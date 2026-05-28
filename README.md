@@ -9,6 +9,7 @@ Skills e ferramentas de IA para Auditores Fiscais do Trabalho (AFT), compatívei
 | Skill | Descrição |
 |---|---|
 | [PGR-analise](PGR-analise/SKILL.md) | Análise de PGR sob a ótica da NR-01 — identifica irregularidades nas 7 ementas e gera autos de infração |
+| [gera-ai](gera-ai/SKILL.md) | Empacota autos de infração já redigidos em TXT importável pelo Sistema Auditor, com pseudonimização reversível dos dados da autuada e dos trabalhadores |
 
 ---
 
@@ -43,6 +44,9 @@ aft-toolkit/
 ├── README.md
 ├── PGR-analise/
 │   └── SKILL.md
+├── gera-ai/
+│   ├── SKILL.md
+│   └── rehydrate.py
 └── (outras skills em breve)
 ```
 
