@@ -188,15 +188,15 @@ AI_[NUM_AUTOS]_[CNPJ]_[sufixo][N].PDF
 | Componente | Descrição | Exemplo |
 |------------|-----------|---------|
 | `NUM_AUTOS` | Total de autos no TXT | `8` |
-| `CNPJ` | Só dígitos (14) | `56309119000103` |
+| `CNPJ` | Só dígitos (14) | `37115367004239` |
 | `sufixo` | Tipo do anexo: `foto`, `doc`, `PGR`, etc. | `foto`, `doc` |
 | `N` | Índice sequencial global (1, 2, 3...) | `1` |
 | Extensão | **SEMPRE `.PDF` em MAIÚSCULAS** (case-sensitive) | `.PDF` |
 
 **Exemplos válidos:**
-- `AI_8_56309119000103_foto1.PDF` — foto de evidência
-- `AI_8_56309119000103_doc1.PDF` — documento PDF (petição, laudo, etc.)
-- `AI_3_56309119000103_PGR.PDF` — PGR auditado
+- `AI_8_37115367004239_foto1.PDF` — foto de evidência
+- `AI_8_37115367004239_doc1.PDF` — documento PDF (petição, laudo, etc.)
+- `AI_3_37115367004239_PGR.PDF` — PGR auditado
 
 ### Protocolo para documentos PDF prontos
 
@@ -209,7 +209,7 @@ Quando o auditor fornece um PDF pronto como anexo (petição, relatório, laudo,
 
 ```bash
 # Exemplo: copiar e renomear petição como anexo
-cp "[CAMINHO_ORIGINAL]/petição.pdf" "[PASTA_LAVRATURA]/AI_8_56309119000103_doc1.PDF"
+cp "[CAMINHO_ORIGINAL]/petição.pdf" "[PASTA_LAVRATURA]/AI_8_37115367004239_doc1.PDF"
 ```
 
 ### Protocolo para fotos de evidência
@@ -401,7 +401,9 @@ linha 6 (CIF)
 4. **Re-hidrate** rodando o script da skill (gera o TXT real a partir do tokenizado + de-para):
    ```bash
    DIR=~/Documents/Cowork\ OS/AFT\ COWORK/OS\ ATIVAS/[RAZAO_SOCIAL]/[PASTA_LAVRATURA]
-   python3 ~/.claude/skills/gera-ai/rehydrate.py \
+   # Resolve o rehydrate.py — funciona na instalação standalone E via aft-toolkit
+   REHYDRATE="$(ls ~/.claude/skills/gera-ai/rehydrate.py ~/.claude/skills/aft-toolkit/gera-ai/rehydrate.py 2>/dev/null | head -1)"
+   python3 "$REHYDRATE" \
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt" \
      "$DIR/.depara_[CNPJ].json" \
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
@@ -487,7 +489,7 @@ Crie o arquivo com este template:
 
 ### Regras de formatação do memory.md
 
-- **CNPJ**: apenas dígitos (sem pontuação). Ex: `56309119000103`.
+- **CNPJ**: apenas dígitos (sem pontuação). Ex: `37115367004239`.
 - **CPF**: apenas dígitos. Ex: `12345678901`.
 - **Data da lavratura**: formato `DD/MM/AAAA` no texto narrativo, `DD-MM` no nome da pasta.
 - **Descrição da ementa**: texto curto extraído do arquivo de ementas (ou do contexto da conversa).
