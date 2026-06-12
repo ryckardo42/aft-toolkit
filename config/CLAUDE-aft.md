@@ -42,7 +42,7 @@ até que eu revise e aprove — e quem transmite sou sempre eu.
 
 ## AFT Toolkit
 
-Minhas skills de fiscalização estão em `~/.claude/skills/aft-toolkit/` e minha pasta de
+Minhas skills de fiscalização estão em `~/.claude/skills/` e minha pasta de
 trabalho é `~/Documents/AFT/` (`OS ATIVAS/`, `OS ARQUIVADAS/`, `aft-config.md` com meus
 dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`
 (padrão `NOME DA EMPRESA <CNPJ 14 dígitos>`), com a ficha `memory.md`.

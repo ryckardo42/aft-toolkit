@@ -70,7 +70,7 @@ Apresente ao AFT um resumo curto da triagem (o que entrou em cada balde) antes d
 **Arquivos AFD/AEJ** — rode o validador da skill jornada-valida-afd-aej sobre a pasta (ou os arquivos), de uma vez:
 
 ```bash
-python ~/.claude/skills/aft-toolkit/jornada-valida-afd-aej/validar.py "<pasta ou arquivos AFD/AEJ>" --out "<pasta>/relatorio-validacao-afd-aej.md"
+python ~/.claude/skills/jornada-valida-afd-aej/validar.py "<pasta ou arquivos AFD/AEJ>" --out "<pasta>/relatorio-validacao-afd-aej.md"
 ```
 
 Leia o resumo (stdout) e o `.md` gerado.
@@ -78,7 +78,7 @@ Leia o resumo (stdout) e o `.md` gerado.
 **Cada PDF de atestado** — acione a skill **jornada-atestado** (uma vez por atestado). Siga o fluxo dela: ler o texto do PDF, rodar a inspeção de assinatura e conferir o art. 89 item a item.
 
 ```bash
-python ~/.claude/skills/aft-toolkit/jornada-atestado/scripts/inspecionar_assinatura.py "<atestado.pdf>"
+python ~/.claude/skills/jornada-atestado/scripts/inspecionar_assinatura.py "<atestado.pdf>"
 ```
 
 (Pré-requisito `pikepdf` — o `/aft-setup` já instala. Se faltar: `pip install pikepdf`.)

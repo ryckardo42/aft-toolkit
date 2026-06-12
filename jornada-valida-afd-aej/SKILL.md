@@ -83,7 +83,7 @@ skill (ele é reportado como **IGNORADO — fora de escopo**) e siga com o(s) AE
 O motor é o script `validar.py` desta skill. Rode com o(s) caminho(s):
 
 ```bash
-python ~/.claude/skills/aft-toolkit/jornada-valida-afd-aej/validar.py "<caminho do .TXT ou pasta>" [mais arquivos...]
+python ~/.claude/skills/jornada-valida-afd-aej/validar.py "<caminho do .TXT ou pasta>" [mais arquivos...]
 ```
 
 Opções:

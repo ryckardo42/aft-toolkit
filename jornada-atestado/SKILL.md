@@ -76,7 +76,7 @@ textual do documento para extrair os campos declarados.
 Rode o script de apoio sobre o PDF:
 
 ```bash
-python ~/.claude/skills/aft-toolkit/jornada-atestado/scripts/inspecionar_assinatura.py "/caminho/para/o/atestado.pdf"
+python ~/.claude/skills/jornada-atestado/scripts/inspecionar_assinatura.py "/caminho/para/o/atestado.pdf"
 ```
 
 O script devolve JSON com: presença de AcroForm, número de campos de assinatura, número de

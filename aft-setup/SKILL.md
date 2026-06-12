@@ -151,7 +151,7 @@ em `~/.claude/CLAUDE.md`:
 
 - **Se `~/.claude/CLAUDE.md` NÃO existe** → copie o template:
   ```bash
-  cp ~/.claude/skills/aft-toolkit/config/CLAUDE-aft.md ~/.claude/CLAUDE.md
+  cp ~/.claude/skills/config/CLAUDE-aft.md ~/.claude/CLAUDE.md
   ```
   Explique em uma frase: *"Instalei o seu perfil de auditor — a partir da próxima
   conversa, o Claude já sabe que você é AFT, conhece as skills do toolkit e segue as

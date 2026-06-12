@@ -20,7 +20,7 @@ description: >
 ## Objetivo
 
 Gerar um **Relatório Técnico para Interdição e/ou Embargo** em formato `.docx`, baseado no
-modelo oficial incluído no toolkit (`~/.claude/skills/aft-toolkit/aft-rt-rgi/template.docx`,
+modelo oficial incluído no toolkit (`~/.claude/skills/aft-rt-rgi/template.docx`,
 modelo da SRTE/GO — adapte cabeçalho/cidade à sua SRTE se necessário). O documento mantém
 TODO o conteúdo fixo do modelo (cabeçalho, logotipos, textos legais, citações doutrinárias,
 tabelas NR-3, instruções de suspensão, nota sobre SEI) e preenche apenas as partes variáveis
@@ -70,7 +70,7 @@ anexados, descrição do AFT). Liste cada irregularidade de forma objetiva e sep
 **4b. Resolver as ementas (3 camadas):**
 
 1. **NotebookLM** (se configurado pelo `/aft-setup`): leia
-   `~/.claude/skills/aft-toolkit/config/notebooks.json`, identifique a key do notebook
+   `~/.claude/skills/config/notebooks.json`, identifique a key do notebook
    `ementario-sst` e a key da NR específica do caso (ex: `nr-12`, `nr-13`, `nr-35`).
    Para cada irregularidade, pergunte (uma consulta por irregularidade, em paralelo):
    ```bash
@@ -155,7 +155,7 @@ Se algum dado não for fornecido, use um placeholder claro como `[PREENCHER]`.
 
 ```bash
 mkdir -p /tmp/RT_temp
-cp ~/.claude/skills/aft-toolkit/aft-rt-rgi/template.docx /tmp/RT_temp/template.docx
+cp ~/.claude/skills/aft-rt-rgi/template.docx /tmp/RT_temp/template.docx
 ```
 
 > No Windows com Git Bash, `/tmp` existe e funciona normalmente.
@@ -163,7 +163,7 @@ cp ~/.claude/skills/aft-toolkit/aft-rt-rgi/template.docx /tmp/RT_temp/template.d
 ### 3. Desempacotar o template
 
 ```bash
-python ~/.claude/skills/aft-toolkit/_scripts/docx_unpack.py /tmp/RT_temp/template.docx /tmp/RT_temp/unpacked/
+python ~/.claude/skills/_scripts/docx_unpack.py /tmp/RT_temp/template.docx /tmp/RT_temp/unpacked/
 ```
 
 ### 4. Substituir os placeholders no XML
@@ -200,7 +200,7 @@ mesma formatação (tabulação).
 ### 5. Remontar e validar o documento
 
 ```bash
-python ~/.claude/skills/aft-toolkit/_scripts/docx_pack.py /tmp/RT_temp/unpacked/ /tmp/RT_temp/RT_Interdicao.docx
+python ~/.claude/skills/_scripts/docx_pack.py /tmp/RT_temp/unpacked/ /tmp/RT_temp/RT_Interdicao.docx
 ```
 
 O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o

@@ -33,8 +33,8 @@ O Claude Code é um assistente que executa comandos no seu computador, **sempre 
 Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cada passo:
 1. Confirme que o Git está instalado e funcionando (git --version).
 2. Verifique se o Python 3 está instalado e funcionando no terminal; se não, instale com winget (pacote Python.Python.3.12).
-3. Baixe o repositório https://github.com/ryckardo42/aft-toolkit.git para a pasta de skills do Claude Code (~/.claude/skills/aft-toolkit) usando git clone.
-4. Confirme que a pasta foi criada, liste as skills instaladas e me diga se preciso reiniciar o aplicativo.
+3. Baixe o repositório https://github.com/ryckardo42/aft-toolkit.git fazendo dele a própria pasta de skills: git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills. Se a pasta ~/.claude/skills já existir com conteúdo, clone numa pasta temporária e mova todo o conteúdo do repositório (incluindo a pasta oculta .git) para dentro dela.
+4. Confirme que as skills ficaram diretamente em ~/.claude/skills (deve existir, por exemplo, ~/.claude/skills/aft-setup/SKILL.md — e NÃO ~/.claude/skills/aft-toolkit/aft-setup), liste-as e me diga se preciso reiniciar o aplicativo.
 ```
 
 Enquanto o Claude trabalha, ele vai pedir permissão para cada comando — basta clicar em **Permitir**. Isso é normal e desejável: nada roda no seu computador sem o seu OK.
@@ -94,7 +94,7 @@ Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando):
 - **Python**: baixe em https://www.python.org/downloads/ e, na primeira tela do instalador, **marque "Add Python to PATH"**.
 - **Toolkit**: abra o Git Bash (menu Iniciar) e rode:
   ```bash
-  git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills/aft-toolkit
+  git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills
   ```
 
 ## Problemas comuns
@@ -105,7 +105,7 @@ Regra geral: **descreva o problema ao próprio Claude** no `</> Code` ("o comand
 |---|---|
 | "Git is required for local sessions" | Instale o Git (Passo 2) e feche o app de verdade: ícone do Claude na bandeja → Sair; reabra. Se persistir, reinicie o computador |
 | Python "não encontrado" | Peça ao Claude: "instale o Python com winget". Se a rede bloquear, plano B manual acima e reinicie o app |
-| Skill não aparece com `/` | Feche e reabra o Claude Code; peça a ele para confirmar se `~/.claude/skills/aft-toolkit` existe |
+| Skill não aparece com `/` | Feche e reabra o Claude Code. Se persistir, peça a ele: "as skills estão diretamente em ~/.claude/skills (ex.: ~/.claude/skills/aft-setup)? Se estiverem dentro de uma subpasta aft-toolkit, mova todo o conteúdo um nível acima" |
 | `notebooklm: command not found` | Peça ao Claude: "instale o notebooklm-py com pip" |
 | NotebookLM responde "sem acesso" | Solicite acesso em https://notebooks-aft.vercel.app e aguarde liberação |
 

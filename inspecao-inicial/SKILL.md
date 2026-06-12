@@ -167,7 +167,7 @@ Se ambíguo, pergunte ao auditor.
 
 **Camada 1 — NotebookLM (preferencial, requer setup do /aft-setup):**
 
-1. Resolva o notebook_id: leia `~/.claude/skills/aft-toolkit/config/notebooks.json` e busque a key correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
+1. Resolva o notebook_id: leia `~/.claude/skills/config/notebooks.json` e busque a key correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
 2. Consulte o NotebookLM:
    ```bash
    notebooklm ask "Qual ementa do ementário cobre a infração ao item [ITEM_NR] da NR-[NR] sobre [DESCRICAO_DA_IRREGULARIDADE]? Retorne o código da ementa (formato XXXXXX-X), a descrição, a capitulação e a gradação." --notebook [notebook_id] --json

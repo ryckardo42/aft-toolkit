@@ -61,7 +61,7 @@ Para cada auto, valide o código da ementa:
 - Formato obrigatório: `\d{6}-\d` (6 dígitos, hífen, 1 dígito verificador). Ex: `312358-8`.
 - Se o auditor não forneceu o código, use a busca em 3 camadas:
   1. **NotebookLM** (se configurado): resolva o notebook da NR em
-     `~/.claude/skills/aft-toolkit/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e rode
+     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e rode
      `notebooklm ask "Qual o código da ementa (formato XXXXXX-X) para [irregularidade]?" --notebook [id] --json`.
   2. **Ementário no Google Drive** (manual): peça ao AFT para abrir
      https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
@@ -180,7 +180,7 @@ Quando o auditor fornece um PDF pronto como anexo (petição, relatório, laudo,
 2. **Renomeie** seguindo a convenção: `AI_[NUM_AUTOS]_[CNPJ]_doc[N].PDF`.
 3. Se o PDF tiver **mais de 10 MB**, comprima antes:
    ```bash
-   python ~/.claude/skills/aft-toolkit/_scripts/comprimir_pdf.py "[original.pdf]" "[PASTA_LAVRATURA]/AI_..._doc1.PDF"
+   python ~/.claude/skills/_scripts/comprimir_pdf.py "[original.pdf]" "[PASTA_LAVRATURA]/AI_..._doc1.PDF"
    ```
    (Nunca use compressores online — o documento contém dados sensíveis.)
 4. **Gere as linhas tipo 5** correspondentes no TXT (uma por auto que recebe o anexo).
@@ -197,7 +197,7 @@ Quando o auditor fornece um PDF pronto como anexo (petição, relatório, laudo,
 4. Monte dict `{auto_id: [lista_de_caminhos]}`. Foto cobrindo múltiplos autos entra em todas as listas (PDFs separados).
 5. Converta cada foto com o script do toolkit (corrige orientação EXIF e dimensiona para A4 200 dpi):
    ```bash
-   python ~/.claude/skills/aft-toolkit/_scripts/fotos_para_pdf.py "[foto]" "[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ]_foto[N].PDF"
+   python ~/.claude/skills/_scripts/fotos_para_pdf.py "[foto]" "[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ]_foto[N].PDF"
    ```
    - Fotos HEIC/HEIF (iPhone) exigem `pip install pillow-heif`; o script avisa se faltar.
 
@@ -337,7 +337,7 @@ linha 6 (CIF)
 4. **Re-hidrate** rodando o script do toolkit (gera o TXT real, já em latin-1, a partir do tokenizado + de-para):
    ```bash
    DIR=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
-   python ~/.claude/skills/aft-toolkit/_scripts/rehydrate.py \
+   python ~/.claude/skills/_scripts/rehydrate.py \
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt" \
      "$DIR/.depara_[CNPJ].json" \
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
