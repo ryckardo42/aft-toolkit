@@ -1,57 +1,123 @@
-# aft-toolkit
+# AFT Toolkit
 
-Skills e ferramentas de IA para Auditores Fiscais do Trabalho (AFT), compatíveis com **Claude Code CLI** e **claude.ai**.
+**Skills de IA para Auditores-Fiscais do Trabalho**, para uso no **Claude Code** (app desktop, Windows).
 
----
+O toolkit transforma o Claude Code num assistente de fiscalização que trabalha **no seu computador**: organiza as pastas das OS, registra o relato de campo, enquadra NR/ementa, redige autos de infração, gera o TXT importável pelo Sistema Auditor e produz relatórios — tudo com uma política de **anonimização de dados pessoais** embutida.
 
-## Skills disponíveis
+## Por que Claude Code (e não o chat comum)?
 
-| Skill | Descrição |
-|---|---|
-| [PGR-analise](PGR-analise/SKILL.md) | Análise de PGR sob a ótica da NR-01 — identifica irregularidades nas 7 ementas e gera autos de infração |
-| [gera-ai](gera-ai/SKILL.md) | Empacota autos de infração já redigidos em TXT importável pelo Sistema Auditor, com pseudonimização reversível dos dados da autuada e dos trabalhadores |
+- **Execução local**: os arquivos das suas fiscalizações ficam no seu computador (`Documentos\AFT`). As skills criam pastas, salvam autos, convertem fotos e geram o TXT diretamente no disco.
+- **Anonimização (pseudonimização reversível)**: nomes e CPFs de trabalhadores são substituídos por tokens (`[[TRAB_01]]`, `[[CPF_01]]`) nos textos processados pela IA. Os valores reais ficam num mapa local e são re-injetados no TXT final por um **script determinístico** (`rehydrate.py`) — nunca pelo modelo. Um nome ou CPF trocado num documento legal é inaceitável; por isso essa etapa não é feita por IA.
+- **Fluxo completo**: do relato ditado pós-inspeção até o arquivo pronto para o botão "imp. txt" do Sistema Auditor.
 
----
+## Instalação (resumo)
 
-## Como instalar (Claude Code CLI)
+Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apostila `Apostila-AFT-Toolkit.docx`).
 
 ```bash
 git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills/aft-toolkit
 ```
 
-> As skills ficam disponíveis automaticamente na próxima conversa. Use `/PGR-analise`, `/nome-da-skill`, etc.
+Depois, dentro do Claude Code, rode **`/aft-setup`** — ele cria as pastas de trabalho, coleta seus dados (CIF, UORG, município) uma única vez e instala as dependências.
 
-## Como atualizar
+**Atualização:**
 
 ```bash
 cd ~/.claude/skills/aft-toolkit && git pull
 ```
 
----
+## Skills incluídas
 
-## Como usar no claude.ai (sem Claude Code)
+### Configuração
+| Skill | O que faz |
+|---|---|
+| `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), dependências, NotebookLM |
 
-1. Abra o arquivo `SKILL.md` da skill desejada
-2. Copie o conteúdo
-3. No claude.ai, crie um **Projeto** e cole nas instruções do projeto
+### Inspeção e lavratura
+| Skill | O que faz |
+|---|---|
+| `/inspecao-fisica` | Transforma a narrativa ditada da visita num relato de campo estruturado (`inspecao-fisica.md`) — fiel, sem enquadramento |
+| `/inspecao-inicial` | Lê o relato de campo, identifica NR/ementa (NotebookLM) e redige os autos de infração (todas as NRs + CLT), com gate de dupla visita |
+| `/registro` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
+| `/PGR-analise` | Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas |
+| `/det-630` | Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT) |
+| `/aft-rt-rgi` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
 
----
+### Jornada / ponto eletrônico (Portaria 671/2021)
+| Skill | O que faz |
+|---|---|
+| `/jornada-analise` | Orquestrador: tria o pacote entregue (AFD/AEJ/atestados) e consolida os pareceres |
+| `/jornada-valida-afd-aej` | Validador determinístico (Python) do AEJ: estrutura, trailer, integridade referencial |
+| `/jornada-atestado` | Auditoria do Atestado Técnico/Termo de Responsabilidade do REP/PTRP (art. 89), com inspeção de assinatura por código |
+| `/jornada-auto-afd-aej` | Autos por AFD/AEJ ausente ou fora do padrão (ementas 002279-9 / 002280-2) |
+
+### Empacotamento e relatórios
+| Skill | O que faz |
+|---|---|
+| `/gera-ai` | Empacota autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível |
+| `/sfitweb-rel` | Relatório Final Simplificado consolidando autos, termos e notificações |
+
+## Fluxo típico de uma fiscalização
+
+```
+1. Visita ao estabelecimento
+2. /inspecao-fisica      → narra o que viu; vira relato estruturado na pasta da OS
+3. /inspecao-inicial     → enquadra NR/ementa e redige os autos
+   (desvios automáticos: /registro p/ trabalhador sem registro ·
+    /aft-rt-rgi p/ risco grave e iminente · /PGR-analise p/ auditoria do PGR)
+4. /gera-ai              → TXT importável + anexos na pasta Autos DD-MM/
+5. Sistema Auditor       → botão "imp. txt" → revisão → transmissão
+6. /sfitweb-rel          → relatório final consolidado
+```
+
+## Estrutura de trabalho
+
+```
+Documentos\AFT\
+├── aft-config.md            (seus dados — criado pelo /aft-setup)
+├── OS ATIVAS\
+│   └── EMPRESA X 12345678000190\
+│       ├── memory.md                (ficha da fiscalização)
+│       ├── inspecao-fisica.md       (relato de campo)
+│       ├── autos.md                 (autos redigidos)
+│       └── Autos 19-05\             (TXT importável + anexos PDF)
+└── OS ARQUIVADAS\
+```
+
+## Segurança dos dados
+
+- Tudo roda e fica **no seu computador**. Nenhuma skill envia arquivos para serviços externos (a compressão de PDF, conversão de fotos e validação de arquivos são scripts Python locais).
+- **Nunca** use compressores/conversores online para documentos de fiscalização.
+- O arquivo `.depara_<CNPJ>.json` (mapa token↔dados reais) é sensível: não compartilhe, não commite.
+- A cópia `*.tokenized.txt` é a única versão segura para compartilhar com colegas.
+- Consultas de ementa ao NotebookLM enviam apenas a **descrição da irregularidade** — nunca nomes de trabalhadores ou da empresa.
+
+## Ementários (códigos de ementa)
+
+As skills buscam o código da ementa em 3 camadas:
+
+1. **NotebookLM** (recomendado): peça acesso em https://notebooks-aft.vercel.app e configure o CLI pelo `/aft-setup`. Os notebooks cobrem os ementários SST e de legislação + NRs específicas.
+2. **Google Drive compartilhado**: [ementários por NR em Markdown](https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing).
+3. **Você informa o código** (formato `XXXXXX-X`).
 
 ## Estrutura do repositório
 
 ```
 aft-toolkit/
-├── README.md
-├── PGR-analise/
-│   └── SKILL.md
-├── gera-ai/
-│   ├── SKILL.md
-│   └── rehydrate.py
-└── (outras skills em breve)
+├── README.md · COMO-INSTALAR.md · Apostila-AFT-Toolkit.docx
+├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
+├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx)
+├── aft-setup/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
+├── registro/ · det-630/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/
+└── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```
 
----
+## Avisos
+
+- As skills são **apoio à redação e organização**. O conteúdo jurídico de cada auto, termo e relatório é de responsabilidade do AFT, que revisa tudo antes de transmitir.
+- Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.
+- O template do RT (`aft-rt-rgi/template.docx`) segue o modelo da SRTE/GO — auditores de outras SRTEs devem ajustar o cabeçalho.
 
 ## Contribuindo
 
-Sugestões de novas skills ou melhorias: abra uma Issue ou entre em contato com o mantenedor.
+Sugestões de novas skills ou melhorias: abra uma Issue ou fale com o mantenedor (Ricardo de Oliveira, AFT — SRTE/GO).

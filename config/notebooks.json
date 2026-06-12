@@ -1,0 +1,201 @@
+{
+  "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso aos notebooks e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst).",
+  "notebooks": {
+    "acidentes": {
+      "notebook_id": "4d96ebf0-f37c-40f2-b873-05123ad8dd74",
+      "title": "Acidentes"
+    },
+    "apreciacao-risco": {
+      "notebook_id": "52f611b7-2e45-4653-9755-fe04f147728c",
+      "title": "Apreciação de risco"
+    },
+    "aprendizagem": {
+      "notebook_id": "a9444ee8-ee98-460b-8c28-9e55c5989e8d",
+      "title": "Aprendizagem Profissional"
+    },
+    "det": {
+      "notebook_id": "227eca8a-a99a-4eb0-b23b-d1a8d4682973",
+      "title": "DET"
+    },
+    "discriminacao": {
+      "notebook_id": "b0226841-b486-40a0-8b1b-35435a359927",
+      "title": "Discriminação no Trabalho"
+    },
+    "doencas-trabalho": {
+      "notebook_id": "63b32ac4-2725-4c0e-ace0-7c46563b9640",
+      "title": "Análise de Doenças do Trabalho"
+    },
+    "dupla-visita": {
+      "notebook_id": "046abfff-ddb4-49b8-96bc-b748502a50c1",
+      "title": "Dupla Visita"
+    },
+    "ementario-legis": {
+      "notebook_id": "aeae6464-eb1b-4e06-86c2-49936058755a",
+      "title": "Ementário Legislação"
+    },
+    "ementario-sst": {
+      "notebook_id": "8a5af173-06c5-46c1-9031-1b10a7b6b7a3",
+      "title": "Ementário SST"
+    },
+    "esocial": {
+      "notebook_id": "a7f16f6a-8333-4f3d-91df-d7aca3e53d6d",
+      "title": "ESocial"
+    },
+    "especialista-nr31": {
+      "notebook_id": "96e8722f-086d-4c09-8f33-baf4dcbff19e",
+      "title": "Especialista em NR-31"
+    },
+    "fgts-digital": {
+      "notebook_id": "e78c73aa-ede5-4e24-9884-4b984adcfa73",
+      "title": "FGTS Digital"
+    },
+    "guia-analise-acidentes": {
+      "notebook_id": "aefa56af-5eb5-4558-8454-827173be228c",
+      "title": "Guia de Análise de Acidentes de Trabalho"
+    },
+    "informalidade": {
+      "notebook_id": "c0b0d976-3b59-49c1-83f0-21111939bdc7",
+      "title": "Informalidade"
+    },
+    "jornada": {
+      "notebook_id": "6986d52a-a56c-4854-80c5-c203dc3ae829",
+      "title": "JORNADA e Khronos"
+    },
+    "manual-lavratura-ai": {
+      "notebook_id": "5dcc16f8-3dcb-4677-8b56-3ce6730e8865",
+      "title": "manual lavratura de auto de infração"
+    },
+    "motorista-profissional": {
+      "notebook_id": "24be4caf-120b-424a-b56a-76b445053f55",
+      "title": "Motorista profissional"
+    },
+    "nho-11": {
+      "notebook_id": "bc2b1412-630d-4b42-b2a4-5e3e5f9009c9",
+      "title": "NHO 11"
+    },
+    "notas-tecnicas-sit": {
+      "notebook_id": "e5d22a2d-9d65-43f4-87c5-e8d7c62c0069",
+      "title": "Notas técnicas e precedentes adm SIT MTE"
+    },
+    "nr-01": {
+      "notebook_id": "3b17b41a-3152-4c72-9b45-d57060434ae8",
+      "title": "NR-01 PGR"
+    },
+    "nr-03": {
+      "notebook_id": "721b73ea-a96c-4a40-8f2a-bb22bd57becb",
+      "title": "NR-03"
+    },
+    "nr-04": {
+      "notebook_id": "c529b09a-61b1-4611-beed-3c73f9ad7396",
+      "title": "NR-04 SESMT"
+    },
+    "nr-05": {
+      "notebook_id": "3e6bd601-c5c7-48c8-8dd7-a49e6240b332",
+      "title": "NR-05 CIPA"
+    },
+    "nr-06": {
+      "notebook_id": "21664a25-ed94-4c3e-9bab-dd619294095e",
+      "title": "NR-06 EPI"
+    },
+    "nr-07": {
+      "notebook_id": "9c378bd1-26b4-4e5e-9878-035b7793cd38",
+      "title": "NR 07 - PCMSO"
+    },
+    "nr-09": {
+      "notebook_id": "148e8dd5-dc55-48ee-93b9-373e4676a8e7",
+      "title": "NR-09"
+    },
+    "nr-10": {
+      "notebook_id": "20b2a283-2a25-403d-bcb2-58e41bb9b40d",
+      "title": "NR-10"
+    },
+    "nr-11": {
+      "notebook_id": "8e934d2d-b2a1-48da-bf90-3d7317dcf9a5",
+      "title": "NR-11"
+    },
+    "nr-12": {
+      "notebook_id": "90bf6539-b105-4bef-b1af-973f102a0187",
+      "title": "NR-12"
+    },
+    "nr-13": {
+      "notebook_id": "a9723b57-78fc-4f2a-b499-097d7b26977a",
+      "title": "NR-13"
+    },
+    "nr-15": {
+      "notebook_id": "750c2ef8-4701-4839-bc10-560d44fd2711",
+      "title": "NR-15"
+    },
+    "nr-17": {
+      "notebook_id": "03c2c3b4-f83e-41c5-803d-83ef92818fe1",
+      "title": "NR 17 Ergonomia"
+    },
+    "nr-18": {
+      "notebook_id": "6b9f1fbb-4d99-478c-9f6b-64b7a5f98808",
+      "title": "NR-18"
+    },
+    "nr-20": {
+      "notebook_id": "09ff79d5-5dce-4398-951b-e459c442cb6b",
+      "title": "NR-20 Segurança e Saúde com Inflamáveis"
+    },
+    "nr-21": {
+      "notebook_id": "503d6437-90e2-4dc2-992b-cde219b2b89e",
+      "title": "NR-21"
+    },
+    "nr-24": {
+      "notebook_id": "af01f7e7-3216-4467-a226-c1870ad298de",
+      "title": "NR-24"
+    },
+    "nr-31": {
+      "notebook_id": "3339f269-ddc6-4496-98d6-4858f83bfab8",
+      "title": "NR-31"
+    },
+    "nr-32": {
+      "notebook_id": "851c15d2-6297-4924-aaf5-88efc7176435",
+      "title": "NR-32: Segurança e Saúde em Serviços de Saúde"
+    },
+    "nr-33": {
+      "notebook_id": "cda8fd33-647a-4164-b037-1e425a12b1d5",
+      "title": "NR-33 Espaço Confinado"
+    },
+    "nr-35": {
+      "notebook_id": "12435239-9d3d-44b5-b473-a9deddc382f9",
+      "title": "NR 35: Trabalho em Altura"
+    },
+    "nr-36": {
+      "notebook_id": "e9fb4dbd-7732-4f40-9b71-fd13859cd232",
+      "title": "NR-36 Frigoríficos"
+    },
+    "nr-38": {
+      "notebook_id": "8d060715-3c8d-482c-afb6-aeaaa1c12adb",
+      "title": "NR-38"
+    },
+    "pcd": {
+      "notebook_id": "b66aa747-fe9c-4622-8403-ecb95d97f41b",
+      "title": "PCD"
+    },
+    "protocolos-seguranca-inspecao": {
+      "notebook_id": "92636d02-a6b3-482a-ae26-2bdcdcef1bcf",
+      "title": "Protocolos de Segurança na Inspeção do Trabalho"
+    },
+    "refrigeracao-frigorificos": {
+      "notebook_id": "73f98c56-4905-46cc-afa7-36a411113422",
+      "title": "Refrigeração em frigoríficos"
+    },
+    "riscos-psicossociais": {
+      "notebook_id": "5622870e-4688-47d3-a390-b2d64dd798c3",
+      "title": "Fatores de Riscos Psicossociais Relacionados ao Trabalho"
+    },
+    "rit": {
+      "notebook_id": "8bef7c2e-a904-4ea7-973b-120ada3fd1c7",
+      "title": "RIT - Regulamento da Inspeção do Trabalho"
+    },
+    "terceirizacao": {
+      "notebook_id": "782ca2d3-9d00-4bba-a707-d5d2e7f25ced",
+      "title": "Terceirização"
+    },
+    "trabalho-infantil": {
+      "notebook_id": "0bf946be-2759-4f45-91e4-557340b3529a",
+      "title": "Trabalho Infantil"
+    }
+  }
+}

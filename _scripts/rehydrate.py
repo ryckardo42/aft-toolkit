@@ -4,18 +4,20 @@ rehydrate.py — re-hidratação determinística de autos pseudonimizados (skill
 
 Troca os tokens [[AUTUADA]] / [[TRAB_NN]] / [[CPF_NN]] de um TXT tokenizado pelos
 valores reais lidos de um mapa de-para JSON, produzindo o TXT real importável pelo
-Sistema Auditor.
+Sistema Auditor — já gravado em ISO-8859-1 (latin-1), o encoding que o Sistema
+Auditor exige. Não é preciso nenhum passo de conversão depois (sem iconv).
 
 NUNCA é o modelo que faz a substituição — é este script, por string-replace exato,
 para garantir a fidelidade do documento legal (um CPF/nome errado é inaceitável).
 
-Uso:
-    python3 rehydrate.py <tokenized.txt> <depara.json> <saida.txt>
+Uso (Windows / Git Bash):
+    python rehydrate.py <tokenized.txt> <depara.json> <saida.txt>
 
 Aborta (exit 1) se:
   - algum valor real do de-para estiver vazio;
   - algum CPF real não tiver exatamente 11 dígitos numéricos;
-  - sobrar qualquer token [[...]] não resolvido no arquivo de saída.
+  - sobrar qualquer token [[...]] não resolvido no arquivo de saída;
+  - algum caractere do texto não existir em ISO-8859-1.
 """
 import json
 import re
@@ -84,10 +86,19 @@ def main():
     if orphans:
         fail("tokens não resolvidos sobraram na saída: " + ", ".join(orphans))
 
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    # Saída direta em latin-1 (encoding do Sistema Auditor).
+    try:
+        data = content.encode("iso-8859-1")
+    except UnicodeEncodeError as e:
+        fail(
+            f"caractere não suportado pelo ISO-8859-1 na posição {e.start}: "
+            f"{content[e.start:e.start+20]!r} — corrija o texto (ex.: travessão, aspas curvas, emoji)"
+        )
 
-    print(f"OK: {len(mapping)} token(s) re-hidratado(s) -> {out_path}")
+    with open(out_path, "wb") as f:
+        f.write(data)
+
+    print(f"OK: {len(mapping)} token(s) re-hidratado(s) -> {out_path} (ISO-8859-1)")
 
 
 if __name__ == "__main__":

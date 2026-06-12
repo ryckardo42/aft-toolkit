@@ -9,47 +9,105 @@ description: >
   de PGR/Inventário/Plano de Ação. Também acione quando o contexto envolver lavratura de
   autos de infração por irregularidades no PGR. O skill executa varredura sistemática das
   sete ementas de PGR, identifica irregularidades com citação dos trechos e páginas do
-  documento, e oferece geração de autos de infração (formato 3 subtítulos, alinhado à
-  skill irmã `inspecao-completa`) com empacotamento na pasta `~/Desktop/autos_<CNPJ>/`
-  contendo TXT importável pelo Sistema Auditor (encoding latin-1) e o próprio PGR como
-  anexo de cada AI (comprimido se necessário, limite 10 MB).
+  documento, e oferece a redação dos autos de infração (formato 3 subtítulos) no formato
+  consumido pelo /gera-ai, que empacota o TXT do Sistema Auditor com o próprio PGR como
+  anexo de cada AI.
 ---
 
-# Skill: Análise de PGR (NR-01)
+# PGR-analise — Análise de PGR (NR-01)
+**AFT Toolkit**
 
 ## Objetivo
 
 Analisar um Programa de Gerenciamento de Riscos (PGR) sob a ótica da NR-01, identificando
 irregularidades enquadráveis em sete ementas de auto de infração. O resultado é uma análise
 ementa por ementa, com citação dos trechos do PGR que sustentam cada conclusão, e a oferta
-de geração de autos de infração e relatório de recomendação para a empresa.
+de redação dos autos de infração (empacotamento via `/gera-ai`) e relatório de recomendação
+para a empresa.
 
 ---
 
 ## Fluxo de execução
 
-### Etapa 1: Receber o PGR
+### Etapa 1: Receber e registrar o contexto da inspeção física (obrigatório)
 
-O PGR pode chegar como PDF anexado ou como texto colado. Aceite os dois formatos.
+> **Princípio:** o PGR não é auditado no vácuo. É um documento que deve refletir a
+> realidade do ambiente de trabalho. Todo risco e toda irregularidade que o AFT constatou
+> in loco é evidência direta para esta análise: se o PGR não identifica, não avalia ou não
+> trata um risco que existe de fato no estabelecimento, isso configura irregularidade nas
+> ementas correspondentes. Por isso, **a captura do contexto de campo antecede a leitura do
+> PGR.**
 
-- **PDF anexado**: leia o conteúdo integral usando as ferramentas de leitura de PDF
-  disponíveis (consulte o skill `pdf-reading` se necessário). Localize as seções de
-  metodologia, Inventário de Riscos, Plano de Ação e comunicação/consulta.
-- **Texto colado**: trabalhe diretamente com o texto fornecido.
-- **Nada fornecido**: solicite ao AFT o PGR (anexo ou texto).
+**Localize a pasta da OS.** Determine a pasta da empresa em
+`~/Documents/AFT/OS ATIVAS/`. Se o AFT já citou a empresa/CNPJ na conversa,
+use-a; senão, pergunte qual OS (ou liste as candidatas).
+
+**Procure o `inspecao-fisica.md` antes de perguntar.** Esse arquivo é a fonte primária do
+contexto de campo — irregularidades encontradas in loco que influenciam a análise do PGR:
+
+```bash
+ls ~/Documents/AFT/"OS ATIVAS"/"<PASTA_EMPRESA>"/inspecao-fisica.md
+```
+
+- **Encontrado:** leia-o e use seu conteúdo como a lista de achados de campo (modo
+  confronto). Apresente um resumo ao AFT e confirme: *"Carreguei o contexto de campo de
+  `inspecao-fisica.md`: [resumo dos achados]. Confirma que uso isso para confrontar o PGR?"*
+- **Não encontrado:** caia para a pergunta padrão abaixo.
+
+**Caso contrário, comece perguntando** ao AFT pelo contexto da inspeção física — salvo se ele
+já o tiver descrito na conversa. Nesse caso, reaproveite o que já está no contexto e apenas confirme.
+
+Pergunta padrão (se não houver `inspecao-fisica.md` e o contexto ainda não foi fornecido):
+
+> "Antes de analisar o PGR, preciso do contexto da sua inspeção física. Liste os achados e
+> irregularidades evidentes constatados in loco — por exemplo: trabalho em altura, uso de
+> produtos químicos, máquinas sem proteção, mobiliário/posto de trabalho deficiente
+> (NR-17), ausência de CIPA, ausência de SESMT, condição de risco grave e iminente /
+> interdição lavrada, etc. Se não houve inspeção física e esta é uma análise puramente
+> documental (ex: PGR entregue via DET), me diga apenas 'documental'."
+
+**Registre os achados** numa lista interna de trabalho. Para cada achado anote: (a) o
+risco/condição observado, (b) o setor/atividade onde foi visto. Essa lista é a **lente de
+confronto** usada na Etapa 4.
+
+**Modo de execução** — defina conforme a resposta:
+
+- **Modo confronto (padrão):** houve inspeção física e o AFT forneceu achados. A análise de
+  cada ementa será confrontada com a lista de campo (Etapa 4).
+- **Modo documental:** o AFT respondeu "documental" (ou equivalente). Prossiga normalmente,
+  mas **marque o relatório** no topo com o aviso: `⚠️ Análise documental apenas — sem
+  confronto com inspeção in loco. Riscos reais não declarados no PGR podem não ter sido
+  detectados.` Nesse modo a análise se baseia só no que o documento traz.
+
+Não avance para a Etapa 2 sem resolver explicitamente qual é o modo.
+
+---
+
+### Etapa 2: Receber o PGR
+
+**Procure o PGR na pasta da OS antes de pedir.** O PGR costuma ser um PDF com `PGR` no
+nome, ou estar dentro de uma pasta com `PGR` no nome. Procure na pasta da OS (e subpastas).
+
+- **Um único PDF localizado:** use-o (confirme o nome com o AFT em uma linha).
+- **Vários candidatos:** liste-os e pergunte qual é o PGR a analisar.
+- **Nenhum:** peça ao AFT (anexo no chat ou caminho do arquivo).
+
+O PGR também pode chegar como PDF anexado ou como texto colado. Um anexo/texto fornecido
+explicitamente pelo AFT tem **precedência** sobre a busca na pasta.
 
 Faça uma leitura inicial completa antes de começar a análise por ementa. Localize, na
 medida do possível, as seções correspondentes a: metodologia de GRO, identificação de
 perigos, avaliação de riscos, Inventário de Riscos, Plano de Ação, ergonomia (NR-17),
 consulta/comunicação com trabalhadores.
 
-### Etapa 2: Detectar gatilhos contextuais
+### Etapa 3: Detectar gatilhos contextuais
 
 **Gatilho de interdição (afeta a Ementa 1010603).**
 
-Verifique se o AFT mencionou, em sua solicitação ou no contexto da conversa, qualquer
-indício de interdição: "interdição de máquina", "termo de interdição lavrado", "máquina
-interditada", "setor interditado", "risco grave e iminente", ou termos equivalentes.
+Na lista de contexto de campo capturada na Etapa 1 (ou em qualquer menção do AFT na
+conversa), verifique se há indício de interdição: "interdição de máquina", "termo de
+interdição lavrado", "máquina interditada", "setor interditado", "risco grave e
+iminente", ou termos equivalentes.
 
 Se detectar o gatilho, **pare antes de iniciar a Ementa 1010603 e confirme**:
 
@@ -59,7 +117,7 @@ Se detectar o gatilho, **pare antes de iniciar a Ementa 1010603 e confirme**:
 
 Só aplique a Regra Especial D.A (descrita abaixo) após confirmação explícita do AFT.
 
-### Etapa 3: Análise sequencial por ementa
+### Etapa 4: Análise sequencial por ementa
 
 Execute a análise nas sete ementas, **na ordem listada**, apresentando a conclusão de
 cada uma direto no chat antes de passar para a próxima. Para cada ementa, siga as
@@ -75,12 +133,37 @@ Ordem fixa:
 6. **1010794** - Inventário de Riscos ausente ou em desacordo
 7. **1011154** - Falha em consulta e comunicação com trabalhadores
 
-### Etapa 4: Pós-análise
+#### Confronto obrigatório campo × PGR (modo confronto)
+
+No modo confronto, **cada achado de campo da Etapa 1 deve ser rastreado contra o PGR**
+antes de fechar cada ementa. Use este mapeamento como roteiro:
+
+| Achado in loco | Pergunta de confronto | Ementa(s) afetada(s) |
+|---|---|---|
+| Qualquer risco real observado (altura, químico, máquina, físico, biológico) | O risco está identificado no Inventário? Fontes/circunstâncias e grupos expostos descritos? | 1010603, 1010794 |
+| Risco observado presente mas sem nível atribuído | O risco foi avaliado e classificado (nível)? | 1010611 |
+| Mobiliário/posto deficiente, postura forçada, esforço, repetitividade | O perigo ergonômico foi inventariado e avaliado? Há AEP/AET? | 1010646 |
+| Risco que poderia ter sido eliminado/substituído na origem | O PGR tentou evitar o perigo antes de partir para EPI/administrativo? | 1010590 |
+| CIPA atuante / ausência de consulta percebida em campo | O PGR documenta consulta aos trabalhadores e uso da CIPA? | 1011154 |
+| Risco grave e iminente / interdição lavrada | (aplica a Regra Especial D.A) | 1010603 |
+
+**Regra de ouro:** se um risco existe de fato no estabelecimento (você o viu) e o PGR não
+o identifica, não o avalia ou não o trata, a ausência é evidência **positiva** de
+irregularidade — mais forte do que uma lacuna meramente documental. Cite o achado de campo
+como elemento de convicção ao lado do trecho (ou da ausência) no PGR.
+
+**Achados sem correspondência nas 7 ementas de PGR:** alguns achados de campo são infrações
+autônomas de outras NRs e não dizem respeito ao conteúdo do PGR. Esta skill é especialista
+em **PGR/NR-01 e permanece estritamente nesse escopo** — não enquadra, não comenta e não
+gera autos de outras NRs (para isso, use `/inspecao-inicial`). Use esses achados apenas,
+quando couber, como contexto de que o ambiente tem riscos relevantes que o PGR deveria refletir.
+
+### Etapa 5: Pós-análise
 
 Após concluir as sete ementas, pergunte ao AFT se deseja:
 
-1. **Gerar autos de infração** por ementa (use o modelo da seção "Modelo de Auto de
-   Infração" deste skill).
+1. **Redigir os autos de infração** por ementa (formato `/gera-ai` — ver seção "Redação
+   dos autos" abaixo).
 2. **Receber relatório de recomendação geral** para envio à empresa (descrito na seção
    final).
 
@@ -121,7 +204,7 @@ identificação (Ementa 1010603) nem com a falha em avaliar (Ementa 1010611): aq
 
 #### Regra Especial D.A: caso haja interdição confirmada
 
-Se o AFT confirmou interdição na Etapa 2, conclua **automaticamente** pela infração e
+Se o AFT confirmou interdição na Etapa 3, conclua **automaticamente** pela infração e
 use **literalmente** o texto a seguir como conteúdo do **subtítulo 2 (IRREGULARIDADE)**
 ao gerar o auto:
 
@@ -339,6 +422,8 @@ esquema:
 
 Conclusão: [presente / não presente / fortes indícios]
 
+Confronto com o campo: [achado in loco relevante para esta ementa e como ele sustenta ou afasta a irregularidade; ou "sem achado de campo aplicável" / "modo documental — não aplicável"]
+
 Evidências:
 - [trecho citado do PGR] (pág. X) [ou ausência apontada]
 - [explicação técnica vinculando à NR-01]
@@ -357,71 +442,55 @@ Quando o PGR não trouxer informação relevante sobre uma ementa, declare expli
 que a irregularidade **não parece estar presente** com base no documento fornecido, sem
 forçar enquadramento.
 
+Ao final, salve a análise completa em
+`~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/analise-PGR.md`.
+
 ---
 
 ## Pós-análise: ofertas ao AFT
 
 Ao terminar as sete ementas, faça uma pergunta única ao AFT:
 
-> "Deseja que eu (1) gere os autos de infração e empacote tudo (textos + TXT
-> importável pelo Sistema Auditor + PGR como anexo) na pasta `~/Desktop/autos_<CNPJ>/`,
-> (2) escreva um relatório de recomendação geral para envio à empresa, ou (3) ambos?"
+> "Deseja que eu (1) redija os autos de infração das ementas presentes (formato pronto
+> para o `/gera-ai`, com o PGR como anexo), (2) escreva um relatório de recomendação
+> geral para envio à empresa, ou (3) ambos?"
 
-### 1) Geração de autos de infração e empacotamento
+### 1) Redação dos autos de infração (formato /gera-ai)
 
-Esta etapa usa o **mesmo formato técnico da skill irmã `inspecao-completa`** (linhas
-tipo 1, 4, 5, 6; placeholders; encoding latin-1; path Windows via Parallels; `#13#10`
-como separador). Sempre que a especificação técnica do TXT for relevante e não estiver
-detalhada aqui, consulte a `inspecao-completa` como fonte autoritativa: a PGR-analise é
-especialista em **análise**; o formato de exportação fica delegado àquele skill.
-
-#### 1.1. Coleta de dados
-
-Antes de gerar os autos, garanta que tem:
-
-- **CIF do auditor** (6 dígitos): obrigatório, vai na linha tipo 6.
-- **CNPJ** da autuada (apenas dígitos): obrigatório, define o nome da pasta.
-- **Razão social, endereço**: opcionais. Use placeholders da `inspecao-completa`
-  (`CLIQUE NA LUPA E CONFIRA A UORG`, `Ja conferiu a UORG?`, `SN`, `QUADRA`, `BAIRRO`,
-  `74911810`, `GO`, `Goiânia`) se não fornecidos.
-- **Data de início da fiscalização** e **atividade econômica do estabelecimento**:
-  obrigatórios, entram no subtítulo 1 do auto.
-
-O CNPJ e a atividade econômica costumam estar na capa do PGR. Procure antes de
-perguntar. Se não localizar, peça em uma única mensagem só o que falta.
-
-#### 1.2. Estrutura do texto de cada auto (3 subtítulos)
-
-Para cada ementa irregular, gere um auto com a estrutura abaixo. Esta é a mesma
-estrutura da `inspecao-completa`, compatível com a geração de `#13#10` no TXT.
-
-##### SUBTÍTULO 1: DA FISCALIZAÇÃO (texto fixo)
+Para cada ementa irregular, gere um bloco no formato consumido pelo `/gera-ai`:
 
 ```
+=== AUTO DE INFRAÇÃO #[N] ===
+Ementa: [codigo com hífen, ex: 101059-0] - [descrição curta da ementa]
+
 1) DA FISCALIZAÇÃO:
 
 Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º,
 do Decreto nº 4.552/2002, iniciada em [data_inspecao] e ainda em curso
 na presente data no empregador acima qualificado, que desenvolve a
 atividade econômica de [atividade_economica].
+
+2) IRREGULARIDADE:
+
+[Conteúdo específico da ementa, com base na análise — ver regras abaixo]
+
+3) OBSERVAÇÕES: a) Lavrado no local da inspeção, conforme parágrafo único do art. 4º da Portaria 667/2021.#13#10b) A auditoria foi iniciada no local de trabalho e continuada em unidade do MTE, com análise documental, pesquisa nos sistemas informatizados e lavratura de documentos (necessidade de acesso a bancos de dados oficiais - eSocial - para confirmação das evidências), o que caracteriza ação fiscal mista, de acordo com o artigo 30, § 3º, do Decreto nº 4.552/2002. Desse modo, a fiscalização ainda se encontra em andamento na data de lavratura deste Auto de Infração.
+
+ELEMENTOS DE CONVICÇÃO:
+Análise documental do PGR apresentado pela empresa; inspeção in loco.
 ```
 
-##### SUBTÍTULO 2: IRREGULARIDADE (texto contextual)
+**Dados a coletar antes** (procure na capa do PGR antes de perguntar; peça em uma única
+mensagem só o que faltar): data de início da fiscalização e atividade econômica do
+estabelecimento. CNPJ: capa do PGR ou memory.md.
 
-Aqui entra o conteúdo específico da ementa, com base na análise.
-
-**Regras de redação**:
+**Regras de redação do subtítulo 2**:
 
 - Descreva os **fatos concretos** com precisão técnica e tom oficial.
 - Cite o **dispositivo da NR-01** violado (item exato, ex: 1.5.4.3.1).
 - **Incorpore as citações de página** geradas na análise (`pág. X` ou `págs. X a Y`).
   Não economize palavras: a empresa precisa localizar cada evidência citada.
-- Em SST (caso do PGR), inclua o **parágrafo de dano coletivo** (texto fixo abaixo).
-- Finalize com a conclusão jurídica: *"Sendo assim, incorreu o empregador na infração
-  ementada supracitada."*
-- Tom: sóbrio, formal, impessoal, terceira pessoa.
-
-**Parágrafo de dano coletivo (incluir sempre em PGR, que é SST)**:
+- Inclua o **parágrafo de dano coletivo** (PGR é SST):
 
 ```
 Dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a
@@ -435,148 +504,41 @@ tutelado tem natureza difusa ou coletiva. (Orientação técnica
 SIT/n.2/2022).
 ```
 
-**Caso especial: Ementa 1010603 com interdição confirmada**. Use o texto literal da
-Regra Especial D.A (definido na seção da Ementa 1010603) como conteúdo deste
-subtítulo 2. O texto da regra dispensa citação de página, pois a prova material é o
-termo de interdição anexo.
+- Finalize com a conclusão jurídica: *"Sendo assim, incorreu o empregador na infração
+  ementada supracitada."*
+- Tom: sóbrio, formal, impessoal, terceira pessoa. Sem travessões.
+- **Caso especial — Ementa 1010603 com interdição confirmada**: use o texto literal da
+  Regra Especial D.A como conteúdo do subtítulo 2 e acrescente aos elementos de
+  convicção: `; termo de interdição lavrado, em anexo`.
+- O subtítulo 3 é **fixo e literal** (bloco acima) — não altere.
+- Não há trabalhadores nominados em autos de PGR (infração coletiva — sem linhas tipo 4).
 
-##### SUBTÍTULO 3: OBSERVAÇÕES (texto fixo)
+**Códigos das sete ementas** (formato com hífen, para a linha `Ementa:` — o `/gera-ai`
+remove o hífen no cod_3):
 
-```
-3) OBSERVAÇÕES: a) Lavrado no local da inspeção, conforme parágrafo único do art. 4º da Portaria 667/2021.#13#10b) A auditoria foi iniciada no local de trabalho e continuada em unidade do MTE, com análise documental, pesquisa nos sistemas informatizados e lavratura de documentos (necessidade de acesso a bancos de dados oficiais - eSocial - para confirmação das evidências), o que caracteriza ação fiscal mista, de acordo com o artigo 30, § 3º, do Decreto nº 4.552/2002. Desse modo, a fiscalização ainda se encontra em andamento na data de lavratura deste Auto de Infração.
-```
-
-> Texto fixo. Não altere. **ATENÇÃO: o texto DEVE conter acentuação completa em português.** O encoding ISO-8859-1 (Latin-1) suporta todos os caracteres acentuados do português — o passo `iconv` na geração do TXT trata o encoding automaticamente. Nunca remova acentos.
-
-##### ELEMENTOS DE CONVICÇÃO
-
-Para autuações de PGR, o padrão é:
-
-```
-ELEMENTOS DE CONVICÇÃO:
-Análise documental do PGR apresentado pela empresa; inspeção in loco.
-```
-
-Em casos de interdição, acrescente: `; termo de interdição lavrado, em anexo`.
-
-#### 1.3. Geração do TXT importável
-
-Siga **literalmente** o formato de linhas da `inspecao-completa` (linha tipo 1 com 23
-campos / 22 tabs, linhas tipo 5 para anexos, linha tipo 6 com a CIF). Não há linhas
-tipo 4 para autos de PGR (a infração é coletiva, sem nominação de trabalhadores).
-
-**Códigos fixos** (idênticos aos da `inspecao-completa`):
-
-| Parâmetro | Valor |
+| Ementa | Linha `Ementa:` |
 |---|---|
-| cod_1 (CNAE) | `8211300` |
-| cod_2 (tipo ação) | `1008` |
-| cod_3 | código da ementa sem hífen (ex: `1010603` → `1010603`; `101059-0` → `1010590`) |
-| cod_4 (UORG) | `015000000` |
-| cod_5 | (vazio) |
-| cod_6 (local) | `SETOR SUL` |
-| cod_7 (CEP UORG) | `74080010` |
+| 1010590 | `101059-0` |
+| 1010603 | `101060-3` |
+| 1010611 | `101061-1` |
+| 1010646 | `101064-6` |
+| 1010743 | `101074-3` |
+| 1010794 | `101079-4` |
+| 1011154 | `101115-4` |
 
-**Códigos das sete ementas do PGR para cod_3** (todos sem hífen, 7 dígitos):
-
-| Ementa | cod_3 |
-|---|---|
-| 1010590 | `1010590` |
-| 1010603 | `1010603` |
-| 1010611 | `1010611` |
-| 1010646 | `1010646` |
-| 1010743 | `1010743` |
-| 1010794 | `1010794` |
-| 1011154 | `1011154` |
-
-**Texto da autuação em linha única**: o conteúdo dos três subtítulos vai concatenado
-em uma única linha do TXT, usando `#13#10` para quebras (interpretado pelo Sistema
-Auditor):
-
-- Entre subtítulos (1→2 e 2→3): `#13#10 . #13#10` (linha vazia visível).
-- Entre parágrafos dentro do mesmo subtítulo: `#13#10`.
-
-**Concatenação de múltiplos autos**: todos os blocos (um por ementa) ficam no **mesmo
-arquivo TXT**, um após o outro, sem linhas em branco entre eles.
-
-**Encoding**: gere em UTF-8 e converta para latin-1 (ISO-8859-1) antes de salvar:
-
-```bash
-iconv -f utf-8 -t iso-8859-1 "$TXT" > "$TXT.tmp" && mv "$TXT.tmp" "$TXT"
-```
-
-**Nome do TXT**: `AI_<NUM_AUTOS>_<CNPJ>.txt`, onde `NUM_AUTOS` é a contagem total de
-autos no arquivo. Exemplo com 3 autos para CNPJ `12345678000190`:
-`AI_3_12345678000190.txt`.
-
-#### 1.4. Empacotamento em pasta na Desktop
-
-Estrutura padrão (idêntica à `inspecao-completa`):
+**Salvar e handoff**: salve todos os blocos em
+`~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/autos-pgr.md` e exiba:
 
 ```
-~/Desktop/autos_<CNPJ>/
-├── AI_<NUM>_<CNPJ>.txt              (arquivo importável pelo Sistema Auditor)
-├── AI_<NUM>_<CNPJ>_legivel.md       (versão legível dos autos, para revisão humana)
-└── AI_<NUM>_<CNPJ>_PGR.PDF          (cópia do PGR como anexo, comprimida se > 10 MB)
+✅ N autos de PGR redigidos — salvos em autos-pgr.md
+
+▶ Próximo passo — empacotar no TXT do Sistema Auditor:
+  1) Rode /gera-ai e responda que os autos estão (b) na sessão.
+  2) Quando ele tratar de anexos, informe o PDF do PGR como documento pronto —
+     ele será renomeado para AI_[N]_[CNPJ]_PGR.PDF e vinculado a TODOS os autos
+     (cada AI precisa do PGR como evidência).
+  3) Se o PGR tiver mais de 10 MB, o /gera-ai comprime com o script do toolkit.
 ```
-
-**Criação da pasta**:
-
-```bash
-mkdir -p ~/Desktop/autos_<CNPJ>/
-```
-
-Se a pasta já existir, pergunte ao AFT: *"Já existe `~/Desktop/autos_<CNPJ>/`. Deseja:
-(a) sobrescrever, (b) renomear a antiga para `_backup_<timestamp>`, (c) cancelar?"*
-
-**Quando o ambiente de execução for um container sem acesso à Desktop do usuário**
-(como o claude.ai web), substitua o destino por `/mnt/user-data/outputs/autos_<CNPJ>/`
-e chame `present_files` ao final com a lista dos arquivos. Comunique: *"Como estou
-rodando em ambiente sem acesso direto à sua MESA, gerei a pasta em outputs. Baixe e
-mova para `~/Desktop/autos_<CNPJ>/` antes de importar no Sistema Auditor."*
-
-#### 1.5. Tratamento do PGR como anexo (limite 10 MB)
-
-Se o PGR foi fornecido como PDF, anexe uma cópia dentro da pasta de saída para ser
-juntada aos autos no Sistema Auditor.
-
-**Nome do arquivo do anexo**: `AI_<NUM>_<CNPJ>_PGR.PDF` (extensão `.PDF` em maiúsculas,
-sistema MTE é case-sensitive).
-
-**Compressão se exceder 10 MB**:
-
-1. Primeira tentativa, ghostscript com `/ebook` (150 dpi):
-   ```bash
-   gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook \
-      -dNOPAUSE -dQUIET -dBATCH \
-      -sOutputFile="AI_<NUM>_<CNPJ>_PGR.PDF" PGR_original.pdf
-   ```
-
-2. Se ainda > 10 MB, segunda tentativa com `/screen` (72 dpi):
-   ```bash
-   gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen \
-      -dNOPAUSE -dQUIET -dBATCH \
-      -sOutputFile="AI_<NUM>_<CNPJ>_PGR.PDF" PGR_original.pdf
-   ```
-
-3. Se mesmo `/screen` mantiver acima de 10 MB, avise o AFT: *"PGR ficou em <X MB> mesmo
-   após compressão máxima. Recomendo dividir o PDF ou anexar manualmente."* Ainda assim,
-   inclua o arquivo comprimido na pasta.
-
-**Linha tipo 5 para o anexo**: uma linha tipo 5 por auto, repetindo o mesmo PGR para
-todos os autos (cada AI precisa ter o PGR como evidência). O path é absoluto Windows
-via drive Parallels:
-
-```
-5	Y:\Desktop\autos_<CNPJ>\AI_<NUM>_<CNPJ>_PGR.PDF	Programa de Gerenciamento de Riscos
-```
-
-> A descrição do anexo (`Programa de Gerenciamento de Riscos`) é a evidência citada
-> dentro do auto. Diferente da `inspecao-completa` que usa "Registro Fotografico" para
-> fotos, aqui o anexo é o próprio PGR auditado.
-
-Se o AFT estiver em ambiente diferente do padrão Parallels (drive `Y:`), peça que
-ele confirme a letra de drive ou ajuste manualmente antes da importação.
 
 ### 2) Relatório de recomendação geral para a empresa
 
@@ -591,9 +553,7 @@ dirigido à empresa, com:
 - Tom técnico, direto, sem linguagem jurídica de auto de infração. O destinatário aqui
   é o empregador, não o processo.
 
-Salve o relatório como `recomendacao_geral.md` dentro da mesma pasta
-`~/Desktop/autos_<CNPJ>/` se o AFT pediu também a geração dos autos. Caso contrário,
-entregue diretamente no chat ou em arquivo `.md` solto em outputs.
+Salve o relatório como `recomendacao-geral-PGR.md` na pasta da OS.
 
 ---
 
@@ -607,5 +567,5 @@ entregue diretamente no chat ou em arquivo `.md` solto em outputs.
   declare explicitamente.
 - Mantenha a separação entre ementas: não misture irregularidades de uma ementa na
   análise de outra.
-- Os textos fixos (regra especial D.A da Ementa 1010603 e modelo do auto de infração)
-  são imutáveis. Reproduza-os literalmente quando aplicáveis.
+- Os textos fixos (regra especial D.A da Ementa 1010603, subtítulo 3 e parágrafo de dano
+  coletivo) são imutáveis. Reproduza-os literalmente quando aplicáveis.
