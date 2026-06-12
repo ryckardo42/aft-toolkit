@@ -1,6 +1,6 @@
 # Como instalar o AFT Toolkit no seu Claude Code (Windows)
 
-Instalação em **3 passos** — quem digita comando é o Claude, não você. Tempo total: ~15 minutos.
+Instalação em **4 passos** — você instala manualmente só o aplicativo e o Git; do Python em diante, quem digita comando é o Claude. Tempo total: ~15 minutos.
 
 ---
 
@@ -8,19 +8,30 @@ Instalação em **3 passos** — quem digita comando é o Claude, não você. Te
 
 1. Baixe o **Claude para Windows** em https://claude.com/claude-code.
 2. Instale e entre com a sua conta Claude (a mesma do claude.ai). É preciso um plano que inclua o Claude Code (Pro ou superior).
-3. Dentro do aplicativo, abra a interface de código: o botão **`</> Code`**. É nela que tudo acontece daqui em diante.
 
 ---
 
-## Passo 2 — Deixe o Claude instalar o resto
+## Passo 2 — Instale o Git
 
-Ao iniciar uma conversa nova no `</> Code`, o Claude pede para você **escolher uma pasta para a sessão** (a pasta do computador em que ele vai trabalhar). Escolha a pasta **Documentos** (`C:\Users\seu-nome\Documents`). Depois da instalação, quando `Documentos\AFT` existir, prefira escolhê-la nas conversas do dia a dia.
+No Windows, o aplicativo **exige o Git para abrir sessões locais** na aba `</> Code` — sem ele, aparece a mensagem "Git is required for local sessions". Por isso este é o único programa que você instala à mão:
+
+1. Baixe em https://git-scm.com/download/win e instale com as opções padrão (clicar "Next" até o fim).
+2. Feche o aplicativo Claude **de verdade**: ele continua rodando na bandeja do sistema (ícones perto do relógio). Botão direito no ícone do Claude → **Sair**. Fechar só a janela no X não basta.
+3. Abra o aplicativo de novo.
+
+**Para que serve o Git?** Nada de programação — é a ferramenta que baixa o toolkit e busca as atualizações futuras (o "downloader"), e traz o Git Bash, o terminal que o Claude Code usa no Windows.
+
+---
+
+## Passo 3 — Deixe o Claude instalar o resto
+
+Abra a interface de código (botão **`</> Code`**) e inicie uma conversa nova. O Claude pede para você **escolher uma pasta para a sessão** (a pasta do computador em que ele vai trabalhar). Escolha a pasta **Documentos** (`C:\Users\seu-nome\Documents`). Depois da instalação, quando `Documentos\AFT` existir, prefira escolhê-la nas conversas do dia a dia.
 
 O Claude Code é um assistente que executa comandos no seu computador, **sempre pedindo a sua permissão antes**. Então, em vez de instalar programa por programa, cole a mensagem abaixo na conversa e aperte Enter:
 
 ```
 Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cada passo:
-1. Verifique se o Git está instalado; se não estiver, instale com winget (pacote Git.Git).
+1. Confirme que o Git está instalado e funcionando (git --version).
 2. Verifique se o Python 3 está instalado e funcionando no terminal; se não, instale com winget (pacote Python.Python.3.12).
 3. Baixe o repositório https://github.com/ryckardo42/aft-toolkit.git para a pasta de skills do Claude Code (~/.claude/skills/aft-toolkit) usando git clone.
 4. Confirme que a pasta foi criada, liste as skills instaladas e me diga se preciso reiniciar o aplicativo.
@@ -28,13 +39,11 @@ Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cad
 
 Enquanto o Claude trabalha, ele vai pedir permissão para cada comando — basta clicar em **Permitir**. Isso é normal e desejável: nada roda no seu computador sem o seu OK.
 
-**O que ele está instalando?**
-- **Git** — a ferramenta que baixa o toolkit e busca as atualizações futuras (nada de programação: é só o "downloader"). De quebra, traz o Git Bash, o terminal que o Claude Code prefere usar.
-- **Python** — roda os scripts locais do toolkit: conversão de fotos em PDF, geração do arquivo do Sistema Auditor e validação de arquivos de ponto.
+**O que ele está instalando?** O **Python** roda os scripts locais do toolkit: conversão de fotos em PDF, geração do arquivo do Sistema Auditor e validação de arquivos de ponto.
 
 ---
 
-## Passo 3 — Reinicie e configure
+## Passo 4 — Reinicie e configure
 
 1. **Feche e reabra** o aplicativo Claude (para ele reconhecer as skills novas e o Git).
 2. Numa conversa nova do `</> Code` (pasta da sessão: **Documentos**), digite:
@@ -80,9 +89,8 @@ Peça ao Claude, numa conversa qualquer: **"Atualize o AFT Toolkit"** (ele roda 
 
 ## Plano B — instalação manual
 
-Só se o Passo 2 falhar (computador sem winget, rede corporativa bloqueando):
+Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando):
 
-- **Git**: baixe em https://git-scm.com/download/win e instale com as opções padrão.
 - **Python**: baixe em https://www.python.org/downloads/ e, na primeira tela do instalador, **marque "Add Python to PATH"**.
 - **Toolkit**: abra o Git Bash (menu Iniciar) e rode:
   ```bash
@@ -95,7 +103,8 @@ Regra geral: **descreva o problema ao próprio Claude** no `</> Code` ("o comand
 
 | Sintoma | Solução |
 |---|---|
-| Git ou Python "não encontrado" | Peça ao Claude: "instale o Git e o Python com winget". Se a rede bloquear, plano B manual acima e reinicie o app |
+| "Git is required for local sessions" | Instale o Git (Passo 2) e feche o app de verdade: ícone do Claude na bandeja → Sair; reabra. Se persistir, reinicie o computador |
+| Python "não encontrado" | Peça ao Claude: "instale o Python com winget". Se a rede bloquear, plano B manual acima e reinicie o app |
 | Skill não aparece com `/` | Feche e reabra o Claude Code; peça a ele para confirmar se `~/.claude/skills/aft-toolkit` existe |
 | `notebooklm: command not found` | Peça ao Claude: "instale o notebooklm-py com pip" |
 | NotebookLM responde "sem acesso" | Solicite acesso em https://notebooks-aft.vercel.app e aguarde liberação |

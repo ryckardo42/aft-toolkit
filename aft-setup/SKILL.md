@@ -50,7 +50,7 @@ winget (o AFT só precisa aprovar os comandos):
   PATH novo só vale em sessão nova: avise que no fim do setup será preciso fechar e
   reabrir o Claude Code, e use o caminho completo do executável (descubra com
   `where python` / `ls "$LOCALAPPDATA/Programs/Python"`) até lá.
-- **Git ausente** (raro — se o toolkit veio via `git clone`, ele existe):
+- **Git ausente** (improvável: no Windows o app desktop só abre sessão local com o Git instalado, e o toolkit veio via `git clone`. Pode ocorrer no macOS/CLI):
   ```bash
   winget install --id Git.Git -e --accept-source-agreements --accept-package-agreements
   ```
