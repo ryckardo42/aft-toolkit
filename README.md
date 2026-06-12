@@ -12,19 +12,13 @@ O toolkit transforma o Claude Code num assistente de fiscalização que trabalha
 
 ## Instalação (resumo)
 
-Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apostila `Apostila-AFT-Toolkit.docx`).
+Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apostila `Apostila-AFT-Toolkit.docx`). São 3 passos — só o primeiro é manual:
 
-```bash
-git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills/aft-toolkit
-```
+1. **Instale o aplicativo Claude** (claude.com/claude-code) e abra a interface `</> Code`.
+2. **Cole o prompt de instalação** (está no COMO-INSTALAR.md): o próprio Claude instala Git e Python via winget e clona este repositório em `~/.claude/skills/aft-toolkit`, pedindo sua permissão a cada comando.
+3. **Reinicie o app e rode `/aft-setup`** — ele cria as pastas de trabalho, coleta seus dados (CIF, UORG, município) uma única vez e instala as dependências.
 
-Depois, dentro do Claude Code, rode **`/aft-setup`** — ele cria as pastas de trabalho, coleta seus dados (CIF, UORG, município) uma única vez e instala as dependências.
-
-**Atualização:**
-
-```bash
-cd ~/.claude/skills/aft-toolkit && git pull
-```
+**Atualização:** peça ao Claude *"Atualize o AFT Toolkit"* (ele roda `git pull` na pasta das skills).
 
 ## Skills incluídas
 

@@ -30,7 +30,7 @@ pela primeira vez. Explique o que cada passo faz em uma frase, sem jargão.
 
 ---
 
-## Passo 1 — Verificar pré-requisitos
+## Passo 1 — Verificar e completar pré-requisitos (você instala, não o AFT)
 
 Rode e interprete:
 
@@ -39,12 +39,27 @@ python --version || python3 --version
 git --version
 ```
 
-- **Python ausente** → oriente: baixar em https://www.python.org/downloads/ e, na
-  instalação, **marcar a caixa "Add Python to PATH"**. (No Windows, também funciona
-  `winget install Python.Python.3.12` num terminal.) Depois, fechar e reabrir o
-  Claude Code e rodar `/aft-setup` de novo.
-- **Git ausente** → se a pessoa chegou até aqui via `git clone`, ele existe. Se não,
-  baixar em https://git-scm.com.
+Se algo faltar, **não mande o AFT instalar manualmente — instale você mesmo** via
+winget (o AFT só precisa aprovar os comandos):
+
+- **Python ausente**:
+  ```bash
+  winget install --id Python.Python.3.12 -e --accept-source-agreements --accept-package-agreements
+  ```
+  Depois confirme com `python --version`. Se o comando ainda não for encontrado, o
+  PATH novo só vale em sessão nova: avise que no fim do setup será preciso fechar e
+  reabrir o Claude Code, e use o caminho completo do executável (descubra com
+  `where python` / `ls "$LOCALAPPDATA/Programs/Python"`) até lá.
+- **Git ausente** (raro — se o toolkit veio via `git clone`, ele existe):
+  ```bash
+  winget install --id Git.Git -e --accept-source-agreements --accept-package-agreements
+  ```
+  Avise que, com o Git instalado, o Claude Code passa a usar o Git Bash como
+  terminal a partir da próxima reinicialização do aplicativo.
+- **winget indisponível ou rede bloqueando** → plano B manual: Python em
+  https://www.python.org/downloads/ (marcando **"Add Python to PATH"**) e Git em
+  https://git-scm.com. Depois, fechar e reabrir o Claude Code e rodar `/aft-setup`
+  de novo.
 
 > Nas demais skills os comandos usam `python`. No Windows isso já funciona; no macOS,
 > se só existir `python3`, use `python3`.
