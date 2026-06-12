@@ -143,6 +143,28 @@ cod_2: "1008"              # tipo de ação fiscal
 Se o arquivo já existir, mostre os valores atuais e pergunte o que mudar — edite só o
 que o AFT pedir.
 
+## Passo 5b — Instalar o perfil do auditor (CLAUDE.md global)
+
+O toolkit traz um perfil pronto que diz ao Claude, em toda conversa, quem é o usuário
+(um AFT, não um programador), como tratar dados sensíveis e quais skills usar. Ele vai
+em `~/.claude/CLAUDE.md`:
+
+- **Se `~/.claude/CLAUDE.md` NÃO existe** → copie o template:
+  ```bash
+  cp ~/.claude/skills/aft-toolkit/config/CLAUDE-aft.md ~/.claude/CLAUDE.md
+  ```
+  Explique em uma frase: *"Instalei o seu perfil de auditor — a partir da próxima
+  conversa, o Claude já sabe que você é AFT, conhece as skills do toolkit e segue as
+  regras de privacidade de dados."*
+- **Se JÁ existe** → mostre um resumo do conteúdo atual e pergunte: *"Você já tem um
+  CLAUDE.md. Quer (a) substituí-lo pelo perfil do AFT Toolkit, (b) acrescentar o perfil
+  ao final do existente, ou (c) deixar como está?"* Execute a escolha. Na opção (b),
+  acrescente o conteúdo do template após o existente, separado por `---`.
+
+> Quando o toolkit for atualizado (`git pull`), o template novo fica em
+> `config/CLAUDE-aft.md` — o `~/.claude/CLAUDE.md` instalado não muda sozinho. Se o AFT
+> quiser a versão nova, basta rodar `/aft-setup` de novo.
+
 ## Passo 6 — Instalar as bibliotecas Python
 
 ```bash
@@ -186,6 +208,7 @@ Apresente:
 
 📁 Pasta de trabalho: ~/Documents/AFT/  (OS ATIVAS · OS ARQUIVADAS)
 📄 Configuração:      ~/Documents/AFT/aft-config.md
+👤 Perfil do auditor: ~/.claude/CLAUDE.md [instalado / mantido o existente]
 🐍 Python:            [versão] · pillow/pikepdf instalados
 📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]
 

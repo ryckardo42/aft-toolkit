@@ -25,7 +25,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ### Configuração
 | Skill | O que faz |
 |---|---|
-| `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), dependências, NotebookLM |
+| `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil do auditor (`CLAUDE.md` global), dependências, NotebookLM |
 
 ### Inspeção e lavratura
 | Skill | O que faz |
@@ -100,6 +100,7 @@ As skills buscam o código da ementa em 3 camadas:
 aft-toolkit/
 ├── README.md · COMO-INSTALAR.md · Apostila-AFT-Toolkit.docx
 ├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
+├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx)
 ├── aft-setup/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── registro/ · det-630/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/
