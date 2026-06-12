@@ -14,7 +14,9 @@ Instalação em **3 passos** — quem digita comando é o Claude, não você. Te
 
 ## Passo 2 — Deixe o Claude instalar o resto
 
-O Claude Code é um assistente que executa comandos no seu computador, **sempre pedindo a sua permissão antes**. Então, em vez de instalar programa por programa, cole a mensagem abaixo numa conversa nova do `</> Code` e aperte Enter:
+Ao iniciar uma conversa nova no `</> Code`, o Claude pede para você **escolher uma pasta para a sessão** (a pasta do computador em que ele vai trabalhar). Escolha a pasta **Documentos** (`C:\Users\seu-nome\Documents`). Depois da instalação, quando `Documentos\AFT` existir, prefira escolhê-la nas conversas do dia a dia.
+
+O Claude Code é um assistente que executa comandos no seu computador, **sempre pedindo a sua permissão antes**. Então, em vez de instalar programa por programa, cole a mensagem abaixo na conversa e aperte Enter:
 
 ```
 Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cada passo:
@@ -35,7 +37,7 @@ Enquanto o Claude trabalha, ele vai pedir permissão para cada comando — basta
 ## Passo 3 — Reinicie e configure
 
 1. **Feche e reabra** o aplicativo Claude (para ele reconhecer as skills novas e o Git).
-2. Numa conversa nova do `</> Code`, digite:
+2. Numa conversa nova do `</> Code` (pasta da sessão: **Documentos**), digite:
    ```
    /aft-setup
    ```
