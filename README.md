@@ -23,10 +23,12 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 
 ## Skills incluídas
 
-### Configuração
+### Configuração e visão geral
 | Skill | O que faz |
 |---|---|
 | `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil do auditor (`CLAUDE.md` global), dependências, NotebookLM |
+| `/nova-os` | Cadastra uma auditoria (empregador, CNPJ, município e o DET com prazo) — o começo do fluxo |
+| `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência** — um SISOS local, sem servidor (só leitura) |
 
 ### Inspeção e lavratura
 | Skill | O que faz |
@@ -56,6 +58,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ## Fluxo típico de uma fiscalização
 
 ```
+0. /nova-os              → cadastra a empresa e o prazo do DET (começo do fluxo)
+   /painel               → a qualquer momento, vê todas as OS e os prazos vencendo
 1. Visita ao estabelecimento
 2. /inspecao-fisica      → narra o que viu; vira relato estruturado na pasta da OS
 3. /inspecao-inicial     → enquadra NR/ementa e redige os autos
@@ -72,9 +76,10 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ```
 Documentos\AFT\
 ├── aft-config.md            (seus dados — criado pelo /aft-setup)
+├── painel.html              (visão geral das OS — gerado pelo /painel)
 ├── OS ATIVAS\
 │   └── EMPRESA X 12345678000190\
-│       ├── memory.md                (ficha da fiscalização)
+│       ├── memory.md                (ficha da fiscalização — criada pelo /nova-os)
 │       ├── inspecao-fisica.md       (relato de campo)
 │       ├── autos.md                 (autos redigidos)
 │       └── Autos 19-05\             (TXT importável + anexos PDF)
@@ -107,8 +112,8 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
-├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx)
-├── aft-setup/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
+├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
+├── aft-setup/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── registro/ · det-630/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```

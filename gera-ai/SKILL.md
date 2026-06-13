@@ -378,14 +378,21 @@ Após gerar TXT + PDFs com sucesso, localize:
 
 ### Caso 1 — `memory.md` NÃO existe
 
-Crie o arquivo com este template:
+Crie o arquivo com este template (front-matter leve + seções fixas — é o mesmo esquema do `/nova-os`, lido pelo `/painel`):
 
 ```markdown
+---
+empregador: [RAZAO_SOCIAL]
+cnpj: "[cnpj_somente_digitos]"
+municipio: [municipio ou vazio]
+status: em_andamento
+---
 # [RAZAO_SOCIAL]
 
-**CNPJ:** [cnpj_somente_digitos]
+**CNPJ:** [cnpj_formatado XX.XXX.XXX/XXXX-XX]
 
----
+## Notificações DET
+_(vazio)_
 
 ## Autos de Infração
 
@@ -399,7 +406,8 @@ Crie o arquivo com este template:
 **Trabalhadores citados:** NOME1 (CPF [11_digitos]), NOME2 (CPF [11_digitos])
 **Arquivo gerado:** `[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ].txt`
 
----
+## Autos lavrados
+_(vazio)_
 
 ## Registro de atividades
 

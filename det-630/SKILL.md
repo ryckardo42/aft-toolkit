@@ -131,6 +131,12 @@ Tal omissão parcial torna imperiosa sua autuação, em face de sua conduta omis
 1. **Salvar o auto redigido** em `$PASTA_OS/auto-det630-<CODIGO>.md`. Se já existir, sobrescreva e avise: "Auto anterior sobrescrito".
 
 2. **Atualizar `memory.md`** da OS (se existir; criar seções se necessário):
+   - Em `## Notificações DET`: registre/atualize a notificação com o **prazo** — esta é a
+     linha que o `/painel` vigia. Se ainda não houver linha para `<CODIGO>`, acrescente
+     (substituindo o `_(vazio)_` se for o caso):
+     ```
+     - [ ] <CODIGO> — ciência <dd/mm/aaaa>, prazo <dd/mm/aaaa>
+     ```
    - Em `## Autos lavrados`: adicionar linha (não duplique se já houver a mesma)
      ```
      - [ ] det630 · ementa 001168-1 · notificação <CODIGO> · cenário <total|parcial> · redigido <DATA_HOJE>

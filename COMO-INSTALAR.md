@@ -71,6 +71,8 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 
 | Situação | Digite |
 |---|---|
+| Cadastrar uma auditoria nova | `/nova-os` |
+| Ver suas OS e prazos de DET | `/painel` |
 | Voltou de uma inspeção | `/inspecao-fisica` e narre o que viu |
 | Quer redigir os autos | `/inspecao-inicial` |
 | Trabalhador sem registro | `/registro` |

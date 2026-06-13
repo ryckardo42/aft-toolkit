@@ -235,9 +235,12 @@ Apresente:
 📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]
 
 Fluxo típico de uma fiscalização:
-  1. /inspecao-fisica   → registra o relato da visita
-  2. /inspecao-inicial  → enquadra NR/ementa e redige os autos
-  3. /gera-ai           → gera o TXT para importar no Sistema Auditor
+  1. /nova-os           → cadastra a empresa e o prazo do DET
+  2. /painel            → vê todas as OS e os prazos vencendo
+  3. /inspecao-fisica   → registra o relato da visita
+  4. /inspecao-inicial  → enquadra NR/ementa e redige os autos
+  5. /gera-ai           → gera o TXT para importar no Sistema Auditor
+  6. /autos-lavrados    → confere o que foi transmitido
 Outras: /registro · /PGR-analise · /aft-rt-rgi · /det-630 · /jornada-analise · /sfitweb-rel
 ```
 

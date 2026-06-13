@@ -48,7 +48,7 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
    ```
    Extraia o que houver: razão social (título), `**CNPJ:**`, município, número de trabalhadores, datas. É um arquivo markdown simples — não exige schema.
 
-3. **Se `memory.md` não existir:** pergunte ao AFT os dados básicos (empregador, CNPJ, município) e crie um `memory.md` mínimo (título = razão social, linha `**CNPJ:** ...`). Se recusar, prossiga sem ele (a Fase 4 será pulada).
+3. **Se `memory.md` não existir:** pergunte ao AFT os dados básicos (empregador, CNPJ, município) e crie um `memory.md` mínimo no esquema padrão do toolkit (front-matter `empregador`/`cnpj`/`municipio`/`status: em_andamento`; título `# RAZAO_SOCIAL`; `**CNPJ:**` formatado; e as seções `## Notificações DET`, `## Autos lavrados`, `## Registro de atividades` — o mesmo formato que o `/nova-os` cria e o `/painel` lê). Se o AFT recusar, prossiga sem ele (a Fase 4 será pulada). Idealmente sugira rodar `/nova-os` para abrir a OS antes.
 
 4. **Se a empresa não existir em OS ATIVAS:** pergunte se deseja criar a pasta. Padrão de nome: `<EMPREGADOR CAIXA ALTA> <CNPJ_SÓ_DÍGITOS>`.
 
