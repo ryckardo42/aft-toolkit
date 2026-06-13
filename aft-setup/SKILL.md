@@ -80,23 +80,44 @@ Explique ao AFT:
 
 ## Passo 3 — Coletar os dados do auditor (uma única vez)
 
-Pergunte, em uma única mensagem, os campos abaixo. Explique que esses dados entram
-automaticamente nos arquivos TXT importados pelo Sistema Auditor, para nunca mais
-serem digitados:
+Pergunte, em uma única mensagem, apenas **três coisas** (o resto você descobre na
+tabela de UORGs). Explique que esses dados entram automaticamente nos arquivos TXT
+importados pelo Sistema Auditor, para nunca mais serem digitados:
 
-| Campo | Exemplo | Observação |
-|---|---|---|
-| Nome completo | JOÃO DA SILVA | usado em relatórios e no RT |
-| CIF (6 dígitos) | 123456 | obrigatório — identifica o auditor no Sistema Auditor |
-| Código da UORG (9 dígitos) | 015000000 | a unidade do MTE onde o auditor é lotado |
-| Local/bairro da UORG | SETOR SUL | campo "local" do Sistema Auditor |
-| CEP da UORG (8 dígitos) | 74080010 | |
-| Município da UORG | Goiânia | |
-| UF | GO | |
+| Campo | Exemplo |
+|---|---|
+| Nome completo | JOÃO DA SILVA |
+| CIF (6 dígitos) | 123456 |
+| Lotação (cidade ou nome da unidade) | "Anápolis" · "SRT Goiás" · "Gerência de Uberlândia" |
 
-> Se o AFT não souber o código da UORG ou o CEP, diga que pode deixar em branco por
-> enquanto — o Sistema Auditor permite confirmar pela lupa — mas recomende preencher
-> depois editando o `aft-config.md`.
+### Resolver a UORG pela tabela (o AFT não precisa saber o código)
+
+O toolkit traz a tabela oficial de UORGs em
+`~/.claude/skills/config/uorgs.csv` (UTF-8, separado por `;`, colunas:
+`CDUORG;NOME;UF;MUNICIPIO;ENDERECO;BAIRRO;CEP`; ~1.000 unidades; CDUORG tem
+sempre 9 dígitos).
+
+1. **Busque** a lotação informada nas colunas `MUNICIPIO` e `NOME`,
+   case-insensitive. Tente com e sem acentos (ex.: `ANÁPOLIS` e `ANAPOLIS`) —
+   o arquivo está acentuado. Se a cidade for comum a vários estados ou vier
+   ambígua, pergunte a UF antes.
+2. **Apresente os candidatos numerados** (código + nome + município/UF) e peça
+   para o AFT escolher. É normal haver mais de uma unidade na mesma cidade
+   (Superintendência, Gerência, Agência) — quem sabe qual é a sua lotação é o AFT.
+   > Dica de qualidade: a tabela tem entradas antigas/desativadas (endereço `.`,
+   > CEP `99999999`, ou `*** A DESATIVAR` no nome). Liste-as por completude, mas
+   > destaque as entradas com endereço real como prováveis.
+3. **Preencha automaticamente** a partir da linha escolhida:
+   - `uorg` = `CDUORG` (9 dígitos)
+   - `local_uorg` = `BAIRRO` (se vazio ou lixo tipo `.`, pergunte ao AFT)
+   - `cep_uorg` = `CEP` (se `99999999`, pergunte ao AFT)
+   - `municipio` = `MUNICIPIO` · `uf` = `UF`
+4. **Eco de confirmação** antes de gravar: mostre código, nome da unidade,
+   bairro/local, CEP, município/UF e pergunte se confere.
+5. **Fallback**: se a lotação não aparecer na tabela (unidade nova/renomeada),
+   peça o código de 9 dígitos diretamente ao AFT — ou aceite deixar em branco
+   por enquanto (o Sistema Auditor permite confirmar pela lupa), recomendando
+   preencher depois editando o `aft-config.md`.
 
 ## Passo 4 — Descobrir o caminho Windows da pasta de trabalho
 

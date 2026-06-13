@@ -17,7 +17,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 1. **Instale o aplicativo Claude** (claude.com/claude-code).
 2. **Instale o Git** (git-scm.com — o app desktop exige o Git para abrir sessões locais no Windows) e reinicie o app pela bandeja.
 3. **Cole o prompt de instalação** (está no COMO-INSTALAR.md) numa conversa do `</> Code`: o próprio Claude instala o Python via winget e clona este repositório em `~/.claude/skills`, pedindo sua permissão a cada comando.
-4. **Reinicie o app e rode `/aft-setup`** — ele cria as pastas de trabalho, coleta seus dados (CIF, UORG, município) uma única vez e instala as dependências.
+4. **Reinicie o app e rode `/aft-setup`** — ele cria as pastas de trabalho, coleta seus dados uma única vez (nome, CIF e a sua lotação — basta dizer a cidade, ex.: "Anápolis", e o toolkit descobre o código de 9 dígitos da UORG) e instala as dependências.
 
 **Atualização:** peça ao Claude *"Atualize o AFT Toolkit"* (ele roda `git pull` na pasta das skills).
 
@@ -103,6 +103,7 @@ As skills buscam o código da ementa em 3 camadas:
 ~/.claude/skills/   (= este repositório)
 ├── README.md · COMO-INSTALAR.md · Apostila-AFT-Toolkit.docx
 ├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
+├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx)
 ├── aft-setup/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
