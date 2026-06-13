@@ -120,7 +120,7 @@ Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos —
 | Município | Não | `municipio` do aft-config.md |
 | Trabalhadores prejudicados | Não | (sem linhas tipo 4) |
 
-**Trabalhadores**: para cada, peça nome completo + CPF (11 dígitos sem pontuação). Assim que recebidos, registre-os direto no mapa de-para (FASE 2.5) e **a partir daí refira-se a eles só pelos tokens** `[[TRAB_NN]]`/`[[CPF_NN]]`.
+**Trabalhadores**: para cada, peça nome completo + CPF (11 dígitos sem pontuação) + **data de admissão**. A data de admissão é **SEMPRE** normalizada para `dd/mm/aaaa` (ex.: "10 de maio de 2026" → `10/05/2026`) e gravada na linha tipo 4 (ver FASE 3). Se já vier de uma skill anterior na sessão (ex.: `/registro`), reaproveite sem perguntar de novo. Assim que recebidos, registre nome/CPF no mapa de-para (FASE 2.5) e **a partir daí refira-se a eles só pelos tokens** `[[TRAB_NN]]`/`[[CPF_NN]]` (a data de admissão não é tokenizada).
 
 ### 1.7 Dados fiscais fixos (não pergunte ao auditor — vêm do aft-config.md)
 
@@ -287,10 +287,24 @@ Linhas separadas por `\n`.
 
 **Linhas tipo 4** — trabalhadores prejudicados (uma por trabalhador, se houver):
 ```
-4[TAB][nome_completo][TAB][TAB][cpf_somente_digitos][TAB][TAB][TAB][TAB][TAB]
+4[TAB][nome_completo][TAB][pis][TAB][cpf_somente_digitos][TAB][data_admissao][TAB][data_afastamento][TAB][observacao][TAB][funcao][TAB]
 ```
 
-> No TXT tokenizado, `[nome_completo]` = `[[TRAB_NN]]` e `[cpf_somente_digitos]` = `[[CPF_NN]]`; o `rehydrate.py` injeta os reais. RG e data_admissao ficam vazios. CPF real tem 11 dígitos sem pontuação.
+> **9 campos**, mapeando as colunas do Sistema Auditor (linha termina em TAB → campo 9 vazio):
+
+| Campo | Coluna no Sistema Auditor | Obrigatório? | Conteúdo |
+|-------|---------------------------|--------------|----------|
+| 1 | (tipo de registro) | — | literal `4` |
+| 2 | Nome | sim | `[[TRAB_NN]]` no tokenizado |
+| 3 | PIS | não | geralmente vazio |
+| 4 | CPF | não | `[[CPF_NN]]` no tokenizado; 11 dígitos sem pontuação |
+| 5 | **DtAdmissão** | **SIM** | data de admissão em `dd/mm/aaaa` |
+| 6 | DtAfast | não | data de afastamento em `dd/mm/aaaa`, se informada |
+| 7 | Observação | não | geralmente vazio |
+| 8 | Função | não | geralmente vazio (a função já consta da narrativa do auto) |
+
+> `[nome_completo]` e `[cpf_somente_digitos]` são tokenizados (`[[TRAB_NN]]`/`[[CPF_NN]]`) — o `rehydrate.py` injeta os reais. Os demais campos (PIS, datas, observação, função) **não** são tokenizados e vão literais no TXT.
+> **`[data_admissao]` (campo 5) é o único obrigatório** dos campos do trabalhador além do nome — normalize sempre para `dd/mm/aaaa`. Se desconhecida, deixe vazia.
 
 **Linha tipo 6** — CIF do auditor (uma única, no final do arquivo):
 ```

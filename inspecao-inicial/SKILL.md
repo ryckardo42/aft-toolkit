@@ -163,7 +163,17 @@ Mapeamento por tema:
 
 Se ambíguo, pergunte ao auditor.
 
-#### Passo 2 — Buscar ementa (estratégia em 3 camadas)
+#### Passo 2 — Buscar ementa (estratégia em camadas)
+
+**Camada 0 — Ementas frequentes (consulta direta, preferencial):**
+
+Antes de qualquer consulta externa, leia o arquivo `ementas-frequentes.md` desta pasta da skill — uma lista curada das ementas que aparecem na maioria das fiscalizações de SST, organizada por NR com uma coluna **Quando usar** (mapa situação → código).
+
+1. Para a irregularidade, compare o fato do relato com a coluna **Quando usar** de cada entrada da NR aplicável (identificada no Passo 1).
+2. **Se casar com confiança** → adote o código direto, com a descrição verbatim do arquivo, e **pule as camadas seguintes** (vá para o Passo 3). A gradação fica `—` (o arquivo não a traz) e será confirmada pelo AFT no Passo 3.
+3. **Se não casar** (irregularidade fora da lista, ou match duvidoso) → siga para a Camada 1 normalmente. A lista **não é exaustiva**.
+
+> A Camada 0 é um fast-path para os casos comuns: evita uma ida ao NotebookLM quando a situação é uma das já catalogadas. Não substitui a confirmação do Passo 3.
 
 **Camada 1 — NotebookLM (preferencial, requer setup do /aft-setup):**
 
