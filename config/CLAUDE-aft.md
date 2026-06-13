@@ -49,14 +49,17 @@ dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVA
 
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
+- Cadastrar uma auditoria / ver prazos de DET → `/nova-os` · `/painel`
 - Narrar a visita de inspeção → `/inspecao-fisica`
-- Redigir autos de infração → `/inspecao-inicial`
+- Redigir autos de infração → `/inspecao-inicial` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
 - Trabalhador sem registro → `/registro`
 - Analisar PGR → `/PGR-analise`
+- Notificar a empresa para corrigir irregularidades → `/tn-nco`
 - Interdição/embargo (risco grave e iminente) → `/aft-rt-rgi`
 - Empregador não entregou documentos do DET → `/det-630`
 - Pacote de ponto eletrônico (AFD/AEJ/atestado) → `/jornada-analise`
 - Gerar o TXT do Sistema Auditor → `/gera-ai`
+- Conferir o que foi transmitido → `/autos-lavrados`
 - Relatório final da ação fiscal → `/sfitweb-rel`
 
 Se a configuração (`~/Documents/AFT/aft-config.md`) não existir, oriente-me a rodar

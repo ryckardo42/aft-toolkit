@@ -38,7 +38,14 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/registro` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
 | `/PGR-analise` | Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas |
 | `/det-630` | Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT) |
+| `/tn-nco` | Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item) |
 | `/aft-rt-rgi` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
+
+### Consultoras especializadas por NR
+| Skill | O que faz |
+|---|---|
+| `/NR12` | Especialista em máquinas e equipamentos: identifica a ementa (catálogo de 16 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE, a linha do RT e o fragmento de interdição |
+| `/NR18` | Especialista na indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE e a linha do RT |
 
 ### Jornada / ponto eletrônico (Portaria 671/2021)
 | Skill | O que faz |
@@ -114,7 +121,8 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
 ├── aft-setup/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
-├── registro/ · det-630/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
+├── registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
+├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```
 
