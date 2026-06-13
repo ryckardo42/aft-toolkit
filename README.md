@@ -46,10 +46,11 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/jornada-atestado` | Auditoria do Atestado Técnico/Termo de Responsabilidade do REP/PTRP (art. 89), com inspeção de assinatura por código |
 | `/jornada-auto-afd-aej` | Autos por AFD/AEJ ausente ou fora do padrão (ementas 002279-9 / 002280-2) |
 
-### Empacotamento e relatórios
+### Empacotamento, rastreamento e relatórios
 | Skill | O que faz |
 |---|---|
 | `/gera-ai` | Empacota autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível |
+| `/autos-lavrados` | Lê os PDFs já transmitidos no Sistema Auditor (`C:\SistemasAFT\...\PRO`), cruza com os rascunhos e marca no `memory.md` o que está lavrado `[x]` / pendente `[ ]` — read-only sobre o Sistema Auditor |
 | `/sfitweb-rel` | Relatório Final Simplificado consolidando autos, termos e notificações |
 
 ## Fluxo típico de uma fiscalização
@@ -62,7 +63,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
     /aft-rt-rgi p/ risco grave e iminente · /PGR-analise p/ auditoria do PGR)
 4. /gera-ai              → TXT importável + anexos na pasta Autos DD-MM/
 5. Sistema Auditor       → botão "imp. txt" → revisão → transmissão
-6. /sfitweb-rel          → relatório final consolidado
+6. /autos-lavrados       → confere o que foi transmitido e marca no memory.md
+7. /sfitweb-rel          → relatório final consolidado
 ```
 
 ## Estrutura de trabalho
@@ -107,7 +109,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx)
 ├── aft-setup/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
-├── registro/ · det-630/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/
+├── registro/ · det-630/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```
 

@@ -189,11 +189,12 @@ em `~/.claude/CLAUDE.md`:
 ## Passo 6 — Instalar as bibliotecas Python
 
 ```bash
-pip install pillow pikepdf || pip3 install pillow pikepdf
+pip install pillow pikepdf pypdf || pip3 install pillow pikepdf pypdf
 ```
 
 Explique: `pillow` converte fotos de evidência em PDF para anexar aos autos;
-`pikepdf` inspeciona assinaturas de PDF e comprime anexos grandes.
+`pikepdf` inspeciona assinaturas de PDF e comprime anexos grandes; `pypdf` lê o
+texto dos autos lavrados no Sistema Auditor (skill `/autos-lavrados`).
 
 ## Passo 7 — NotebookLM (recomendado, pode pular)
 
