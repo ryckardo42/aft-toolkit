@@ -201,13 +201,23 @@ texto dos autos lavrados no Sistema Auditor (skill `/autos-lavrados`).
 As skills de lavratura consultam ementários no Google NotebookLM para achar o código
 da ementa automaticamente. Para habilitar:
 
-1. **Pedir acesso aos notebooks**: entrar em https://notebooks-aft.vercel.app com a
+1. **Confirmar/instalar o CLI** `notebooklm`. Normalmente o prompt de instalação do
+   guia (COMO-INSTALAR, Passo 3) já instalou. Verifique:
+   ```bash
+   notebooklm --help
+   ```
+   Se o comando **não** for encontrado, instale a partir do repositório do teng-lin —
+   com o extra `browser`, e de preferência via pipx (deixa o comando no PATH sem
+   conflito; no Windows o `pip install` simples às vezes não põe o script no PATH):
+   ```bash
+   pipx install "notebooklm-py[browser]"        # recomendado
+   # se não houver pipx: pip install pipx && python -m pipx ensurepath, depois o comando acima
+   # alternativa direta (pip): pip install "notebooklm-py[browser]"
+   ```
+   (O pacote `notebooklm-py` é publicado pelo projeto https://github.com/teng-lin/notebooklm-py.)
+2. **Pedir acesso aos notebooks**: entrar em https://notebooks-aft.vercel.app com a
    conta Google (Gmail) e solicitar acesso. O mantenedor (Ricardo, SRTE/GO) libera os
    notebooks de ementas e NRs.
-2. **Instalar o CLI**:
-   ```bash
-   pip install notebooklm-py || pip3 install notebooklm-py
-   ```
 3. **Autenticar** (abre o navegador para login Google):
    ```bash
    notebooklm login
