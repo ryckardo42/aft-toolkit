@@ -29,7 +29,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | Skill | O que faz |
 |---|---|
 | `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil do auditor (`CLAUDE.md` global), dependências, NotebookLM |
-| `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho e bibliotecas — e diz, em linguagem simples, o que falta (só leitura) |
+| `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas e o estado do NotebookLM — e diz, em linguagem simples, o que falta (só leitura) |
+| `/notebooklm-login` | Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge) — o Claude conduz tudo, sem terminal |
 | `/nova-os` | Cadastra uma auditoria (empregador, CNPJ, município e o DET com prazo) — o começo do fluxo |
 | `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência** — um SISOS local, sem servidor (só leitura) |
 
@@ -108,7 +109,7 @@ Documentos\AFT\
 
 As skills buscam o código da ementa em 3 camadas:
 
-1. **NotebookLM** (recomendado): peça acesso em https://notebooks-aft.vercel.app e configure o CLI pelo `/aft-setup`. Os notebooks cobrem os ementários SST e de legislação + NRs específicas.
+1. **NotebookLM** (recomendado): peça acesso em https://notebooks-aft.vercel.app e conecte com `/notebooklm-login` (ou pelo `/aft-setup`) — o Claude faz o login na sua conta Google por você, sem terminal. Os notebooks cobrem os ementários SST e de legislação + NRs específicas.
 2. **Google Drive compartilhado**: [ementários por NR em Markdown](https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing).
 3. **Você informa o código** (formato `XXXXXX-X`).
 
@@ -123,7 +124,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
-├── aft-setup/ · aft-doctor/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
+├── aft-setup/ · aft-doctor/ · notebooklm-login/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/

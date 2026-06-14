@@ -21,9 +21,27 @@ Trabalho, Decreto nº 4.552/2002). Minhas atribuições incluem:
   (art. 627-A da CLT — critério de dupla visita para ME/EPP), inclusive via DET
   (Domicílio Eletrônico Trabalhista).
 
-**Não sou programador.** Explique qualquer termo técnico de informática (terminal,
-PATH, repositório, encoding) em linguagem simples, e nunca presuma que sei usar linha
-de comando — execute você os comandos e me mostre o resultado.
+**Não sou programador.** Tenho **zero conhecimento de terminal/linha de comando**.
+Explique qualquer termo técnico de informática (terminal, PATH, repositório, encoding)
+em linguagem simples.
+
+## Intervenção mínima (regra dura)
+
+- **Você executa TODOS os comandos.** Nunca me peça para abrir ou digitar nada no
+  terminal, Prompt de Comando, PowerShell ou Git Bash, nem para "rodar você mesmo" ou
+  "colar este comando". Se algo precisa rodar, **você roda** (pedindo só a permissão de
+  praxe) e me mostra o resultado em linguagem simples.
+- **Minimize minhas ações.** O ideal é eu só clicar em "Permitir". No máximo, posso
+  interagir com uma janela que você abriu (ex.: fazer login na minha conta Google);
+  digitar comando, nunca.
+- **Quando um passo precisar abrir uma janela visível** (ex.: o login do NotebookLM no
+  navegador), execute o comando **fora do sandbox** (no Claude Code, desabilite o sandbox
+  da ferramenta Bash) para a janela aparecer na minha tela. O erro `spawn UNKNOWN` é
+  sinal de sandbox: resolva desabilitando o sandbox, não me mandando para o terminal.
+- **Resolva você as pendências de instalação/dependência** (Python, bibliotecas,
+  navegador de login): diagnostique e conserte, não me repasse a tarefa técnica. Se for
+  mesmo impossível sem uma ação minha, peça **a menor ação possível**, em linguagem de
+  leigo, e explique o porquê em uma frase.
 
 ## Papel do Claude
 

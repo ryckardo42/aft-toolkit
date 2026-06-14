@@ -143,14 +143,45 @@ else:
         " (fotos->PDF, compressao e leitura de autos lavrados dependem delas).")
 
 # 9. NotebookLM (opcional) ---------------------------------------------------
-nlm = cmd_version("notebooklm", ("--help",))
-if nlm:
-    add("NotebookLM (CLI)", "ok", "comando 'notebooklm' disponivel")
-else:
+# Checa o CLI e, se presente, o estado da sessao (validacao LOCAL, sem rede).
+# A dica nunca manda o AFT ao terminal: aponta para a skill /notebooklm-login.
+nlm_path = shutil.which("notebooklm")
+if not nlm_path:
     add("NotebookLM (CLI)", "aviso", "comando 'notebooklm' nao encontrado",
-        "Opcional: acelera a busca de ementas. Instale com "
-        "pipx install \"notebooklm-py[browser]\" e rode /aft-setup (Passo 7). "
+        "Opcional: acelera a busca de ementas. Peca ao Claude 'conecte o notebooklm' "
+        "(skill /notebooklm-login) - ele instala e faz o login por voce, sem terminal. "
         "Sem ele, as skills usam o Drive ou pedem o codigo da ementa.")
+else:
+    estado = None
+    try:
+        out = subprocess.run(
+            [nlm_path, "auth", "check", "--json"],
+            capture_output=True, text=True, timeout=25,
+        )
+        raw = (out.stdout or "").strip()
+        try:
+            estado = json.loads(raw)
+        except Exception:
+            i, j = raw.find("{"), raw.rfind("}")
+            estado = json.loads(raw[i:j + 1]) if i != -1 and j != -1 else None
+    except Exception:
+        estado = None
+
+    chk = estado.get("checks", {}) if isinstance(estado, dict) else {}
+    if estado is None:
+        # CLI responde, mas nao foi possivel ler a sessao - reporta so presenca.
+        add("NotebookLM (CLI)", "ok", "comando 'notebooklm' disponivel")
+    elif estado.get("status") == "ok" or chk.get("sid_cookie"):
+        add("NotebookLM (CLI)", "ok",
+            "comando disponivel e sessao salva (login local OK)")
+    elif not chk.get("storage_exists"):
+        add("NotebookLM (CLI)", "aviso", "instalado, mas ainda nao conectado (sem login)",
+            "Peca ao Claude 'conecte o notebooklm' (skill /notebooklm-login) - ele abre "
+            "o login na sua conta Google e salva sozinho, sem terminal.")
+    else:
+        add("NotebookLM (CLI)", "aviso",
+            "instalado, mas a sessao parece incompleta ou expirada",
+            "Peca ao Claude 'reconecte o notebooklm' (skill /notebooklm-login).")
 
 # ----------------------------------------------------------------------------
 resumo = {

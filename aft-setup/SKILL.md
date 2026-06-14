@@ -155,6 +155,8 @@ municipio: "Goiânia"
 uf: "GO"
 # Prefixo Windows da pasta de trabalho (para os anexos do Sistema Auditor):
 path_windows: "C:\\Users\\joao\\Documents\\AFT"
+# Navegador que o AFT usa com a conta Google do NotebookLM (chrome | edge):
+notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /notebooklm-login
 # Dados fixos do TXT (não alterar sem orientação):
 cod_1: "8211300"           # CNAE placeholder — o Sistema Auditor corrige pela lupa
 cod_2: "1008"              # tipo de ação fiscal
@@ -199,37 +201,55 @@ texto dos autos lavrados no Sistema Auditor (skill `/autos-lavrados`).
 ## Passo 7 — NotebookLM (recomendado, pode pular)
 
 As skills de lavratura consultam ementários no Google NotebookLM para achar o código
-da ementa automaticamente. Para habilitar:
+da ementa automaticamente. **Conecte com a menor intervenção possível e sem nunca
+mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
+`/notebooklm-login`; conduza-o aqui mesmo:
 
-1. **Confirmar/instalar o CLI** `notebooklm`. Normalmente o prompt de instalação do
-   guia (COMO-INSTALAR, Passo 3) já instalou. Verifique:
+1. **Confirmar/instalar o CLI** (você roda — instale com os dois extras: `browser`
+   para o login por janela e `cookies` para o login silencioso):
    ```bash
-   notebooklm --help
+   notebooklm --help            # se faltar, instale:
+   pipx install "notebooklm-py[browser,cookies]"
    ```
-   Se o comando **não** for encontrado, instale a partir do repositório do teng-lin —
-   com o extra `browser`, e de preferência via pipx (deixa o comando no PATH sem
-   conflito; no Windows o `pip install` simples às vezes não põe o script no PATH):
+   (Pacote publicado em https://github.com/teng-lin/notebooklm-py. Se não houver pipx:
+   `python -m pip install --user pipx && python -m pipx ensurepath`, reabrir o app.)
+2. **Já conectado?** `notebooklm auth check --test --json` — se `status: ok`, pule
+   direto para o teste do item 6.
+3. **Qual navegador o AFT usa com a conta Google (Gmail/NotebookLM)?** Pergunte uma vez:
+   *"Você usa o Chrome ou o Edge com sua conta do Gmail?"* Grave a resposta em
+   `aft-config.md` no campo `notebooklm_browser` (`chrome` ou `edge`) — assim não se
+   pergunta de novo nas reconexões. Use essa escolha como `<NAV>` abaixo. **Atenção ao
+   nome:** nos comandos de cookie (`auth inspect`, `--browser-cookies`) o Edge é `edge`;
+   no login por janela (`--browser`) o Edge é `msedge`; o Chrome é `chrome` nos dois.
+4. **Tentar cookies primeiro (zero cliques):** `notebooklm auth inspect --browser <NAV>
+   --json`. Se achar uma conta válida:
+   `notebooklm login --browser-cookies <NAV>` (com `--account email-do-aft` se houver
+   mais de uma). Em Chrome/Edge atualizados isso costuma falhar ("Could not decrypt"):
+   é esperado, siga ao item 5 sem alarmar o AFT.
+5. **Login por janela (um único login do AFT no Google):** avise que vai abrir o `<NAV>`,
+   e rode **com o sandbox desabilitado** (`dangerouslyDisableSandbox`) e timeout alto
+   (o comando espera o login por até 5 min):
    ```bash
-   pipx install "notebooklm-py[browser]"        # recomendado
-   # se não houver pipx: pip install pipx && python -m pipx ensurepath, depois o comando acima
-   # alternativa direta (pip): pip install "notebooklm-py[browser]"
+   notebooklm login --browser chrome     # ou: --browser msedge (Edge)
    ```
-   (O pacote `notebooklm-py` é publicado pelo projeto https://github.com/teng-lin/notebooklm-py.)
-2. **Pedir acesso aos notebooks**: entrar em https://notebooks-aft.vercel.app com a
-   conta Google (Gmail) e solicitar acesso. O mantenedor (Ricardo, SRTE/GO) libera os
-   notebooks de ementas e NRs.
-3. **Autenticar** (abre o navegador para login Google):
+   Usa o navegador já instalado — **sem baixar o Chromium e sem Visual C++**. A janela
+   abre, o AFT faz login no Google e o comando salva sozinho. (A janela usa um perfil
+   isolado, então o login é feito uma vez mesmo que o AFT já esteja logado no navegador
+   do dia a dia.) Sem o sandbox desabilitado dá `spawn UNKNOWN` (limitação do sandbox,
+   não do PC — nunca mande o AFT ao terminal por isso). Fallbacks: o outro navegador
+   (`chrome` <-> `msedge`), depois `notebooklm login` (Chromium próprio, baixado sozinho).
+6. **Pedir acesso e testar:** se a lista vier vazia ou "sem acesso", o AFT solicita
+   acesso em https://notebooks-aft.vercel.app (conta Google); o mantenedor (Ricardo,
+   SRTE/GO) libera os notebooks. Confirme com:
    ```bash
-   notebooklm login
+   notebooklm --quiet list
    ```
-4. **Testar**:
-   ```bash
-   notebooklm list
-   ```
-   Se aparecer a lista de notebooks compartilhados, está pronto.
+   Se aparecer a lista de notebooks, está pronto.
 
 Se o AFT pular este passo, as skills continuam funcionando: elas oferecem o ementário
 no Google Drive (link nas próprias skills) ou pedem o código da ementa diretamente.
+Quando a sessão expirar no futuro, basta pedir "reconectar o notebooklm"
+(skill `/notebooklm-login`) — sem mexer em terminal.
 
 ## Passo 8 — Resumo final
 
