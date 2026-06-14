@@ -85,7 +85,7 @@
   <h2>Instalação <span style="font-weight:400;color:var(--mut);font-size:13px">— só os 2 primeiros passos são manuais</span></h2>
   <div class="card"><div class="pipe install" id="pipe-install"></div></div>
 
-  <h2>Skills (19) por camada</h2>
+  <h2>Skills (20) por camada</h2>
   <div id="camadas"></div>
 
   <div class="twocol" style="margin-top:38px">
@@ -135,12 +135,12 @@ const ARCH = {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
   "data": "2026-06-14",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 19 skills cobrem o fluxo completo (cadastrar a OS, narrar a inspeção, enquadrar NR/ementa, redigir autos, empacotar o TXT do Sistema Auditor e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
-  "stats": { "skills": 19, "scripts": 8, "dados": 3, "commit": "87e80a3 (13/06/2026)" },
+  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 20 skills cobrem o fluxo completo (cadastrar a OS, narrar a inspeção, enquadrar NR/ementa, redigir autos, empacotar o TXT do Sistema Auditor e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "stats": { "skills": 20, "scripts": 9, "dados": 3, "commit": "52e7725 (14/06/2026)" },
   "atores": [
     { "nome": "AFT colega (novo usuário)", "papel": "Auditor no Windows", "descricao": "Instala o toolkit no próprio PC; não é programador — o Claude executa os comandos por ele. Único responsável jurídico por cada auto/termo." },
     { "nome": "Claude Code", "papel": "Assistente técnico", "descricao": "App desktop no Windows; descobre as skills no 1º nível de ~/.claude/skills e executa os scripts locais pedindo permissão." },
-    { "nome": "Sistema Auditor", "papel": "App oficial do MTE", "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\\SistemasAFT\\...\\PRO." },
+    { "nome": "Sistema Auditor", "papel": "App oficial do MTE", "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\SistemasAFT\...\PRO." },
     { "nome": "NotebookLM", "papel": "Fonte de ementas", "descricao": "Consultado via CLI notebooklm-py para achar o código da ementa; recebe apenas a descrição da irregularidade, nunca dados pessoais." },
     { "nome": "Ricardo (mantenedor)", "papel": "AFT — SRTE/GO", "descricao": "Adapta as skills pessoais para o toolkit e publica no GitHub; o template do RT segue o modelo SRTE/GO." }
   ],
@@ -152,7 +152,7 @@ const ARCH = {
     { "who": "/inspecao-inicial", "act": "Lê o relato, identifica NR/ementa (NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave) ou /PGR-analise. Gate de dupla visita (ME/EPP)." },
     { "who": "/gera-ai", "act": "Empacota os autos no TXT importável (latin-1) + anexos PDF. Pseudonimização reversível: rehydrate.py re-injeta nomes/CPFs reais — nunca o LLM." },
     { "who": "Sistema Auditor", "act": "Botão imp. txt → revisão do AFT → transmissão." },
-    { "who": "/autos-lavrados", "act": "Lê os PDFs transmitidos em ...\\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]." },
+    { "who": "/autos-lavrados", "act": "Lê os PDFs transmitidos em ...\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]." },
     { "who": "/sfitweb-rel", "act": "Relatório Final Simplificado consolidando autos, termos e notificações." }
   ],
   "instalacao": [
@@ -167,6 +167,7 @@ const ARCH = {
       "cor": "accent2",
       "skills": [
         { "nome": "/aft-setup", "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, dependências, NotebookLM.", "tech": "winget · pipx · uorgs.csv" },
+        { "nome": "/aft-doctor", "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho e bibliotecas — e diz em linguagem simples o que falta (só leitura).", "tech": "aft_doctor.py" },
         { "nome": "/nova-os", "role": "Cadastra uma auditoria (empregador, CNPJ, município, DET com prazo) — o começo do fluxo. Idempotente.", "tech": "cria memory.md" },
         { "nome": "/painel", "role": "Gera um painel.html local com todas as OS e os prazos de DET coloridos por urgência — um SISOS local, sem servidor (só leitura).", "tech": "gerar_painel.py" }
       ]
@@ -207,7 +208,7 @@ const ARCH = {
       "cor": "ok",
       "skills": [
         { "nome": "/gera-ai", "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento.", "tech": "rehydrate.py · fotos · compressão" },
-        { "nome": "/autos-lavrados", "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO), cruza com os rascunhos e marca no memory.md [x]/[ ] — read-only sobre o Sistema Auditor.", "tech": "scan_autos.py · pypdf" },
+        { "nome": "/autos-lavrados", "role": "Lê os PDFs já transmitidos (C:\SistemasAFT\...\PRO), cruza com os rascunhos e marca no memory.md [x]/[ ] — read-only sobre o Sistema Auditor.", "tech": "scan_autos.py · pypdf" },
         { "nome": "/sfitweb-rel", "role": "Relatório Final Simplificado consolidando autos, termos e notificações.", "tech": "lê memory.md" }
       ]
     }
@@ -215,6 +216,7 @@ const ARCH = {
   "scripts": [
     { "nome": "rehydrate.py", "caminho": "_scripts/rehydrate.py", "papel": "Re-injeta nomes/CPFs reais no TXT tokenizado e grava direto em ISO-8859-1. Aborta em valor ausente, CPF inválido, token órfão ou caractere fora do latin-1. Nunca é o LLM que re-hidrata.", "runtime": "Python stdlib" },
     { "nome": "gerar_painel.py", "caminho": "_scripts/gerar_painel.py", "papel": "Varre OS ATIVAS/*/memory.md (parser tolerante), calcula dias-para-o-prazo com date.today() e gera o painel.html autocontido com prazos coloridos. Imprime resumo no stdout.", "runtime": "Python stdlib" },
+    { "nome": "aft_doctor.py", "caminho": "_scripts/aft_doctor.py", "papel": "Verificação pós-instalação: checa Python, Git, descoberta das skills, config do repo, perfil, pasta de trabalho, bibliotecas e NotebookLM; emite relatório legível + JSON com status e dica por item. Só leitura.", "runtime": "Python stdlib" },
     { "nome": "fotos_para_pdf.py", "caminho": "_scripts/fotos_para_pdf.py", "papel": "Converte as fotos da inspeção em PDF (anexo do auto).", "runtime": "Python · pillow" },
     { "nome": "comprimir_pdf.py", "caminho": "_scripts/comprimir_pdf.py", "papel": "Comprime PDFs grandes para caber no limite de tamanho do Sistema Auditor.", "runtime": "Python · pikepdf/pypdf" },
     { "nome": "docx_pack.py / docx_unpack.py", "caminho": "_scripts/docx_*.py", "papel": "Empacota e desempacota .docx (geração e validação de RT/relatórios sem libs externas).", "runtime": "Python stdlib · zipfile" },

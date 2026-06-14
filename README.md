@@ -19,6 +19,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 3. **Cole o prompt de instalação** (está no COMO-INSTALAR.md) numa conversa do `</> Code`: o próprio Claude instala o Python via winget e clona este repositório em `~/.claude/skills`, pedindo sua permissão a cada comando.
 4. **Reinicie o app e rode `/aft-setup`** — ele cria as pastas de trabalho, coleta seus dados uma única vez (nome, CIF e a sua lotação — basta dizer a cidade, ex.: "Anápolis", e o toolkit descobre o código de 9 dígitos da UORG) e instala as dependências.
 
+**Conferir:** a qualquer momento, rode **`/aft-doctor`** para checar se está tudo no lugar (Python, Git, skills, configuração) — ele diz, em linguagem simples, o que falta e como resolver.
+
 **Atualização:** peça ao Claude *"Atualize o AFT Toolkit"* (ele roda `git pull` na pasta das skills).
 
 ## Skills incluídas
@@ -27,6 +29,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | Skill | O que faz |
 |---|---|
 | `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil do auditor (`CLAUDE.md` global), dependências, NotebookLM |
+| `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho e bibliotecas — e diz, em linguagem simples, o que falta (só leitura) |
 | `/nova-os` | Cadastra uma auditoria (empregador, CNPJ, município e o DET com prazo) — o começo do fluxo |
 | `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência** — um SISOS local, sem servidor (só leitura) |
 
@@ -120,7 +123,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
-├── aft-setup/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
+├── aft-setup/ · aft-doctor/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/

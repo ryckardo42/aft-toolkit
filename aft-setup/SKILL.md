@@ -254,6 +254,10 @@ Fluxo típico de uma fiscalização:
 Outras: /registro · /PGR-analise · /aft-rt-rgi · /det-630 · /jornada-analise · /sfitweb-rel
 ```
 
+Feche sugerindo o diagnóstico: *"Sempre que quiser confirmar que está tudo no lugar
+(ou se algo parar de funcionar), rode `/aft-doctor` — ele confere a instalação e diz o
+que falta."*
+
 ---
 
 ## Regras

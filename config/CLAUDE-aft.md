@@ -49,6 +49,7 @@ dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVA
 
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
+- Conferir se o toolkit está instalado/funcionando → `/aft-doctor`
 - Cadastrar uma auditoria / ver prazos de DET → `/nova-os` · `/painel`
 - Narrar a visita de inspeção → `/inspecao-fisica`
 - Redigir autos de infração → `/inspecao-inicial` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
