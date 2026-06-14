@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Arquitetura — AFT Toolkit</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#161b22; --panel2:#1c232c; --line:#2a323c;
+    --ink:#e6edf3; --mut:#9aa7b4; --accent:#25d366; --accent2:#5aa7ff;
+    --warn:#f0a35e; --chip:#243042; --ok:#2ea043;
+    --radius:14px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent2)}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+  header.hero{padding:28px 26px;border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(135deg,#13241c,#161b22 60%);}
+  .hero h1{margin:0 0 6px;font-size:25px;letter-spacing:.2px}
+  .hero p{margin:0;color:var(--mut);max-width:820px}
+  .meta{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--chip);border:1px solid var(--line);color:var(--ink);
+    font-size:12px;padding:4px 10px;border-radius:999px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 16px;text-align:center}
+  .stat b{display:block;font-size:22px;color:var(--accent)}
+  .stat span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  h2{margin:38px 0 14px;font-size:18px;display:flex;align-items:center;gap:10px}
+  h2::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  h3.lay{margin:18px 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .grid{display:grid;gap:12px}
+  .grid.cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  .comp{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .comp .nm{font-weight:600;font-family:var(--mono);font-size:14px}
+  .comp .role{color:var(--mut);font-size:13px;margin:7px 0}
+  .comp .tech{margin-top:8px;font-size:11px;color:var(--mut);font-family:var(--mono)}
+  .comp code{font-family:var(--mono);font-size:11.5px;color:#cbd5e1;background:#0d1117;
+    border:1px solid var(--line);border-radius:6px;padding:2px 6px;display:inline-block;word-break:break-all}
+  /* pipeline */
+  .pipe{display:flex;flex-direction:column;gap:0}
+  .stage{display:flex;gap:14px;align-items:flex-start}
+  .stage .dot{flex:0 0 auto;width:34px;display:flex;flex-direction:column;align-items:center}
+  .stage .num{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#04210f;
+    font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .stage .bar{flex:1;width:2px;background:var(--line);min-height:14px}
+  .stage:last-child .bar{display:none}
+  .stage .body{flex:1;padding-bottom:16px}
+  .stage .who{font-family:var(--mono);font-size:13px;color:var(--accent2);font-weight:600}
+  .stage .act{margin-top:2px;color:var(--mut);font-size:13.5px}
+  .install .num{background:var(--accent2);color:#041427}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td code,.kbd{font-family:var(--mono);font-size:12px;color:#cbd5e1;background:#0d1117;
+    border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  ul.lim{margin:0;padding-left:20px;color:var(--mut)}
+  ul.lim li{margin:6px 0}
+  ul.lim.warn li::marker{color:var(--warn)}
+  .twocol{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  @media(max-width:680px){.twocol{grid-template-columns:1fr}}
+  .num.warn{background:var(--warn);color:#241402}
+  footer{margin-top:46px;color:var(--mut);font-size:12px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <h1>AFT Toolkit <span style="color:var(--accent)">·</span> <code style="font-family:var(--mono);font-size:18px">~/.claude/skills</code></h1>
+    <p id="resumo"></p>
+    <div class="meta">
+      <span class="chip" id="chip-data"></span>
+      <span class="chip" id="chip-repo"></span>
+      <span class="chip">Claude Code · Windows · local</span>
+      <span class="chip">companion: arquitetura.json</span>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <h2>Fluxo de uma fiscalização</h2>
+  <div class="card"><div class="pipe" id="pipe-fluxo"></div></div>
+
+  <h2>Instalação <span style="font-weight:400;color:var(--mut);font-size:13px">— só os 2 primeiros passos são manuais</span></h2>
+  <div class="card"><div class="pipe install" id="pipe-install"></div></div>
+
+  <h2>Skills (19) por camada</h2>
+  <div id="camadas"></div>
+
+  <div class="twocol" style="margin-top:38px">
+    <div>
+      <h2>Scripts locais (Python)</h2>
+      <div class="card"><table id="scripts"><thead><tr><th>Script</th><th>Papel</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div>
+      <h2>Dados e configuração</h2>
+      <div class="card"><table id="dados"><thead><tr><th>Arquivo</th><th>Uso</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="twocol" style="margin-top:38px">
+    <div>
+      <h2>Ementas (3 camadas)</h2>
+      <div class="card"><table id="ementas"><thead><tr><th>Fonte</th><th>Como</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div>
+      <h2>Anonimização (pseudonimização reversível)</h2>
+      <div class="card"><ul class="lim" id="anonimizacao"></ul></div>
+    </div>
+  </div>
+
+  <h2>Decisões de design</h2>
+  <div class="card"><table id="decisoes"><thead><tr><th>Tópico</th><th>Escolha / racional</th></tr></thead><tbody></tbody></table></div>
+
+  <div class="twocol" style="margin-top:38px">
+    <div>
+      <h2>Diferenças vs. Cowork pessoal</h2>
+      <div class="card"><table id="diferencas"><thead><tr><th>Eixo</th><th>Pessoal → Toolkit</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div>
+      <h2>Ficou de fora do toolkit</h2>
+      <div class="card"><ul class="lim" id="fora"></ul></div>
+    </div>
+  </div>
+
+  <h2>Avisos e limitações</h2>
+  <div class="card"><ul class="lim warn" id="avisos"></ul></div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const ARCH = {
+  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
+  "repo": "github.com/ryckardo42/aft-toolkit",
+  "data": "2026-06-14",
+  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 19 skills cobrem o fluxo completo (cadastrar a OS, narrar a inspeção, enquadrar NR/ementa, redigir autos, empacotar o TXT do Sistema Auditor e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "stats": { "skills": 19, "scripts": 8, "dados": 3, "commit": "87e80a3 (13/06/2026)" },
+  "atores": [
+    { "nome": "AFT colega (novo usuário)", "papel": "Auditor no Windows", "descricao": "Instala o toolkit no próprio PC; não é programador — o Claude executa os comandos por ele. Único responsável jurídico por cada auto/termo." },
+    { "nome": "Claude Code", "papel": "Assistente técnico", "descricao": "App desktop no Windows; descobre as skills no 1º nível de ~/.claude/skills e executa os scripts locais pedindo permissão." },
+    { "nome": "Sistema Auditor", "papel": "App oficial do MTE", "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\\SistemasAFT\\...\\PRO." },
+    { "nome": "NotebookLM", "papel": "Fonte de ementas", "descricao": "Consultado via CLI notebooklm-py para achar o código da ementa; recebe apenas a descrição da irregularidade, nunca dados pessoais." },
+    { "nome": "Ricardo (mantenedor)", "papel": "AFT — SRTE/GO", "descricao": "Adapta as skills pessoais para o toolkit e publica no GitHub; o template do RT segue o modelo SRTE/GO." }
+  ],
+  "fluxo": [
+    { "who": "/nova-os", "act": "Cadastra a empresa, o CNPJ, o município e o 1º DET com prazo. Cria OS ATIVAS/<NOME> <CNPJ>/ e o memory.md no esquema padrão. Começo do fluxo." },
+    { "who": "/painel", "act": "A qualquer momento: varre os memory.md e gera o painel.html com os prazos de DET coloridos por urgência (só leitura)." },
+    { "who": "Visita ao estabelecimento", "act": "Inspeção física presencial." },
+    { "who": "/inspecao-fisica", "act": "Transcreve a narrativa ditada num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento." },
+    { "who": "/inspecao-inicial", "act": "Lê o relato, identifica NR/ementa (NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave) ou /PGR-analise. Gate de dupla visita (ME/EPP)." },
+    { "who": "/gera-ai", "act": "Empacota os autos no TXT importável (latin-1) + anexos PDF. Pseudonimização reversível: rehydrate.py re-injeta nomes/CPFs reais — nunca o LLM." },
+    { "who": "Sistema Auditor", "act": "Botão imp. txt → revisão do AFT → transmissão." },
+    { "who": "/autos-lavrados", "act": "Lê os PDFs transmitidos em ...\\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]." },
+    { "who": "/sfitweb-rel", "act": "Relatório Final Simplificado consolidando autos, termos e notificações." }
+  ],
+  "instalacao": [
+    { "who": "Instalar o app Claude", "act": "claude.com/claude-code — único passo realmente inicial." },
+    { "who": "Instalar o Git + reiniciar pela bandeja", "act": "git-scm.com. O app desktop exige Git para abrir sessões locais no Windows; sair pela bandeja (não só o X)." },
+    { "who": "Colar o prompt de instalação no </> Code", "act": "O próprio Claude instala o Python (winget) e o notebooklm-py (pipx, repo teng-lin) e clona o repositório direto em ~/.claude/skills, pedindo permissão a cada comando." },
+    { "who": "/aft-setup", "act": "Cria as pastas de trabalho, coleta nome/CIF/lotação (basta a cidade — o toolkit resolve o código de 9 dígitos da UORG via uorgs.csv), instala dependências e o perfil CLAUDE.md." }
+  ],
+  "camadas": [
+    {
+      "nome": "Configuração e visão geral",
+      "cor": "accent2",
+      "skills": [
+        { "nome": "/aft-setup", "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, dependências, NotebookLM.", "tech": "winget · pipx · uorgs.csv" },
+        { "nome": "/nova-os", "role": "Cadastra uma auditoria (empregador, CNPJ, município, DET com prazo) — o começo do fluxo. Idempotente.", "tech": "cria memory.md" },
+        { "nome": "/painel", "role": "Gera um painel.html local com todas as OS e os prazos de DET coloridos por urgência — um SISOS local, sem servidor (só leitura).", "tech": "gerar_painel.py" }
+      ]
+    },
+    {
+      "nome": "Inspeção e lavratura",
+      "cor": "accent",
+      "skills": [
+        { "nome": "/inspecao-fisica", "role": "Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md) — fiel, sem enquadramento.", "tech": "relato → memory.md" },
+        { "nome": "/inspecao-inicial", "role": "Lê o relato, identifica NR/ementa (NotebookLM) e redige os autos (NRs + CLT), com gate de dupla visita.", "tech": "orquestra consultoras" },
+        { "nome": "/registro", "role": "Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) + exame admissional (NR-07).", "tech": "data de admissão dd/mm/aaaa" },
+        { "nome": "/PGR-analise", "role": "Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas.", "tech": "handoff p/ gera-ai" },
+        { "nome": "/det-630", "role": "Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).", "tech": "escreve em ## Notificações DET" },
+        { "nome": "/tn-nco", "role": "Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item; preenchimento manual).", "tech": "limite 1000 char/campo" },
+        { "nome": "/aft-rt-rgi", "role": "Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).", "tech": "template.docx SRTE/GO" }
+      ]
+    },
+    {
+      "nome": "Consultoras especializadas por NR",
+      "cor": "warn",
+      "skills": [
+        { "nome": "/NR12", "role": "Máquinas e equipamentos: identifica a ementa (catálogo de 16 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE, a linha do RT e o fragmento de interdição.", "tech": "references/ementas-comuns.md" },
+        { "nome": "/NR18", "role": "Indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE e a linha do RT.", "tech": "references/ementas-comuns.md" }
+      ]
+    },
+    {
+      "nome": "Jornada / ponto eletrônico (Portaria 671/2021)",
+      "cor": "accent2",
+      "skills": [
+        { "nome": "/jornada-analise", "role": "Orquestrador: tria o pacote entregue (AFD/AEJ/atestados) e consolida os pareceres.", "tech": "roteador" },
+        { "nome": "/jornada-valida-afd-aej", "role": "Validador determinístico (Python) do AEJ: estrutura, trailer, integridade referencial.", "tech": "Python" },
+        { "nome": "/jornada-atestado", "role": "Auditoria do Atestado Técnico/Termo de Responsabilidade do REP/PTRP (art. 89), com inspeção de assinatura por código.", "tech": "inspecionar_assinatura.py" },
+        { "nome": "/jornada-auto-afd-aej", "role": "Autos por AFD/AEJ ausente ou fora do padrão (ementas 002279-9 / 002280-2).", "tech": "handoff p/ gera-ai" }
+      ]
+    },
+    {
+      "nome": "Empacotamento, rastreamento e relatórios",
+      "cor": "ok",
+      "skills": [
+        { "nome": "/gera-ai", "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento.", "tech": "rehydrate.py · fotos · compressão" },
+        { "nome": "/autos-lavrados", "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO), cruza com os rascunhos e marca no memory.md [x]/[ ] — read-only sobre o Sistema Auditor.", "tech": "scan_autos.py · pypdf" },
+        { "nome": "/sfitweb-rel", "role": "Relatório Final Simplificado consolidando autos, termos e notificações.", "tech": "lê memory.md" }
+      ]
+    }
+  ],
+  "scripts": [
+    { "nome": "rehydrate.py", "caminho": "_scripts/rehydrate.py", "papel": "Re-injeta nomes/CPFs reais no TXT tokenizado e grava direto em ISO-8859-1. Aborta em valor ausente, CPF inválido, token órfão ou caractere fora do latin-1. Nunca é o LLM que re-hidrata.", "runtime": "Python stdlib" },
+    { "nome": "gerar_painel.py", "caminho": "_scripts/gerar_painel.py", "papel": "Varre OS ATIVAS/*/memory.md (parser tolerante), calcula dias-para-o-prazo com date.today() e gera o painel.html autocontido com prazos coloridos. Imprime resumo no stdout.", "runtime": "Python stdlib" },
+    { "nome": "fotos_para_pdf.py", "caminho": "_scripts/fotos_para_pdf.py", "papel": "Converte as fotos da inspeção em PDF (anexo do auto).", "runtime": "Python · pillow" },
+    { "nome": "comprimir_pdf.py", "caminho": "_scripts/comprimir_pdf.py", "papel": "Comprime PDFs grandes para caber no limite de tamanho do Sistema Auditor.", "runtime": "Python · pikepdf/pypdf" },
+    { "nome": "docx_pack.py / docx_unpack.py", "caminho": "_scripts/docx_*.py", "papel": "Empacota e desempacota .docx (geração e validação de RT/relatórios sem libs externas).", "runtime": "Python stdlib · zipfile" },
+    { "nome": "scan_autos.py", "caminho": "autos-lavrados/scripts/scan_autos.py", "papel": "Extrai texto dos PDFs transmitidos (pypdf; pdftotext se no PATH) e parseia AI_[NUM]_[CNPJ]_[sufixo].PDF para o cruzamento.", "runtime": "Python · pypdf" },
+    { "nome": "inspecionar_assinatura.py", "caminho": "jornada-atestado/scripts/inspecionar_assinatura.py", "papel": "Inspeciona a assinatura/identificação do atestado técnico do REP por código.", "runtime": "Python" }
+  ],
+  "dados": [
+    { "arquivo": "config/notebooks.json", "conteudo": "49 notebooks (IDs do NotebookLM, ex.: nr-12, nr-18, ementario-sst)", "uso": "Consulta de ementa pelas skills." },
+    { "arquivo": "config/uorgs.csv", "conteudo": "1012 UORGs oficiais (CDUORG;NOME;UF;MUNICIPIO;...)", "uso": "O /aft-setup resolve o código de 9 dígitos pela cidade informada." },
+    { "arquivo": "config/CLAUDE-aft.md", "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho e privacidade", "uso": "Instalado pelo /aft-setup em ~/.claude/CLAUDE.md (carregado em toda conversa)." }
+  ],
+  "ementas": [
+    { "camada": "1. NotebookLM (recomendado)", "txt": "CLI notebooklm-py; IDs em config/notebooks.json; acesso em notebooks-aft.vercel.app. Envia só a descrição da irregularidade." },
+    { "camada": "2. Google Drive compartilhado", "txt": "Ementários por NR em Markdown, pasta pública — fallback quando o NotebookLM falha." },
+    { "camada": "3. O AFT informa o código", "txt": "Formato XXXXXX-X, conferido no ementário oficial." }
+  ],
+  "anonimizacao": [
+    "No chat e nas consultas à IA, trabalhadores viram tokens [[TRAB_NN]] / [[CPF_NN]] e a empresa vira [[AUTUADA]]; o CNPJ nunca é tokenizado.",
+    "O mapa token↔dados reais fica em .depara_<CNPJ>.json (sensível: não exibir, não compartilhar, não commitar).",
+    "Os dados reais entram no TXT final apenas pelo script determinístico rehydrate.py — nunca pelo modelo. Um nome/CPF trocado num documento legal é inaceitável.",
+    "A cópia *.tokenized.txt é a única versão segura para compartilhar com colegas.",
+    "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais."
+  ],
+  "decisoes": [
+    { "topico": "Instalação", "txt": "O repositório É a pasta ~/.claude/skills do colega (clone direto). O Claude Code só descobre skills no 1º nível dessa pasta — clone aninhado deixa todas invisíveis." },
+    { "topico": "Git obrigatório", "txt": "O app desktop Windows exige Git antes de abrir sessão local; Git é passo manual (galinha-e-ovo); o Claude instala só Python/toolkit." },
+    { "topico": "Sem SISOS/Supabase", "txt": "O toolkit é offline: os memory.md são o banco local e o /painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /nova-os." },
+    { "topico": "Empacotamento único", "txt": "Todo TXT é gerado no /gera-ai; /registro, /PGR-analise e a jornada só redigem e fazem handoff (diferente das versões pessoais)." },
+    { "topico": "Latin-1 sem iconv", "txt": "rehydrate.py grava o TXT final direto em ISO-8859-1 — iconv/sips não existem garantidamente no Windows." },
+    { "topico": "Lotação pela cidade", "txt": "O /aft-setup resolve o código da UORG pela cidade (uorgs.csv) — o AFT raramente sabe o código de 9 dígitos." },
+    { "topico": "Ementas em 3 camadas", "txt": "NotebookLM primeiro → Drive compartilhado → o AFT digita o código. Nunca inventar ementa." },
+    { "topico": "Bases distintas", "txt": "Nunca mexer nas skills pessoais do mantenedor (~/.claude/skills do Ricardo) ao trabalhar no toolkit; o toolkit é uma adaptação à parte." }
+  ],
+  "diferencas": [
+    { "topico": "Plataforma", "txt": "Pessoal: macOS/Parallels (iconv, sips). Toolkit: Windows, tudo em Python stdlib e latin-1 direto." },
+    { "topico": "Estado central", "txt": "Pessoal: SISOS (Next.js + Supabase + Vercel) + cron de DET. Toolkit: memory.md locais + /painel, sem servidor." },
+    { "topico": "Empacotamento", "txt": "Pessoal: cada skill empacota. Toolkit: centralizado no /gera-ai." },
+    { "topico": "Identidade do AFT", "txt": "Pessoal: dados SRTE/GO hardcoded. Toolkit: aft-config.md + UORG resolvida pela cidade." }
+  ],
+  "foraDoToolkit": [
+    "nad-tn (geração do NAD via DET) — substituída por preenchimento manual no /tn-nco.",
+    "det-baixar-empregador (Chrome + credenciais) — fase futura possível.",
+    "cowork-ingest / cowork-manifest / cowork-ementas — pipeline RAG do NotebookLM (ecossistema pessoal).",
+    "cowork-sync / sisos-sync / notebooklm-conf / aft-grant / analise-preliminar — infra pessoal, não distribuída."
+  ],
+  "avisos": [
+    "As skills são apoio à redação e organização; o conteúdo jurídico de cada auto, termo e relatório é responsabilidade do AFT, que revisa tudo antes de transmitir.",
+    "Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.",
+    "/autos-lavrados: a extração por pypdf precisa de calibração/verificação na 1ª execução contra os PDFs reais do Sistema Auditor.",
+    "O template do RT (aft-rt-rgi/template.docx) segue o modelo SRTE/GO — auditores de outras SRTEs ajustam o cabeçalho.",
+    "Validação end-to-end de /NR12, /NR18 e /tn-nco depende de interação e do NotebookLM; testar no Windows real."
+  ]
+};
+const $=s=>document.querySelector(s), el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+$("#resumo").textContent=ARCH.resumo;
+$("#chip-data").textContent="gerado em "+ARCH.data;
+$("#chip-repo").textContent=ARCH.repo;
+[["skills","skills"],["scripts","scripts"],["dados","arquivos de dados"],["commit","último commit"]].forEach(([k,lbl])=>{
+  const s=el("div","stat",`<b>${esc(ARCH.stats[k])}</b><span>${esc(lbl)}</span>`);$("#stats").appendChild(s);});
+function pipe(target,steps,cls){const w=$(target);steps.forEach((s,i)=>{
+  const st=el("div","stage"+(cls?" "+cls:""));
+  st.innerHTML=`<div class="dot"><div class="num">${i+1}</div><div class="bar"></div></div>
+    <div class="body"><div class="who">${esc(s.who)}</div><div class="act">${esc(s.act)}</div></div>`;
+  w.appendChild(st);});}
+pipe("#pipe-fluxo",ARCH.fluxo);
+pipe("#pipe-install",ARCH.instalacao,"install");
+ARCH.camadas.forEach(cam=>{
+  $("#camadas").appendChild(el("h3","lay",esc(cam.nome)));
+  const g=el("div","grid cards");
+  cam.skills.forEach(c=>{const d=el("div","comp");
+    d.style.borderLeft="3px solid var(--"+cam.cor+")";
+    d.innerHTML=`<div class="nm">${esc(c.nome)}</div><div class="role">${esc(c.role)}</div><div class="tech">${esc(c.tech)}</div>`;
+    g.appendChild(d);});
+  $("#camadas").appendChild(g);});
+ARCH.scripts.forEach(s=>$("#scripts tbody").appendChild(el("tr",null,
+  `<td><code>${esc(s.nome)}</code><div style="color:var(--mut);font-size:11px;margin-top:3px">${esc(s.runtime)}</div></td><td>${esc(s.papel)}</td>`)));
+ARCH.dados.forEach(d=>$("#dados tbody").appendChild(el("tr",null,
+  `<td><code>${esc(d.arquivo)}</code><div style="color:var(--mut);font-size:11px;margin-top:3px">${esc(d.conteudo)}</div></td><td>${esc(d.uso)}</td>`)));
+ARCH.ementas.forEach(e=>$("#ementas tbody").appendChild(el("tr",null,
+  `<td><strong>${esc(e.camada)}</strong></td><td style="color:var(--mut)">${esc(e.txt)}</td>`)));
+ARCH.anonimizacao.forEach(a=>$("#anonimizacao").appendChild(el("li",null,esc(a))));
+ARCH.decisoes.forEach(d=>$("#decisoes tbody").appendChild(el("tr",null,
+  `<td><strong>${esc(d.topico)}</strong></td><td>${esc(d.txt)}</td>`)));
+ARCH.diferencas.forEach(d=>$("#diferencas tbody").appendChild(el("tr",null,
+  `<td><strong>${esc(d.topico)}</strong></td><td style="color:var(--mut)">${esc(d.txt)}</td>`)));
+ARCH.foraDoToolkit.forEach(f=>$("#fora").appendChild(el("li",null,esc(f))));
+ARCH.avisos.forEach(a=>$("#avisos").appendChild(el("li",null,esc(a))));
+$("#footer").innerHTML=`${esc(ARCH.projeto)} — mapa de arquitetura. Dados estruturados em <code>arquitetura.json</code>. Repositório: ${esc(ARCH.repo)}. Gerado em ${ARCH.data}.`;
+</script>
+</body>
+</html>
