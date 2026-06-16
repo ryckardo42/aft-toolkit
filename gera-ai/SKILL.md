@@ -115,10 +115,12 @@ Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos —
 | Número | Não | `SN` |
 | Complemento | Não | `QUADRA` |
 | Bairro | Não | `BAIRRO` |
-| CEP | Não | `cep_uorg` do aft-config.md |
+| CEP | **Sim (nunca vazio)** | `cep_uorg` do aft-config.md |
 | UF | Não | `uf` do aft-config.md |
 | Município | Não | `municipio` do aft-config.md |
 | Trabalhadores prejudicados | Não | (sem linhas tipo 4) |
+
+> **CEP é obrigatório no Sistema Auditor** — se o campo CEP da linha tipo 1 vier vazio, a importação é RECUSADA com o aviso "CEP não informado! AI RECUSADO". Por isso o CEP **nunca** pode sair em branco: se o auditor não informar o CEP do estabelecimento e ele não estiver no contexto (memory.md/RT/auto), preencha automaticamente com `cep_uorg` do aft-config.md (placeholder que o auditor corrige na lupa). Nunca pergunte de novo nem deixe vazio — caia no `cep_uorg`.
 
 **Trabalhadores**: para cada, peça nome completo + CPF (11 dígitos sem pontuação) + **data de admissão**. A data de admissão é **SEMPRE** normalizada para `dd/mm/aaaa` (ex.: "10 de maio de 2026" → `10/05/2026`) e gravada na linha tipo 4 (ver FASE 3). Se já vier de uma skill anterior na sessão (ex.: `/registro`), reaproveite sem perguntar de novo. Assim que recebidos, registre nome/CPF no mapa de-para (FASE 2.5) e **a partir daí refira-se a eles só pelos tokens** `[[TRAB_NN]]`/`[[CPF_NN]]` (a data de admissão não é tokenizada).
 
@@ -269,6 +271,7 @@ Linhas separadas por `\n`.
 > 23 campos, 22 tabs. Termina em `0` sem tab final.
 > `[razao_social]` = token `[[AUTUADA]]` no TXT tokenizado (o `rehydrate.py` injeta o nome real; o Sistema Auditor também o puxa pelo CNPJ via lupa).
 > `[texto_autuacao]` = texto **tokenizado** (`[[AUTUADA]]`, `[[TRAB_NN]]`, `[[CPF_NN]]`), conforme FASE 2.5.
+> **`[cep]` (campo 8) JAMAIS pode ser vazio** — o Sistema Auditor recusa o auto inteiro ("CEP não informado! AI RECUSADO"). Se não houver CEP do estabelecimento, preencha com `cep_uorg` do aft-config.md. Antes de gravar o TXT, valide que TODAS as linhas tipo 1 têm o campo 8 preenchido; se alguma estiver vazia, substitua por `cep_uorg` e só então gere o arquivo.
 
 **Linhas tipo 5** — anexos (uma por PDF, se houver):
 ```
