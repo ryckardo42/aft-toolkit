@@ -61,8 +61,14 @@ Para cada auto, valide o código da ementa:
 - Formato obrigatório: `\d{6}-\d` (6 dígitos, hífen, 1 dígito verificador). Ex: `312358-8`.
 - Se o auditor não forneceu o código, use a busca em 3 camadas:
   1. **NotebookLM** (se configurado): resolva o notebook da NR em
-     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e rode
-     `notebooklm ask "Qual o código da ementa (formato XXXXXX-X) para [irregularidade]?" --notebook [id] --json`.
+     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e consulte
+     **sempre pelo wrapper com auto-reautenticação** (a sessão do NotebookLM expira e o
+     wrapper reconecta sozinho, sem abortar a tarefa):
+     ```bash
+     python ~/.claude/skills/_scripts/nlm_ask.py -n [id] --prompt-file [arquivo_pergunta.txt]
+     ```
+     Escreva a pergunta num arquivo (evita problemas de acento no shell). Só caia em
+     `/notebooklm-login` se o wrapper avisar que não conseguiu reautenticar sozinho.
   2. **Ementário no Google Drive** (manual): peça ao AFT para abrir
      https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
      na pasta `EMENTAS SST`, abrir o `ementasNRXX.md` da NR e colar o trecho relevante.
@@ -92,7 +98,7 @@ Só prossiga após confirmação.
    ls ~/Documents/AFT/"OS ATIVAS"/
    ```
 2. Apresente numerado + opção "criar nova".
-3. Se "criar nova" → peça o nome em CAIXA ALTA (padrão: `NOME DA EMPRESA <CNPJ 14 dígitos>`) e crie o diretório:
+3. Se "criar nova" → peça o nome em CAIXA ALTA (padrão: `NOME DA EMPRESA <identificador>`, onde o identificador é o **CNPJ (14 dígitos)** para pessoa jurídica OU o **CPF/CAEPF (11 dígitos)** para empregador pessoa física — ex.: produtor rural. Use só dígitos.) e crie o diretório:
    ```bash
    mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[NOME_EMPRESA]"/
    ```
@@ -110,7 +116,7 @@ Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos —
 | Campo | Obrigatório | Default/Placeholder |
 |-------|-------------|---------------------|
 | CIF do auditor (6 dígitos) | **Sim** | `cif` do aft-config.md (não re-pergunte) |
-| CNPJ (14 dígitos, só números) | **Sim** | extrair do memory.md se disponível |
+| Identificador: CNPJ (14 díg.) **ou** CPF/CAEPF (11 díg.), só números | **Sim** | extrair do memory.md (`**CNPJ:**` ou `**CPF:**`) se disponível |
 | Logradouro | Não | `Ja conferiu a UORG?` |
 | Número | Não | `SN` |
 | Complemento | Não | `QUADRA` |
@@ -218,7 +224,7 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 | Razão social / nome fantasia | **Sim** | `[[AUTUADA]]` |
 | Nome do trabalhador | **Sim** | `[[TRAB_NN]]` (NN = 2 dígitos, zero-pad: `01`, `02`, …) |
 | CPF do trabalhador | **Sim** | `[[CPF_NN]]` (mesmo NN do nome correspondente) |
-| **CNPJ** | **NÃO — sempre real** | (chave do sistema: pasta, anexos, `memory.md`) |
+| **CNPJ ou CPF/CAEPF** (identificador) | **NÃO — sempre real** | (chave do sistema: pasta, anexos, `memory.md`) |
 | Endereço | Não | (placeholders; o Sistema Auditor puxa pelo CNPJ) |
 
 > Tokens são ASCII com terminador `]]` — seguros dentro de campos TAB, da codificação `#13#10` e do latin-1, e à prova de colisão de prefixo (`[[CPF_01]]` ≠ início de `[[CPF_10]]`).
@@ -360,6 +366,12 @@ linha 6 (CIF)
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
    O script aborta (sem gerar o TXT) se faltar valor no de-para, se algum CPF não tiver 11 dígitos, se sobrar token órfão `[[...]]`, ou se houver caractere fora do latin-1. Se abortar, corrija a causa e rode de novo — **não** preencha o TXT à mão.
+5. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, caractere fora do latin-1):
+   ```bash
+   python ~/.claude/skills/_scripts/validar_txt.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
+   ```
+   - **APROVADO** (exit 0) → siga para as instruções de importação.
+   - **REPROVADO** (exit 1) → corrija a causa apontada (ex.: CEP vazio → preencher com `cep_uorg`), regenere o tokenizado, re-hidrate e valide de novo. **Nunca** entregue ao AFT um TXT que não passou no validador.
 
 ### Instruções de importação
 
@@ -457,6 +469,6 @@ _(vazio)_
 - **A extensão dos anexos é `.PDF` MAIÚSCULA** (o Sistema Auditor é case-sensitive na extensão).
 - **Antes de sobrescrever** qualquer arquivo existente, confirme com o auditor.
 - **Re-hidratação é SEMPRE via `rehydrate.py`** (string-replace determinístico), nunca digitada pelo modelo — é documento legal, um CPF/nome trocado é inaceitável.
-- **CNPJ nunca é tokenizado** — fica real em pasta, anexos, `memory.md` e TXT.
+- **O identificador (CNPJ 14 díg. ou CPF/CAEPF 11 díg.) nunca é tokenizado** — fica real em pasta, anexos, `memory.md` e TXT. Nos nomes de arquivo `AI_[NUM_AUTOS]_[CNPJ]...`, `[CNPJ]` é esse identificador (11 ou 14 dígitos).
 - **`.depara_[CNPJ].json` contém PII** — tratar como sensível: não exibir no chat, não compartilhar, não commitar. A cópia `*.tokenized.txt` é a única segura para compartilhar.
 - **Após a FASE 2.5, não reimprima** razão social real nem nome/CPF de trabalhador no chat — use sempre os tokens.

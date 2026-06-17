@@ -38,7 +38,7 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 | Campo | Obrigatório | Observação |
 |---|---|---|
 | Empregador (razão social) | **Sim** | em CAIXA ALTA, padrão das pastas |
-| CNPJ (14 dígitos) | **Sim** | aceite com ou sem pontuação; guarde só dígitos |
+| CNPJ (14 díg.) **ou** CPF/CAEPF (11 díg.) | **Sim** | empregador pessoa jurídica usa CNPJ; pessoa física (ex.: produtor rural) usa CPF/CAEPF. Aceite com ou sem pontuação; guarde só dígitos |
 | Município | Não | onde fica o estabelecimento |
 | Notificação DET — código | Não | ex.: `RMNHIHSH9525MU` (se já notificou pelo DET) |
 | DET — data de ciência | Não | dd/mm/aaaa |
@@ -49,7 +49,7 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 
 ## Passo 2 — Resolver a pasta da OS
 
-Nome da pasta (padrão do toolkit): `<EMPREGADOR> <CNPJ 14 dígitos>`.
+Nome da pasta (padrão do toolkit): `<EMPREGADOR> <identificador só dígitos>` — CNPJ (14 díg.) para pessoa jurídica ou CPF/CAEPF (11 díg.) para pessoa física. Grave o mesmo identificador no `memory.md` (`**CNPJ:**` ou `**CPF:**`).
 
 ```bash
 ls ~/Documents/AFT/"OS ATIVAS"/

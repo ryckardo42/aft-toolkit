@@ -176,6 +176,23 @@ seguirá sem o NotebookLM e que as skills vão usar o ementário no Google Drive
 
 ---
 
+## Auto-reautenticação nas consultas (wrapper)
+
+A sessão do NotebookLM **expira de tempos em tempos**, inclusive no meio de uma ação
+fiscal. Para isso não abortar a tarefa, as skills que consultam ementas (`/gera-ai`,
+`/inspecao-inicial`, `/NR12`, `/NR18`, `/tn-nco`...) devem chamar o **wrapper** em vez
+de `notebooklm ask` direto:
+
+```bash
+python ~/.claude/skills/_scripts/nlm_ask.py -n [notebook_id] --prompt-file [pergunta.txt]
+```
+
+O wrapper roda a consulta; se detectar sessão expirada, dispara sozinho o refresh
+silencioso (login pelo perfil persistente do navegador do AFT, que reaproveita a sessão
+já aberta) e tenta a consulta **uma vez** de novo. Só caia nesta skill (`/notebooklm-login`)
+quando o wrapper avisar que **não** conseguiu reautenticar sozinho (ex.: sem rede, ou o
+login exige uma ação do AFT na janela).
+
 ## Regras
 
 - O Claude executa todos os comandos. O AFT só clica "Permitir" e, no máximo, faz o

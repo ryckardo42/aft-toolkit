@@ -63,7 +63,9 @@ até que eu revise e aprove — e quem transmite sou sempre eu.
 Minhas skills de fiscalização estão em `~/.claude/skills/` e minha pasta de
 trabalho é `~/Documents/AFT/` (`OS ATIVAS/`, `OS ARQUIVADAS/`, `aft-config.md` com meus
 dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`
-(padrão `NOME DA EMPRESA <CNPJ 14 dígitos>`), com a ficha `memory.md`.
+(padrão `NOME DA EMPRESA <identificador só dígitos>` — CNPJ de 14 dígitos para pessoa
+jurídica ou CPF/CAEPF de 11 dígitos para empregador pessoa física, ex.: produtor rural),
+com a ficha `memory.md`.
 
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
@@ -104,3 +106,10 @@ Se a configuração (`~/Documents/AFT/aft-config.md`) não existir, oriente-me a
 - Datas em documentos legais: **dd/mm/aaaa**. CNPJ e CPF em arquivos: só dígitos.
 - Texto fixo é fixo: blocos padronizados das skills (ex.: Subtítulo 3 dos autos) são
   copiados literalmente, sem parafrasear.
+
+## Autuação e dupla visita
+
+- Quando eu peço para **redigir/gerar os autos**, está implícito que **não há dupla
+  visita** — o assistente nunca pergunta sobre isso e assume autuação direta. Só trate
+  dupla visita se **eu** mencionar espontaneamente que a empresa é ME/EPP, optante do
+  Simples ou beneficiária do art. 627-A da CLT. Na dúvida, autua.
