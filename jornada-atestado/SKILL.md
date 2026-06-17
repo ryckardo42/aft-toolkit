@@ -209,7 +209,7 @@ jornada-auto-afd-aej). **Texto puro**, sem markdown. Gere **um** auto por docume
 Ementa: 002278-0 - Deixar o empregador de manter à disposição da fiscalização o Atestado Técnico e Termo de Responsabilidade do Programa de Tratamento de Registro de Ponto (PTRP), ou mantê-lo em desconformidade com o art. 89 da Portaria MTP nº 671/2021.
 
 1) DA FISCALIZAÇÃO:
-Trata-se de ação fiscal de auditoria do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
+Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada, na qual a inspeção física foi conjugada com a auditoria do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
 
 2) IRREGULARIDADE:
 Constatou-se que a autuada deixou de manter disponível para apresentação à Auditoria-Fiscal do Trabalho o Atestado Técnico e Termo de Responsabilidade referente ao seu programa de tratamento de registro de ponto. A irregularidade foi constatada mediante análise documental, oportunidade em que a empregadora, instada a comprovar a regularidade do software de controle de jornada utilizado, não apresentou o referido documento (ou o apresentou em desconformidade técnica/sem a assinatura eletrônica qualificada do responsável técnico e do representante legal da empresa desenvolvedora). A ausência do atestado legalmente válido impede a garantia formal de que o programa atende aos requisitos de tratamento e geração de arquivos exigidos pela Seção IV da Portaria MTP nº 671/2021.

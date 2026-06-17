@@ -104,7 +104,7 @@ como abaixo.
 Ementa: 002279-9 - Deixar o empregador de gerar e manter o Arquivo Fonte de Dados (AFD) conforme as especificações técnicas disponíveis no portal gov.br, quando adotar qualquer tipo de sistema de registro eletrônico de ponto (REP-A, REP-P ou REP-C).
 
 1) DA FISCALIZAÇÃO:
-Trata-se de ação fiscal de auditoria digital da jornada de trabalho, na qual se analisou o arquivo do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
+Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada, na qual a inspeção física foi conjugada com a auditoria digital da jornada de trabalho, mediante análise do arquivo do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
 
 2) IRREGULARIDADE:
 <HISTORICO_AFD>
@@ -122,7 +122,7 @@ ELEMENTOS DE CONVICÇÃO:
 Ementa: 002280-2 - Deixar o empregador de gerar e manter o Arquivo Eletrônico de Jornada (AEJ) conforme especificações disponíveis no portal gov.br, quando adotar qualquer tipo de sistema de registro eletrônico de ponto (REP-A, REP-P ou REP-C).
 
 1) DA FISCALIZAÇÃO:
-Trata-se de ação fiscal de auditoria digital da jornada de trabalho, na qual se analisou o arquivo do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
+Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada, na qual a inspeção física foi conjugada com a auditoria digital da jornada de trabalho, mediante análise do arquivo do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
 
 2) IRREGULARIDADE:
 <HISTORICO_AEJ>
