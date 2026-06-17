@@ -69,6 +69,11 @@ toolkit (são problemas técnicos meus, não do AFT — resolva-os sozinho):
   `python ~/.claude/skills/_scripts/backup_arquivo.py "<arquivo>"` (salva uma cópia
   carimbada em `.backups/`; é silencioso se o arquivo for novo). Assim uma edição errada
   nunca perde o original.
+- **Word/Excel aberto:** antes de sobrescrever/editar um `.docx` (ou `.xlsx`) que o AFT
+  possa ter aberto, rode `python ~/.claude/skills/_scripts/checar_arquivo_aberto.py
+  "<arquivo>"`. Se acusar **ABERTO**, peça ao AFT — em uma frase — para fechar o arquivo
+  no Word/Excel e tente de novo; nunca grave por cima (o erro de permissão apareceria só
+  no meio da operação).
 
 ## Papel do Claude
 

@@ -208,15 +208,22 @@ O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o
 
 ### 6. Salvar na pasta da OS
 
-Calcule a data de hoje (`date +%d-%m`) e crie a pasta de saída. **Antes de copiar**, faça
-backup de um RT anterior que já exista nessa pasta (re-execução é idempotente, mas o backup
-protege o original — o script é silencioso se não houver arquivo a salvar):
+Calcule a data de hoje (`date +%d-%m`) e crie a pasta de saída. **Antes de copiar**: (1)
+se já existir um RT nessa pasta e ele estiver **aberto no Word**, a cópia falharia com erro
+de permissão — cheque e peça para fechar ANTES; (2) faça backup do RT anterior (o backup é
+silencioso se não houver arquivo a salvar):
 
 ```bash
 mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/
-python ~/.claude/skills/_scripts/backup_arquivo.py ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/RT_Interdicao.docx
-cp /tmp/RT_temp/RT_Interdicao.docx ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/
+DEST=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/RT_Interdicao.docx
+python ~/.claude/skills/_scripts/checar_arquivo_aberto.py "$DEST"
+python ~/.claude/skills/_scripts/backup_arquivo.py "$DEST"
+cp /tmp/RT_temp/RT_Interdicao.docx "$DEST"
 ```
+
+> Se o `checar_arquivo_aberto.py` retornar **ABERTO** (exit 1), **pare** e peça ao AFT, em
+> uma frase: *"Feche o arquivo `RT_Interdicao.docx` no Word para eu poder salvar."* Assim
+> que ele fechar, rode de novo. Nunca tente o `cp` por cima de um arquivo aberto.
 
 Informe o caminho ao AFT — ele revisa o `.docx` no Word.
 
