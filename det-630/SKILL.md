@@ -58,7 +58,6 @@ Extraia do PDF da notificação (ou pergunte UMA pergunta consolidada com o que 
 
 | Variável | O que é |
 |---|---|
-| `tipo_fiscalizacao` | `mista` ou `indireta` |
 | `cnpj` | CNPJ do empregador (14 dígitos) |
 | `data_notificacao` | data de lavratura da notificação |
 | `data_ciencia` | data em que o empregador teve ciência (marco do prazo) |
@@ -77,7 +76,7 @@ Monte o bloco abaixo. Não use markdown bold (`**…**`) — o parser do `/gera-
 Ementa: 001168-1 - Deixar de apresentar documentos sujeitos à inspeção do trabalho no dia e hora previamente fixados pelo AFT.
 
 1) DA FISCALIZAÇÃO:
-Trata-se de ação fiscal em curso, na modalidade fiscalização <TIPO> (nos termos do <PARAGRAFO> do art. 30 do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento supracitado.
+Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º do art. 30 do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento supracitado.
 
 2) IRREGULARIDADE:
 O empregador acima identificado foi notificado, nos termos do disposto nos parágrafos 3º e 4º do art. 630 da Consolidação das Leis do Trabalho - CLT, para a apresentação de documentos.
@@ -102,8 +101,6 @@ ELEMENTOS DE CONVICÇÃO:
 
 | Placeholder | Cenário 1 (omissão total) | Cenário 2 (omissão parcial) |
 |---|---|---|
-| `<TIPO>` | `mista` se `tipo_fiscalizacao=mista`; `indireta` se `=indireta` | idem |
-| `<PARAGRAFO>` | `§ 3º` se mista; `§ 1º` se indireta | idem |
 | `<DATA_NOTIFICACAO>` | dd/mm/yyyy | idem |
 | `<DATA_CIENCIA>` | dd/mm/yyyy | idem |
 | `<NUMERO_NOTIFICACAO>` | código (ex: ROCHC716LMJ3KP) | idem |
@@ -165,7 +162,7 @@ Imprima no chat:
 ✅ Auto da Ementa 001168-1 redigido — notificação <CODIGO>
 
 Cenário: <total|parcial>
-Modalidade: <mista|indireta>
+Modalidade: mista
 Ciência: <DATA_CIENCIA>  ·  Prazo: <PRAZO_ENTREGA>
 
 📄 Texto do auto: <PASTA_OS>/auto-det630-<CODIGO>.md
