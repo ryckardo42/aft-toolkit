@@ -208,10 +208,13 @@ O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o
 
 ### 6. Salvar na pasta da OS
 
-Calcule a data de hoje (`date +%d-%m`) e crie a pasta de saída:
+Calcule a data de hoje (`date +%d-%m`) e crie a pasta de saída. **Antes de copiar**, faça
+backup de um RT anterior que já exista nessa pasta (re-execução é idempotente, mas o backup
+protege o original — o script é silencioso se não houver arquivo a salvar):
 
 ```bash
 mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/
+python ~/.claude/skills/_scripts/backup_arquivo.py ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/RT_Interdicao.docx
 cp /tmp/RT_temp/RT_Interdicao.docx ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/
 ```
 
@@ -293,7 +296,22 @@ Na mesma pasta `Autos TE-TI {DD-MM}/` criada no passo 6, salve:
 2. A cópia do `.docx` do RT já está lá (passo 6) — serve como elemento de convicção /
    anexo de todos os autos.
 
-#### 7.5. Apresentar e encerrar
+#### 7.5. Conferir a coerência RT x autos (obrigatório)
+
+A Seção 4 do RT e o `autos.md` precisam bater. Eles podem desalinhar quando o RT é
+editado (trocar ementas por itens de NR, tirar/incluir irregularidade — ex.: NR-01/NR-35).
+Rode o verificador comparando o `.docx` do RT com o `autos.md`:
+
+```bash
+python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[caminho do autos.md]"
+```
+
+- **Sem divergência** (exit 0) → siga para 7.6.
+- **Com divergência** (exit 1: contagem diferente, ou NR no RT sem auto / auto sem item
+  no RT) → relate ao AFT em linguagem simples e pergunte como reconciliar (incluir o auto
+  faltante, remover o excedente, ou ajustar o RT). **Não encerre como se estivesse coerente.**
+
+#### 7.6. Apresentar e encerrar
 
 - Imprima no chat os N blocos `=== AUTO DE INFRAÇÃO #N ===` na íntegra (para o AFT revisar
   visualmente).

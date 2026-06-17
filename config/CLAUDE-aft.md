@@ -64,6 +64,11 @@ toolkit (são problemas técnicos meus, não do AFT — resolva-os sozinho):
 - **Scripts em UTF-8:** ao gerar um `.py` temporário, declare `# -*- coding: utf-8 -*-`
   e, se imprimir acentos no console, reconfigure a saída para UTF-8 com `errors=replace`
   (o console do Windows é cp1252 e pode derrubar o script).
+- **Backup antes de editar:** antes de sobrescrever ou regravar um arquivo legal que já
+  existe — o `.docx` do RT ou o `memory.md` de uma OS — rode
+  `python ~/.claude/skills/_scripts/backup_arquivo.py "<arquivo>"` (salva uma cópia
+  carimbada em `.backups/`; é silencioso se o arquivo for novo). Assim uma edição errada
+  nunca perde o original.
 
 ## Papel do Claude
 
