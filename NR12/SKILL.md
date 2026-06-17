@@ -221,7 +221,7 @@ No modo **B/C** (sub-rotina), substitua o rodapé por uma marca curta:
 
 ### Com /inspecao-inicial
 
-Quando essa skill identifica NR-12 na Fase 2 ("Identificação de NR e Ementa"), em vez de fazer a busca por conta própria, chama esta skill passando a narrativa de cada irregularidade NR-12. O bloco `2) IRREGULARIDADE` retornado é colado direto no auto; a chamadora anexa o subtítulo 1) DA FISCALIZAÇÃO (contextual) e 3) OBSERVAÇÕES (texto fixo imutável).
+Quando essa skill identifica NR-12 na Fase 2 ("Identificação de NR e Ementa"), em vez de fazer a busca por conta própria, chama esta skill passando a narrativa de cada irregularidade NR-12. O bloco `2) IRREGULARIDADE` retornado é colado direto no auto; a chamadora anexa o subtítulo 1) DA FISCALIZAÇÃO (contextual). O 3) OBSERVAÇÕES **não é escrito** — é único, fixo e injetado pelo `/gera-ai` (de `config/blocos_auto.md`).
 
 ### Com /aft-rt-rgi
 

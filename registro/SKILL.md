@@ -103,8 +103,11 @@ Reproduza estes textos literalmente nos três autos, nos subtítulos indicados:
 **[BLOCO_FISC]:**
 > *Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º, do Decreto nº 4.552/2002, iniciada em **[data_inspecao]** e ainda em curso na presente data no empregador acima qualificado.*
 
-**[BLOCO_OBS]:**
-> *a) Lavrado no local da inspeção, conforme parágrafo único do art. 4º da Portaria 667/2021.#13#10b) A auditoria foi iniciada no local de trabalho e continuada em unidade do MTE, com análise documental, pesquisa nos sistemas informatizados e lavratura de documentos (necessidade de acesso a bancos de dados oficiais - eSocial - para confirmação das evidências), o que caracteriza ação fiscal mista, de acordo com o artigo 30, § 3º, do Decreto nº 4.552/2002. Desse modo, a fiscalização ainda se encontra em andamento na data de lavratura deste Auto de Infração.*
+**Subtítulo 3 (OBSERVAÇÕES):** NÃO escreva. O bloco 3 é único e fixo para todo auto e é
+injetado pelo `/gera-ai` (de `config/blocos_auto.md`, marcas `<BLOCO3>`) entre o Subtítulo
+2 e os ELEMENTOS DE CONVICÇÃO. Os autos abaixo terminam, de propósito, no Subtítulo 2 +
+ELEMENTOS DE CONVICÇÃO. (O texto canônico é exatamente o que esta skill usava como
+`[BLOCO_OBS]` — agora centralizado.)
 
 ---
 
@@ -171,8 +174,6 @@ formalização do vínculo empregatício. Esta ausência da prestação dessas i
 o dia imediatamente anterior ao início da prestação laboral ratifica a manutenção do
 vínculo na informalidade.
 
-3) OBSERVAÇÕES: [BLOCO_OBS]
-
 ELEMENTOS DE CONVICÇÃO:
 Inspeção in loco; informações da inspeção realizada; consultas ao sistema eSocial no
 planejamento e no curso da ação fiscal, que evidenciou a omissão do empregador quanto
@@ -218,8 +219,6 @@ informação a respeito dos citados vínculos com o empregador autuado. Sendo as
 incorreu o empregador na infração ementada acima, contrariando os dispositivos legais
 inframencionados.
 
-3) OBSERVAÇÕES: [BLOCO_OBS]
-
 ELEMENTOS DE CONVICÇÃO:
 Inspeção do estabelecimento; informações da inspeção realizada; consulta ao banco de dados
 do eSocial.
@@ -249,8 +248,6 @@ A irregularidade restou evidenciada, também, pela própria ausência de registr
 trabalhador(es), apurada no curso da fiscalização e objeto de Auto de Infração capitulado
 no art. 41 da CLT lavrado nesta mesma ação fiscal, o que confirma a inexistência de qualquer
 procedimento de saúde ocupacional prévio ao início das atividades laborais.
-
-3) OBSERVAÇÕES: [BLOCO_OBS]
 
 ELEMENTOS DE CONVICÇÃO:
 Inspeção in loco; informações da inspeção realizada; ausência do Atestado de Saúde

@@ -251,13 +251,14 @@ O quadro resultante dessa sistematização e análise de informações levou à 
 
 Exemplo de empregado prejudicado: dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a citação do empregado em situação irregular faz-se necessária apenas quando imprescindível à caracterização da infração e quando a lei fixar a multa com base no quantitativo de trabalhadores diretamente prejudicados. Ademais, nas infrações que atingem a coletividade dos trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho (SST), dispensa-se a individualização do sujeito, pois o bem jurídico tutelado tem natureza difusa ou coletiva. (Orientação técnica SIT/n.2/2022).
 
-3) OBSERVAÇÕES:
-1) Nos termos do art. 628 da CLT, o descumprimento de um preceito legal trabalhista tem como consequência a lavratura do respectivo auto de infração. Considerando que a ilicitude se consuma no ato da prática da conduta e a constatação de grave e eminente risco manifestado por meio de termo de interdição, a posterior adequação não é capaz de impedir ou de levar à improcedência do auto de infração.
-2) A presente ação fiscal se enquadra na modalidade mista (art. 30, § 3º. do Decreto Federal 4552 de 27/12/2002). O auto de infração deve ser lavrado, obrigatoriamente, em equipamento de informática com sistema operacional Windows, acesso à internet e utilização de programa denominado Sistema Auditor - com download, acesso e uso exclusivo da Inspeção do Trabalho. Lavrado no local da inspeção, conforme parágrafo único do art. 4º da Portaria 667/2021.
-
 ELEMENTOS DE CONVICÇÃO:
 Inspeção realizada no estabelecimento e relatório técnico do embargo/interdição em anexo.
 ```
+
+> **NÃO escreva o Subtítulo 3 (OBSERVAÇÕES).** Ele é único e fixo para todo auto e é
+> injetado pelo `/gera-ai` (de `config/blocos_auto.md`) entre o Subtítulo 2 e os
+> ELEMENTOS DE CONVICÇÃO. O template acima termina, de propósito, no Subtítulo 2 +
+> ELEMENTOS DE CONVICÇÃO.
 
 #### 7.3. Regras de substituição
 

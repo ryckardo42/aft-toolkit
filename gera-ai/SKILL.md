@@ -38,12 +38,26 @@ Se ambíguo, pergunte: **"Os autos para empacotar estão (a) colados/fornecidos 
 
 ### 1.2 Parser dos autos
 
+**Passo 0 — Injetar o bloco 3 (OBSERVAÇÕES).** As skills do toolkit redigem os autos
+**sem** o Subtítulo 3 (terminam no bloco 2 + ELEMENTOS DE CONVICÇÃO). O bloco 3 é único,
+fixo e igual para todo auto — fica em `config/blocos_auto.md` e é injetado aqui, de forma
+determinística (texto idêntico, byte a byte, sem gastar tokens reescrevendo-o). Antes de
+parsear, rode sobre o `autos.md` (passe o `python_path` do aft-config.md):
+
+```bash
+python ~/.claude/skills/_scripts/bloco3_inject.py "[caminho do autos.md]"
+```
+
+O script é idempotente e compatível com o legado: se um auto **já** tiver `3) OBSERVAÇÕES`
+(auto antigo escrito à mão), ele é mantido como está; os demais recebem o bloco canônico
+entre o bloco 2 e `ELEMENTOS DE CONVICÇÃO:`. Depois disso, parseie o `autos.md` já completo.
+
 Identifique cada **bloco de auto** procurando estes marcadores:
 - Cabeçalho `=== AUTO DE INFRAÇÃO #N ===` ou `=== AUTO #N ===`
 - Linha `Ementa: [codigo] - [descricao]`
 - Subtítulo `1) DA FISCALIZAÇÃO:`
 - Subtítulo `2) IRREGULARIDADE:`
-- Subtítulo `3) OBSERVAÇÕES:`
+- Subtítulo `3) OBSERVAÇÕES:` (injetado no Passo 0; ver `config/blocos_auto.md`)
 - Bloco `ELEMENTOS DE CONVICÇÃO:`
 
 Para cada bloco extraia:

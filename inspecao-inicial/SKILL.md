@@ -343,19 +343,19 @@ SIT/n.2/2022).
 - Tom: sóbrio, formal, impessoal, terceira pessoa.
 - Dados ausentes: sinalize como `[DADO NÃO INFORMADO]`.
 
-#### SUBTÍTULO 3 — OBSERVAÇÕES (texto fixo, imutável)
+#### SUBTÍTULO 3 — OBSERVAÇÕES (NÃO escreva: é injetado pelo /gera-ai)
 
-```
-3) OBSERVAÇÕES: a) Lavrado no local da inspeção, conforme parágrafo único do art. 4º da Portaria 667/2021.#13#10b) A auditoria foi iniciada no local de trabalho e continuada em unidade do MTE, com análise documental, pesquisa nos sistemas informatizados e lavratura de documentos (necessidade de acesso a bancos de dados oficiais - eSocial - para confirmação das evidências), o que caracteriza ação fiscal mista, de acordo com o artigo 30, § 3º, do Decreto nº 4.552/2002. Desse modo, a fiscalização ainda se encontra em andamento na data de lavratura deste Auto de Infração.
-```
-
-> **Este texto é FIXO e LITERAL. Copie-o caractere por caractere — não parafraseie, não condense, não resuma, não troque palavras por sinônimos, não renumere os itens `a)`/`b)` e não altere a pontuação.** Use exatamente o bloco acima, idêntico em todos os autos.
+> **NÃO redija o Subtítulo 3.** O bloco 3 é único, fixo e igual para todo auto de
+> infração — fica em `config/blocos_auto.md` (fonte do texto canônico desta skill) e é
+> injetado automaticamente pelo `/gera-ai` (`_scripts/bloco3_inject.py`) entre o
+> Subtítulo 2 e os ELEMENTOS DE CONVICÇÃO. Isso economiza tokens e garante o texto
+> idêntico, byte a byte, em todos os autos.
 >
-> **NÃO adote o formato do Subtítulo 3 de outros autos já existentes na pasta da OS** (ex.: autos de interdição gerados por `/aft-rt-rgi`, que trazem item sobre art. 628 da CLT e termo de interdição). Aqueles textos são específicos daquele tipo de auto. A "consistência com a ação fiscal" vale para o Subtítulo 1 (que é contextual), **nunca** para o Subtítulo 3 — aqui, fidelidade ao texto canônico vence consistência de estilo.
->
-> Usa `#13#10` como separador de parágrafo (interpretado pelo Sistema Auditor). **ATENÇÃO: o texto DEVE conter acentuação completa em português.** O encoding ISO-8859-1 suporta todos — a conversão é feita pelo `/gera-ai`.
+> Portanto, **termine o auto no Subtítulo 2 (IRREGULARIDADE) seguido direto dos ELEMENTOS
+> DE CONVICÇÃO** — sem o `3) OBSERVAÇÕES`. (Para conferência, o texto canônico é o de
+> `config/blocos_auto.md`, marcas `<BLOCO3>`.)
 
-#### ELEMENTOS DE CONVICÇÃO (após subtítulo 3)
+#### ELEMENTOS DE CONVICÇÃO (logo após o Subtítulo 2)
 
 ```
 ELEMENTOS DE CONVICÇÃO:
