@@ -132,15 +132,50 @@ else:
         "Rode /aft-setup para informar nome, CIF e lotacao uma unica vez.")
 
 # 8. Bibliotecas Python ------------------------------------------------------
-libs = {"pillow": "PIL", "pikepdf": "pikepdf", "pypdf": "pypdf"}
+libs = {
+    "pillow": "PIL",            # fotos -> PDF
+    "pikepdf": "pikepdf",       # assinaturas/compressao de PDF
+    "pypdf": "pypdf",           # leitura de autos lavrados
+    "python-docx": "docx",      # gera/edita o RT (.docx) da interdicao
+    "pdfplumber": "pdfplumber", # extrai texto de PDFs de fiscalizacao
+    "pillow-heif": "pillow_heif",  # fotos HEIC/HEIF do iPhone (opcional)
+}
 faltando_lib = [nome for nome, mod in libs.items() if find_spec(mod) is None]
 if not faltando_lib:
-    add("Bibliotecas Python", "ok", "pillow, pikepdf e pypdf instaladas")
+    add("Bibliotecas Python", "ok",
+        "pillow, pikepdf, pypdf, python-docx, pdfplumber e pillow-heif instaladas")
 else:
     add("Bibliotecas Python", "aviso",
         f"Faltam: {', '.join(faltando_lib)}",
         "Rode /aft-setup (Passo 6) ou: pip install " + " ".join(faltando_lib) +
-        " (fotos->PDF, compressao e leitura de autos lavrados dependem delas).")
+        " (fotos->PDF, .docx do RT, leitura de PDF e de autos lavrados dependem delas).")
+
+# 8b. python_path no aft-config.md (resolver o Python certo) ------------------
+# No Windows, 'python3' pode ser o atalho vazio da Microsoft Store. O /aft-setup
+# grava o caminho completo do interpretador em python_path para as skills usarem.
+cfg_path = AFT_DIR / "aft-config.md"
+py_path_val = None
+if cfg_path.is_file():
+    import re as _re
+    try:
+        for _line in cfg_path.read_text(encoding="utf-8").splitlines():
+            _m = _re.search(r'python_path:\s*"?([^"#]+?)"?\s*(?:#.*)?$', _line)
+            if _m and _m.group(1).strip():
+                py_path_val = _m.group(1).strip()
+                break
+    except OSError:
+        pass
+if py_path_val and Path(py_path_val).is_file():
+    add("Caminho do Python (python_path)", "ok", py_path_val)
+elif py_path_val:
+    add("Caminho do Python (python_path)", "aviso",
+        f"python_path aponta para um arquivo inexistente: {py_path_val}",
+        "Rode /aft-setup para regravar o caminho do Python.")
+elif cfg_path.is_file():
+    add("Caminho do Python (python_path)", "aviso",
+        "aft-config.md nao tem python_path",
+        "Rode /aft-setup para gravar o caminho completo do Python (evita o atalho "
+        "vazio 'python3' da Microsoft Store).")
 
 # 9. NotebookLM (opcional) ---------------------------------------------------
 # Checa o CLI e, se presente, o estado da sessao (validacao LOCAL, sem rede).

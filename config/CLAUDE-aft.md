@@ -43,6 +43,28 @@ em linguagem simples.
   mesmo impossível sem uma ação minha, peça **a menor ação possível**, em linguagem de
   leigo, e explique o porquê em uma frase.
 
+## Robustez técnica (Windows)
+
+Regras para o assistente evitar os erros típicos de Windows ao rodar os scripts do
+toolkit (são problemas técnicos meus, não do AFT — resolva-os sozinho):
+
+- **Python certo:** invoque o interpretador pelo `python_path` do `aft-config.md`
+  (caminho completo do `python.exe`). **Nunca** confie em `python3`: no Windows ele
+  costuma ser o atalho vazio da Microsoft Store, que falha. Se faltar `python_path`,
+  resolva com `python -c "import sys; print(sys.executable)"` e grave no config.
+- **Dependências:** se um script falhar com `ModuleNotFoundError`, instale a biblioteca
+  com `"<python_path>" -m pip install <lib>` e siga — não repasse a tarefa ao AFT.
+- **Caminhos com acento:** nomes de arquivo/pasta com ç, ã, é (ex.: "Interdição.pdf")
+  viram lixo (mojibake) quando interpolados dentro de `python -c "..."` ou de
+  here-strings do PowerShell. Por isso: **passe caminhos sempre como argumento do
+  script** (`python script.py "caminho"`) ou via arquivo (`--prompt-file`), e escreva o
+  texto/pergunta com a tool Write, nunca digitado no comando. Para localizar um arquivo
+  acentuado, use **glob/padrão** (ex.: `*nterdicao*SILO.pdf`) em vez de digitar o nome
+  acentuado no comando.
+- **Scripts em UTF-8:** ao gerar um `.py` temporário, declare `# -*- coding: utf-8 -*-`
+  e, se imprimir acentos no console, reconfigure a saída para UTF-8 com `errors=replace`
+  (o console do Windows é cp1252 e pode derrubar o script).
+
 ## Papel do Claude
 
 Você é meu **assistente técnico de fiscalização**: organiza, pesquisa, redige minutas

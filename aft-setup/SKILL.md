@@ -155,6 +155,9 @@ municipio: "Goiânia"
 uf: "GO"
 # Prefixo Windows da pasta de trabalho (para os anexos do Sistema Auditor):
 path_windows: "C:\\Users\\joao\\Documents\\AFT"
+# Caminho completo do interpretador Python (resolvido no Passo 6; evita o atalho
+# vazio "python3" da Microsoft Store). As skills devem invocar este executavel:
+python_path: "C:\\Users\\joao\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
 # Navegador que o AFT usa com a conta Google do NotebookLM (chrome | edge):
 notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /notebooklm-login
 # Dados fixos do TXT (não alterar sem orientação):
@@ -188,15 +191,33 @@ em `~/.claude/CLAUDE.md`:
 > `config/CLAUDE-aft.md` — o `~/.claude/CLAUDE.md` instalado não muda sozinho. Se o AFT
 > quiser a versão nova, basta rodar `/aft-setup` de novo.
 
-## Passo 6 — Instalar as bibliotecas Python
+## Passo 6 — Resolver o Python e instalar as bibliotecas
+
+**6a. Descobrir e gravar o `python_path`.** No Windows, `python3` às vezes é o atalho
+vazio da Microsoft Store (abre a loja em vez de rodar) — por isso o toolkit fixa o
+caminho completo do interpretador. Você roda (e grava o resultado no `python_path` do
+`aft-config.md`):
 
 ```bash
-pip install pillow pikepdf pypdf || pip3 install pillow pikepdf pypdf
+python -c "import sys; print(sys.executable)"
 ```
 
-Explique: `pillow` converte fotos de evidência em PDF para anexar aos autos;
-`pikepdf` inspeciona assinaturas de PDF e comprime anexos grandes; `pypdf` lê o
-texto dos autos lavrados no Sistema Auditor (skill `/autos-lavrados`).
+Se `python` não existir, tente `py -c "import sys; print(sys.executable)"` ou
+`where python`. Grave o caminho retornado (ex.:
+`C:\Users\joao\AppData\Local\Programs\Python\Python312\python.exe`) no campo
+`python_path`. Daí em diante, as skills invocam **esse** executável.
+
+**6b. Instalar as bibliotecas** (use o `python_path` recém-resolvido, não o `pip` solto):
+
+```bash
+"<python_path>" -m pip install pillow pikepdf pypdf python-docx pdfplumber pillow-heif
+```
+
+Explique: `pillow` converte fotos de evidência em PDF; `pikepdf` inspeciona assinaturas
+e comprime anexos grandes; `pypdf` lê os autos lavrados (`/autos-lavrados`);
+`python-docx` gera e edita o Relatório Técnico (.docx) da interdição (`/aft-rt-rgi`);
+`pdfplumber` extrai texto de PDFs de fiscalização (termos, autos-modelo);
+`pillow-heif` lê fotos HEIC/HEIF do iPhone (opcional, só se houver esse formato).
 
 ## Passo 7 — NotebookLM (recomendado, pode pular)
 
