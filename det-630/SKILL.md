@@ -86,7 +86,6 @@ A notificação foi lavrada em <DATA_NOTIFICACAO> por meio do Domicílio Eletrô
 
 <PARAGRAFO_OMISSAO>
 
-3) OBSERVAÇÕES:
 A recusa na apresentação dos documentos solicitados não apenas impede a verificação do cumprimento das obrigações trabalhistas, mas também configura um dano de natureza coletiva. Tal conduta obstrui a atuação preventiva e fiscalizatória do Estado, prejudicando a efetividade das políticas de proteção aos direitos de todos os trabalhadores, em conformidade com o entendimento do Precedente Administrativo nº 92 da Secretaria de Inspeção do Trabalho (SIT).
 
 Em anexo o Relatório de <ATEND_OU_NAO_ATEND> à notificação emitido pelo DET<COMPLEMENTO_RELATORIO>.
@@ -96,6 +95,8 @@ Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nom
 ELEMENTOS DE CONVICÇÃO:
 - Relatório de <ATEND_OU_NAO_ATEND> à notificação emitido pelo DET (ANEXO).
 ```
+
+> **Não escreva o rótulo `3) OBSERVAÇÕES`.** As observações específicas deste auto (Precedente nº 92, referência ao Relatório do DET, dano coletivo) ficam como os parágrafos finais do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o último parágrafo do bloco 2 e os ELEMENTOS DE CONVICÇÃO.
 
 ### Tabela de substituições
 

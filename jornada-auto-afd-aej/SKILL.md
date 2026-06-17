@@ -109,7 +109,6 @@ Trata-se de ação fiscal de auditoria digital da jornada de trabalho, na qual s
 2) IRREGULARIDADE:
 <HISTORICO_AFD>
 
-3) OBSERVAÇÕES:
 A ausência de Arquivo Fonte de Dados íntegro e em conformidade com o padrão normatizado inviabiliza a auditoria fiscal da jornada de toda a coletividade de trabalhadores do estabelecimento, frustrando a fiscalização do controle de horário a que o empregador está obrigado. Trata-se de bem jurídico de natureza difusa, cuja lesão dispensa a individualização dos trabalhadores prejudicados (Orientação Técnica SIT nº 2/2022).
 
 ELEMENTOS DE CONVICÇÃO:
@@ -128,12 +127,13 @@ Trata-se de ação fiscal de auditoria digital da jornada de trabalho, na qual s
 2) IRREGULARIDADE:
 <HISTORICO_AEJ>
 
-3) OBSERVAÇÕES:
 A ausência de Arquivo Eletrônico de Jornada íntegro e em conformidade com o padrão normatizado inviabiliza a auditoria fiscal da jornada de toda a coletividade de trabalhadores do estabelecimento, frustrando a fiscalização do controle de horário a que o empregador está obrigado. Trata-se de bem jurídico de natureza difusa, cuja lesão dispensa a individualização dos trabalhadores prejudicados (Orientação Técnica SIT nº 2/2022).
 
 ELEMENTOS DE CONVICÇÃO:
 - <ELEMENTO_CONVICCAO_AEJ> (ANEXO).
 ```
+
+> **Não escreva o rótulo `3) OBSERVAÇÕES`** em nenhum dos dois autos (AFD e AEJ). O parágrafo sobre a frustração da auditoria de jornada (acima) fica como parágrafo final do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o bloco 2 e os ELEMENTOS DE CONVICÇÃO.
 
 > Se **só um** arquivo reprovou, gere apenas o bloco correspondente como `#1`.
 

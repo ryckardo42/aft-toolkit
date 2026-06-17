@@ -215,12 +215,13 @@ Trata-se de ação fiscal de auditoria do sistema de registro eletrônico de pon
 Constatou-se que a autuada deixou de manter disponível para apresentação à Auditoria-Fiscal do Trabalho o Atestado Técnico e Termo de Responsabilidade referente ao seu programa de tratamento de registro de ponto. A irregularidade foi constatada mediante análise documental, oportunidade em que a empregadora, instada a comprovar a regularidade do software de controle de jornada utilizado, não apresentou o referido documento (ou o apresentou em desconformidade técnica/sem a assinatura eletrônica qualificada do responsável técnico e do representante legal da empresa desenvolvedora). A ausência do atestado legalmente válido impede a garantia formal de que o programa atende aos requisitos de tratamento e geração de arquivos exigidos pela Seção IV da Portaria MTP nº 671/2021.
 Destaca-se que a adoção de sistema eletrônico vincula o empregador aos parâmetros técnicos vigentes, não sendo admitida a alegação de integração com aplicativos de gestão de terceiros ou eventuais acordos coletivos para afastar a exigência da documentação de conformidade tecnológica. Tal conduta afronta diretamente o art. 89 da Portaria MTP nº 671/2021, caracterizando o descumprimento do dever de manter controle fidedigno da jornada nos termos do art. 74, § 2º, da CLT.
 
-3) OBSERVAÇÕES:
 A inexistência de atestado técnico válido frustra a garantia formal de conformidade do sistema de registro de ponto adotado, comprometendo a fiscalização do controle de jornada de toda a coletividade de trabalhadores do estabelecimento. Trata-se de bem jurídico de natureza difusa, cuja lesão dispensa a individualização dos trabalhadores prejudicados (Orientação Técnica SIT nº 2/2022).
 
 ELEMENTOS DE CONVICÇÃO:
 - Parecer de auditoria do Atestado Técnico e resultado da inspeção estrutural de assinatura do documento (ANEXO).
 ```
+
+> **Não escreva o rótulo `3) OBSERVAÇÕES`.** O parágrafo sobre a frustração da conformidade do sistema de ponto (acima) fica como parágrafo final do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o bloco 2 e os ELEMENTOS DE CONVICÇÃO.
 
 ### Modelo — Atestado do EQUIPAMENTO (REP) — Ementa 002277-2
 
