@@ -12,6 +12,10 @@ description: >
   imagens, tabelas NR-3 e instruções de levantamento). Logo após o RT, a skill OBRIGATORIAMENTE
   redige os autos de infração derivados das ementas da seção 4 (um auto por ementa, no formato
   consumido por /gera-ai) e salva tudo na pasta `Autos TE-TI DD-MM/` da OS.
+  Acione esta skill TAMBÉM quando o AFT ANEXAR um Relatório Técnico de Interdição (ou um Termo
+  de Interdição) já pronto e pedir para "gerar os autos de infração" desse documento: nesse
+  caso, é esta skill que redige os autos (a partir das irregularidades do documento anexado),
+  NÃO se devendo improvisar os autos fora dela.
 ---
 
 # aft-rt-rgi — Relatório Técnico para Interdição e Embargo
@@ -29,6 +33,20 @@ com os dados fornecidos pelo AFT.
 ---
 
 ## Fluxo de execução
+
+### Modo de entrada (decida primeiro)
+
+- **Modo A — Criar o RT do zero:** o AFT pede o Relatório Técnico de Interdição/Embargo.
+  Siga o fluxo completo: passos 1 a 6 (montam e salvam o `.docx`) e depois o passo 7 (autos).
+- **Modo B — RT/Termo de Interdição já ANEXADO + pedido de autos:** o AFT anexa um RT ou um
+  Termo de Interdição pronto e pede "gere os autos de infração". **Não refaça o RT** (pule os
+  passos 2 a 6). Resolva a pasta da OS (passo 1, mínimo: empregador/CNPJ/CPF), **extraia as
+  irregularidades/ementas e os objetos interditados do documento anexado** e vá direto ao
+  **passo 7** para redigir os autos. Use o `.docx`/PDF anexado como o RT da OS (copie-o para a
+  pasta `Autos TE-TI DD-MM/` como elemento de convicção, fazendo backup/checagem de arquivo
+  aberto antes de sobrescrever).
+
+> Em ambos os modos, os autos são redigidos AQUI (nesta skill) — nunca improvisados fora dela.
 
 ### 1. Coletar os dados necessários
 
@@ -320,16 +338,20 @@ python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[ca
 
 #### 7.6. Apresentar e encerrar
 
-- Imprima no chat os N blocos `=== AUTO DE INFRAÇÃO #N ===` na íntegra (para o AFT revisar
-  visualmente).
-- Feche com uma linha objetiva indicando o caminho da pasta e os arquivos gerados. Exemplo:
+- **Imprima no chat os N blocos `=== AUTO DE INFRAÇÃO #N ===` na íntegra** (para o AFT revisar
+  visualmente) e indique o caminho da pasta e os arquivos gerados. Exemplo:
 
   > RT e autos salvos em `~/Documents/AFT/OS ATIVAS/{PASTA_EMPRESA}/Autos TE-TI 26-05/`
-  > (`autos.md` + RT em .docx). Quando for transmitir, rode `/gera-ai` apontando para
-  > `autos.md` desta pasta — e anexe o RT (convertido em PDF) aos autos.
+  > (`autos.md` + RT em .docx).
 
-- **NÃO pergunte** se quer chamar `/gera-ai`. **NÃO chame** `/gera-ai` automaticamente. O AFT
-  dispara `/gera-ai` por conta própria quando estiver pronto para transmitir.
+- **Encerramento conforme o modo de entrada:**
+  - **Modo A (criou o RT do zero):** **NÃO pergunte** se quer chamar `/gera-ai` nem o chame
+    automaticamente — o AFT dispara `/gera-ai` por conta própria quando estiver pronto para
+    transmitir.
+  - **Modo B (RT/Termo anexado + pedido de autos):** depois de mostrar os autos, **pergunte
+    ao AFT se estão OK** (ex.: *"Os autos acima estão OK para empacotar?"*). **Se ele
+    confirmar, chame a skill `/gera-ai`** apontando para o `autos.md` desta pasta (anexando o
+    RT/Termo aos autos). Se ele pedir ajustes, corrija e mostre de novo antes do `/gera-ai`.
 
 ---
 

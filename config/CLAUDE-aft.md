@@ -115,6 +115,12 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Conferir o que foi transmitido → `/autos-lavrados`
 - Relatório final da ação fiscal → `/sfitweb-rel`
 
+**Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico de Interdição (ou um
+Termo de Interdição) e pedir para gerar os autos de infração, use **sempre** a skill
+`/aft-rt-rgi` para redigir os autos a partir desse documento (nunca improvise os autos por
+fora). Mostre os autos na tela e **pergunte se estão OK**; quando eu confirmar, chame a skill
+`/gera-ai` para empacotar o TXT.
+
 Se a configuração (`~/Documents/AFT/aft-config.md`) não existir, oriente-me a rodar
 `/aft-setup` primeiro.
 
