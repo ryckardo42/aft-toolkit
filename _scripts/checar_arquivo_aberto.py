@@ -55,17 +55,26 @@ def main():
         print(f"LIVRE: '{path}' nao existe (arquivo novo) - nada a bloquear.")
         sys.exit(0)
 
+    # O sinal AUTORITATIVO e a tentativa de escrita (preve exatamente se o save
+    # vai falhar). O arquivo-dono "~$" do Office so enriquece a mensagem - sozinho
+    # NAO bloqueia, pois pode ser um "~$" orfao/fantasma deixado por um Word que
+    # fechou mal (falso positivo classico).
     locked = bloqueado_para_escrita(path)
     dono = arquivo_dono_office(path)
     tem_dono = bool(dono and os.path.exists(dono))
 
-    if locked or tem_dono:
-        pista = " (parece estar aberto no Word/Excel)" if tem_dono else ""
+    if locked:
+        pista = " (aberto no Word/Excel)" if tem_dono else ""
         print(f"ABERTO: '{os.path.basename(path)}' esta bloqueado para gravacao{pista}.")
         print("  -> Peca ao AFT para FECHAR o arquivo no Word/Excel e tente de novo.")
         sys.exit(1)
 
-    print(f"LIVRE: '{os.path.basename(path)}' pode ser gravado.")
+    if tem_dono:
+        print(f"LIVRE: '{os.path.basename(path)}' pode ser gravado.")
+        print(f"  (aviso: existe um arquivo-dono orfao '{os.path.basename(dono)}' de uma "
+              "sessao anterior do Office; e inofensivo e pode ser apagado.)")
+    else:
+        print(f"LIVRE: '{os.path.basename(path)}' pode ser gravado.")
     sys.exit(0)
 
 
