@@ -38,6 +38,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | Skill | O que faz |
 |---|---|
 | `/inspecao-fisica` | Transforma a narrativa ditada da visita num relato de campo estruturado (`inspecao-fisica.md`) — fiel, sem enquadramento |
+| `/consulta` | Consulta os ementários/notebooks do NotebookLM: tira dúvidas técnico-jurídicas **ou** enquadra um fato — missão tripla (IDENTIFICAR a ementa, FUNDAMENTAR capitulação/gradação/notas, REDIGIR minuta de Histórico anti-nulidade). Só consulta; não lavra (delega a `/inspecao-inicial`/`/gera-ai`) |
 | `/inspecao-inicial` | Lê o relato de campo, identifica NR/ementa (NotebookLM) e redige os autos de infração (todas as NRs + CLT), com gate de dupla visita |
 | `/registro` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
 | `/PGR-analise` | Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas |
@@ -109,7 +110,7 @@ Documentos\AFT\
 
 As skills buscam o código da ementa em 3 camadas:
 
-1. **NotebookLM** (recomendado): peça acesso em https://notebooks-aft.vercel.app e conecte com `/notebooklm-login` (ou pelo `/aft-setup`) — o Claude faz o login na sua conta Google por você, sem terminal. Os notebooks cobrem os ementários SST e de legislação + NRs específicas.
+1. **NotebookLM** (recomendado): peça acesso em https://notebooks-aft.vercel.app e conecte com `/notebooklm-login` (ou pelo `/aft-setup`) — o Claude faz o login na sua conta Google por você, sem terminal. Os notebooks cobrem os ementários SST e de legislação + NRs específicas. Para **consultar livremente** os notebooks (tirar dúvida ou enquadrar um fato), use a skill **`/consulta`**. A reconexão da sessão é automática (`NOTEBOOKLM_REFRESH_CMD`).
 2. **Google Drive compartilhado**: [ementários por NR em Markdown](https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing).
 3. **Você informa o código** (formato `XXXXXX-X`).
 
@@ -125,7 +126,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
 ├── aft-setup/ · aft-doctor/ · notebooklm-login/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
-├── registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
+├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```
