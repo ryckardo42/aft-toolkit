@@ -75,14 +75,14 @@ Para cada auto, valide o código da ementa:
 - Formato obrigatório: `\d{6}-\d` (6 dígitos, hífen, 1 dígito verificador). Ex: `312358-8`.
 - Se o auditor não forneceu o código, use a busca em 3 camadas:
   1. **NotebookLM** (se configurado): resolva o notebook da NR em
-     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e consulte
-     **sempre pelo wrapper com auto-reautenticação** (a sessão do NotebookLM expira e o
-     wrapper reconecta sozinho, sem abortar a tarefa):
+     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e consulte:
      ```bash
-     python ~/.claude/skills/_scripts/nlm_ask.py -n [id] --prompt-file [arquivo_pergunta.txt]
+     notebooklm ask "Qual o código da ementa (formato XXXXXX-X) para [irregularidade]?" --notebook [id] --json
      ```
-     Escreva a pergunta num arquivo (evita problemas de acento no shell). Só caia em
-     `/notebooklm-login` se o wrapper avisar que não conseguiu reautenticar sozinho.
+     Para perguntas com acento, escreva num arquivo e use `--prompt-file`. **A reconexão é
+     automática:** se a sessão tiver expirado, o próprio `notebooklm` se reautentica sozinho
+     pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/notebooklm-login`). Só caia
+     em `/notebooklm-login` se ele avisar que não conseguiu reconectar.
   2. **Ementário no Google Drive** (manual): peça ao AFT para abrir
      https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
      na pasta `EMENTAS SST`, abrir o `ementasNRXX.md` da NR e colar o trecho relevante.

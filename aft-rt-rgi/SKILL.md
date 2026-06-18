@@ -94,6 +94,9 @@ anexados, descrição do AFT). Liste cada irregularidade de forma objetiva e sep
    ```bash
    notebooklm ask "Qual é o código da ementa no formato XXXXXX-X, a descrição completa da ementa e a capitulação legal para a seguinte infração: [descrição objetiva da irregularidade]?" --notebook [notebook_id] --json
    ```
+   > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
+   > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/notebooklm-login`).
+   > Só passe à camada seguinte se ele ainda assim não responder.
 2. **Ementário no Google Drive** (manual): oriente o AFT a abrir
    https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
    (pasta `EMENTAS SST` → `ementasNRXX.md`) e colar o trecho da ementa.

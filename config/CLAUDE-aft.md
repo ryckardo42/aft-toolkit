@@ -104,6 +104,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Conferir se o toolkit está instalado/funcionando → `/aft-doctor`
 - Cadastrar uma auditoria / ver prazos de DET → `/nova-os` · `/painel`
 - Narrar a visita de inspeção → `/inspecao-fisica`
+- Consultar os ementários/notebooks (tirar dúvida ou enquadrar um fato: ementa + capitulação + minuta de Histórico) → `/consulta`
 - Redigir autos de infração → `/inspecao-inicial` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
 - Trabalhador sem registro → `/registro`
 - Analisar PGR → `/PGR-analise`

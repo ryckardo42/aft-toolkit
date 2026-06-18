@@ -218,6 +218,27 @@ else:
             "instalado, mas a sessao parece incompleta ou expirada",
             "Peca ao Claude 'reconecte o notebooklm' (skill /notebooklm-login).")
 
+# 9b. Reconexao automatica do NotebookLM (NOTEBOOKLM_REFRESH_CMD) --------------
+# Faz o 'notebooklm ask' se reautenticar sozinho ao expirar. Pode estar so no
+# ambiente persistente (registro do Windows) e nao no processo atual.
+import os as _os
+_refresh = _os.environ.get("NOTEBOOKLM_REFRESH_CMD")
+if not _refresh and _os.name == "nt":
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as _k:
+            _refresh, _ = winreg.QueryValueEx(_k, "NOTEBOOKLM_REFRESH_CMD")
+    except (FileNotFoundError, OSError):
+        _refresh = None
+if _refresh:
+    add("Reconexao automatica do NotebookLM", "ok",
+        f"NOTEBOOKLM_REFRESH_CMD = {_refresh}")
+else:
+    add("Reconexao automatica do NotebookLM", "aviso",
+        "NOTEBOOKLM_REFRESH_CMD nao configurada",
+        "Sem ela, o 'notebooklm ask' nao se reautentica sozinho ao expirar. "
+        "Rode /aft-setup (passo 7) ou /notebooklm-login para configurar.")
+
 # ----------------------------------------------------------------------------
 resumo = {
     "ok": sum(1 for c in checks if c["status"] == "ok"),

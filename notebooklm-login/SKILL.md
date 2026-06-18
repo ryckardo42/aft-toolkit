@@ -176,22 +176,28 @@ seguirá sem o NotebookLM e que as skills vão usar o ementário no Google Drive
 
 ---
 
-## Auto-reautenticação nas consultas (wrapper)
+## Auto-reautenticação nativa (NOTEBOOKLM_REFRESH_CMD)
 
-A sessão do NotebookLM **expira de tempos em tempos**, inclusive no meio de uma ação
-fiscal. Para isso não abortar a tarefa, as skills que consultam ementas (`/gera-ai`,
-`/inspecao-inicial`, `/NR12`, `/NR18`, `/tn-nco`...) devem chamar o **wrapper** em vez
-de `notebooklm ask` direto:
+A sessão do NotebookLM **expira de tempos em tempos**, inclusive no meio de uma ação fiscal.
+Em vez de cada skill tratar isso, o toolkit usa o **gancho nativo da CLI**: a variável de
+ambiente `NOTEBOOKLM_REFRESH_CMD`. Quando ela aponta para um comando de reconexão, o próprio
+`notebooklm ask` **se reautentica sozinho** ao detectar a sessão expirada — sem wrapper, e
+valendo para TODAS as skills que usam `notebooklm ask` (testado: recupera até sessão
+totalmente expirada, pelo perfil persistente do navegador).
 
-```bash
-python ~/.claude/skills/_scripts/nlm_ask.py -n [notebook_id] --prompt-file [pergunta.txt]
+**Deixe a variável configurada** (você roda; é persistente — vale para as próximas sessões).
+No Windows, use o `<NAV>` do AFT (`chrome` ou `msedge`):
+
+```powershell
+[Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','notebooklm login --browser <NAV>','User')
+[Environment]::GetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','User')   # conferir
 ```
 
-O wrapper roda a consulta; se detectar sessão expirada, dispara sozinho o refresh
-silencioso (login pelo perfil persistente do navegador do AFT, que reaproveita a sessão
-já aberta) e tenta a consulta **uma vez** de novo. Só caia nesta skill (`/notebooklm-login`)
-quando o wrapper avisar que **não** conseguiu reautenticar sozinho (ex.: sem rede, ou o
-login exige uma ação do AFT na janela).
+> A variável só passa a valer em **processos novos** — avise o AFT que pode ser preciso
+> **reabrir o Claude Code uma vez** para o gancho entrar em vigor nas skills. Quando o
+> `notebooklm` precisar abrir o navegador para reconectar, rode-o **fora do sandbox**
+> (mesma regra do login). Esta skill continua sendo o caminho **manual** de reconexão
+> quando o gancho não basta (ex.: sem rede, ou primeiro login do navegador).
 
 ## Regras
 

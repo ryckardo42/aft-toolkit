@@ -102,6 +102,9 @@ Use APENAS quando a Fase 2 não bater nenhuma das 16 ementas locais.
    notebooklm ask "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-12 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-12), gradação (I1-I4) e o texto-base sugerido." --notebook [notebook_id] --json
    ```
    Se o item da NR-12 violado for desconhecido, formule a pergunta com base no fato observado.
+   > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
+   > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/notebooklm-login`).
+   > Só trate como falha (item 5) se ele ainda assim não responder.
 
 3. **Parse a resposta**: extraia código (regex `\d{6}-\d`), descrição, capitulação, gradação. Use `references[].cited_text` quando vier.
 

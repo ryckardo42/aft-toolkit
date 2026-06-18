@@ -266,6 +266,14 @@ mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
    notebooklm --quiet list
    ```
    Se aparecer a lista de notebooks, está pronto.
+7. **Reconexão automática (recomendado):** grave a variável `NOTEBOOKLM_REFRESH_CMD` para o
+   `notebooklm ask` se reautenticar sozinho quando a sessão expirar — vale para TODAS as
+   skills, sem wrapper. Use o `<NAV>` do AFT (`chrome` ou `msedge`):
+   ```powershell
+   [Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','notebooklm login --browser <NAV>','User')
+   ```
+   Avise o AFT que isso passa a valer ao **reabrir o Claude Code**. (Detalhes na skill
+   `/notebooklm-login`.)
 
 Se o AFT pular este passo, as skills continuam funcionando: elas oferecem o ementário
 no Google Drive (link nas próprias skills) ou pedem o código da ementa diretamente.

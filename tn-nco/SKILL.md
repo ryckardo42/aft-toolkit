@@ -80,6 +80,9 @@ Estratégia em 3 camadas (mesma de `/inspecao-inicial`):
    ```bash
    notebooklm ask "Qual ementa do ementário cobre a infração ao [BASE_LEGAL] sobre [DESCRICAO]? Retorne o código (formato XXXXXX-X) e a descrição oficial." --notebook [notebook_id] --json
    ```
+   > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
+   > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/notebooklm-login`).
+   > Só passe à Camada 2 se ele ainda assim não responder.
 3. Extraia o código com regex `\d{6}-\d` do `answer` ou de `references[].cited_text`.
 
 **Camada 2 — Ementário no Google Drive (manual):** oriente o AFT a abrir

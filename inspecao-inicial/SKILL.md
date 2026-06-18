@@ -177,17 +177,19 @@ Antes de qualquer consulta externa, leia o arquivo `ementas-frequentes.md` desta
 **Camada 1 — NotebookLM (preferencial, requer setup do /aft-setup):**
 
 1. Resolva o notebook_id: leia `~/.claude/skills/config/notebooks.json` e busque a key correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
-2. Consulte o NotebookLM:
-   Consulte **sempre pelo wrapper com auto-reautenticação** (a sessão do NotebookLM expira; o wrapper reconecta sozinho e não aborta a tarefa). Escreva a pergunta num arquivo para evitar problemas de acento no shell:
+2. Consulte o NotebookLM (a reconexão é automática — ver nota abaixo). Escreva a pergunta num arquivo para evitar problemas de acento no shell e use `--prompt-file`:
    ```bash
-   python ~/.claude/skills/_scripts/nlm_ask.py -n [notebook_id] --prompt-file [pergunta.txt]
+   notebooklm ask --notebook [notebook_id] --json --prompt-file [pergunta.txt]
    ```
    (Conteúdo da pergunta: *"Qual ementa do ementário cobre a infração ao item [ITEM_NR] da NR-[NR] sobre [DESCRICAO_DA_IRREGULARIDADE]? Retorne o código da ementa (formato XXXXXX-X), a descrição, a capitulação e a gradação."*)
 3. Parse a resposta JSON: extraia `answer` e `references[].cited_text`.
 4. Extraia o código da ementa usando regex `\d{6}-\d` do `answer` ou de cada `cited_text`.
 5. Se encontrou o código → use-o. Extraia também gradação (regex `I[1-4]`) e descrição.
 
-> Se o wrapper avisar que **não conseguiu reautenticar sozinho** (ex.: sem rede ou login exige ação do AFT), avise: *"O NotebookLM precisa reconectar — rode `/notebooklm-login` (ou `/aft-setup`, passo 7). Por ora, sigo pelo ementário do Drive."*
+> **Reconexão automática:** se a sessão do NotebookLM tiver expirado, o próprio `notebooklm`
+> se reautentica sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/notebooklm-login`).
+> Só se ele ainda assim falhar (sem rede, ou login exige ação do AFT), avise: *"O NotebookLM
+> precisa reconectar — rode `/notebooklm-login`. Por ora, sigo pelo ementário do Drive."*
 
 **Camada 2 — Ementário no Google Drive (manual):**
 
