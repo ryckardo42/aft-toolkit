@@ -33,7 +33,7 @@ O Claude Code é um assistente que executa comandos no seu computador, **sempre 
 Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cada passo:
 1. Confirme que o Git está instalado e funcionando (git --version).
 2. Verifique se o Python 3 está instalado e funcionando no terminal; se não, instale com winget (pacote Python.Python.3.12).
-3. Instale a ferramenta do NotebookLM a partir do repositório https://github.com/teng-lin/notebooklm-py - pacote notebooklm-py com os extras browser e cookies (use: pipx install "notebooklm-py[browser,cookies]"; se não houver pipx, instale o pipx antes). Ao final, confirme que o comando notebooklm responde (notebooklm --help). Não é preciso baixar navegador nenhum nem o Visual C++: o login usa o Edge/Chrome que já existe no computador.
+3. Instale a ferramenta do NotebookLM a partir do repositório https://github.com/teng-lin/notebooklm-py - pacote notebooklm-py com os extras browser e cookies (use: pipx install "notebooklm-py[browser,cookies]"; se não houver pipx, instale o pipx antes). Ao final, confirme que o comando notebooklm responde (notebooklm --help). Em seguida rode notebooklm skill install para registrar a skill /notebooklm no Claude Code (o pip/pipx só instala o comando de terminal; sem esse passo extra a skill /notebooklm não aparece, mesmo com o comando funcionando). Não é preciso baixar navegador nenhum nem o Visual C++: o login usa o Edge/Chrome que já existe no computador.
 4. Baixe o repositório https://github.com/ryckardo42/aft-toolkit.git fazendo dele a própria pasta de skills: git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills. Se a pasta ~/.claude/skills já existir com conteúdo, clone numa pasta temporária e mova todo o conteúdo do repositório (incluindo a pasta oculta .git) para dentro dela.
 5. Confirme que as skills ficaram diretamente em ~/.claude/skills (deve existir, por exemplo, ~/.claude/skills/aft-setup/SKILL.md — e NÃO ~/.claude/skills/aft-toolkit/aft-setup), liste-as e me diga se preciso reiniciar o aplicativo.
 ```
@@ -42,7 +42,7 @@ Enquanto o Claude trabalha, ele vai pedir permissão para cada comando — basta
 
 **O que ele está instalando?**
 - **Python** — roda os scripts locais do toolkit: conversão de fotos em PDF, geração do arquivo do Sistema Auditor e validação de arquivos de ponto.
-- **notebooklm** — a ferramenta que consulta os ementários no NotebookLM para achar o código da ementa sozinho. Ela já fica instalada aqui; o login (na sua conta Google) o Claude conduz para você no passo "Recomendado — Ative o NotebookLM" abaixo, sem terminal.
+- **notebooklm** — a ferramenta que consulta os ementários no NotebookLM para achar o código da ementa sozinho. Ela já fica instalada aqui (comando de terminal + skill `/notebooklm`); o login (na sua conta Google) o Claude conduz para você no passo "Recomendado — Ative o NotebookLM" abaixo, sem terminal.
 
 ---
 
@@ -112,6 +112,7 @@ Regra geral: **descreva o problema ao próprio Claude** no `</> Code` ("o comand
 | Python "não encontrado" | Peça ao Claude: "instale o Python com winget". Se a rede bloquear, plano B manual acima e reinicie o app |
 | Skill não aparece com `/` | Feche e reabra o Claude Code. Se persistir, peça a ele: "as skills estão diretamente em ~/.claude/skills (ex.: ~/.claude/skills/aft-setup)? Se estiverem dentro de uma subpasta aft-toolkit, mova todo o conteúdo um nível acima" |
 | NotebookLM não conecta / "command not found" / pede login | Peça ao Claude: "conecte o notebooklm" (skill `/notebooklm-login`). Ele instala o que faltar e abre a janela de login do Edge — você só entra na sua conta Google |
+| Skill `/notebooklm` não aparece (mas o comando `notebooklm --help` funciona) | Peça ao Claude: "rode notebooklm skill install" e depois feche e reabra o app. O pip/pipx instala só o comando de terminal — a skill precisa desse passo extra |
 | NotebookLM responde "sem acesso" | Solicite acesso em https://notebooks-aft.vercel.app e aguarde a liberação do mantenedor |
 | NotebookLM parou ("authentication expired") | A sessão expira de tempos em tempos. Peça ao Claude "reconecte o notebooklm" — ele reabre o login, sem terminal |
 

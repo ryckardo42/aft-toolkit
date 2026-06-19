@@ -226,14 +226,22 @@ da ementa automaticamente. **Conecte com a menor intervenção possível e sem n
 mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
 `/notebooklm-login`; conduza-o aqui mesmo:
 
-1. **Confirmar/instalar o CLI** (você roda — instale com os dois extras: `browser`
-   para o login por janela e `cookies` para o login silencioso):
+1. **Confirmar/instalar o CLI e a skill** (você roda — instale com os dois extras:
+   `browser` para o login por janela e `cookies` para o login silencioso):
    ```bash
    notebooklm --help            # se faltar, instale:
    pipx install "notebooklm-py[browser,cookies]"
+   notebooklm skill install     # registra a skill /notebooklm no Claude Code
    ```
    (Pacote publicado em https://github.com/teng-lin/notebooklm-py. Se não houver pipx:
    `python -m pip install --user pipx && python -m pipx ensurepath`, reabrir o app.)
+   **Atenção:** o `pip`/`pipx install` só instala o comando de terminal. Sem o
+   `notebooklm skill install`, a skill `/notebooklm` (acesso completo à API: criar
+   notebooks, adicionar fontes, gerar artefatos) não aparece no Claude Code, mesmo com
+   o CLI funcionando — esse é o passo mais fácil de esquecer numa instalação nova. Essa
+   skill é independente da `/notebooklm-login` (que só cuida da autenticação, já
+   incluída neste toolkit) e não vem pelo `git clone` do aft-toolkit — pertence ao
+   projeto teng-lin/notebooklm-py.
 2. **Já conectado?** `notebooklm auth check --test --json` — se `status: ok`, pule
    direto para o teste do item 6.
 3. **Qual navegador o AFT usa com a conta Google (Gmail/NotebookLM)?** Pergunte uma vez:
