@@ -63,6 +63,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ### Empacotamento, rastreamento e relatórios
 | Skill | O que faz |
 |---|---|
+| `/revisa-auto` | Revisa o rascunho dos autos antes do empacotamento: checklist 5W1H e parágrafo de dano coletivo (SST) — gate automático dentro do `/gera-ai` |
 | `/gera-ai` | Empacota autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível |
 | `/autos-lavrados` | Lê os PDFs já transmitidos no Sistema Auditor (`C:\SistemasAFT\...\PRO`), cruza com os rascunhos e marca no `memory.md` o que está lavrado `[x]` / pendente `[ ]` — read-only sobre o Sistema Auditor |
 | `/sfitweb-rel` | Relatório Final Simplificado consolidando autos, termos e notificações |
@@ -126,7 +127,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
 ├── aft-setup/ · aft-doctor/ · notebooklm-login/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
-├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/
+├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/ · revisa-auto/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```

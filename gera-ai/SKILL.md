@@ -38,7 +38,13 @@ Se ambíguo, pergunte: **"Os autos para empacotar estão (a) colados/fornecidos 
 
 ### 1.2 Parser dos autos
 
-**Passo 0 — Injetar o bloco 3 (OBSERVAÇÕES).** As skills do toolkit redigem os autos
+**Passo 0a — Revisão pré-empacotamento (`/revisa-auto`).** Antes de injetar o bloco 3,
+invoque a skill `/revisa-auto` sobre o `autos.md`. Ela roda o checklist 5W1H e, em autos
+de SST, garante o parágrafo de dano coletivo, corrigindo in loco o que for determinístico
+(e sinalizando com `⚠️` as pendências factuais, sem bloquear). Prossiga com o arquivo já
+revisado. Critério completo em `~/.claude/skills/revisa-auto/SKILL.md`.
+
+**Passo 0b — Injetar o bloco 3 (OBSERVAÇÕES).** As skills do toolkit redigem os autos
 **sem** o Subtítulo 3 (terminam no bloco 2 + ELEMENTOS DE CONVICÇÃO). O bloco 3 é único,
 fixo e igual para todo auto — fica em `config/blocos_auto.md` e é injetado aqui, de forma
 determinística (texto idêntico, byte a byte, sem gastar tokens reescrevendo-o). Antes de
@@ -57,7 +63,7 @@ Identifique cada **bloco de auto** procurando estes marcadores:
 - Linha `Ementa: [codigo] - [descricao]`
 - Subtítulo `1) DA FISCALIZAÇÃO:`
 - Subtítulo `2) IRREGULARIDADE:`
-- Subtítulo `3) OBSERVAÇÕES:` (injetado no Passo 0; ver `config/blocos_auto.md`)
+- Subtítulo `3) OBSERVAÇÕES:` (injetado no Passo 0b; ver `config/blocos_auto.md`)
 - Bloco `ELEMENTOS DE CONVICÇÃO:`
 
 Para cada bloco extraia:
