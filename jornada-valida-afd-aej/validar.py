@@ -290,6 +290,16 @@ def validate_aej(path, lines, rep):
                             f"(esperado {faixa}).")
             continue
 
+        # jornada flexivel: horario (04) com duracao 0 e todas as horas vazias
+        # (ex.: "04|1|0||||") e o encode legitimo de "trabalhador sem horario
+        # fixo" — nao e lacuna, entao nao se cobra entrada/saida.
+        flex_horario = False
+        if tipo == "04":
+            dur = fields[2].strip() if ncampos > 2 else ""
+            horas = [fields[k].strip() for k in (3, 4, 5, 6) if k < ncampos]
+            if (dur == "" or _norm(dur.split(".")[0]) == "0") and not any(horas):
+                flex_horario = True
+
         # valida cada campo (idx refere fields[idx])
         for (i, name, ftyp, req) in specs:
             if i >= ncampos:
@@ -297,6 +307,8 @@ def validate_aej(path, lines, rep):
             v = fields[i]
             if req and v.strip() == "":
                 if ftyp == "H":
+                    if flex_horario:
+                        continue
                     # PTRP pode encodar jornada de periodo unico deixando um
                     # par entrada/saida vazio — comum e aceito. Aviso, nao erro.
                     rep.warn(ln, f"tipo {tipo}: par entrada/saida incompleto "
@@ -414,7 +426,18 @@ def validate_aej_field(rep, ln, tipo, name, v, ftyp):
             rep.err(ln, f"tipo {tipo} campo {name}: esperado '{exp}', encontrado '{v}'.")
     elif ftyp == "N":
         if v.strip() and not v.isdigit():
-            rep.err(ln, f"tipo {tipo} campo {name}: nao numerico ('{v}').")
+            if re.match(r"^\d+[.,]\d+$", v.strip()):
+                # Decimal em campo inteiro. Espelha o sistema oficial (Khronos):
+                # qtMinutos (banco de horas, tipo 07) e REJEITADO — o calculo
+                # falha no parse inteiro; durJornada (tipo 04) e tolerado.
+                if name == "qtMinutos":
+                    rep.err(ln, f"tipo {tipo} campo {name}: valor com casa decimal "
+                                f"('{v}') — invalido para banco de horas (esperado inteiro de minutos).")
+                else:
+                    rep.warn(ln, f"tipo {tipo} campo {name}: gravado com casa decimal "
+                                 f"('{v}') — desvio de leiaute, dado legivel.")
+            else:
+                rep.err(ln, f"tipo {tipo} campo {name}: nao numerico ('{v}').")
     elif ftyp == "D":
         if not valid_date(v):
             rep.err(ln, f"tipo {tipo} campo {name}: data invalida '{v}'.")

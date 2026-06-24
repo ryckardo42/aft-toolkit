@@ -151,7 +151,18 @@ Ajustes de calibração (leiaute teórico × arquivo certificado):
 - **`qtMinutos` / `tipoMovBH` (tipo 07):** **opcionais**; só geram aviso quando
   `tipoAusenOuComp='3'` (movimento de banco de horas) e ficam vazios.
 - **Horário contratual (tipo 04) com par entrada/saída incompleto** é tratado
-  como **aviso** (alguns PTRPs encodam jornada de período único assim).
+  como **aviso** (alguns PTRPs encodam jornada de período único assim). **Exceção:**
+  horário com `durJornada=0` e **todas** as horas vazias (ex.: `04|1|0||||`) é o
+  encode legítimo de **jornada flexível / sem horário fixo** e **não** é sinalizado.
+- **Decimal em campo inteiro:** conferido contra o sistema oficial de auditoria
+  (importação real). `qtMinutos` (tipo 07, banco de horas) com casa decimal (ex.:
+  `1196.0`) é **ERRO** — o sistema oficial rejeita o registro (cálculo do banco de
+  horas falha no parse inteiro). Já `durJornada` (tipo 04) com casa decimal (ex.:
+  `480.0`) é só **AVISO** — o oficial tolera, o dado é legível como minutos. Comum
+  em arquivos de alguns softwares de ponto (ex.: PontoMais).
+- **Linha de assinatura (`ASSINATURA_DIGITAL_EM_ARQUIVO_P7S`):** quando o AEJ é
+  baixado do portal/DET, a assinatura `.p7s` real é destacada e o arquivo carrega
+  só esse marcador. O validador **aceita** essa linha — não é defeito do empregador.
 - **`codHorContratual` na primeira entrada:** o leiaute diz que é obrigatório
   quando `tpMarc='E'` e `seqEntSaida='1'`, mas o REP certificado legitimamente o
   omite em parte das marcações. Por ser regra de **completude de jornada** (não
