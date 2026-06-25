@@ -173,6 +173,25 @@ Caminho: `~/Documents/AFT/OS ATIVAS/<PASTA_EMPRESA>/inspecao-fisica.md`
 `inspecao-fisica.md` nesta OS. Deseja (a) acrescentar estes achados ao final, (b) substituir o
 conteúdo, ou (c) cancelar?"* Não sobrescreva sem confirmação.
 
+### Passo 5.1 — Guard-rail de PII (opcional, só avisa)
+
+Logo após salvar, rode o checador de PII de alto dano sobre o relato. Ele detecta apenas
+**CPF e PIS/PASEP** (formato fixo + dígito verificador) — o único dado de pessoa natural que
+pode escapar para o TXT em texto claro se entrar por engano no ditado. Não troca nem bloqueia
+nada; só avisa:
+
+```bash
+python ~/.claude/skills/_scripts/checar_pii.py "<PASTA_OS>/inspecao-fisica.md"
+```
+
+Se houver um `depara.json` na OS, acrescente `--depara "<PASTA_OS>/depara.json"` para que ele
+marque o que já está tokenizado (`[já no de-para]`) versus o que está solto (`[SOLTO]`).
+
+- **Saiu "✓ Nenhum CPF/PIS detectado":** siga normalmente.
+- **Apareceu um CPF/PIS:** avise o AFT em uma linha — *"Detectei 1 CPF no relato; confirme que
+  ele entra no de-para antes do `/gera-ai`."* O nome do trabalhador em contexto permanece no
+  relato por design (é prova local); o alerta é só para o número de documento.
+
 ### Passo 6 — Encadeamento
 
 Depois de salvar, ofereça o próximo passo natural do toolkit:

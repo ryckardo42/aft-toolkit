@@ -125,7 +125,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
-├── _scripts/                (scripts compartilhados: rehydrate, fotos, compressão, docx, gerar_painel)
+├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel)
 ├── aft-setup/ · aft-doctor/ · notebooklm-login/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · autos-lavrados/ · revisa-auto/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
@@ -137,6 +137,7 @@ As skills buscam o código da ementa em 3 camadas:
 - As skills são **apoio à redação e organização**. O conteúdo jurídico de cada auto, termo e relatório é de responsabilidade do AFT, que revisa tudo antes de transmitir.
 - Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.
 - O template do RT (`aft-rt-rgi/template.docx`) segue o modelo da SRTE/GO — auditores de outras SRTEs devem ajustar o cabeçalho.
+- Guard-rail de PII: `_scripts/checar_pii.py` varre um relato/pasta e **avisa** se houver CPF ou PIS/PASEP com dígito verificador válido (o único dado de alto dano que pode entrar por engano). Não troca nem bloqueia nada — a anonimização real continua determinística (`rehydrate.py`).
 
 ## Contribuindo
 
