@@ -82,7 +82,7 @@ Esta skill **so diagnostica**. Para resolver, encaminhe para o lugar certo:
 - Skills nao descobertas (estao aninhadas, ex.: `~/.claude/skills/aft-toolkit/...`) →
   explique que o repositorio precisa SER a pasta `~/.claude/skills` e ofereca reinstalar
   com o prompt do COMO-INSTALAR (Passo 3).
-- Config do toolkit incompleta → ofereca "Atualize o AFT Toolkit" (`git pull`) ou reclone.
+- Config do toolkit incompleta → ofereca "Atualize o AFT Toolkit" (`/aft-atualizar`) ou reclone.
 
 So execute uma correcao se o AFT pedir. Nunca instale nada silenciosamente neste fluxo.
 

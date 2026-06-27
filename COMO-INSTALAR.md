@@ -88,7 +88,7 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 
 ## Como receber atualizações
 
-Peça ao Claude, numa conversa qualquer: **"Atualize o AFT Toolkit"** (ele roda o `git pull` na pasta das skills e mostra o que mudou).
+Peça ao Claude, numa conversa qualquer: **"Atualize o AFT Toolkit"** (ou `/aft-atualizar`). Ele atualiza as skills (`git pull`), confere se o comando `notebooklm` tem versão nova e atualiza sozinho se houver, e confirma no final com o `/aft-doctor` que nada quebrou — mostrando o que mudou em cada parte.
 
 ---
 
