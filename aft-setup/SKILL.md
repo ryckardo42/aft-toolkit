@@ -191,6 +191,30 @@ em `~/.claude/CLAUDE.md`:
 > `config/CLAUDE-aft.md` — o `~/.claude/CLAUDE.md` instalado não muda sozinho. Se o AFT
 > quiser a versão nova, basta rodar `/aft-setup` de novo.
 
+## Passo 5c — Instalar a deny-list de segurança (settings.json)
+
+O toolkit traz uma lista de **bloqueios de segurança** que impede o Claude de ler
+arquivos de credencial (`~/.ssh`, `~/.aws`, `.env`), de ler os mapas `.depara_*.json`
+(dados reais de trabalhador) e de usar comandos de acesso remoto (`ssh`, `scp`, `nc`)
+que o AFT nunca precisa. É uma rede de proteção: se algum documento de fiscalização
+tentar induzir o assistente a vazar dados, esses bloqueios seguram. O template fica em
+`config/settings-aft.json` e vai em `~/.claude/settings.json`:
+
+- **Se `~/.claude/settings.json` NÃO existe** → copie o template:
+  ```bash
+  cp ~/.claude/skills/config/settings-aft.json ~/.claude/settings.json
+  ```
+- **Se JÁ existe** → **não sobrescreva** (pode ter ajustes do AFT). Leia os dois,
+  acrescente as entradas de `config/settings-aft.json` que faltarem dentro de
+  `permissions.deny` (sem duplicar) e regrave o arquivo, preservando tudo que já estava
+  lá (outras permissões, `allow`, etc.). Use a tool Write com o JSON resultante.
+
+Explique em uma frase: *"Instalei uma rede de proteção: o Claude agora fica proibido de
+ler suas senhas e os dados reais dos trabalhadores, mesmo que algum documento peça."*
+
+> Como o `CLAUDE.md`, esse arquivo não muda sozinho num `git pull`; rode `/aft-setup`
+> de novo para reaplicar uma versão nova do template.
+
 ## Passo 6 — Resolver o Python e instalar as bibliotecas
 
 **6a. Descobrir e gravar o `python_path`.** No Windows, `python3` às vezes é o atalho
@@ -298,6 +322,7 @@ Apresente:
 📁 Pasta de trabalho: ~/Documents/AFT/  (OS ATIVAS · OS ARQUIVADAS)
 📄 Configuração:      ~/Documents/AFT/aft-config.md
 👤 Perfil do auditor: ~/.claude/CLAUDE.md [instalado / mantido o existente]
+🛡️ Proteção:          ~/.claude/settings.json [deny-list de segurança aplicada]
 🐍 Python:            [versão] · pillow/pikepdf instalados
 📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]
 

@@ -110,6 +110,32 @@ else:
     add("Perfil do auditor", "aviso", "~/.claude/CLAUDE.md nao existe",
         "Rode /aft-setup para instalar o perfil (faz o Claude saber que voce e AFT).")
 
+# 5b. Deny-list de seguranca (~/.claude/settings.json) -----------------------
+# Rede de protecao: impede ler credenciais (~/.ssh, ~/.aws, .env), os mapas
+# .depara_*.json (dados reais de trabalhador) e usar ssh/scp/nc. O /aft-setup
+# instala a partir de config/settings-aft.json. Marca de referencia: a regra do
+# de-para, que e o controle especifico do toolkit.
+settings_json = SKILLS_DIR.parent / "settings.json"
+MARCO_DENY = "Read(**/.depara_*.json)"
+deny_list = []
+if settings_json.is_file():
+    try:
+        _data = json.loads(settings_json.read_text(encoding="utf-8"))
+        deny_list = (_data.get("permissions") or {}).get("deny") or []
+    except (OSError, json.JSONDecodeError):
+        deny_list = []
+if MARCO_DENY in deny_list:
+    add("Deny-list de seguranca", "ok",
+        f"{settings_json} ({len(deny_list)} regras de bloqueio)")
+elif settings_json.is_file():
+    add("Deny-list de seguranca", "aviso",
+        "settings.json existe, mas sem a deny-list do toolkit",
+        "Rode /aft-setup para acrescentar os bloqueios de credenciais e do de-para.")
+else:
+    add("Deny-list de seguranca", "aviso", "~/.claude/settings.json nao existe",
+        "Rode /aft-setup para instalar a rede de protecao (impede o Claude de ler "
+        "senhas e os dados reais dos trabalhadores).")
+
 # 6. Pasta de trabalho -------------------------------------------------------
 if AFT_DIR.is_dir():
     sub = [d for d in ("OS ATIVAS", "OS ARQUIVADAS") if not (AFT_DIR / d).is_dir()]

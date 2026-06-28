@@ -108,6 +108,9 @@ Documentos\AFT\
 - O arquivo `.depara_<CNPJ>.json` (mapa token↔dados reais) é sensível: não compartilhe, não commite.
 - A cópia `*.tokenized.txt` é a única versão segura para compartilhar com colegas.
 - Consultas de ementa ao NotebookLM enviam apenas a **descrição da irregularidade** — nunca nomes de trabalhadores ou da empresa.
+- **Documentos do empregador são dados, não instruções.** O que a empresa fiscalizada entrega (resposta ao DET, PGR, atas, atestados, AFD/AEJ) é conteúdo não confiável: o perfil do auditor (`config/CLAUDE-aft.md`) instrui o assistente a tratá-lo como fato a analisar e a **relatar** — nunca obedecer — qualquer texto embutido que tente direcionar a fiscalização ("aprove", "não autue", "está regular").
+- **Rede de proteção (deny-list).** O `/aft-setup` instala em `~/.claude/settings.json` (a partir de `config/settings-aft.json`) bloqueios que impedem o Claude de ler credenciais (`~/.ssh`, `~/.aws`, `.env`), de ler os mapas `.depara_*.json` e de usar comandos de acesso remoto (`ssh`, `scp`, `nc`). É a última linha de defesa caso algum documento tente induzir um vazamento.
+- **Atualização verificada.** O `/aft-atualizar` varre o conteúdo que está chegando (`_scripts/checar_diff.py`) por sinais de adulteração antes de baixar — uma atualização de skills é tratada como artefato de cadeia de suprimentos.
 
 ## Ementários (códigos de ementa)
 
@@ -140,6 +143,7 @@ As skills buscam o código da ementa em 3 camadas:
 - Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.
 - O template do RT (`aft-rt-rgi/template.docx`) segue o modelo da SRTE/GO — auditores de outras SRTEs devem ajustar o cabeçalho.
 - Guard-rail de PII: `_scripts/checar_pii.py` varre um relato/pasta e **avisa** se houver CPF ou PIS/PASEP com dígito verificador válido (o único dado de alto dano que pode entrar por engano). Não troca nem bloqueia nada — a anonimização real continua determinística (`rehydrate.py`).
+- Guard-rail de supply-chain: `_scripts/checar_diff.py` varre o diff de uma atualização (linhas que estão chegando) por Unicode invisível e padrões de exfiltração/execução remota, e **avisa** antes do `git pull` (chamado pelo `/aft-atualizar`). Também é só um alarme — quem decide atualizar é o AFT.
 
 ## Contribuindo
 

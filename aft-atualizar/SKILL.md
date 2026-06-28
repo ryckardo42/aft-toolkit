@@ -36,7 +36,9 @@ git log HEAD..origin/main --oneline   # commits novos disponíveis
 ```
 
 - **Lista vazia** → já está na última versão; informe isso e siga para o Passo 2.
-- **Lista com commits** → atualize e guarde as mensagens para o resumo final:
+- **Lista com commits** → **antes de baixar**, faça a varredura de segurança abaixo
+  (Passo 1a). Só depois de ela passar, atualize e guarde as mensagens para o resumo
+  final:
   ```bash
   git pull origin main
   ```
@@ -44,6 +46,27 @@ git log HEAD..origin/main --oneline   # commits novos disponíveis
   por mudanças locais não commitadas, **não descarte nada**: avise o AFT e pergunte
   como prosseguir (isso não deveria acontecer numa instalação normal, em que o AFT
   nunca edita os arquivos do repositório).
+
+### Passo 1a — Varredura de segurança do que está chegando (antes do pull)
+
+Uma atualização de skills é **código de terceiro** entrando na máquina do AFT: roda com
+acesso aos documentos e dados reais da fiscalização. Antes do `git pull`, confira o que
+muda e varra o conteúdo que está chegando por sinais de adulteração (Unicode invisível,
+cano para shell, `ANTHROPIC_BASE_URL`, exfiltração por rede). Você roda:
+
+```bash
+git diff --stat HEAD..origin/main                      # quais arquivos mudam
+python ~/.claude/skills/_scripts/checar_diff.py        # varredura das linhas novas
+```
+
+- **Saída `✓` (nada suspeito)** → siga para o `git pull` normalmente.
+- **Saída `⚠️` (sinais suspeitos)** → **NÃO dê o pull.** Mostre os achados ao AFT em
+  linguagem simples, explique que a atualização traz algo fora do padrão e só prossiga
+  se ele confirmar que a mudança é legítima (autor/commit conhecido). Na dúvida, não
+  atualize: o toolkit antigo funcionando é melhor que um novo adulterado.
+
+O `checar_diff.py` é um alarme: nunca bloqueia nem altera nada, só relata. Quem decide
+seguir é sempre o AFT.
 
 ## Passo 2 — Atualizar o `notebooklm` (notebooklm-py)
 

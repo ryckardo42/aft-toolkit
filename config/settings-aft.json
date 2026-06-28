@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(**/.env*)",
+      "Read(**/.depara_*.json)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(sftp:*)",
+      "Bash(nc:*)",
+      "Bash(telnet:*)"
+    ]
+  }
+}
