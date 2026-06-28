@@ -43,6 +43,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/inspecao-inicial` | Lê o relato de campo, identifica NR/ementa (NotebookLM) e redige os autos de infração (todas as NRs + CLT), com gate de dupla visita |
 | `/registro` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
 | `/PGR-analise` | Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas |
+| `/aet-auditoria` | Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e AET anexada a cada auto |
 | `/det-630` | Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT) |
 | `/tn-nco` | Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item) |
 | `/aft-rt-rgi` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
@@ -69,6 +70,10 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/gera-ai` | Empacota autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível |
 | `/autos-lavrados` | Lê os PDFs já transmitidos no Sistema Auditor (`C:\SistemasAFT\...\PRO`), cruza com os rascunhos e marca no `memory.md` o que está lavrado `[x]` / pendente `[ ]` — read-only sobre o Sistema Auditor |
 | `/sfitweb-rel` | Relatório Final Simplificado consolidando autos, termos e notificações |
+
+## Modo rápido: cada skill funciona isolada
+
+O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos de DET e manter o painel atualizado — mas **nenhuma skill de redação exige esse fluxo**. Você pode chamar `/inspecao-inicial`, `/registro`, `/aft-rt-rgi`, `/PGR-analise` ou `/det-630` direto, colar a narrativa da inspeção e receber o texto do auto pronto, sem nunca ter rodado `/nova-os` e sem precisar do CNPJ real (um nome fantasia basta — o texto do auto nunca embute o CNPJ no corpo, ele é só metadado administrativo). O CNPJ só passa a ser obrigatório no `/gera-ai`, porque é um campo exigido pelo próprio Sistema Auditor (não pelo toolkit) para a importação do TXT — ou seja, dá pra usar o toolkit só para gerar o texto dos autos, sem nunca empacotar nada.
 
 ## Fluxo típico de uma fiscalização
 
