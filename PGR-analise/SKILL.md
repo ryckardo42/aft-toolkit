@@ -1,5 +1,6 @@
 ---
 name: PGR-analise
+model: claude-opus-4-8[1m]
 description: >
   Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para analisar, auditar,
   revisar ou avaliar um Programa de Gerenciamento de Riscos (PGR) à luz da NR-01. Acione
