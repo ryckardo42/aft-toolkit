@@ -1,21 +1,19 @@
 ---
 name: aft-rt-rgi
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para criar, gerar, redigir
-  ou montar um Relatório Técnico para Interdição e/ou Embargo (RT). Acione quando o usuário
-  mencionar "relatório técnico de interdição", "relatório técnico de embargo", "RT de interdição",
-  "RT para interdição", "gerar o relatório técnico", "montar o RT", "relatório técnico do termo",
-  "AFT-RT-RGI" ou expressões equivalentes. O skill produz um documento .docx completo seguindo
-  o modelo oficial (template incluído no toolkit), preenchendo os dados do empregador, ação
-  fiscal, objetos interditados, irregularidades, fatores de risco, medidas de proteção,
-  documentos solicitados e conclusão, mantendo todo o conteúdo fixo (cabeçalho, seções legais,
-  imagens, tabelas NR-3 e instruções de levantamento). Logo após o RT, a skill OBRIGATORIAMENTE
-  redige os autos de infração derivados das ementas da seção 4 (um auto por ementa, no formato
-  consumido por /gera-ai) e salva tudo na pasta `Autos TE-TI DD-MM/` da OS.
-  Acione esta skill TAMBÉM quando o AFT ANEXAR um Relatório Técnico de Interdição (ou um Termo
-  de Interdição) já pronto e pedir para "gerar os autos de infração" desse documento: nesse
-  caso, é esta skill que redige os autos (a partir das irregularidades do documento anexado),
-  NÃO se devendo improvisar os autos fora dela.
+  Use SEMPRE que o AFT pedir para criar, gerar ou redigir um Relatório Técnico
+  para Interdição e/ou Embargo (RT). Acione com "relatório técnico de
+  interdição/embargo", "RT de interdição", "gerar o relatório técnico",
+  "montar o RT", "AFT-RT-RGI". Produz um .docx completo no modelo oficial
+  (template incluído no toolkit), preenchendo empregador, ação fiscal, objetos
+  interditados, irregularidades, fatores de risco, medidas de proteção,
+  documentos solicitados e conclusão, mantendo todo o conteúdo fixo
+  (cabeçalho, seções legais, imagens, tabelas NR-3). Logo após o RT,
+  OBRIGATORIAMENTE redige os autos de infração derivados das ementas da seção
+  4 (um por ementa, no formato do /gera-ai) e salva na pasta `Autos TE-TI DD-
+  MM/` da OS. Acione TAMBÉM quando o AFT ANEXAR um RT ou Termo de Interdição
+  já pronto e pedir os autos de infração dele: é esta skill que redige esses
+  autos, nunca improvisar por fora.
 ---
 
 # aft-rt-rgi — Relatório Técnico para Interdição e Embargo

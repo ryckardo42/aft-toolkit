@@ -1,5 +1,6 @@
 ---
 name: det-630
+model: sonnet
 description: >
   Use SEMPRE que o empregador omitir (total ou parcialmente) a entrega de
   documentos notificados via DET (Domicílio Eletrônico Trabalhista). Dispare

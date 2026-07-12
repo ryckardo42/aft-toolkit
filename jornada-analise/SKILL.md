@@ -1,22 +1,19 @@
 ---
 name: jornada-analise
+model: sonnet
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) tiver recebido, em resposta a
-  uma notificacao sobre jornada/ponto eletronico, um PACOTE de documentos do
-  empregador (arquivos AFD e AEJ + Atestado(s) Tecnico(s) e Termo(s) de
-  Responsabilidade do REP/PTRP) e quiser analisar TUDO de uma vez. Acione com
-  "/jornada-analise", "analisar documentos de jornada", "analisar a entrega da
-  jornada", "auditar o pacote de ponto", "conferir os documentos do REP que a
-  empresa entregou", "analisar AFD AEJ e atestado", "rodar a analise da jornada
-  da empresa X", "validar tudo que a empresa mandou sobre ponto". Aceita como
-  argumento o caminho de uma PASTA (a pasta da OS ou a subpasta da entrega) ou
-  uma lista de arquivos. A skill faz a TRIAGEM dos documentos e delega: arquivos
-  AFD/AEJ vao para a skill jornada-valida-afd-aej (integridade tecnica) e cada PDF de
-  atestado vai para a skill jornada-atestado (conformidade ao art. 89 da
-  Portaria 671/2021), consolidando tudo num unico relatorio. NAO faz analise de
-  jornada propriamente dita (confronto marcacao x horario contratual, horas
-  extras, intervalos) — isso e etapa posterior. NAO confundir com
-  /analise-preliminar generica; esta aqui e especifica do pacote de jornada.
+  Use SEMPRE que o AFT tiver recebido, em resposta a uma notificacao sobre
+  jornada/ponto eletronico, um PACOTE de documentos do empregador (arquivos
+  AFD e AEJ + Atestado(s) Tecnico(s) e Termo(s) de Responsabilidade do
+  REP/PTRP) e quiser analisar TUDO de uma vez. Acione com "/jornada-analise",
+  "analisar documentos de jornada", "auditar o pacote de ponto", "analisar AFD
+  AEJ e atestado", "validar tudo que a empresa mandou sobre ponto". Aceita
+  como argumento uma PASTA (da OS ou da entrega) ou uma lista de arquivos. Faz
+  a TRIAGEM e delega: AFD/AEJ vao para /jornada-valida-afd-aej (integridade
+  tecnica) e cada PDF de atestado para /jornada-atestado (art. 89 da Portaria
+  671/2021), consolidando tudo num unico relatorio. NAO faz analise de jornada
+  propriamente dita (confronto marcacao x horario, horas extras, intervalos) —
+  isso e etapa posterior.
 ---
 
 # jornada-analise — Orquestrador da análise da entrega de jornada

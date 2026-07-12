@@ -2,21 +2,19 @@
 name: aet-auditoria
 model: claude-opus-4-8[1m]
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para auditar, analisar,
-  revisar ou criticar uma Análise Ergonômica do Trabalho (AET) à luz da NR-17. Acione quando
-  o usuário mencionar "auditar AET", "analisar AET", "análise ergonômica do trabalho",
-  "AET da empresa", "AET apresentada", "auditoria de ergonomia", "AET deficiente", "AET não
-  ouviu trabalhador", "ementa de ergonomia", "117244-1", "117248-4", "117249-2", "117250-6",
-  "117251-4", ou anexar PDF de AET / laudo ergonômico. Também acione quando o contexto
-  envolver lavratura de autos de infração por irregularidades na AET. O skill executa
-  varredura sistemática das cinco ementas de AET da NR-17 (conteúdo e etapas 17.3.3,
-  oitiva dos trabalhadores 17.3.8, aspectos da organização do trabalho 17.4.1, medidas para
-  sobrecarga muscular 17.4.2, e medidas de prevenção da exposição contínua/repetitiva 17.4.3),
-  identifica irregularidades com citação de página/folha do documento, e oferece a redação
-  dos autos de infração (formato 3 subtítulos) no formato consumido pelo /gera-ai, que
-  empacota o TXT do Sistema Auditor com a própria AET como anexo de cada AI. NÃO confundir com
-  /PGR-analise (que audita o PGR sob a NR-01) nem com /inspecao-inicial (achados de campo).
-  Esta skill audita o documento AET sob a NR-17.
+  Use SEMPRE que o AFT pedir para auditar, analisar ou revisar uma Análise
+  Ergonômica do Trabalho (AET) à luz da NR-17. Acione com "auditar AET",
+  "analisar AET", "análise ergonômica do trabalho", "AET da empresa", "ementa
+  de ergonomia", códigos 117244-1, 117248-4, 117249-2, 117250-6, 117251-4, ou
+  quando anexar PDF de AET/laudo ergonômico — inclusive para lavrar autos por
+  irregularidade na AET. Varre as cinco ementas de AET da NR-17 (conteúdo e
+  etapas 17.3.3, oitiva dos trabalhadores 17.3.8, organização do trabalho
+  17.4.1, sobrecarga muscular 17.4.2, exposição contínua/repetitiva 17.4.3),
+  aponta irregularidades com citação de página/folha e oferece a redação dos
+  autos (formato 3 subtítulos) no formato do /gera-ai, que empacota o TXT com
+  a própria AET anexa a cada AI. NÃO confundir com /PGR-analise (PGR sob a
+  NR-01) nem com /inspecao-inicial (achados de campo): esta skill audita o
+  documento AET sob a NR-17.
 ---
 
 # aet-auditoria — Auditoria de AET (NR-17)

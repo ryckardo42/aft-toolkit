@@ -1,5 +1,7 @@
 ---
 name: autos-lavrados
+model: sonnet
+allowed-tools: Read, Glob, Grep, Bash, Write, Edit, AskUserQuestion
 description: >
   Use SEMPRE que o AFT pedir para checar quais autos de infração já foram
   efetivamente lavrados (transmitidos no Sistema Auditor) de uma empresa em

@@ -1,5 +1,6 @@
 ---
 name: jornada-valida-afd-aej
+model: sonnet
 description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser validar o arquivo
   fiscal de ponto eletronico AEJ (Arquivo Eletronico de Jornada) recebido do

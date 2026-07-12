@@ -1,5 +1,6 @@
 ---
 name: gera-ai
+model: sonnet
 description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) tiver autos de infração já
   redigidos e quiser empacotá-los em arquivo TXT importável pelo Sistema Auditor.

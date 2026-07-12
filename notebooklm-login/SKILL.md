@@ -1,20 +1,18 @@
 ---
 name: notebooklm-login
+model: sonnet
 description: >
-  Use SEMPRE que for preciso CONECTAR ou RECONECTAR o NotebookLM (o ementário que
-  as skills consultam para achar o código da ementa) à conta Google do AFT, ou
-  quando o NotebookLM parar de responder. Acione com "/notebooklm-login",
-  "conectar o notebooklm", "ativar o notebooklm", "logar no notebooklm",
-  "reconectar o ementário", "o notebooklm parou", "deu erro no notebooklm",
-  "authentication expired", "notebooklm pede para logar de novo", "a consulta de
-  ementa falhou", "notebooklm list deu erro". A skill conecta com a MENOR
-  intervenção possível e SEM nunca mandar o AFT para o terminal: o Claude tenta
-  primeiro os cookies do navegador (zero cliques) e, se preciso, abre uma janela
-  do navegador do sistema (Edge/Chrome) para um único login no Google, salvando a
-  sessão sozinho. NÃO baixa o Chromium próprio nem exige Visual C++ quando usa o
-  navegador do sistema. Também detecta sessão já ativa ou expirada. NÃO redige
-  autos nem consulta ementas: só deixa o comando `notebooklm` pronto para as
-  outras skills usarem (/inspecao-inicial, /NR12, /NR18, /tn-nco, /gera-ai...).
+  Use SEMPRE que for preciso CONECTAR ou RECONECTAR o NotebookLM (o ementário
+  que as skills consultam) à conta Google do AFT, ou quando ele parar de
+  responder. Acione com "/notebooklm-login", "conectar o notebooklm", "logar
+  no notebooklm", "reconectar o ementário", "o notebooklm parou",
+  "authentication expired", "a consulta de ementa falhou". Conecta com a MENOR
+  intervenção possível e SEM nunca mandar o AFT ao terminal: tenta primeiro os
+  cookies do navegador (zero cliques) e, se preciso, abre uma janela do
+  navegador do sistema (Edge/Chrome) para um único login no Google, salvando a
+  sessão sozinho. NÃO baixa o Chromium próprio nem exige Visual C++. Também
+  detecta sessão já ativa ou expirada. NÃO redige autos nem consulta ementas:
+  só deixa o comando `notebooklm` pronto para as outras skills usarem.
 ---
 
 # notebooklm-login — Conectar o NotebookLM (mínima intervenção, sem terminal)

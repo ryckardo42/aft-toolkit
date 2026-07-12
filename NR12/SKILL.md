@@ -2,24 +2,18 @@
 name: NR12
 description: >
   Use SEMPRE que o AFT mencionar irregularidade, autuação, interdição,
-  embargo, RT ou ementa relacionados à NR-12 (Segurança no Trabalho em
-  Máquinas e Equipamentos). Acione com /NR12 ou quando a narrativa
-  envolver "máquina", "equipamento", "proteção fixa", "proteção móvel",
+  embargo, RT ou ementa relacionados à NR-12 (máquinas e equipamentos). Acione
+  com /NR12 ou quando a narrativa envolver "máquina", "proteção fixa/móvel",
   "intertravamento", "zona de perigo", "parada de emergência",
-  "botão de emergência", "CLP de segurança", "relé de segurança",
-  "categoria de segurança", "apreciação de riscos de máquina",
-  "manual da máquina", "manutenção da máquina", "transmissão de força",
-  "polia exposta", "correia exposta", "engrenagem aparente",
-  "aterramento de máquina", "redundância", "reset manual", "rearme manual",
-  "extrabaixa tensão", "partida inesperada", "religação automática",
-  "capacitação NR-12", "sinalização de máquina", "arranjo físico de máquinas".
-  Acione também quando /inspecao-inicial ou /aft-rt-rgi estiverem em curso e a
-  NR identificada for a 12 — esta skill é a consultora especializada para NR-12.
-  Retorna: (1) código da ementa + descrição oficial; (2) bloco 2) IRREGULARIDADE
-  pronto para o auto de infração; (3) linha formatada para a Seção 4 do RT;
-  (4) fragmento de fundamentação para o Termo de Interdição. NÃO empacota TXT
-  (delega a /gera-ai) e NÃO redige o auto inteiro (delega a /inspecao-inicial)
-  — produz apenas o material específico de NR-12 que essas skills consomem.
+  "polia/correia/engrenagem exposta", "categoria de segurança", "apreciação de
+  riscos de máquina", "partida inesperada", "capacitação NR-12". Acione também
+  quando /inspecao-inicial ou /aft-rt-rgi estiverem em curso e a NR
+  identificada for a 12 — é a consultora especializada para NR-12. Retorna:
+  (1) código da ementa + descrição oficial; (2) bloco 2) IRREGULARIDADE pronto
+  para o auto de infração; (3) linha formatada para a Seção 4 do RT; (4)
+  fragmento de fundamentação para o Termo de Interdição. NÃO empacota TXT
+  (delega a /gera-ai) e NÃO redige o auto inteiro (delega a /inspecao-
+  inicial).
 ---
 
 # NR12 — Consultora especializada para irregularidades de máquinas e equipamentos

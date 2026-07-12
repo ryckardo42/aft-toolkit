@@ -108,6 +108,8 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Redigir autos de infração → `/inspecao-inicial` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
 - Trabalhador sem registro → `/registro`
 - Analisar PGR → `/PGR-analise`
+- Auditar AET (Análise Ergonômica do Trabalho, NR-17) → `/aet-auditoria`
+- Analisar acidente ou doença do trabalho (relatório da IN 2/2022) → `/analise-acidente`
 - Notificar a empresa para corrigir irregularidades → `/tn-nco`
 - Interdição/embargo (risco grave e iminente) → `/aft-rt-rgi`
 - Empregador não entregou documentos do DET → `/det-630`

@@ -1,5 +1,6 @@
 ---
 name: aft-setup
+model: sonnet
 description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) acabou de instalar o AFT Toolkit
   e precisa configurá-lo pela primeira vez, ou quando quiser revisar/alterar a

@@ -1,21 +1,20 @@
 ---
 name: analise-acidente
+model: claude-opus-4-8[1m]
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser analisar um acidente ou doença
-  do trabalho e produzir o Relatório de Análise de Acidente, na forma da IN GMTP/MTP nº
-  2/2022. Acione com "/analise-acidente", "analisar acidente", "análise de acidente",
-  "relatório de análise de acidente", "investigar acidente de trabalho", "análise de
-  acidente fatal", "acidente com óbito", "fatores causais do acidente", "árvore de causas",
-  "analisar essa CAT", "montar o relatório do acidente", ou quando o AFT apontar uma pasta
-  com documentos de acidente (CAT, RAI/BO, laudos, PGR, investigação da empresa, ponto,
-  ASO, contrato) e pedir a análise. A skill varre os documentos (pasta inteira ou anexos),
-  redige um relatório em texto contínuo seguindo o roteiro fixo de 6 seções, propõe os
-  fatores causais com os códigos oficiais do SFIT (famílias 251 a 260) para o AFT confirmar,
-  gera o documento em Word (.docx) e, ao final, PERGUNTA se o AFT deseja encadear a redação
-  dos autos de infração (/inspecao-inicial) e o empacotamento (/gera-ai). NÃO redige os autos
-  sozinha e NÃO inventa fatos, códigos ou ementas. Não confundir com /inspecao-fisica (apenas
-  o relato de campo) nem com /inspecao-inicial (que redige os autos): esta skill produz a
-  ANÁLISE do acidente.
+  Use SEMPRE que o AFT quiser analisar um acidente ou doença do trabalho e
+  produzir o Relatório de Análise de Acidente (IN GMTP/MTP nº 2/2022). Acione
+  com "/analise-acidente", "analisar acidente", "relatório de análise de
+  acidente", "acidente fatal", "acidente com óbito", "fatores causais",
+  "árvore de causas", "analisar essa CAT", ou quando o AFT apontar uma pasta
+  com documentos do acidente (CAT, RAI/BO, laudos, PGR, ponto, ASO, contrato).
+  Varre os documentos, redige o relatório em texto contínuo no roteiro fixo de
+  6 seções, propõe os fatores causais com os códigos oficiais do SFIT
+  (famílias 251 a 260) para o AFT confirmar, gera o .docx e, ao final,
+  PERGUNTA se deseja encadear /inspecao-inicial (autos) e /gera-ai. NÃO redige
+  os autos sozinha e NÃO inventa fatos, códigos ou ementas. Não confundir com
+  /inspecao-fisica (relato de campo) nem /inspecao-inicial (autos): esta skill
+  produz a ANÁLISE do acidente.
 ---
 
 # analise-acidente — Análise de Acidente do Trabalho (IN GMTP/MTP nº 2/2022)

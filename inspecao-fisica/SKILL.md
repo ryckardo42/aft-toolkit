@@ -1,5 +1,6 @@
 ---
 name: inspecao-fisica
+model: sonnet
 description: >
   Use SEMPRE que o AFT chegar de uma inspeção/fiscalização de campo e narrar — por voz ditada
   ou texto corrido — o que encontrou in loco, e quiser registrar isso como um relato

@@ -1,5 +1,6 @@
 ---
 name: nova-os
+model: sonnet
 description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser cadastrar/abrir uma nova
   auditoria (OS) no AFT Toolkit — registrar uma empresa que vai fiscalizar e, se já

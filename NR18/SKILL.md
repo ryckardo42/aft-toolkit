@@ -2,25 +2,18 @@
 name: NR18
 description: >
   Use SEMPRE que o AFT mencionar irregularidade, autuação, ementa ou auto de
-  infração relacionados à NR-18 (Segurança e Saúde no Trabalho na Indústria da
-  Construção). Acione com /NR18 ou quando a narrativa envolver fiscalização de
-  obra / canteiro e termos como "canteiro de obras", "área de vivência",
-  "instalação sanitária", "vestiário", "refeitório", "andaime", "plataforma de
-  trabalho", "proteção coletiva", "guarda-corpo", "periferia da laje",
-  "abertura no piso", "elevador de obra", "elevador de materiais", "torre do
-  elevador", "cancela", "cremalheira", "serra circular", "vergalhão", "ponta de
-  ferro", "escada de uso coletivo", "instalações elétricas temporárias",
-  "quadro de distribuição", "condutores elétricos", "aterramento da obra",
-  "PGR do canteiro", "prevenção de incêndio no canteiro", "rede de segurança",
-  "organização e limpeza do canteiro", "concretagem da primeira laje". Acione
-  também quando /inspecao-inicial ou /aft-rt-rgi estiverem em curso e a NR
-  identificada for a 18 — esta skill é a consultora especializada para NR-18. A
-  partir do contexto da auditoria, ela SEPARA as ementas de NR-18 envolvidas,
-  confirma com o AFT e, após aprovação, redige o material de cada uma: (1) código
-  da ementa + descrição oficial + capitulação; (2) bloco 2) IRREGULARIDADE pronto
-  para o auto; (3) linha formatada para a Seção 4 do RT. NÃO trata medida cautelar
-  (embargo/interdição fica com /aft-rt-rgi), NÃO empacota TXT (delega a /gera-ai)
-  e NÃO redige o auto inteiro (delega a /inspecao-inicial).
+  infração relacionados à NR-18 (indústria da construção). Acione com /NR18 ou
+  quando a narrativa envolver fiscalização de obra/canteiro: "canteiro de
+  obras", "área de vivência", "andaime", "guarda-corpo", "periferia da laje",
+  "elevador de obra", "serra circular", "ponta de vergalhão", "instalações
+  elétricas temporárias", "rede de segurança". Acione também quando /inspecao-
+  inicial ou /aft-rt-rgi estiverem em curso e a NR identificada for a 18 — é a
+  consultora especializada para NR-18. Ela SEPARA as ementas envolvidas,
+  confirma com o AFT e redige o material de cada uma: (1) código da ementa +
+  descrição oficial + capitulação; (2) bloco 2) IRREGULARIDADE pronto para o
+  auto; (3) linha da Seção 4 do RT. NÃO trata medida cautelar
+  (embargo/interdição fica com /aft-rt-rgi), NÃO empacota TXT (delega a /gera-
+  ai) e NÃO redige o auto inteiro (delega a /inspecao-inicial).
 ---
 
 # NR18 — Consultora especializada para irregularidades na indústria da construção

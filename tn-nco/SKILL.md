@@ -1,22 +1,20 @@
 ---
 name: tn-nco
+model: sonnet
 description: >
-  Use SEMPRE que o AFT quiser redigir/gerar uma Notificação para Correção de
+  Use SEMPRE que o AFT quiser redigir uma Notificação para Correção de
   Irregularidades (TN-NCO) — o texto que vai no DET notificando a empresa a
-  corrigir irregularidades de Segurança e Medicina do Trabalho constatadas em
-  inspeção física ou auditoria de documentos. Dispare com /tn-nco, ou frases
-  como "cria a notificação para corrigir", "redige a TN de correção", "notifica
-  a empresa para sanar as irregularidades", "como eu notifico essa empresa?",
-  "me ajuda a escrever a notificação de correção", "monta a notificação dessas
-  irregularidades". Acione também PROATIVAMENTE logo após identificar uma
-  irregularidade + NR/item + ementa (em /inspecao-inicial, /PGR-analise ou
-  narrativa de campo), oferecendo gerar a notificação. Produz: introdução fixa
-  (alínea X do art. 18 do Decreto 4552/2002) + um item por irregularidade no
-  formato "*Título* - item X da NR-Y: <exigência> [ementa]" (ementa via
-  NotebookLM, só quando existir) + observações fixas, apresentado BLOCO A BLOCO
-  para o AFT copiar item por item no DET e salvo como .md na pasta da OS. NÃO é
-  o auto de infração (isso é /inspecao-inicial → /gera-ai) — é só o TEXTO da
-  notificação de correção, pronto para colar.
+  corrigir irregularidades de SST. Dispare com /tn-nco, "cria a notificação
+  para corrigir", "redige a TN de correção", "notifica a empresa para sanar as
+  irregularidades", "monta a notificação dessas irregularidades". Acione
+  também PROATIVAMENTE logo após identificar irregularidade + NR/item + ementa
+  (em /inspecao-inicial, /PGR-analise ou narrativa de campo), oferecendo gerar
+  a notificação. Produz: introdução fixa (art. 18 do Decreto 4552/2002) + um
+  item por irregularidade no formato "*Título* - item X da NR-Y: <exigência>
+  [ementa]" (ementa via NotebookLM, só quando existir) + observações fixas,
+  apresentado BLOCO A BLOCO para o AFT copiar no DET e salvo como .md na pasta
+  da OS. NÃO é o auto de infração (isso é /inspecao-inicial → /gera-ai) — é só
+  o TEXTO da notificação, pronto para colar.
 ---
 
 # tn-nco — Notificação para Correção de Irregularidades

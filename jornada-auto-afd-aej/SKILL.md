@@ -1,22 +1,18 @@
 ---
 name: jornada-auto-afd-aej
+model: sonnet
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser lavrar auto de
-  infração porque o empregador deixou de gerar/manter o Arquivo Fonte de Dados
-  (AFD) e/ou o Arquivo Eletronico de Jornada (AEJ) conforme as especificações do
-  portal gov.br (Portaria MTP nº 671/2021). Acione com "/jornada-auto-afd-aej", "auto do
-  AFD", "auto do AEJ", "lavrar auto do AFD", "autuar AFD fora do padrão", "autuar
-  AEJ fora do padrão", "ementa 002279-9", "ementa 002280-2", "art. 81 da 671",
-  "art. 83 da 671", "AFD inválido autuar", "AEJ inválido autuar", "arquivo de
-  ponto fora do padrão", "REP não gerou o AFD". Também deve ser oferecida
-  automaticamente quando /jornada-valida-afd-aej ou /jornada-analise apontarem o AFD ou o
-  AEJ como INVÁLIDO e o AFT quiser autuar. A skill redige UM auto por arquivo
-  reprovado (002279-9 para o AFD, art. 81 caput; 002280-2 para o AEJ, art. 83, I;
-  ambos c/c art. 74, §2º, da CLT) já no formato estruturado consumido por
-  /gera-ai (=== AUTO DE INFRAÇÃO #N === / 1) DA FISCALIZAÇÃO / 2) IRREGULARIDADE /
-  3) OBSERVAÇÕES / ELEMENTOS DE CONVICÇÃO), adaptando o histórico ao defeito
-  realmente constatado. NÃO valida o arquivo (isso é da /jornada-valida-afd-aej) nem
-  empacota o TXT (delega ao /gera-ai).
+  Use SEMPRE que o AFT quiser lavrar auto de infração porque o empregador
+  deixou de gerar/manter o AFD e/ou o AEJ conforme a Portaria MTP nº 671/2021.
+  Acione com "/jornada-auto-afd-aej", "auto do AFD", "auto do AEJ", "autuar
+  AFD/AEJ fora do padrão", "ementa 002279-9", "ementa 002280-2", "art. 81 da
+  671", "art. 83 da 671", "REP não gerou o AFD". Ofereça automaticamente
+  quando /jornada-valida-afd-aej ou /jornada-analise apontarem o AFD ou o AEJ
+  como INVÁLIDO e o AFT quiser autuar. Redige UM auto por arquivo reprovado
+  (002279-9 para o AFD, art. 81 caput; 002280-2 para o AEJ, art. 83, I; ambos
+  c/c art. 74, §2º, da CLT) já no formato estruturado consumido por /gera-ai,
+  adaptando o histórico ao defeito realmente constatado. NÃO valida o arquivo
+  (isso é da /jornada-valida-afd-aej) nem empacota o TXT (delega ao /gera-ai).
 ---
 
 # jornada-auto-afd-aej — Autos de Infração: AFD (002279-9) e AEJ (002280-2)

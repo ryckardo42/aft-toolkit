@@ -1,18 +1,19 @@
 ---
 name: consulta
 description: >
-  Use esta skill quando o Auditor-Fiscal do Trabalho (AFT) quiser CONSULTAR os ementários e
-  notebooks do NotebookLM — para tirar dúvidas técnico-jurídicas OU para enquadrar uma situação
-  de fato. Acione com "/consulta", "consultar o ementário", "tirar dúvida sobre a NR-XX",
-  "pesquisar no notebook", "qual a ementa para [situação]", "qual a capitulação de", "qual a
-  gradação", "tem precedente/nota técnica da SIT sobre", "me ajuda a enquadrar", "sugere o
-  histórico do auto para [fato]". Tem missão TRIPLA quando o AFT descreve uma irregularidade:
-  (1) IDENTIFICAR a ementa mais específica (código + descrição); (2) FUNDAMENTAR (capitulação
-  legal exata + gradação da penalidade + notas técnicas/precedentes); (3) REDIGIR uma minuta de
-  texto para o campo "Histórico" do Auto de Infração, com metodologia robusta anti-nulidade.
-  Para perguntas gerais, responde usando as fontes do notebook, com citações. É SOMENTE consulta:
-  não lavra autos nem gera o TXT (delega a /inspecao-inicial → /gera-ai) e NUNCA inventa código,
-  item, capitulação ou gradação — tudo vem do NotebookLM, com fonte.
+  Use quando o AFT quiser CONSULTAR os ementários e notebooks do NotebookLM —
+  tirar dúvidas técnico-jurídicas OU enquadrar uma situação de fato. Acione
+  com "/consulta", "consultar o ementário", "tirar dúvida sobre a NR-XX",
+  "qual a ementa para [situação]", "qual a capitulação", "qual a gradação",
+  "me ajuda a enquadrar", "sugere o histórico do auto". Missão TRIPLA diante
+  de uma irregularidade: (1) IDENTIFICAR a ementa mais específica (código +
+  descrição); (2) FUNDAMENTAR (capitulação legal exata + gradação da
+  penalidade + notas técnicas/precedentes); (3) REDIGIR minuta do campo
+  "Histórico" do Auto de Infração com metodologia anti-nulidade. Para
+  perguntas gerais, responde usando as fontes do notebook, com citações. É
+  SOMENTE consulta: não lavra autos nem gera o TXT (delega a /inspecao-inicial
+  → /gera-ai) e NUNCA inventa código, capitulação ou gradação — tudo vem do
+  NotebookLM, com fonte.
 ---
 
 # consulta — Consulta aos ementários/notebooks (missão tripla)

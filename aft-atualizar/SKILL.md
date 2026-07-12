@@ -1,5 +1,6 @@
 ---
 name: aft-atualizar
+model: sonnet
 description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para atualizar o AFT
   Toolkit. Acione com "/aft-atualizar", "atualize o toolkit", "atualize o aft

@@ -1,5 +1,6 @@
 ---
 name: sfitweb-rel
+model: sonnet
 description: >
   Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) precisar gerar um Relatório Final
   Simplificado de fiscalização trabalhista a partir de documentos lavrados. Acione quando o usuário
