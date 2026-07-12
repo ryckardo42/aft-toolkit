@@ -10,6 +10,10 @@ O toolkit transforma o Claude Code num assistente de fiscalização que trabalha
 - **Anonimização (pseudonimização reversível)**: nomes e CPFs de trabalhadores são substituídos por tokens (`[[TRAB_01]]`, `[[CPF_01]]`) nos textos processados pela IA. Os valores reais ficam num mapa local e são re-injetados no TXT final por um **script determinístico** (`rehydrate.py`) — nunca pelo modelo. Um nome ou CPF trocado num documento legal é inaceitável; por isso essa etapa não é feita por IA.
 - **Fluxo completo**: do relato ditado pós-inspeção até o arquivo pronto para o botão "imp. txt" do Sistema Auditor.
 
+### O que são esses "scripts" que as skills mencionam?
+
+Você vai ver, em várias skills, referência a arquivos com nome tipo `gerar_painel.py` ou `rehydrate.py` — são **scripts**: pequenos programinhas de computador, parecidos com uma calculadora ou um carimbo automático, que fazem sempre a mesma tarefa mecânica, exatamente igual, toda vez que rodam (gerar o painel, comprimir uma foto, montar o arquivo do Sistema Auditor). A diferença para a IA é essa: a IA "pensa" — lê, interpreta, redige o texto do auto —, enquanto o script só executa uma receita fixa, sem interpretar nada. É por isso que a troca de nome/CPF de um trabalhador no arquivo final, por exemplo, é feita por um script (nunca pela IA): script não erra por criatividade, só faz o que está escrito no código. E é aqui que mora a "mágica" do Claude Code: diferente do chat comum, ele consegue *rodar* esses programinhas no seu próprio computador — criar pastas, salvar arquivos, gerar o TXT — sempre pedindo sua permissão antes. O resultado é um assistente que conversa como uma IA, mas trabalha como um programa instalado na sua máquina.
+
 ## Instalação (resumo)
 
 Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apostila `Apostila-AFT-Toolkit.docx`). São 4 passos — só os dois primeiros são manuais:
