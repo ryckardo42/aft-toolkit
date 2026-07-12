@@ -71,13 +71,15 @@ winget (o AFT só precisa aprovar os comandos):
 mkdir -p ~/Documents/AFT/"OS ATIVAS" ~/Documents/AFT/"OS ARQUIVADAS"
 ```
 
-Explique ao AFT:
+Explique ao AFT, com destaque (essa é a informação mais importante do setup — o AFT
+vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização):
 
-> Sua pasta de trabalho é `Documentos\AFT`. Cada empresa fiscalizada ganha uma
-> subpasta dentro de `OS ATIVAS` (padrão: `NOME DA EMPRESA <CNPJ 14 dígitos>`), onde
-> ficam todos os arquivos daquela fiscalização: relato de campo, autos, anexos e a
-> ficha `memory.md`. Quando a fiscalização termina, a pasta inteira vai para
-> `OS ARQUIVADAS`. Tudo fica **no seu computador** — nada é enviado para fora.
+> 📁 **`Documentos\AFT\OS ATIVAS` é onde moram todas as suas empresas fiscalizadas.**
+> Cada empresa ganha uma subpasta ali dentro (padrão: `NOME DA EMPRESA <CNPJ 14
+> dígitos>`), com todos os arquivos daquela fiscalização: relato de campo, autos,
+> anexos e a ficha `memory.md`. Quando a fiscalização termina, a pasta inteira vai
+> para `OS ARQUIVADAS` (mesmo nível, ao lado de `OS ATIVAS`). Tudo fica **no seu
+> computador** — nada é enviado para fora.
 
 ## Passo 3 — Coletar os dados do auditor (uma única vez)
 
@@ -320,7 +322,8 @@ Apresente:
 ```
 ✅ AFT Toolkit configurado!
 
-📁 Pasta de trabalho: ~/Documents/AFT/  (OS ATIVAS · OS ARQUIVADAS)
+📁 Suas empresas fiscalizadas ficam em: ~/Documents/AFT/OS ATIVAS/
+   (arquivadas ao final da fiscalização em ~/Documents/AFT/OS ARQUIVADAS/)
 📄 Configuração:      ~/Documents/AFT/aft-config.md
 👤 Perfil do auditor: ~/.claude/CLAUDE.md [instalado / mantido o existente]
 🛡️ Proteção:          ~/.claude/settings.json [deny-list de segurança aplicada]

@@ -430,6 +430,10 @@
       "txt": "O toolkit é offline: os memory.md são o banco local e o /painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /nova-os."
     },
     {
+      "topico": "Pasta de trabalho fixa",
+      "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /nova-os, conferida pelo /aft-doctor (mostra quantas empresas há dentro) e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Mantido como subpasta de AFT/ (não achatada para a raiz de Documentos) porque agrupa também aft-config.md e o painel.html — 22 arquivos do toolkit fixam esse caminho."
+    },
+    {
       "topico": "Empacotamento único",
       "txt": "Todo TXT é gerado no /gera-ai; /registro, /PGR-analise, /aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
     },

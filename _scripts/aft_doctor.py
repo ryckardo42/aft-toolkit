@@ -140,7 +140,9 @@ else:
 if AFT_DIR.is_dir():
     sub = [d for d in ("OS ATIVAS", "OS ARQUIVADAS") if not (AFT_DIR / d).is_dir()]
     if not sub:
-        add("Pasta de trabalho", "ok", f"{AFT_DIR} (OS ATIVAS, OS ARQUIVADAS)")
+        n_empresas = len(list((AFT_DIR / "OS ATIVAS").glob("*/memory.md")))
+        add("Pasta de trabalho", "ok",
+            f"{AFT_DIR} — {n_empresas} empresa(s) em OS ATIVAS")
     else:
         add("Pasta de trabalho", "aviso",
             f"{AFT_DIR} existe, mas falta: {', '.join(sub)}",

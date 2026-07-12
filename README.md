@@ -93,6 +93,8 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 
 ## Estrutura de trabalho
 
+`Documentos\AFT\OS ATIVAS\` é onde moram as pastas de todas as empresas fiscalizadas — é criada pelo `/aft-setup` e cada empresa nova entra ali via `/nova-os`. Quando a fiscalização termina, a pasta da empresa vai para `OS ARQUIVADAS\` (mesmo nível).
+
 ```
 Documentos\AFT\
 ├── aft-config.md            (seus dados — criado pelo /aft-setup)
