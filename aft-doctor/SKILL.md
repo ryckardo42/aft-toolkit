@@ -1,5 +1,7 @@
 ---
 name: aft-doctor
+model: sonnet
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion
 description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser checar se o AFT Toolkit
   esta instalado e funcionando, ou quando algo nao estiver funcionando e for preciso
@@ -7,7 +9,8 @@ description: >
   certo?", "diagnostico", "o toolkit esta funcionando?", "testar instalacao", "checar
   o toolkit", "nao esta funcionando", "as skills nao aparecem". A skill roda uma
   verificacao automatica (Python, Git, descoberta das skills, arquivos de config,
-  perfil do auditor, pasta de trabalho, bibliotecas Python e NotebookLM) e relata, em
+  perfil do auditor, pasta de trabalho, bibliotecas Python, NotebookLM e a saude das
+  skills - frontmatter e modelos pinados, com teste ao vivo) e relata, em
   linguagem simples, o que esta OK e o que precisa ser resolvido - com a solucao de
   cada item. E SOMENTE LEITURA: nao instala nem altera nada (so diagnostica).
 ---
@@ -83,13 +86,19 @@ Esta skill **so diagnostica**. Para resolver, encaminhe para o lugar certo:
   explique que o repositorio precisa SER a pasta `~/.claude/skills` e ofereca reinstalar
   com o prompt do COMO-INSTALAR (Passo 3).
 - Config do toolkit incompleta → ofereca "Atualize o AFT Toolkit" (`/aft-atualizar`) ou reclone.
+- Frontmatter de skill quebrado ou modelo pinado indisponivel → ofereca `/aft-atualizar`;
+  se ja estiver atualizado e o problema persistir, oriente a avisar o mantenedor
+  citando a mensagem do check (pode ser modelo descontinuado ou limitacao do plano).
 
 So execute uma correcao se o AFT pedir. Nunca instale nada silenciosamente neste fluxo.
 
 ## Regras
 
 - **Somente leitura.** A skill nao instala, nao baixa, nao cria pastas. Diagnostica e
-  encaminha.
+  encaminha. Isso e garantido tecnicamente pelo `allowed-tools` do frontmatter: as
+  ferramentas de escrita (Write/Edit) ficam indisponiveis enquanto a skill roda. (Unica ressalva: o check "teste dos modelos pinados" faz UMA chamada
+  minima ao Claude por modelo datado, para confirmar que a conta do AFT tem acesso —
+  gasta uma resposta curta de cota e nao altera nada.)
 - O codigo `[ERRO]` (saida != 0) significa que ha pelo menos um item essencial faltando;
   trate sempre os erros antes dos avisos.
 - Rodar fora de `~/.claude/skills` (ex.: testando no repositorio clonado em outra pasta)

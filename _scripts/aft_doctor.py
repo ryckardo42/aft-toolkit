@@ -265,6 +265,135 @@ else:
         "Sem ela, o 'notebooklm ask' nao se reautentica sozinho ao expirar. "
         "Rode /aft-setup (passo 7) ou /notebooklm-login para configurar.")
 
+# 10. Skills - frontmatter e modelos ------------------------------------------
+# Tres camadas, todas somente leitura:
+#   (a) cada SKILL.md precisa de frontmatter com 'name' igual ao nome da pasta,
+#       senao o Claude Code nao aciona a skill direito;
+#   (b) o campo 'model', quando presente, deve ser um apelido conhecido ou um ID
+#       listado em config/models-validos.json (o mantenedor atualiza a lista e o
+#       AFT recebe via /aft-atualizar);
+#   (c) IDs datados (ex.: claude-opus-4-8[1m]) sao testados AO VIVO com uma
+#       chamada minima 'claude -p' por ID distinto - um modelo indisponivel no
+#       plano do AFT quebraria a skill sem mensagem compreensivel. O teste so
+#       roda se a CLI 'claude' existir; gasta uma resposta curta de cota.
+import re as _re2
+
+ALIAS_MODELOS = {"sonnet", "opus", "haiku"}
+
+
+def _frontmatter(texto):
+    """Le os campos simples (campo: valor) do frontmatter; None se nao houver."""
+    linhas = texto.splitlines()
+    if not linhas or linhas[0].strip() != "---":
+        return None
+    campos = {}
+    for ln in linhas[1:]:
+        if ln.strip() == "---":
+            return campos
+        m = _re2.match(r"^([A-Za-z][\w-]*):\s*(.*)$", ln)
+        if m:
+            campos[m.group(1)] = m.group(2).strip()
+    return None  # frontmatter nunca fechou
+
+
+ids_validos = set()
+mv = cfg / "models-validos.json"
+if mv.is_file():
+    try:
+        _mv = json.loads(mv.read_text(encoding="utf-8"))
+        ids_validos = set(_mv.get("ids") or [])
+        ALIAS_MODELOS |= set(_mv.get("aliases") or [])
+    except (OSError, json.JSONDecodeError):
+        pass
+
+quebradas, modelos_suspeitos, ids_datados = [], [], set()
+for sk in sorted(SKILLS_DIR.glob("*/SKILL.md")):
+    pasta = sk.parent.name
+    try:
+        campos = _frontmatter(sk.read_text(encoding="utf-8"))
+    except OSError:
+        campos = None
+    if campos is None or campos.get("name") != pasta:
+        quebradas.append(pasta)
+        continue
+    modelo = campos.get("model")
+    if not modelo or modelo in ALIAS_MODELOS:
+        continue
+    if _re2.fullmatch(r"claude-[\w.-]+(\[1m\])?", modelo):
+        ids_datados.add(modelo)
+        if ids_validos and modelo not in ids_validos:
+            modelos_suspeitos.append(f"{pasta} ({modelo})")
+    else:
+        modelos_suspeitos.append(f"{pasta} ({modelo})")
+
+if quebradas:
+    add("Skills - frontmatter", "erro",
+        "SKILL.md com frontmatter invalido ou 'name' diferente da pasta: "
+        + ", ".join(quebradas),
+        "Essas skills podem nao ser acionadas. Rode 'Atualize o AFT Toolkit' "
+        "(/aft-atualizar); se persistir, avise o mantenedor.")
+else:
+    add("Skills - frontmatter", "ok",
+        f"{total_skills} SKILL.md com frontmatter valido e name correto")
+
+if modelos_suspeitos:
+    add("Skills - modelos declarados", "aviso",
+        "model desconhecido em: " + ", ".join(modelos_suspeitos),
+        "Pode ser um modelo descontinuado ou erro de digitacao. Rode 'Atualize "
+        "o AFT Toolkit' (/aft-atualizar); se persistir, avise o mantenedor.")
+else:
+    add("Skills - modelos declarados", "ok",
+        "todos os campos 'model' usam apelidos ou IDs da lista valida")
+
+if ids_datados:
+    claude_cli = shutil.which("claude")
+    if not claude_cli:
+        add("Skills - teste dos modelos pinados", "ok",
+            "teste ao vivo pulado (CLI 'claude' nao encontrada); "
+            "valeu a validacao pela lista acima")
+    else:
+        indisponiveis, inconclusivos = [], []
+        for mid in sorted(ids_datados):
+            try:
+                r = subprocess.run(
+                    [claude_cli, "-p", "Responda apenas: OK", "--model", mid],
+                    capture_output=True, text=True, timeout=120,
+                    stdin=subprocess.DEVNULL,
+                )
+                if r.returncode != 0:
+                    msg = (r.stderr or r.stdout or "").strip()
+                    primeira = msg.splitlines()[0][:100] if msg else "falhou"
+                    # So e veredito sobre o MODELO se a mensagem falar dele;
+                    # falha de autenticacao/rede da CLI e inconclusiva.
+                    if "model" in msg.lower():
+                        indisponiveis.append(f"{mid} - {primeira}")
+                    else:
+                        inconclusivos.append(f"{mid} ({primeira})")
+            except subprocess.TimeoutExpired:
+                inconclusivos.append(f"{mid} (sem resposta a tempo)")
+            except OSError:
+                inconclusivos.append(f"{mid} (CLI nao rodou)")
+        if indisponiveis:
+            add("Skills - teste dos modelos pinados", "erro",
+                "modelo(s) indisponivel(is) nesta conta: "
+                + "; ".join(indisponiveis),
+                "As skills que usam esse modelo vao falhar. Rode 'Atualize o "
+                "AFT Toolkit' (/aft-atualizar); se persistir, avise o "
+                "mantenedor informando esta mensagem (pode ser limitacao do "
+                "seu plano ou modelo descontinuado).")
+        elif inconclusivos:
+            add("Skills - teste dos modelos pinados", "aviso",
+                "teste inconclusivo (falha alheia ao modelo): "
+                + "; ".join(inconclusivos),
+                "A CLI 'claude' nao conseguiu completar a chamada (login ou "
+                "internet), entao nao da para afirmar nada sobre o modelo. "
+                "Rode /aft-doctor de novo mais tarde; as skills podem "
+                "funcionar normalmente.")
+        else:
+            add("Skills - teste dos modelos pinados", "ok",
+                f"{len(ids_datados)} modelo(s) pinado(s) respondendo: "
+                + ", ".join(sorted(ids_datados)))
+
 # ----------------------------------------------------------------------------
 resumo = {
     "ok": sum(1 for c in checks if c["status"] == "ok"),

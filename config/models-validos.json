@@ -1,0 +1,5 @@
+{
+  "_comentario": "Lista dos valores aceitos no campo 'model:' dos SKILL.md. O aft_doctor.py valida os frontmatters contra ela. Quando a Anthropic descontinuar um modelo, o mantenedor atualiza este arquivo e as skills afetadas; os AFTs recebem via /aft-atualizar.",
+  "aliases": ["sonnet", "opus", "haiku"],
+  "ids": ["claude-opus-4-8", "claude-opus-4-8[1m]"]
+}
