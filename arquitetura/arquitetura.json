@@ -1,13 +1,13 @@
 {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-06-27",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 25 skills cobrem o fluxo completo (cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "data": "2026-07-12",
+  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 26 skills cobrem o fluxo completo (cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 25,
-    "scripts": 17,
-    "dados": 4,
-    "commit": "ver `git log -1` — atualizado em 27/06/2026"
+    "skills": 26,
+    "scripts": 18,
+    "dados": 6,
+    "commit": "ver `git log -1` — atualizado em 12/07/2026"
   },
   "atores": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "who": "/painel",
-      "act": "A qualquer momento: varre os memory.md e gera o painel.html com os prazos de DET coloridos por urgência (só leitura)."
+      "act": "A qualquer momento: varre os memory.md e gera o painel.html com os prazos de DET coloridos por urgência; detecta PDFs de notificação DET nas pastas das OS ainda não cadastrados na ficha (código e datas). Opcionalmente (opt-in) publica o painel como Artifact privado na aba Artefatos. Só leitura nas fichas."
     },
     {
       "who": "Visita ao estabelecimento",
@@ -55,7 +55,7 @@
     },
     {
       "who": "/inspecao-inicial",
-      "act": "Lê o relato, identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise ou /analise-acidente (quando há acidente/doença do trabalho). Gate de dupla visita (ME/EPP)."
+      "act": "Lê o relato, identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise, /aet-auditoria ou /analise-acidente (quando há acidente/doença do trabalho). Gate de dupla visita (ME/EPP)."
     },
     {
       "who": "/revisa-auto",
@@ -93,7 +93,7 @@
     },
     {
       "who": "/aft-setup",
-      "act": "Cria as pastas de trabalho, coleta nome/CIF/lotação (basta a cidade — o toolkit resolve o código de 9 dígitos da UORG via uorgs.csv), instala dependências e o perfil CLAUDE.md."
+      "act": "Cria as pastas de trabalho, coleta nome/CIF/lotação (basta a cidade — o toolkit resolve o código de 9 dígitos da UORG via uorgs.csv), instala dependências, o perfil CLAUDE.md e a deny-list de segurança (settings-aft.json)."
     }
   ],
   "camadas": [
@@ -103,33 +103,33 @@
       "skills": [
         {
           "nome": "/aft-setup",
-          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, dependências, NotebookLM.",
-          "tech": "winget · pipx · uorgs.csv"
+          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, deny-list de segurança, dependências, NotebookLM.",
+          "tech": "winget · pipx · uorgs.csv · model: sonnet"
         },
         {
           "nome": "/aft-doctor",
-          "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho e bibliotecas — e diz em linguagem simples o que falta (só leitura, nunca instala).",
-          "tech": "aft_doctor.py"
+          "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta (só leitura; allowed-tools sem Write/Edit).",
+          "tech": "aft_doctor.py · model: sonnet"
         },
         {
           "nome": "/aft-atualizar",
-          "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou.",
-          "tech": "git pull · pipx upgrade · PyPI API"
+          "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou. Antes do pull, o checar_diff.py varre o diff por sinais de adulteração.",
+          "tech": "git pull · pipx upgrade · checar_diff.py · model: sonnet"
         },
         {
           "nome": "/notebooklm-login",
           "role": "Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge/Chrome) — o Claude conduz tudo, sem terminal.",
-          "tech": "notebooklm auth · NOTEBOOKLM_REFRESH_CMD"
+          "tech": "notebooklm auth · NOTEBOOKLM_REFRESH_CMD · model: sonnet"
         },
         {
           "nome": "/nova-os",
           "role": "Cadastra uma auditoria (empregador, CNPJ, município, DET com prazo) — o começo do fluxo. Idempotente.",
-          "tech": "cria memory.md"
+          "tech": "cria memory.md · model: sonnet"
         },
         {
           "nome": "/painel",
-          "role": "Gera um painel.html local com todas as OS e os prazos de DET coloridos por urgência — um SISOS local, sem servidor (só leitura).",
-          "tech": "gerar_painel.py"
+          "role": "Gera um painel.html local com as OS e os prazos de DET coloridos por urgência; detecta PDFs de notificação DET não cadastrados nas pastas das OS (código/datas via regex + pdfplumber, determinístico); opt-in: publica o painel como Artifact privado na aba Artefatos (única saída externa do toolkit, com consentimento por sessão). Só leitura nas fichas — allowed-tools sem Write/Edit.",
+          "tech": "gerar_painel.py · tool Artifact · model: haiku"
         }
       ]
     },
@@ -140,47 +140,52 @@
         {
           "nome": "/inspecao-fisica",
           "role": "Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md) — fiel, sem enquadramento.",
-          "tech": "relato → memory.md"
+          "tech": "relato → memory.md · model: sonnet"
         },
         {
           "nome": "/consulta",
           "role": "Consulta os ementários do NotebookLM com missão tripla: identifica a ementa, fundamenta capitulação/gradação/notas e redige a minuta do campo Histórico anti-nulidade. Só consulta — não lavra.",
-          "tech": "notebooklm ask"
+          "tech": "notebooklm ask · herda o modelo da sessão"
         },
         {
           "nome": "/inspecao-inicial",
           "role": "Lê o relato, identifica NR/ementa (via /consulta) e redige os autos (NRs + CLT), com gate de dupla visita.",
-          "tech": "orquestra consultoras"
+          "tech": "orquestra consultoras · herda o modelo da sessão"
         },
         {
           "nome": "/registro",
           "role": "Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) + exame admissional (NR-07).",
-          "tech": "data de admissão dd/mm/aaaa"
+          "tech": "data de admissão dd/mm/aaaa · model: sonnet"
         },
         {
           "nome": "/PGR-analise",
           "role": "Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas.",
-          "tech": "handoff p/ gera-ai"
+          "tech": "handoff p/ gera-ai · model: opus 1M"
+        },
+        {
+          "nome": "/aet-auditoria",
+          "role": "Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e a AET anexada a cada auto.",
+          "tech": "handoff p/ gera-ai · model: opus 1M"
         },
         {
           "nome": "/det-630",
           "role": "Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).",
-          "tech": "escreve em ## Notificações DET"
+          "tech": "escreve em ## Notificações DET · model: sonnet"
         },
         {
           "nome": "/tn-nco",
           "role": "Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item; preenchimento manual).",
-          "tech": "limite 1000 char/campo"
+          "tech": "limite 1000 char/campo · model: sonnet"
         },
         {
           "nome": "/aft-rt-rgi",
           "role": "Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).",
-          "tech": "template.docx SRTE/GO"
+          "tech": "template.docx SRTE/GO · herda o modelo da sessão"
         },
         {
           "nome": "/analise-acidente",
           "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx; ao final, oferece encadear /inspecao-inicial + /gera-ai.",
-          "tech": "gerar_relatorio_docx.py"
+          "tech": "gerar_relatorio_docx.py · model: opus 1M"
         }
       ]
     },
@@ -191,12 +196,12 @@
         {
           "nome": "/NR12",
           "role": "Máquinas e equipamentos: identifica a ementa (catálogo de 16 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE, a linha do RT e o fragmento de interdição.",
-          "tech": "references/ementas-comuns.md"
+          "tech": "references/ementas-comuns.md · herda o modelo da sessão"
         },
         {
           "nome": "/NR18",
           "role": "Indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE e a linha do RT.",
-          "tech": "references/ementas-comuns.md"
+          "tech": "references/ementas-comuns.md · herda o modelo da sessão"
         }
       ]
     },
@@ -207,22 +212,22 @@
         {
           "nome": "/jornada-analise",
           "role": "Orquestrador: tria o pacote entregue (AFD/AEJ/atestados) e consolida os pareceres.",
-          "tech": "roteador"
+          "tech": "roteador · model: sonnet"
         },
         {
           "nome": "/jornada-valida-afd-aej",
           "role": "Validador determinístico do AEJ: estrutura, trailer, integridade referencial, decimais e jornada flexível calibrados pelo sistema oficial.",
-          "tech": "validar.py"
+          "tech": "validar.py · model: sonnet"
         },
         {
           "nome": "/jornada-atestado",
           "role": "Auditoria do Atestado Técnico/Termo de Responsabilidade do REP/PTRP (art. 89), com inspeção de assinatura por código.",
-          "tech": "inspecionar_assinatura.py"
+          "tech": "inspecionar_assinatura.py · herda o modelo da sessão"
         },
         {
           "nome": "/jornada-auto-afd-aej",
           "role": "Autos por AFD/AEJ ausente ou fora do padrão (ementas 002279-9 / 002280-2).",
-          "tech": "handoff p/ gera-ai"
+          "tech": "handoff p/ gera-ai · model: sonnet"
         }
       ]
     },
@@ -233,22 +238,22 @@
         {
           "nome": "/revisa-auto",
           "role": "Gate de qualidade antes do empacotamento: checklist 5W1H em cada auto e parágrafo de dano coletivo obrigatório em SST (Portaria MTP 667/2021). Roda dentro do /gera-ai, mas pode ser chamada isolada.",
-          "tech": "gate dentro do /gera-ai"
+          "tech": "gate dentro do /gera-ai · model: sonnet"
         },
         {
           "nome": "/gera-ai",
           "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento.",
-          "tech": "rehydrate.py · bloco3_inject.py · validar_txt.py"
+          "tech": "rehydrate.py · bloco3_inject.py · validar_txt.py · model: sonnet"
         },
         {
           "nome": "/autos-lavrados",
-          "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO), cruza com os rascunhos e marca no memory.md [x]/[ ] — read-only sobre o Sistema Auditor.",
-          "tech": "scan_autos.py · pypdf"
+          "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO), cruza com os rascunhos e marca no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem ferramentas de rede (os PDFs trazem dados pessoais).",
+          "tech": "scan_autos.py · pypdf · model: sonnet"
         },
         {
           "nome": "/sfitweb-rel",
           "role": "Relatório Final Simplificado consolidando autos, termos e notificações.",
-          "tech": "lê memory.md"
+          "tech": "lê memory.md · model: sonnet"
         }
       ]
     }
@@ -279,6 +284,12 @@
       "runtime": "Python stdlib"
     },
     {
+      "nome": "checar_diff.py",
+      "caminho": "_scripts/checar_diff.py",
+      "papel": "Guard-rail de supply-chain: varre o diff de uma atualização (linhas que chegam) por Unicode invisível e padrões de exfiltração/execução remota, e avisa antes do git pull (chamado pelo /aft-atualizar). Só alarme — quem decide é o AFT.",
+      "runtime": "Python stdlib"
+    },
+    {
       "nome": "checar_arquivo_aberto.py",
       "caminho": "_scripts/checar_arquivo_aberto.py",
       "papel": "Detecta se um .docx (RT, autos) está aberto/bloqueado no Word antes de tentar sobrescrevê-lo no Windows — evita erro silencioso de gravação.",
@@ -299,13 +310,13 @@
     {
       "nome": "gerar_painel.py",
       "caminho": "_scripts/gerar_painel.py",
-      "papel": "Varre OS ATIVAS/*/memory.md (parser tolerante), calcula dias-para-o-prazo com date.today() e gera o painel.html autocontido com prazos coloridos. Imprime resumo no stdout.",
-      "runtime": "Python stdlib"
+      "papel": "Varre OS ATIVAS/*/memory.md (parser tolerante), calcula dias-para-o-prazo com date.today(), detecta PDFs de notificação DET não cadastrados (código por regex + 1ª página via pdfplumber, comparado ao memory.md) e gera o painel.html autocontido; 3º argumento opcional grava a versão para a tool Artifact (sem wrapper HTML e sem a coluna Pasta). Imprime resumo JSON no stdout.",
+      "runtime": "Python stdlib (+pdfplumber opcional)"
     },
     {
       "nome": "aft_doctor.py",
       "caminho": "_scripts/aft_doctor.py",
-      "papel": "Verificação pós-instalação: checa Python, Git, descoberta das skills, config do repo, perfil, pasta de trabalho, bibliotecas e NotebookLM; emite relatório legível + JSON com status e dica por item. Só leitura.",
+      "papel": "Verificação pós-instalação: checa Python, Git, descoberta das skills, config do repo, perfil, deny-list, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills — frontmatter (name = pasta), campo model contra config/models-validos.json e teste ao vivo dos modelos pinados (claude -p, 1 chamada por ID; falha de login/rede é inconclusiva, nunca veredito). Emite relatório legível + JSON. Só leitura.",
       "runtime": "Python stdlib"
     },
     {
@@ -364,13 +375,23 @@
     },
     {
       "arquivo": "config/CLAUDE-aft.md",
-      "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho e privacidade",
+      "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho, privacidade e roteamento das skills",
       "uso": "Instalado pelo /aft-setup em ~/.claude/CLAUDE.md (carregado em toda conversa)."
     },
     {
       "arquivo": "config/blocos_auto.md",
       "conteudo": "Texto fixo e literal do Subtítulo 3 (OBSERVAÇÕES) do auto de infração",
       "uso": "Fonte única lida pelo bloco3_inject.py — nenhuma skill de redação escreve esse bloco na mão."
+    },
+    {
+      "arquivo": "config/settings-aft.json",
+      "conteudo": "Deny-list de segurança: bloqueia leitura de credenciais (~/.ssh, ~/.aws, .env), dos mapas .depara_*.json e comandos de acesso remoto (ssh/scp/nc)",
+      "uso": "Instalada pelo /aft-setup em ~/.claude/settings.json — última linha de defesa contra exfiltração induzida por documento."
+    },
+    {
+      "arquivo": "config/models-validos.json",
+      "conteudo": "Apelidos e IDs de modelo aceitos no campo model: dos SKILL.md",
+      "uso": "O aft_doctor.py valida os frontmatters contra ela; quando um modelo for descontinuado, o mantenedor atualiza a lista e as skills, e os AFTs recebem via /aft-atualizar."
     }
   ],
   "ementas": [
@@ -393,7 +414,7 @@
     "Os dados reais entram no TXT final apenas pelo script determinístico rehydrate.py — nunca pelo modelo. Um nome/CPF trocado num documento legal é inaceitável.",
     "A cópia *.tokenized.txt é a única versão segura para compartilhar com colegas.",
     "Guard-rail extra: checar_pii.py varre relatos/pastas e avisa se um CPF ou PIS/PASEP com dígito verificador válido escapou da anonimização (não bloqueia — a troca real continua só pelo rehydrate.py).",
-    "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais."
+    "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais. Única exceção, opt-in e com consentimento por sessão: o /painel pode publicar o painel (empresas e prazos, sem dados de trabalhador) como Artifact privado na conta claude.ai do AFT."
   ],
   "decisoes": [
     {
@@ -410,7 +431,7 @@
     },
     {
       "topico": "Empacotamento único",
-      "txt": "Todo TXT é gerado no /gera-ai; /registro, /PGR-analise e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
+      "txt": "Todo TXT é gerado no /gera-ai; /registro, /PGR-analise, /aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
     },
     {
       "topico": "Latin-1 sem iconv",
@@ -431,6 +452,18 @@
     {
       "topico": "Atualização separada do diagnóstico",
       "txt": "/aft-doctor só lê (nunca instala); quem efetivamente atualiza skills e o notebooklm-py é o /aft-atualizar, que chama o /aft-doctor ao final para confirmar."
+    },
+    {
+      "topico": "Política de model por skill",
+      "txt": "Três faixas: claude-opus-4-8[1m] para auditoria de documento longo (/PGR-analise, /aet-auditoria, /analise-acidente); sonnet/haiku para o formular e o mecânico (empacotar, validar, painel, setup); sem pin nas skills de redação jurídica pesada (herdam o melhor modelo da sessão do AFT — um pin de opus quebraria em plano sem acesso). O /aft-doctor valida os pins contra config/models-validos.json e testa a disponibilidade ao vivo."
+    },
+    {
+      "topico": "allowed-tools como garantia",
+      "txt": "Promessa de 'somente leitura' virou restrição técnica: /aft-doctor e /painel rodam sem Write/Edit (frontmatter allowed-tools); /autos-lavrados precisa escrever (relatório + memory.md), então seu fence corta as ferramentas de rede — ela processa PDFs com dados pessoais."
+    },
+    {
+      "topico": "Detecção determinística no /painel",
+      "txt": "A identificação de notificações DET não cadastradas é do script (regex de código + 1ª página via pdfplumber, comparada ao memory.md) — o modelo (haiku) só relata o que o script achou e encaminha o cadastro ao /nova-os. Heurística: o painel apresenta como 'confira e cadastre', nunca como fato."
     },
     {
       "topico": "Bases distintas",
@@ -468,6 +501,8 @@
     "/autos-lavrados: a extração por pypdf precisa de calibração/verificação na 1ª execução contra os PDFs reais do Sistema Auditor.",
     "O template do RT (aft-rt-rgi/template.docx) segue o modelo SRTE/GO — auditores de outras SRTEs ajustam o cabeçalho.",
     "/aft-atualizar atualiza o notebooklm-py automaticamente, sem perguntar antes — é uma dependência de terceiro (teng-lin/notebooklm-py) fora do controle de versão do toolkit.",
-    "Validação end-to-end de /NR12, /NR18 e /tn-nco depende de interação e do NotebookLM; testar no Windows real."
+    "As skills com model: claude-opus-4-8[1m] dependem do plano do AFT ter acesso ao modelo — o /aft-doctor testa e explica em linguagem simples se faltar.",
+    "A detecção de notificações DET do /painel é heurística (pode dar falso positivo) — o AFT confere antes de cadastrar.",
+    "Validação end-to-end de /NR12, /NR18, /tn-nco e do fluxo de Artifact do /painel depende de interação e de máquina real com o app logado; testar no Windows real."
   ]
 }

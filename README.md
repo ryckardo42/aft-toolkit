@@ -29,11 +29,11 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | Skill | O que faz |
 |---|---|
 | `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil do auditor (`CLAUDE.md` global), dependências, NotebookLM |
-| `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas e o estado do NotebookLM — e diz, em linguagem simples, o que falta (só leitura) |
+| `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, o estado do NotebookLM e a saúde das skills (frontmatter e modelos pinados, com teste ao vivo) — e diz, em linguagem simples, o que falta (só leitura) |
 | `/aft-atualizar` | Atualiza as skills (`git pull`) e o comando `notebooklm` (notebooklm-py), se houver versão nova, e roda o `/aft-doctor` ao final para confirmar |
 | `/notebooklm-login` | Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge) — o Claude conduz tudo, sem terminal |
 | `/nova-os` | Cadastra uma auditoria (empregador, CNPJ, município e o DET com prazo) — o começo do fluxo |
-| `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência** — um SISOS local, sem servidor (só leitura) |
+| `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência**, e detecta PDFs de notificação DET nas pastas das OS ainda **não cadastrados** na ficha — um SISOS local, sem servidor (só leitura). Opcionalmente (com consentimento), publica o painel como Artifact privado na aba Artefatos do app |
 
 ### Inspeção e lavratura
 | Skill | O que faz |
@@ -109,6 +109,7 @@ Documentos\AFT\
 ## Segurança dos dados
 
 - Tudo roda e fica **no seu computador**. Nenhuma skill envia arquivos para serviços externos (a compressão de PDF, conversão de fotos e validação de arquivos são scripts Python locais).
+- **Única exceção, opcional e com consentimento a cada sessão:** o `/painel` pode publicar o painel como **Artifact privado** na conta claude.ai do AFT (aba Artefatos do app), para acompanhar os prazos de qualquer lugar. O painel não contém dados de trabalhadores, mas lista as empresas sob fiscalização e prazos — o artifact é privado por padrão e o link **não deve ser compartilhado**. Nada é publicado sem o AFT autorizar expressamente.
 - **Nunca** use compressores/conversores online para documentos de fiscalização.
 - O arquivo `.depara_<CNPJ>.json` (mapa token↔dados reais) é sensível: não compartilhe, não commite.
 - A cópia `*.tokenized.txt` é a única versão segura para compartilhar com colegas.
