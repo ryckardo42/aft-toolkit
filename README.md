@@ -39,6 +39,12 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/nova-os` | Cadastra uma auditoria (empregador, CNPJ, município e o DET com prazo) — o começo do fluxo |
 | `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência**, e detecta PDFs de notificação DET nas pastas das OS ainda **não cadastrados** na ficha — um SISOS local, sem servidor (só leitura). Opcionalmente (com consentimento), publica o painel como Artifact privado na aba Artefatos do app |
 
+### Preparação da ação fiscal (antes da visita)
+| Skill | O que faz |
+|---|---|
+| `/preparacao-acao-fiscal` | Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS, coleta denúncia/dados prévios, tokeniza qualquer lista nominal de trabalhadores, estuda os temas nos NotebookLMs (com fontes) e monta o checklist de documentos a solicitar — salva tudo em `preparacao.md` |
+| `/NAD` | Redige a Notificação para Apresentação de Documentos — documentos que se presume existir (PGR, controles de jornada, ASOs...), texto pronto para colar no DET, item por item |
+
 ### Inspeção e lavratura
 | Skill | O que faz |
 |---|---|
@@ -82,8 +88,10 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 ## Fluxo típico de uma fiscalização
 
 ```
-0. /nova-os              → cadastra a empresa e o prazo do DET (começo do fluxo)
-   /painel               → a qualquer momento, vê todas as OS e os prazos vencendo
+0. /preparacao-acao-fiscal → (opcional, antes da visita) planeja a ação: cadastra/usa a OS,
+                              estuda os temas no NotebookLM, monta o checklist de documentos
+   /NAD                     → notifica a empresa a apresentar os documentos do checklist
+   /painel                  → a qualquer momento, vê todas as OS e os prazos vencendo
 1. Visita ao estabelecimento
 2. /inspecao-fisica      → narra o que viu; vira relato estruturado na pasta da OS
 3. /inspecao-inicial     → enquadra NR/ementa e redige os autos
@@ -94,6 +102,8 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 6. /autos-lavrados       → confere o que foi transmitido e marca no memory.md
 7. /sfitweb-rel          → relatório final consolidado
 ```
+
+Sem `/preparacao-acao-fiscal`, o começo do fluxo continua sendo `/nova-os` (cadastro simples, sem estudo prévio).
 
 ## Estrutura de trabalho
 
@@ -144,7 +154,8 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel)
 ├── aft-setup/ · aft-doctor/ · aft-atualizar/ · notebooklm-login/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
-├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aft-rt-rgi/ · analise-acidente/ · autos-lavrados/ · revisa-auto/
+├── preparacao-acao-fiscal/ · NAD/   (planejamento pré-visita e notificação de documentos)
+├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · analise-acidente/ · autos-lavrados/ · revisa-auto/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 └── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 ```

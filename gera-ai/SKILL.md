@@ -252,9 +252,12 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 
 ### Passo 1 — Montar o mapa de-para
 
-Dados já coletados: razão social (FASE 1.5); CNPJ real + trabalhadores (nome+CPF) (FASE 1.6). Se outra skill da sessão já criou um `.depara_[CNPJ].json` na pasta da OS, **reaproveite-o** (acrescente trabalhadores novos sem renumerar os existentes).
+Dados já coletados: razão social (FASE 1.5); CNPJ real + trabalhadores (nome+CPF) (FASE 1.6). **Antes de criar um mapa novo, procure um já existente** e reaproveite-o (acrescente trabalhadores novos sem renumerar os existentes):
 
-Salve em `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json`:
+1. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/.depara_[CNPJ].json` (raiz da OS — criado por `/preparacao-acao-fiscal` quando a lista de trabalhadores foi tokenizada antes da visita).
+2. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json` de uma lavratura anterior da mesma OS.
+
+Se achar em qualquer um dos dois locais, copie/estenda para a pasta da lavratura atual. Se não achar em nenhum, crie do zero em `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json`:
 
 ```json
 {

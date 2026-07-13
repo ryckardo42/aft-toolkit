@@ -134,13 +134,13 @@
 const ARCH = {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-07-12",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 26 skills cobrem o fluxo completo (cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "data": "2026-07-13",
+  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 26,
+    "skills": 28,
     "scripts": 18,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 12/07/2026"
+    "commit": "ver `git log -1` — atualizado em 13/07/2026"
   },
   "atores": [
     {
@@ -171,8 +171,12 @@ const ARCH = {
   ],
   "fluxo": [
     {
+      "who": "/preparacao-acao-fiscal",
+      "act": "Opcional, antes da visita: resolve/cria a OS (chama /nova-os), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /NAD ao final. Salva preparacao.md."
+    },
+    {
       "who": "/nova-os",
-      "act": "Cadastra a empresa, o CNPJ, o município e o 1º DET com prazo. Cria OS ATIVAS/<NOME> <CNPJ>/ e o memory.md no esquema padrão. Começo do fluxo."
+      "act": "Cadastra a empresa, o CNPJ, o município e o 1º DET com prazo. Cria OS ATIVAS/<NOME> <CNPJ>/ e o memory.md no esquema padrão. Começo do fluxo (direto, ou chamado por /preparacao-acao-fiscal)."
     },
     {
       "who": "/painel",
@@ -263,6 +267,22 @@ const ARCH = {
           "nome": "/painel",
           "role": "Gera um painel.html local com as OS e os prazos de DET coloridos por urgência; detecta PDFs de notificação DET não cadastrados nas pastas das OS (código/datas via regex + pdfplumber, determinístico); opt-in: publica o painel como Artifact privado na aba Artefatos (única saída externa do toolkit, com consentimento por sessão). Só leitura nas fichas — allowed-tools sem Write/Edit.",
           "tech": "gerar_painel.py · tool Artifact · model: haiku"
+        }
+      ]
+    },
+    {
+      "nome": "Preparação da ação fiscal (antes da visita)",
+      "cor": "accent2",
+      "skills": [
+        {
+          "nome": "/preparacao-acao-fiscal",
+          "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /nova-os), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /NAD ao final. Salva preparacao.md na pasta da OS.",
+          "tech": "chama /nova-os · .depara_[CNPJ].json na raiz da OS · model: opus"
+        },
+        {
+          "nome": "/NAD",
+          "role": "Notificação para Apresentação de Documentos — documentos que se presume existir (verbo central: Apresentar). Introdução fixa (art. 630 §§3º/4º CLT c/c art. 23 Lei 8.036/90 c/c art. 18, IV/V, Dec. 4.552/02) + um item por documento (NR ou artigo de lei) + ementa via NotebookLM só quando existir, bloco a bloco para colar no DET. Origem natural: /preparacao-acao-fiscal; também standalone.",
+          "tech": "espelha /tn-nco · model: sonnet"
         }
       ]
     },
@@ -599,6 +619,10 @@ const ARCH = {
       "txt": "Promessa de 'somente leitura' virou restrição técnica: /aft-doctor e /painel rodam sem Write/Edit (frontmatter allowed-tools); /autos-lavrados precisa escrever (relatório + memory.md), então seu fence corta as ferramentas de rede — ela processa PDFs com dados pessoais."
     },
     {
+      "topico": "Tokenização antes da lavratura (.depara na raiz da OS)",
+      "txt": "Até 2026-07-13, o .depara_[CNPJ].json (mapa token↔dado real de trabalhador) só nascia dentro da pasta Autos DD-MM/, criado pelo /gera-ai. Com /preparacao-acao-fiscal, a tokenização pode acontecer ANTES de qualquer lavratura, então o mapa passou a poder viver também na raiz da pasta da OS. O /gera-ai foi ajustado (FASE 2.5 Passo 1) para procurar nos dois locais — raiz da OS primeiro, depois lavraturas anteriores — e reaproveitar, nunca recriar do zero se já existir."
+    },
+    {
       "topico": "Detecção determinística no /painel",
       "txt": "A identificação de notificações DET não cadastradas é do script (regex de código + 1ª página via pdfplumber, comparada ao memory.md) — o modelo (haiku) só relata o que o script achou e encaminha o cadastro ao /nova-os. Heurística: o painel apresenta como 'confira e cadastre', nunca como fato."
     },
@@ -626,7 +650,7 @@ const ARCH = {
     }
   ],
   "foraDoToolkit": [
-    "nad-tn (geração do NAD via DET) — substituída por preenchimento manual no /tn-nco.",
+    "nad-tn — eixo B (--conteudo=docs, modo=texto) adaptado no toolkit como /NAD (2026-07-13); o eixo A (--modo=template, automação Chrome+DET) e o eixo A de correção (--conteudo=correcao, que no toolkit já é a /tn-nco) permanecem infra pessoal, não distribuídos.",
     "det-baixar-empregador (Chrome + credenciais) — fase futura possível.",
     "analise-preliminar (triagem de resposta documental ao DET) — infra pessoal, não distribuída.",
     "cowork-ingest / cowork-manifest / cowork-ementas — pipeline RAG do NotebookLM (ecossistema pessoal).",
