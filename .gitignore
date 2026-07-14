@@ -5,3 +5,8 @@ __pycache__/
 .backups/
 # Arquivos-dono temporarios do Office (Word/Excel abertos) - nunca versionar
 ~$*
+# Skills proprias do AFT (criadas pelo colega para a realidade dele). Namespace
+# reservado: NENHUMA skill oficial do toolkit comeca com "minha-". Assim elas
+# ficam no 1o nivel (o Claude Code as enxerga), nunca sao versionadas no repo
+# oficial e sobrevivem a qualquer atualizacao (git pull). Ver /nova-skill.
+minha-*/

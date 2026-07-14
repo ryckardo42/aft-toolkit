@@ -97,6 +97,27 @@ curl -s https://pypi.org/pypi/notebooklm-py/json | python3 -c "import json,sys; 
   ```
   Depois confirme com `notebooklm --version` que a versão nova ficou ativa.
 
+## Passo 2b — Oferecer a rotina diária do painel (só na primeira vez)
+
+O toolkit ganhou a opção de o `/painel` se atualizar sozinho toda manhã (agendamento do
+próprio sistema operacional — launchd/Agendador de Tarefas, zero tokens, sem abrir o
+Claude Code). AFTs que instalaram o toolkit antes dessa novidade nunca foram perguntados.
+Confira se já foi oferecida:
+
+```bash
+grep -q "rotina_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
+```
+
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: o
+  painel pode se atualizar sozinho toda manhã, sem você pedir — não gasta nada, é o
+  próprio computador rodando um programinha. Quer ativar?"*
+  - **Não** → grave `rotina_painel: ""` no front-matter do `aft-config.md` (só para não
+    perguntar de novo nas próximas atualizações) e siga.
+  - **Sim** → siga exatamente o Passo 7b do `/aft-setup` (mesmo script
+    `instalar_rotina_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados)
+    e grave `rotina_painel: "07:00"` (ou o horário escolhido) no `aft-config.md`.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve
@@ -142,3 +163,7 @@ diagnóstico — não é preciso alarde.
 - Esta skill **instala/atualiza**; o `/aft-doctor` (chamado no Passo 3) **só
   diagnostica**. Não pule o Passo 3: é o que garante que a atualização não
   deixou nada quebrado para o AFT descobrir sozinho em campo.
+- **Skills próprias do AFT (`minha-*`) são preservadas.** O `git pull` fast-forward
+  nunca toca nelas (namespace reservado + `.gitignore`). Se o AFT tiver alguma, o Passo
+  3 (`/aft-doctor`) as lista como protegidas — mencione isso no resumo para tranquilizá-lo
+  ("suas skills próprias continuam intactas"). Nunca rode comando que possa apagá-las.

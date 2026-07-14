@@ -308,16 +308,24 @@ if mv.is_file():
     except (OSError, json.JSONDecodeError):
         pass
 
+# Skills proprias do colega (prefixo "minha-") sao validadas a parte, com
+# tolerancia: sao experimentos do AFT, nao devem derrubar o diagnostico do
+# toolkit inteiro nem seguem a politica de model-pinning das oficiais.
 quebradas, modelos_suspeitos, ids_datados = [], [], set()
+proprias_ok, proprias_quebradas = [], []
 for sk in sorted(SKILLS_DIR.glob("*/SKILL.md")):
     pasta = sk.parent.name
+    eh_propria = pasta.startswith("minha-")
     try:
         campos = _frontmatter(sk.read_text(encoding="utf-8"))
     except OSError:
         campos = None
     if campos is None or campos.get("name") != pasta:
-        quebradas.append(pasta)
+        (proprias_quebradas if eh_propria else quebradas).append(pasta)
         continue
+    if eh_propria:
+        proprias_ok.append(pasta)
+        continue  # nao aplica a politica de 'model' as skills proprias
     modelo = campos.get("model")
     if not modelo or modelo in ALIAS_MODELOS:
         continue
@@ -328,6 +336,9 @@ for sk in sorted(SKILLS_DIR.glob("*/SKILL.md")):
     else:
         modelos_suspeitos.append(f"{pasta} ({modelo})")
 
+n_proprias = len(proprias_ok) + len(proprias_quebradas)
+n_oficiais = total_skills - n_proprias
+
 if quebradas:
     add("Skills - frontmatter", "erro",
         "SKILL.md com frontmatter invalido ou 'name' diferente da pasta: "
@@ -336,7 +347,7 @@ if quebradas:
         "(/aft-atualizar); se persistir, avise o mantenedor.")
 else:
     add("Skills - frontmatter", "ok",
-        f"{total_skills} SKILL.md com frontmatter valido e name correto")
+        f"{n_oficiais} SKILL.md oficiais com frontmatter valido e name correto")
 
 if modelos_suspeitos:
     add("Skills - modelos declarados", "aviso",
@@ -395,6 +406,35 @@ if ids_datados:
             add("Skills - teste dos modelos pinados", "ok",
                 f"{len(ids_datados)} modelo(s) pinado(s) respondendo: "
                 + ", ".join(sorted(ids_datados)))
+
+# 11. Skills proprias do colega (minha-*) -------------------------------------
+# So aparece se o AFT tiver criado alguma. Confirma que estao protegidas de
+# atualizacoes (padrao 'minha-*/' no .gitignore) e valida com tolerancia.
+if n_proprias:
+    protegidas = False
+    gi = SKILLS_DIR / ".gitignore"
+    if gi.is_file():
+        try:
+            protegidas = "minha-*" in gi.read_text(encoding="utf-8")
+        except OSError:
+            pass
+    nota_protecao = ("protegidas de atualizacoes (.gitignore)" if protegidas else
+                     "ATENCAO: o .gitignore nao reserva 'minha-*'; rode /aft-atualizar "
+                     "para pegar a protecao antes da proxima atualizacao")
+    if proprias_quebradas:
+        add("Skills proprias (minha-*)", "aviso",
+            f"{n_proprias} skill(s) propria(s); com frontmatter/name a corrigir: "
+            + ", ".join(proprias_quebradas) + f" - {nota_protecao}",
+            "Sao SUAS skills. Para o Claude Code aciona-las, o 'name' do frontmatter "
+            "deve ser igual ao nome da pasta. O /nova-skill cria ja no formato certo.")
+    elif not protegidas:
+        add("Skills proprias (minha-*)", "aviso",
+            f"{n_proprias} skill(s) propria(s) valida(s), mas {nota_protecao}",
+            "Rode 'Atualize o AFT Toolkit' (/aft-atualizar) para reservar o namespace.")
+    else:
+        add("Skills proprias (minha-*)", "ok",
+            f"{n_proprias} skill(s) propria(s) valida(s) e {nota_protecao}: "
+            + ", ".join(proprias_ok))
 
 # ----------------------------------------------------------------------------
 resumo = {

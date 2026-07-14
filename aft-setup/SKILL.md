@@ -315,6 +315,36 @@ no Google Drive (link nas próprias skills) ou pedem o código da ementa diretam
 Quando a sessão expirar no futuro, basta pedir "reconectar o notebooklm"
 (skill `/notebooklm-login`) — sem mexer em terminal.
 
+## Passo 7b — Rotina diária do painel (opcional)
+
+Ofereça, em uma frase: *"Quer que o painel (visão geral das suas OS e prazos) se
+atualize sozinho toda manhã, sem precisar me pedir? Isso não gasta nada — é o próprio
+computador rodando um programinha, sem abrir o Claude Code."*
+
+- **Se não** → pule este passo (sem instalar nada); explique que dá para pedir a
+  qualquer momento depois, ou rodar `/painel` manualmente quando quiser.
+- **Se sim**:
+  1. Confirme/pergunte a pasta de OS ATIVAS a usar (a criada no Passo 2, salvo se o AFT
+     já apontou outra) e use o `python_path` já resolvido no Passo 6a.
+  2. Instale com o script cross-platform do toolkit (detecta macOS/Windows sozinho):
+     ```bash
+     python "<python_path recém-resolvido>" ~/.claude/skills/_scripts/instalar_rotina_painel.py instalar "<python_path>" "<pasta OS ATIVAS>"
+     ```
+     (padrão: todas as manhãs às 07:00 — se o AFT preferir outro horário, acrescente
+     `--hora HH:MM`.)
+  3. Leia o JSON de retorno (`ok`, `sistema`, `detalhe`) e traduza em uma frase. Se
+     `ok: false`, explique o erro em linguagem simples — não é bloqueante, o AFT segue
+     podendo rodar `/painel` manualmente.
+  4. Grave no `aft-config.md` (acrescente ao front-matter) `rotina_painel: "07:00"` (ou
+     o horário escolhido) para o `/aft-atualizar` e o `/aft-doctor` saberem que já foi
+     oferecida/instalada e não perguntarem de novo.
+
+> A rotina roda **inteiramente fora do Claude Code** (launchd no macOS, Agendador de
+> Tarefas no Windows) — chama o `gerar_painel.py` direto, com `--scan`. Se o Sistema
+> Auditor não estiver acessível no horário (VM desligada), o script degrada sozinho
+> para o último snapshot salvo; nunca falha por isso. Detalhes e como remover:
+> `painel/SKILL.md`, Passo 5.
+
 ## Passo 8 — Resumo final
 
 Apresente:
@@ -329,6 +359,7 @@ Apresente:
 🛡️ Proteção:          ~/.claude/settings.json [deny-list de segurança aplicada]
 🐍 Python:            [versão] · pillow/pikepdf instalados
 📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]
+📊 Painel diário:      [instalado, roda às HH:MM / não instalado — peça a qualquer hora]
 
 Fluxo típico de uma fiscalização:
   1. /nova-os           → cadastra a empresa e o prazo do DET

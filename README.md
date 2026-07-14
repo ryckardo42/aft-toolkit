@@ -35,9 +35,11 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/aft-setup` | Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil do auditor (`CLAUDE.md` global), dependências, NotebookLM |
 | `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, o estado do NotebookLM e a saúde das skills (frontmatter e modelos pinados, com teste ao vivo) — e diz, em linguagem simples, o que falta (só leitura) |
 | `/aft-atualizar` | Atualiza as skills (`git pull`) e o comando `notebooklm` (notebooklm-py), se houver versão nova, e roda o `/aft-doctor` ao final para confirmar |
+| `/nova-skill` | Ajuda o AFT (leigo) a criar uma **habilidade própria**, para uma tarefa que o toolkit não cobre: pergunta objetivo, gatilhos e passos em linguagem simples e grava `~/.claude/skills/minha-<nome>/SKILL.md`. O prefixo reservado `minha-` garante que a skill própria é descoberta pelo Claude Code e **nunca se perde numa atualização** |
 | `/notebooklm-login` | Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge) — o Claude conduz tudo, sem terminal |
 | `/nova-os` | Cadastra uma auditoria (nome livre, CNPJ opcional, município e o DET com prazo) — o começo do fluxo |
-| `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência**, e detecta PDFs de notificação DET nas pastas das OS ainda **não cadastrados** na ficha — um SISOS local, sem servidor (só leitura). Opcionalmente (com consentimento), publica o painel como Artifact privado na aba Artefatos do app |
+| `/organiza-os` | Importa uma **pasta bagunçada de fiscalização pré-toolkit** jogada em `OS ATIVAS/`: lê os documentos (notificações DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos, mostra o plano antes-e-depois e — com sua aprovação — renomeia a pasta para o padrão, cria o `memory.md` completo e move cada arquivo para onde as demais skills esperam. Nunca apaga nada |
+| `/painel` | Gera um `painel.html` local em formato **dashboard de cards**: um card por OS colorido pela urgência do prazo de DET, e um clique abre o **detalhe da auditoria** (DETs, todos os autos de infração lavrados com nº do AI e constatação, pendências, atividades). Detecta PDFs de notificação DET ainda **não cadastrados** na ficha e, com `--scan`, puxa os autos ao vivo do Sistema Auditor (Windows ou Mac+Parallels, degradando para o último snapshot se indisponível) — um SISOS local, sem servidor (só leitura). Pode instalar uma rotina diária que regenera o painel de manhã e, opcionalmente (com consentimento), publica como Artifact privado |
 
 ### Preparação da ação fiscal (antes da visita)
 | Skill | O que faz |
@@ -152,13 +154,20 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
-├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel)
-├── aft-setup/ · aft-doctor/ · aft-atualizar/ · notebooklm-login/ · nova-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
+├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel, instalar_rotina_painel)
+├── aft-setup/ · aft-doctor/ · aft-atualizar/ · nova-skill/ · notebooklm-login/ · nova-os/ · organiza-os/ · painel/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── preparacao-acao-fiscal/ · NAD/   (planejamento pré-visita e notificação de documentos)
 ├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · analise-acidente/ · autos-lavrados/ · revisa-auto/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
-└── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
+├── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
+└── minha-*/   (SUAS skills próprias — criadas pelo /nova-skill; git-ignoradas, sobrevivem a toda atualização)
 ```
+
+> **Skills próprias, à prova de atualização.** Você (ou qualquer colega) pode criar skills
+> suas para tarefas que o toolkit oficial não cobre. Basta que o nome comece com `minha-`
+> (o `/nova-skill` faz isso por você). Esse prefixo é um **namespace reservado**: nenhuma
+> skill oficial o usa, o `.gitignore` protege essas pastas, e o `git pull` do
+> `/aft-atualizar` **nunca as toca** — elas ficam no seu computador, suas, para sempre.
 
 ## Avisos
 

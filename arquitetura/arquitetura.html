@@ -137,8 +137,8 @@ const ARCH = {
   "data": "2026-07-13",
   "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 28,
-    "scripts": 18,
+    "skills": 30,
+    "scripts": 20,
     "dados": 6,
     "commit": "ver `git log -1` — atualizado em 13/07/2026"
   },
@@ -156,7 +156,7 @@ const ARCH = {
     {
       "nome": "Sistema Auditor",
       "papel": "App oficial do MTE",
-      "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\SistemasAFT\...\PRO."
+      "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\\SistemasAFT\\...\\PRO."
     },
     {
       "nome": "NotebookLM",
@@ -208,7 +208,7 @@ const ARCH = {
     },
     {
       "who": "/autos-lavrados",
-      "act": "Lê os PDFs transmitidos em ...\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]."
+      "act": "Lê os PDFs transmitidos em ...\\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]."
     },
     {
       "who": "/sfitweb-rel",
@@ -240,7 +240,7 @@ const ARCH = {
       "skills": [
         {
           "nome": "/aft-setup",
-          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, deny-list de segurança, dependências, NotebookLM.",
+          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, deny-list de segurança, dependências, NotebookLM. Oferece (opt-in) instalar a rotina diária do painel via instalar_rotina_painel.py.",
           "tech": "winget · pipx · uorgs.csv · model: sonnet"
         },
         {
@@ -250,7 +250,7 @@ const ARCH = {
         },
         {
           "nome": "/aft-atualizar",
-          "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou. Antes do pull, o checar_diff.py varre o diff por sinais de adulteração.",
+          "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou. Antes do pull, o checar_diff.py varre o diff por sinais de adulteração. Em usuários existentes, oferece a rotina diária do painel uma única vez (marcada no aft-config.md) e roda /aft-doctor ao final.",
           "tech": "git pull · pipx upgrade · checar_diff.py · model: sonnet"
         },
         {
@@ -264,9 +264,19 @@ const ARCH = {
           "tech": "cria memory.md · model: sonnet"
         },
         {
+          "nome": "/organiza-os",
+          "role": "Importa uma pasta bagunçada de fiscalização pré-toolkit jogada em OS ATIVAS: classifica os documentos pela 1ª página (notificação DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos lavrados, apresenta plano antes-e-depois e — só com aprovação — renomeia a pasta para o padrão, cria o memory.md completo e move os arquivos para onde as demais skills esperam. Nunca apaga nada; não identificado fica onde está.",
+          "tech": "pdftotext/pdfplumber (1ª página) · checar_pii.py · gerar_painel.py p/ conferir · model: opus"
+        },
+        {
           "nome": "/painel",
-          "role": "Gera um painel.html local com as OS e os prazos de DET coloridos por urgência; detecta PDFs de notificação DET não cadastrados nas pastas das OS (código/datas via regex + pdfplumber, determinístico); opt-in: publica o painel como Artifact privado na aba Artefatos (única saída externa do toolkit, com consentimento por sessão). Só leitura nas fichas — allowed-tools sem Write/Edit.",
-          "tech": "gerar_painel.py · tool Artifact · model: haiku"
+          "role": "Dashboard local em cards (estilo SisOS, sem servidor/nuvem): um card por OS colorido pela urgência do DET; clique abre o detalhe (modal central amplo) — DETs, relato da inspeção física completo (inspecao-fisica.md, só na versão local por conter PII), TODOS os autos lavrados em grade (nº do AI, ementa, constatação), autos substituídos, pendências e atividades. Detecta notificações DET não cadastradas; com --scan puxa os autos ao vivo do Sistema Auditor (Windows/Mac+Parallels), degradando para o último autos-lavrados.md. Rotina diária opcional (launchd/Task Scheduler) regenera o painel de manhã sem gastar IA. Publicação como Artifact segue opt-in.",
+          "tech": "gerar_painel.py (parser tolerante aos 2 schemas de memory.md + autos-lavrados.md + scan_autos.py) · model: haiku · allowed-tools sem Write/Edit"
+        },
+        {
+          "nome": "/nova-skill",
+          "role": "Ajuda o AFT (leigo) a criar uma skill PRÓPRIA para uma tarefa que o toolkit oficial não cobre: coleta objetivo, gatilhos e passos em linguagem simples e grava ~/.claude/skills/minha-<nome>/SKILL.md com frontmatter válido. Só cria/edita skills próprias (prefixo minha-), nunca as oficiais.",
+          "tech": "prefixo reservado minha- (1o nível, git-ignorado) · model: sonnet"
         }
       ]
     },
@@ -400,7 +410,7 @@ const ARCH = {
         },
         {
           "nome": "/autos-lavrados",
-          "role": "Lê os PDFs já transmitidos (C:\SistemasAFT\...\PRO) e cruza com os rascunhos, marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto.",
+          "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos, marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto.",
           "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
         },
         {
@@ -641,6 +651,22 @@ const ARCH = {
     {
       "topico": "autos-lavrados: uma ementa = um auto válido (dedup por re-lavratura)",
       "txt": "Em regra cada ementa corresponde a um único auto: quando o AFT erra e re-lavra, o PDF cancelado resiste na pasta. Como a numeração dos autos é crescente (último dígito = verificador), scan_autos.py agrupa por ementa e marca status_duplicidade: mantido_ultimo (maior número-base = válido) vs cancelado_presumido (substituido_por). Exceções fixas no script: 001960-7 nunca deduplica (todos válidos); 001775-2/001774-4/002270-5/002269-1 avisam e o AFT decide (relacionar todos ou só o último). No relatório, cancelados vão numa seção 'Autos substituídos' à parte; no memory.md as linhas [x] passam a ser chaveadas pelo número do AI (permite ementas legitimamente repetidas)."
+    },
+    {
+      "topico": "Painel virou dashboard de cards (SISOS local, offline)",
+      "txt": "O /painel deixou de ser tabela e virou dashboard de cards com detalhe por auditoria, espelhando o SisOS pessoal do Ricardo mas 100% local (sem Vercel/Supabase): os memory.md são o banco, o autos-lavrados.md dá os autos com constatação, e o scan_autos.py (--scan) dá a lista fria ao vivo do Sistema Auditor — mesclados por número de AI, com degradação graciosa quando a pasta PRO está inacessível. Atualização diária é agendador do SO (launchd/schtasks) rodando o script determinístico, sem gastar tokens. No Mac a pasta das OS é perguntada uma vez e gravada como pasta_os: no aft-config.md; no Windows é o padrão."
+    },
+    {
+      "topico": "Rotina diária do painel entra no /aft-setup e no /aft-atualizar",
+      "txt": "Criado _scripts/instalar_rotina_painel.py (cross-platform: launchd no macOS, Agendador de Tarefas no Windows) para instalar/remover/consultar a rotina do /painel sem gastar tokens (chama gerar_painel.py --scan direto pelo SO). O /aft-setup passou a oferecer isso (opt-in) no Passo 7b, usando o python_path e a pasta OS ATIVAS já coletados. O /aft-atualizar oferece a mesma coisa, uma única vez, para quem instalou o toolkit antes dessa novidade — controla isso com o campo rotina_painel no aft-config.md (vazio = já perguntado e recusado; HH:MM = instalado) para nunca perguntar duas vezes."
+    },
+    {
+      "topico": "Skills próprias do colega, à prova de atualização (namespace minha-)",
+      "txt": "O toolkit passou a suportar skills criadas pelo próprio AFT/colega. Como o Claude Code só descobre skills no 1o nível de ~/.claude/skills (o repo É essa pasta), uma pasta 'Minhas Skills' aninhada não funcionaria — as skills ficariam invisíveis. Solução: namespace reservado 'minha-' (nenhuma skill oficial começa assim) + '.gitignore' com 'minha-*/'. Isso mantém a skill própria no 1o nível (visível), fora do versionamento e intocada pelo git pull do /aft-atualizar. O aft_doctor valida essas skills à parte, com tolerância (aviso, não erro) e confirma a proteção. A skill oficial /nova-skill faz o scaffold guiado para leigos. CLAUDE-aft.md instrui o Claude a tratar minha-* como primeira classe e a nunca editar skill oficial a título de personalização."
+    },
+    {
+      "topico": "Onboarding de pastas pré-toolkit (/organiza-os)",
+      "txt": "O colega chega ao toolkit com fiscalizações em andamento e documentos acumulados numa pasta do jeito dele. A /organiza-os faz o onboarding: joga-se a pasta em OS ATIVAS, ela lê a 1ª página de cada PDF, classifica (notificação DET, relação de autos do Sistema Auditor — que já alimenta a seção Autos lavrados do memory.md —, resposta do empregador item1..N, fotos), extrai empregador/identificador/prazos e propõe um plano antes-e-depois que só executa com aprovação. Convenção mantida: notificacao-<COD>.pdf na raiz + subpasta notificacao-<COD>/ para a resposta (onde analise-preliminar/det-630/painel já procuram), em vez de uma pasta 'Notificações' nova. Nada é apagado; arquivo não identificado fica intocado e listado."
     }
   ],
   "diferencas": [

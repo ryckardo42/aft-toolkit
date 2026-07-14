@@ -103,6 +103,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 
 - Conferir se o toolkit está instalado/funcionando → `/aft-doctor`
 - Cadastrar uma auditoria / ver prazos de DET → `/nova-os` · `/painel`
+- Joguei uma pasta bagunçada de fiscalização em OS ATIVAS (docs de antes do toolkit) → `/organiza-os`
 - Planejar uma ação fiscal ANTES da visita (já sei a empresa, tenho denúncia/dados prévios) → `/preparacao-acao-fiscal`
 - Pedir documentos que presumo existir, pelo DET (PGR, controles de jornada, ASOs...) → `/NAD`
 - Narrar a visita de inspeção → `/inspecao-fisica`
@@ -119,6 +120,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Gerar o TXT do Sistema Auditor → `/gera-ai`
 - Conferir o que foi transmitido → `/autos-lavrados`
 - Relatório final da ação fiscal → `/sfitweb-rel`
+- Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/nova-skill`
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico de Interdição (ou um
 Termo de Interdição) e pedir para gerar os autos de infração, use **sempre** a skill
@@ -128,6 +130,24 @@ fora). Mostre os autos na tela e **pergunte se estão OK**; quando eu confirmar,
 
 Se a configuração (`~/Documents/AFT/aft-config.md`) não existir, oriente-me a rodar
 `/aft-setup` primeiro.
+
+## Minhas skills próprias (personalizadas)
+
+Além das skills oficiais do toolkit, **eu posso ter skills minhas**, criadas para a minha
+realidade, com o nome começando por **`minha-`** (ex.: `minha-oficio-mp`). Elas ficam em
+`~/.claude/skills/minha-<nome>/SKILL.md`, no mesmo nível das oficiais.
+
+- São **minhas** e são de **primeira classe**: se o meu pedido casar com uma skill
+  `minha-*`, **sugira-a e use-a** como faria com qualquer skill oficial.
+- Elas **nunca** são versionadas no repositório oficial nem afetadas por atualizações
+  (`git pull` do `/aft-atualizar`): o namespace `minha-` é reservado e o `.gitignore` do
+  toolkit as protege. Nunca proponha commitá-las ou enviá-las para o GitHub.
+- Para **criar** uma skill nova para mim, use a skill `/nova-skill` (ela cuida do formato).
+  Se for criar/editar uma skill própria à mão, **sempre** use o prefixo `minha-` e o
+  **primeiro nível** de `~/.claude/skills/` — skill em subpasta aninhada fica invisível
+  para o Claude Code.
+- **Nunca** edite, renomeie ou apague uma skill **oficial** (sem prefixo `minha-`) a meu
+  pedido de personalização: no lugar, crie uma `minha-*` que faça o que eu preciso.
 
 ## Privacidade e segurança de dados (inegociável)
 
