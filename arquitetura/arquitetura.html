@@ -260,7 +260,7 @@ const ARCH = {
         },
         {
           "nome": "/nova-os",
-          "role": "Cadastra uma auditoria (empregador, CNPJ, município, DET com prazo) — o começo do fluxo. Idempotente.",
+          "role": "Cadastra uma auditoria (nome livre — razão social, fantasia ou o que o AFT preferir; CNPJ/CPF opcional, município, DET com prazo) — o começo do fluxo. Idempotente.",
           "tech": "cria memory.md · model: sonnet"
         },
         {
@@ -395,13 +395,13 @@ const ARCH = {
         },
         {
           "nome": "/gera-ai",
-          "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento.",
+          "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento — é aqui que o CNPJ/CPF da fiscalizada se torna obrigatório: se a OS ainda não tinha, o gera-ai pergunta, grava no memory.md e renomeia a pasta prefixando o CNPJ na frente do nome original.",
           "tech": "rehydrate.py · bloco3_inject.py · validar_txt.py · model: sonnet"
         },
         {
           "nome": "/autos-lavrados",
-          "role": "Lê os PDFs já transmitidos (C:\SistemasAFT\...\PRO), cruza com os rascunhos e marca no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem ferramentas de rede (os PDFs trazem dados pessoais).",
-          "tech": "scan_autos.py · pypdf · model: sonnet"
+          "role": "Lê os PDFs já transmitidos (C:\SistemasAFT\...\PRO) e cruza com os rascunhos, marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto.",
+          "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
         },
         {
           "nome": "/sfitweb-rel",
@@ -629,6 +629,18 @@ const ARCH = {
     {
       "topico": "Bases distintas",
       "txt": "Nunca mexer nas skills pessoais do mantenedor (~/.claude/skills do Ricardo) ao trabalhar no toolkit; o toolkit é uma adaptação à parte."
+    },
+    {
+      "topico": "CNPJ/CPF opcional na /nova-os, obrigatório só no /gera-ai",
+      "txt": "A /nova-os deixou de exigir CNPJ/CPF: o AFT nomeia a auditoria livremente (razão social, fantasia, com ou sem identificador). O CNPJ/CPF só se torna obrigatório no /gera-ai (exigência do próprio Sistema Auditor para o TXT) — se a OS ainda não tiver, o gera-ai pergunta, grava no memory.md e RENOMEIA a pasta da OS prefixando o CNPJ na frente do nome original (mv, não recria). Reflexo no .depara: quando a tokenização de trabalhadores (preparacao-acao-fiscal) roda antes do CNPJ ser conhecido, o arquivo nasce como .depara.json (sem sufixo) e o gera-ai sabe procurar os dois nomes."
+    },
+    {
+      "topico": "autos-lavrados: Mac+Parallels e match por 8 dígitos",
+      "txt": "scan_autos.py passou a autodetectar a pasta PRO do Sistema Auditor também no Mac com Parallels (glob em /Volumes/*/SistemasAFT/Auditor/Docs/AutosDeInfracao/PRO, o disco C: da VM montado no Finder), além do padrão Windows e do 3º argumento manual. E aceita identificador de 8, 11 ou 14 dígitos (antes exigia 14, o que rejeitava CPF/CAEPF) — como toda pasta do Sistema Auditor termina com os 8 primeiros dígitos do CNPJ/CPF, esse prefixo basta para achar os autos. Reflexo da /nova-os sem CNPJ: quando a OS não tem identificador, a skill pergunta os 8 dígitos ao AFT (modo OS única) ou pula a OS com aviso (modo lote)."
+    },
+    {
+      "topico": "autos-lavrados: uma ementa = um auto válido (dedup por re-lavratura)",
+      "txt": "Em regra cada ementa corresponde a um único auto: quando o AFT erra e re-lavra, o PDF cancelado resiste na pasta. Como a numeração dos autos é crescente (último dígito = verificador), scan_autos.py agrupa por ementa e marca status_duplicidade: mantido_ultimo (maior número-base = válido) vs cancelado_presumido (substituido_por). Exceções fixas no script: 001960-7 nunca deduplica (todos válidos); 001775-2/001774-4/002270-5/002269-1 avisam e o AFT decide (relacionar todos ou só o último). No relatório, cancelados vão numa seção 'Autos substituídos' à parte; no memory.md as linhas [x] passam a ser chaveadas pelo número do AI (permite ementas legitimamente repetidas)."
     }
   ],
   "diferencas": [

@@ -119,7 +119,7 @@ Só prossiga após confirmação.
    ls ~/Documents/AFT/"OS ATIVAS"/
    ```
 2. Apresente numerado + opção "criar nova".
-3. Se "criar nova" → peça o nome em CAIXA ALTA (padrão: `NOME DA EMPRESA <identificador>`, onde o identificador é o **CNPJ (14 dígitos)** para pessoa jurídica OU o **CPF/CAEPF (11 dígitos)** para empregador pessoa física — ex.: produtor rural. Use só dígitos.) e crie o diretório:
+3. Se "criar nova" → **prefira encaminhar ao `/nova-os`** (é o ponto de entrada padrão do toolkit para abrir uma OS). Se mesmo assim for criada aqui, peça o nome em CAIXA ALTA (mesma regra do `/nova-os`: razão social, fantasia ou qualquer nome — não precisa incluir CNPJ/CPF) e crie o diretório:
    ```bash
    mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[NOME_EMPRESA]"/
    ```
@@ -148,6 +148,12 @@ Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos —
 | Trabalhadores prejudicados | Não | (sem linhas tipo 4) |
 
 > **CEP é obrigatório no Sistema Auditor** — se o campo CEP da linha tipo 1 vier vazio, a importação é RECUSADA com o aviso "CEP não informado! AI RECUSADO". Por isso o CEP **nunca** pode sair em branco: se o auditor não informar o CEP do estabelecimento e ele não estiver no contexto (memory.md/RT/auto), preencha automaticamente com `cep_uorg` do aft-config.md (placeholder que o auditor corrige na lupa). Nunca pergunte de novo nem deixe vazio — caia no `cep_uorg`.
+
+**Renomear a pasta da OS, se o CNPJ acabou de ser coletado agora.** Se `[PASTA_EMPRESA]` (nome da pasta em `OS ATIVAS/`) ainda não tinha o CNPJ/CPF no nome — ou seja, o identificador veio do auditor **nesta** FASE 1.6, não do `memory.md` nem do nome da pasta — renomeie a pasta prefixando o identificador **na frente** do nome original:
+```bash
+mv ~/Documents/AFT/"OS ATIVAS"/"[NOME_ORIGINAL]" ~/Documents/AFT/"OS ATIVAS"/"[CNPJ] [NOME_ORIGINAL]"
+```
+Atualize `[PASTA_EMPRESA]` para o novo nome e use-o em todos os passos seguintes (é o mesmo diretório, só mudou de nome — `.depara`, `memory.md` e qualquer arquivo já salvo continuam dentro dele). Se o CNPJ já estava no nome da pasta (veio do `/nova-os` ou de uma lavratura anterior), não renomeie de novo.
 
 **Trabalhadores**: para cada, peça nome completo + **data de admissão**. **Nunca peça CPF** — não é necessário para a lavratura do AI; o campo CPF da linha tipo 4 fica sempre vazio. A data de admissão é **SEMPRE** normalizada para `dd/mm/aaaa` (ex.: "10 de maio de 2026" → `10/05/2026`) e gravada na linha tipo 4 (ver FASE 3). Se já vier de uma skill anterior na sessão (ex.: `/registro`), reaproveite sem perguntar de novo. Assim que recebido, registre o nome no mapa de-para (FASE 2.5) e **a partir daí refira-se a ele só pelo token** `[[TRAB_NN]]` (a data de admissão não é tokenizada).
 
@@ -256,7 +262,7 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 
 Dados já coletados: razão social (FASE 1.5); CNPJ real + trabalhadores (nome) (FASE 1.6). **Antes de criar um mapa novo, procure um já existente** e reaproveite-o (acrescente trabalhadores novos sem renumerar os existentes):
 
-1. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/.depara_[CNPJ].json` (raiz da OS — criado por `/preparacao-acao-fiscal` quando a lista de trabalhadores foi tokenizada antes da visita).
+1. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/.depara_[CNPJ].json` **ou** `.depara.json` (raiz da OS — criado por `/preparacao-acao-fiscal` quando a lista de trabalhadores foi tokenizada antes da visita; o nome sem `[CNPJ]` acontece quando a preparação rodou antes de o CNPJ ser informado — nesse caso, renomeie para `.depara_[CNPJ].json` agora que o CNPJ é conhecido).
 2. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json` de uma lavratura anterior da mesma OS.
 
 Se achar em qualquer um dos dois locais, copie/estenda para a pasta da lavratura atual. Se não achar em nenhum, crie do zero em `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json`:
@@ -475,7 +481,8 @@ _(vazio)_
    - **Se existir** → adicione uma nova subseção `### Lavratura [DD/MM/AAAA] — Pasta: [PASTA_LAVRATURA]` ao final dessa seção (não sobrescreva subseções antigas).
    - **Se NÃO existir** → insira a seção completa **antes** de `## Registro de atividades` (ou ao final do arquivo).
 2. Adicione uma nova linha ao final da tabela de `## Registro de atividades`. NÃO toque nas linhas existentes.
-3. Se o `memory.md` já tem `**CNPJ:**` no cabeçalho, **não duplique** — apenas confira que bate com o CNPJ desta lavratura. Se divergir, avise o auditor e pergunte antes de prosseguir.
+3. Se o `memory.md` já tem `**CNPJ:**` preenchido no cabeçalho, **não duplique** — apenas confira que bate com o CNPJ desta lavratura. Se divergir, avise o auditor e pergunte antes de prosseguir.
+4. Se o `memory.md` **não tem CNPJ ainda** (front-matter `cnpj: ""` ou corpo com o aviso de pendência — comum quando a OS veio do `/nova-os` sem CNPJ) — grave agora o CNPJ/CPF coletado na FASE 1.6: atualize `cnpj:` no front-matter e substitua a linha `**CNPJ:**` do corpo pelo valor formatado (a pasta já foi renomeada na FASE 1.6, se aplicável).
 
 ### Regras de formatação do memory.md
 

@@ -36,7 +36,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/aft-doctor` | Verificação pós-instalação: checa Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, o estado do NotebookLM e a saúde das skills (frontmatter e modelos pinados, com teste ao vivo) — e diz, em linguagem simples, o que falta (só leitura) |
 | `/aft-atualizar` | Atualiza as skills (`git pull`) e o comando `notebooklm` (notebooklm-py), se houver versão nova, e roda o `/aft-doctor` ao final para confirmar |
 | `/notebooklm-login` | Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge) — o Claude conduz tudo, sem terminal |
-| `/nova-os` | Cadastra uma auditoria (empregador, CNPJ, município e o DET com prazo) — o começo do fluxo |
+| `/nova-os` | Cadastra uma auditoria (nome livre, CNPJ opcional, município e o DET com prazo) — o começo do fluxo |
 | `/painel` | Gera um `painel.html` local com todas as OS e os **prazos de DET coloridos por urgência**, e detecta PDFs de notificação DET nas pastas das OS ainda **não cadastrados** na ficha — um SISOS local, sem servidor (só leitura). Opcionalmente (com consentimento), publica o painel como Artifact privado na aba Artefatos do app |
 
 ### Preparação da ação fiscal (antes da visita)

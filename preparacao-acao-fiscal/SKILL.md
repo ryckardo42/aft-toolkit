@@ -28,16 +28,16 @@ Organizar o que o AFT já sabe **antes de ir a campo**: quem vai fiscalizar, por
 Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o próximo passo é `/inspecao-fisica` (relato do que foi constatado) → `/inspecao-inicial` (autos). Esta skill **não** redige autos e **não** registra achados de campo — ela planeja.
 
 ## Pasta base
-`~/Documents/AFT/OS ATIVAS/<EMPREGADOR> <CNPJ>/`
+`~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/nova-os`)
 
 ---
 
 ## FASE 1 — Resolver/criar a OS
 
 1. Se a empresa já tem pasta em `OS ATIVAS/`, use-a.
-2. Se não existe, **chame o fluxo do `/nova-os`** para coletar empregador, CNPJ, município (e DET, se já houver) e criar a pasta + `memory.md`. Não duplique a lógica de `/nova-os` — reaproveite-a.
+2. Se não existe, **chame o fluxo do `/nova-os`** para coletar o nome da auditoria, município (e DET, se já houver) e criar a pasta + `memory.md`. Não duplique a lógica de `/nova-os` — reaproveite-a. O CNPJ é opcional nessa fase (só se torna obrigatório no `/gera-ai`) — se o AFT já souber, informe; se não, siga sem.
 
-Guarde: `PASTA_OS`, `EMPREGADOR`, `CNPJ`.
+Guarde: `PASTA_OS`, `EMPREGADOR`, `CNPJ` (pode vir vazio).
 
 ---
 
@@ -62,11 +62,11 @@ Se o AFT anexar um PDF (denúncia, extrato de OS, lista do eSocial), leia-o norm
 
 Se o AFT forneceu uma lista **nominal** de trabalhadores (nome, e opcionalmente CPF — ex.: extrato do eSocial, lista anexada à denúncia), **tokenize antes de processar qualquer coisa com ela.** Nenhum nome ou CPF real de trabalhador deve aparecer no chat a partir deste ponto, nem no `preparacao.md`.
 
-1. **Reaproveite** um `.depara_<CNPJ>.json` existente na **raiz da pasta da OS**, se houver (não confundir com o de uma subpasta `Autos DD-MM/` — a preparação acontece antes de qualquer lavratura). Se existir, acrescente os trabalhadores novos sem renumerar os existentes.
-2. Se não existir, crie `~/Documents/AFT/OS ATIVAS/<EMPREGADOR> <CNPJ>/.depara_<CNPJ>.json` no mesmo esquema usado pelo `/gera-ai`:
+1. **Reaproveite** um `.depara_<CNPJ>.json` (ou `.depara.json`, se o CNPJ ainda não foi informado) existente na **raiz da pasta da OS**, se houver (não confundir com o de uma subpasta `Autos DD-MM/` — a preparação acontece antes de qualquer lavratura). Se existir, acrescente os trabalhadores novos sem renumerar os existentes.
+2. Se não existir, crie o arquivo na raiz da OS no mesmo esquema usado pelo `/gera-ai`: `.depara_<CNPJ>.json` se o CNPJ já foi informado (na `/nova-os` desta OS), ou `.depara.json` (sem sufixo) se ainda não — o `/gera-ai` sabe procurar os dois nomes e renomeia para incluir o CNPJ quando ele for coletado.
    ```json
    {
-     "cnpj": "[cnpj_14_digitos]",
+     "cnpj": "[cnpj_14_digitos, ou vazio se ainda não informado]",
      "autuada": { "token": "[[AUTUADA]]", "razao_social": "[RAZAO_SOCIAL]" },
      "trabalhadores": [
        { "token_nome": "[[TRAB_01]]", "nome": "[NOME REAL]",
@@ -173,7 +173,7 @@ Apresente o resumo final:
 
 ```
 ✅ Preparação registrada — <EMPREGADOR>
-📄 ~/Documents/AFT/OS ATIVAS/<EMPREGADOR> <CNPJ>/preparacao.md
+📄 ~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/preparacao.md
 
 Temas estudados: N   ·   Documentos no checklist: M   ·   NAD gerada: sim/não
 

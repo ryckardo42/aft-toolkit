@@ -94,10 +94,10 @@ até que eu revise e aprove — e quem transmite sou sempre eu.
 
 Minhas skills de fiscalização estão em `~/.claude/skills/` e minha pasta de
 trabalho é `~/Documents/AFT/` (`OS ATIVAS/`, `OS ARQUIVADAS/`, `aft-config.md` com meus
-dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`
-(padrão `NOME DA EMPRESA <identificador só dígitos>` — CNPJ de 14 dígitos para pessoa
-jurídica ou CPF/CAEPF de 11 dígitos para empregador pessoa física, ex.: produtor rural),
-com a ficha `memory.md`.
+dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`,
+nomeada como eu quiser na `/nova-os` (razão social, fantasia, com ou sem CNPJ/CPF), com a
+ficha `memory.md`. O CNPJ (14 dígitos) ou CPF/CAEPF (11 dígitos, ex.: produtor rural) é
+opcional ao abrir a OS e só se torna obrigatório na hora de gerar os autos (`/gera-ai`).
 
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
