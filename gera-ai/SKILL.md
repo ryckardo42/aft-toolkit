@@ -74,7 +74,7 @@ Para cada bloco extraia:
 - **NR e item violado** (se mencionados)
 - **Gradação** (se mencionada)
 - **Elementos de convicção**
-- **Trabalhadores citados** (nome + CPF se houver)
+- **Trabalhadores citados** (nome)
 
 ### 1.3 Validação/fallback de ementa
 
@@ -149,7 +149,7 @@ Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos —
 
 > **CEP é obrigatório no Sistema Auditor** — se o campo CEP da linha tipo 1 vier vazio, a importação é RECUSADA com o aviso "CEP não informado! AI RECUSADO". Por isso o CEP **nunca** pode sair em branco: se o auditor não informar o CEP do estabelecimento e ele não estiver no contexto (memory.md/RT/auto), preencha automaticamente com `cep_uorg` do aft-config.md (placeholder que o auditor corrige na lupa). Nunca pergunte de novo nem deixe vazio — caia no `cep_uorg`.
 
-**Trabalhadores**: para cada, peça nome completo + CPF (11 dígitos sem pontuação) + **data de admissão**. A data de admissão é **SEMPRE** normalizada para `dd/mm/aaaa` (ex.: "10 de maio de 2026" → `10/05/2026`) e gravada na linha tipo 4 (ver FASE 3). Se já vier de uma skill anterior na sessão (ex.: `/registro`), reaproveite sem perguntar de novo. Assim que recebidos, registre nome/CPF no mapa de-para (FASE 2.5) e **a partir daí refira-se a eles só pelos tokens** `[[TRAB_NN]]`/`[[CPF_NN]]` (a data de admissão não é tokenizada).
+**Trabalhadores**: para cada, peça nome completo + **data de admissão**. **Nunca peça CPF** — não é necessário para a lavratura do AI; o campo CPF da linha tipo 4 fica sempre vazio. A data de admissão é **SEMPRE** normalizada para `dd/mm/aaaa` (ex.: "10 de maio de 2026" → `10/05/2026`) e gravada na linha tipo 4 (ver FASE 3). Se já vier de uma skill anterior na sessão (ex.: `/registro`), reaproveite sem perguntar de novo. Assim que recebido, registre o nome no mapa de-para (FASE 2.5) e **a partir daí refira-se a ele só pelo token** `[[TRAB_NN]]` (a data de admissão não é tokenizada).
 
 ### 1.7 Dados fiscais fixos (não pergunte ao auditor — vêm do aft-config.md)
 
@@ -236,7 +236,7 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 
 ## FASE 2.5 — PSEUDONIMIZAÇÃO REVERSÍVEL (TOKENS + MAPA DE-PARA)
 
-> **OBJETIVO**: manter dados sensíveis da autuada (razão social/nome fantasia) e dos trabalhadores (nome + CPF) **fora do que o modelo ecoa no chat e fora da cópia compartilhável**. O dado real é confinado a um mapa de-para local e só é re-injetado no TXT final por um **script determinístico** (`rehydrate.py`), nunca pelo modelo. Esta é a política de anonimização padrão do AFT Toolkit.
+> **OBJETIVO**: manter dados sensíveis da autuada (razão social/nome fantasia) e dos trabalhadores (nome) **fora do que o modelo ecoa no chat e fora da cópia compartilhável**. O dado real é confinado a um mapa de-para local e só é re-injetado no TXT final por um **script determinístico** (`rehydrate.py`), nunca pelo modelo. Esta é a política de anonimização padrão do AFT Toolkit.
 
 ### O que tokeniza e o que NÃO tokeniza
 
@@ -244,15 +244,17 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 |------|-----------|-------|
 | Razão social / nome fantasia | **Sim** | `[[AUTUADA]]` |
 | Nome do trabalhador | **Sim** | `[[TRAB_NN]]` (NN = 2 dígitos, zero-pad: `01`, `02`, …) |
-| CPF do trabalhador | **Sim** | `[[CPF_NN]]` (mesmo NN do nome correspondente) |
-| **CNPJ ou CPF/CAEPF** (identificador) | **NÃO — sempre real** | (chave do sistema: pasta, anexos, `memory.md`) |
+| CPF do trabalhador | **Nunca coletado** — campo fica sempre vazio no TXT | — |
+| **CNPJ ou CPF/CAEPF** (identificador do autuado) | **NÃO — sempre real** | (chave do sistema: pasta, anexos, `memory.md`) |
 | Endereço | Não | (placeholders; o Sistema Auditor puxa pelo CNPJ) |
 
-> Tokens são ASCII com terminador `]]` — seguros dentro de campos TAB, da codificação `#13#10` e do latin-1, e à prova de colisão de prefixo (`[[CPF_01]]` ≠ início de `[[CPF_10]]`).
+> Tokens são ASCII com terminador `]]` — seguros dentro de campos TAB, da codificação `#13#10` e do latin-1, e à prova de colisão de prefixo entre nomes (`[[TRAB_01]]` ≠ início de `[[TRAB_10]]`).
+>
+> **Não confundir** o "CPF do trabalhador" (nunca coletado, linha acima) com o "CPF/CAEPF (identificador)": este último é o CPF do **próprio autuado** quando pessoa física (ex.: produtor rural) e substitui o CNPJ — continua sempre real, nunca tokenizado, exatamente como o CNPJ.
 
 ### Passo 1 — Montar o mapa de-para
 
-Dados já coletados: razão social (FASE 1.5); CNPJ real + trabalhadores (nome+CPF) (FASE 1.6). **Antes de criar um mapa novo, procure um já existente** e reaproveite-o (acrescente trabalhadores novos sem renumerar os existentes):
+Dados já coletados: razão social (FASE 1.5); CNPJ real + trabalhadores (nome) (FASE 1.6). **Antes de criar um mapa novo, procure um já existente** e reaproveite-o (acrescente trabalhadores novos sem renumerar os existentes):
 
 1. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/.depara_[CNPJ].json` (raiz da OS — criado por `/preparacao-acao-fiscal` quando a lista de trabalhadores foi tokenizada antes da visita).
 2. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json` de uma lavratura anterior da mesma OS.
@@ -264,22 +266,20 @@ Se achar em qualquer um dos dois locais, copie/estenda para a pasta da lavratura
   "cnpj": "[cnpj_14_digitos]",
   "autuada": { "token": "[[AUTUADA]]", "razao_social": "[RAZAO_SOCIAL]" },
   "trabalhadores": [
-    { "token_nome": "[[TRAB_01]]", "nome": "[NOME REAL]",
-      "token_cpf": "[[CPF_01]]",  "cpf": "[11_digitos]" }
+    { "token_nome": "[[TRAB_01]]", "nome": "[NOME REAL]" }
   ]
 }
 ```
 
-> Se não houver trabalhadores prejudicados, deixe `"trabalhadores": []`. O bloco `autuada` é sempre preenchido.
+> Se não houver trabalhadores prejudicados, deixe `"trabalhadores": []`. O bloco `autuada` é sempre preenchido. **Não inclua `token_cpf`/`cpf`** — CPF do trabalhador não é coletado por esta skill.
 
 ### Passo 2 — Tokenizar o texto dos autos (scrub de ingestão)
 
 No texto já parseado na FASE 1.2, substitua **as ocorrências literais** dos valores reais pelos tokens (match exato + case-insensitive sobre as strings conhecidas):
 - razão social real → `[[AUTUADA]]`
 - nome de cada trabalhador → `[[TRAB_NN]]`
-- CPF de cada trabalhador (com e sem pontuação) → `[[CPF_NN]]`
 
-A partir daqui, **todo eco no chat usa o texto tokenizado**. Nunca reimprima a razão social real nem CPF/nome de trabalhador no chat após este passo.
+A partir daqui, **todo eco no chat usa o texto tokenizado**. Nunca reimprima a razão social real nem nome de trabalhador no chat após este passo.
 
 > **Limitação honesta**: se os autos vieram de outra skill na mesma sessão, o dado real já entrou no contexto do modelo antes do `/gera-ai` — a tokenização aqui protege a cópia compartilhável e os ecos seguintes, não o que já está no histórico. O `rehydrate.py` (re-hidratação) é a direção crítica e é sempre exata e determinística.
 
@@ -300,7 +300,7 @@ Linhas separadas por `\n`.
 
 > 23 campos, 22 tabs. Termina em `0` sem tab final.
 > `[razao_social]` = token `[[AUTUADA]]` no TXT tokenizado (o `rehydrate.py` injeta o nome real; o Sistema Auditor também o puxa pelo CNPJ via lupa).
-> `[texto_autuacao]` = texto **tokenizado** (`[[AUTUADA]]`, `[[TRAB_NN]]`, `[[CPF_NN]]`), conforme FASE 2.5.
+> `[texto_autuacao]` = texto **tokenizado** (`[[AUTUADA]]`, `[[TRAB_NN]]`), conforme FASE 2.5.
 > **`[cep]` (campo 8) JAMAIS pode ser vazio** — o Sistema Auditor recusa o auto inteiro ("CEP não informado! AI RECUSADO"). Se não houver CEP do estabelecimento, preencha com `cep_uorg` do aft-config.md. Antes de gravar o TXT, valide que TODAS as linhas tipo 1 têm o campo 8 preenchido; se alguma estiver vazia, substitua por `cep_uorg` e só então gere o arquivo.
 
 **Linhas tipo 5** — anexos (uma por PDF, se houver):
@@ -320,7 +320,7 @@ Linhas separadas por `\n`.
 
 **Linhas tipo 4** — trabalhadores prejudicados (uma por trabalhador, se houver):
 ```
-4[TAB][nome_completo][TAB][pis][TAB][cpf_somente_digitos][TAB][data_admissao][TAB][data_afastamento][TAB][observacao][TAB][funcao][TAB]
+4[TAB][nome_completo][TAB][pis][TAB][cpf_sempre_vazio][TAB][data_admissao][TAB][data_afastamento][TAB][observacao][TAB][funcao][TAB]
 ```
 
 > **9 campos**, mapeando as colunas do Sistema Auditor (linha termina em TAB → campo 9 vazio):
@@ -330,13 +330,13 @@ Linhas separadas por `\n`.
 | 1 | (tipo de registro) | — | literal `4` |
 | 2 | Nome | sim | `[[TRAB_NN]]` no tokenizado |
 | 3 | PIS | não | geralmente vazio |
-| 4 | CPF | não | `[[CPF_NN]]` no tokenizado; 11 dígitos sem pontuação |
+| 4 | CPF | não | **sempre vazio — não coletado por esta skill** |
 | 5 | **DtAdmissão** | **SIM** | data de admissão em `dd/mm/aaaa` |
 | 6 | DtAfast | não | data de afastamento em `dd/mm/aaaa`, se informada |
 | 7 | Observação | não | geralmente vazio |
 | 8 | Função | não | geralmente vazio (a função já consta da narrativa do auto) |
 
-> `[nome_completo]` e `[cpf_somente_digitos]` são tokenizados (`[[TRAB_NN]]`/`[[CPF_NN]]`) — o `rehydrate.py` injeta os reais. Os demais campos (PIS, datas, observação, função) **não** são tokenizados e vão literais no TXT.
+> `[nome_completo]` é tokenizado (`[[TRAB_NN]]`) — o `rehydrate.py` injeta o real. Os demais campos (PIS, CPF, datas, observação, função) **não** são tokenizados; CPF vai sempre literal e vazio no TXT.
 > **`[data_admissao]` (campo 5) é o único obrigatório** dos campos do trabalhador além do nome — normalize sempre para `dd/mm/aaaa`. Se desconhecida, deixe vazia.
 
 **Linha tipo 6** — CIF do auditor (uma única, no final do arquivo):
@@ -456,7 +456,7 @@ _(vazio)_
    Descrição: [descricao_da_ementa]
 
 **Elementos de convicção:** [lista resumida — ex: Inspeção in loco, registros fotográficos, consulta eSocial]
-**Trabalhadores citados:** NOME1 (CPF [11_digitos]), NOME2 (CPF [11_digitos])
+**Trabalhadores citados:** NOME1, NOME2
 **Arquivo gerado:** `[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ].txt`
 
 ## Autos lavrados
@@ -479,7 +479,7 @@ _(vazio)_
 
 ### Regras de formatação do memory.md
 
-- **CNPJ**: apenas dígitos. **CPF**: apenas dígitos.
+- **CNPJ**: apenas dígitos. **CPF/CAEPF do autuado** (quando pessoa física, ex.: produtor rural): apenas dígitos. Trabalhador não tem CPF registrado no memory.md.
 - **Data da lavratura**: `DD/MM/AAAA` no texto, `DD-MM` no nome da pasta.
 - Use a tool **Edit** quando o arquivo já existe (não sobrescreva com Write).
 
@@ -492,7 +492,8 @@ _(vazio)_
 - **Preserve a acentuação** em TODO texto português. O latin-1 suporta todos os caracteres acentuados.
 - **A extensão dos anexos é `.PDF` MAIÚSCULA** (o Sistema Auditor é case-sensitive na extensão).
 - **Antes de sobrescrever** qualquer arquivo existente, confirme com o auditor.
-- **Re-hidratação é SEMPRE via `rehydrate.py`** (string-replace determinístico), nunca digitada pelo modelo — é documento legal, um CPF/nome trocado é inaceitável.
-- **O identificador (CNPJ 14 díg. ou CPF/CAEPF 11 díg.) nunca é tokenizado** — fica real em pasta, anexos, `memory.md` e TXT. Nos nomes de arquivo `AI_[NUM_AUTOS]_[CNPJ]...`, `[CNPJ]` é esse identificador (11 ou 14 dígitos).
+- **Re-hidratação é SEMPRE via `rehydrate.py`** (string-replace determinístico), nunca digitada pelo modelo — é documento legal, um nome trocado é inaceitável.
+- **O identificador (CNPJ 14 díg. ou CPF/CAEPF 11 díg. do autuado) nunca é tokenizado** — fica real em pasta, anexos, `memory.md` e TXT. Nos nomes de arquivo `AI_[NUM_AUTOS]_[CNPJ]...`, `[CNPJ]` é esse identificador (11 ou 14 dígitos).
 - **`.depara_[CNPJ].json` contém PII** — tratar como sensível: não exibir no chat, não compartilhar, não commitar. A cópia `*.tokenized.txt` é a única segura para compartilhar.
-- **Após a FASE 2.5, não reimprima** razão social real nem nome/CPF de trabalhador no chat — use sempre os tokens.
+- **Após a FASE 2.5, não reimprima** razão social real nem nome de trabalhador no chat — use sempre os tokens.
+- **Nunca peça CPF do trabalhador prejudicado** — não é necessário para a lavratura do AI. O campo CPF da linha tipo 4 fica sempre vazio no TXT. (Não confundir com o CPF/CAEPF do autuado pessoa física, que é o identificador legal e continua sendo coletado normalmente.)
