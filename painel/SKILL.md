@@ -6,17 +6,17 @@ description: >
   Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser um panorama das
   auditorias em andamento e os prazos de DET vencendo. Acione com /painel,
   "painel", "minhas auditorias", "minhas OS", "o que vence essa semana",
-  "quais DET estão vencendo", "dashboard", "quadro das OS". Varre as fichas
-  locais (memory.md em OS ATIVAS/), detecta PDFs de notificação DET ainda NÃO
-  cadastrados, e gera um painel.html autocontido (abre por duplo-clique, sem
-  servidor): um CARD por OS colorido por urgência e, ao clicar, o detalhe da
-  auditoria — DETs, TODOS os autos de infração lavrados (nº do AI, ementa,
-  constatação), pendências e atividades. Com --scan, puxa os autos ao vivo do
-  Sistema Auditor (Windows ou Mac+Parallels), degradando para o último
-  autos-lavrados.md se indisponível. Opcionalmente — só com consentimento
-  explícito — publica como Artifact privado. Pode instalar rotina diária que
-  regenera o painel de manhã. É SOMENTE LEITURA: nunca altera os memory.md;
-  para cadastrar notificação detectada, encaminha ao /nova-os.
+  "dashboard", "quadro das OS", "painel interativo". Varre os memory.md de
+  OS ATIVAS/, detecta notificações DET não cadastradas e gera um painel.html
+  autocontido: um CARD por OS colorido por urgência e, ao clicar, o detalhe —
+  DETs, TODOS os autos lavrados (nº do AI, ementa, constatação), inspeção
+  física, pendências e atividades. Com --scan, puxa os autos ao vivo do
+  Sistema Auditor. Tem MODO INTERATIVO opcional (servir_painel.py,
+  http://127.0.0.1:8347, 100% local): ações mecânicas nos cards — marcar DET
+  respondida, resolver pendência, registrar atividade, status e
+  embargo/interdição — gravadas no memory.md com backup, e botões que copiam
+  comandos prontos para o Claude Code. Artifact só com consentimento.
+  Aberto pelo arquivo (duplo-clique) continua somente leitura.
 ---
 
 # painel — Dashboard local das auditorias (SISOS-lite)
@@ -62,7 +62,7 @@ ficha. Imprime no stdout um JSON de resumo:
 
 ```json
 { "painel": "...painel.html", "artifact_html": null,
-  "os_ativas": N, "dets_vencidos": X, "dets_vencendo_7d": Y,
+  "os_ativas": N, "os_encerradas_ocultas": E, "dets_vencidos": X, "dets_vencendo_7d": Y,
   "notificacoes_nao_cadastradas": Z, "autos_lavrados": A,
   "scan_ao_vivo": {"pedido": true|false, "os_com_scan_ok": K},
   "novas": [ {"empregador": "...", "arquivo": "....pdf", "codigo": "ABC...",
@@ -91,6 +91,8 @@ A partir do JSON, dê um resumo objetivo, **destacando o que precisa de ação**
   código e datas) e diga que essas notificações **não estão na ficha** — sugira cadastrar
   com `/nova-os` (ou editar o `memory.md` da OS). **Esta skill não cadastra nada.**
 - Informe o total de OS ativas e de autos lavrados (e a fonte: scan ao vivo ou snapshot).
+  Se `os_encerradas_ocultas > 0`, mencione em uma frase ("+ N encerrada(s) fora do
+  painel — peça `/painel --todas` para ver todas").
 
 Exemplo de resposta:
 ```
@@ -123,6 +125,53 @@ open "<caminho do painel.html>"
 ```
 
 Se o AFT preferir, ele mesmo abre o arquivo na pasta.
+
+## Passo 3.5 — (Opcional) Modo interativo (servidor local)
+
+Se o AFT pedir o painel **interativo** ("quero marcar direto no painel", "painel ativo",
+"abrir o painel com os botões"), suba o servidor local e abra pelo endereço `http` — é o
+mesmo painel, mas os cards ganham ações:
+
+```bash
+python ~/.claude/skills/_scripts/servir_painel.py "<PASTA_OS_ATIVAS>" --abrir
+```
+
+- Endereço: **http://127.0.0.1:8347** (só a máquina do AFT enxerga — nada sai para a
+  rede). Consumo ocioso: ~20 MB de RAM, CPU zero. Se já estiver rodando, o script apenas
+  informa o endereço e sai — pode chamar de novo sem medo.
+- **Ações mecânicas** (gravadas direto no `memory.md` da OS, sempre com backup prévio em
+  `.backups/`): marcar notificação DET como checada (e desmarcar), resolver pendência, registrar
+  atividade de hoje, mudar o status da OS (`em_andamento` / `aguardando_resposta` /
+  `encerrada`) e alternar **embargo/interdição** entre vigente/suspenso (preserva a
+  descrição já registrada no campo `embargo_interdicao`).
+- **Botões de comando**: copiam para a área de transferência um comando pronto
+  (`/inspecao-fisica`, `/inspecao-inicial`, `/gera-ai`, `/autos-lavrados`, `/det-630`,
+  `/tn-nco`, `/aft-rt-rgi`, `/sfitweb-rel` — sempre com `— OS <EMPREGADOR>` anexado)
+  para o AFT colar no Claude Code; ao passar o mouse, cada botão mostra uma legenda com
+  o resumo da skill (texto vindo da arquitetura do toolkit). Ações que exigem julgamento
+  nunca rodam pelo servidor.
+- O `painel.html` estático continua existindo e é regenerado a cada carregamento da
+  página; aberto por duplo-clique (`file://`), os controles somem e ele volta a ser
+  somente leitura.
+- Para encerrar o servidor: `Ctrl+C` no terminal onde roda (ou reiniciar o computador —
+  ele não se instala sozinho, só roda quando chamado).
+- **Sempre ligado (opcional):** para não depender de abrir terminal toda vez — necessário
+  para a sincronização automática do DET pela extensão Chrome (abaixo) —, instale como
+  serviço do sistema (o `/aft-setup`/`/aft-atualizar` já oferecem isso na instalação):
+  ```bash
+  python ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<PASTA_OS_ATIVAS>"
+  ```
+  No Windows usa o Agendador de Tarefas (gatilho "ao fazer logon", `pythonw.exe` sem
+  janela, reinício automático se cair); no macOS um LaunchAgent com `KeepAlive`. Remover:
+  `instalar_servidor_painel.py remover`. Status: `... status`.
+- **Sync do DET pela extensão Chrome** ("SisOS — Sync DET", da Chrome Web Store): com o
+  servidor no ar e o "Painel local" ativado nas opções da extensão, o botão flutuante
+  **Sincronizar** no site do DET envia o token de sessão do próprio AFT para
+  `POST /api/det-sync`; o `det_sync.py` consulta a API oficial do DET para cada OS com
+  CNPJ/CPF ou RI e atualiza a seção `## Notificações DET` dos memory.md: notificação
+  nova → linha `- [ ] <COD> — prazo <data>`; prazo que mudou → data atualizada na linha;
+  `ri:` vazio → preenchido. O estado `[ ]`/`[x]` nunca é alterado e o token nunca é
+  gravado em disco. Requer estar logado no DET no navegador.
 
 ## Passo 4 — (Opcional) Publicar na aba Artefatos
 
@@ -180,22 +229,39 @@ rotina nunca falha por causa disso.
 - **Um card por OS**: empregador, CNPJ, município, badge de urgência (vencido / vence em
   Xd / no prazo / sem prazo), chips das NRs autuadas, nº de autos e DETs abertos, "há N
   dias" desde o início.
-- **Clique no card → detalhe da auditoria** (modal central amplo): DETs com estado
-  (✔ atendida / ◻ aberta), notificações sem registro, o **relato da inspeção física**
-  completo (todos os bullets do `inspecao-fisica.md`), TODOS os autos lavrados em grade
-  (Nº do AI, ementa, descrição, constatação, data), autos substituídos (re-lavratura),
-  pendentes de transmissão, pendências da OS e registro de atividades.
+- **Clique no card → detalhe da auditoria** (modal central amplo): RI em destaque, botão
+  para copiar o caminho da pasta, DETs com estado (✔ checada / ◻ aberta) e **selo de
+  urgência por notificação** ("vencido há Xd" / "vence HOJE" / "vence em Xd" / "em Xd"),
+  notificações sem registro, o **relato da inspeção física** completo (todos os bullets
+  do `inspecao-fisica.md`), TODOS os autos lavrados em grade (Nº do AI, ementa,
+  descrição, constatação, data), autos substituídos (re-lavratura), pendentes de
+  transmissão, pendências da OS e registro de atividades.
+- **Datas sempre em dd/mm/aaaa na tela**: as fichas do schema v2 gravam datas ISO nas
+  linhas de DET; o painel normaliza só na exibição (os `memory.md` não são tocados).
+- Coral é reservado ao que aperta o prazo: DET aberto só fica vermelho se estiver
+  vencido ou vencendo em ≤7 dias; os demais ficam neutros. Seções sem conteúdo aparecem
+  esmaecidas (informam a ausência sem competir por atenção).
 - Cores por urgência: vermelho = vencido, laranja = vence em ≤7 dias, verde = no prazo,
   cinza = sem prazo cadastrado. Tema claro/escuro automático.
+- Chip ⛔ no card quando o front-matter tem `embargo_interdicao` preenchido.
+- **No modo interativo** (Passo 3.5): controles de status, embargo/interdição, DET,
+  pendência e atividade em cada card, além dos botões 📋 de copiar comando.
+- **OS com `status: encerrada` somem do painel por padrão** — é um dashboard do que está
+  em andamento. Mudar o status para `encerrada` (pelo dropdown do modo interativo, ou
+  editando o `memory.md`) já basta para o card sumir na próxima geração — não precisa
+  mover a pasta. Para ver todas de novo (conferência pontual), rode com `--todas`. Isso
+  é **diferente de arquivar**: a OS encerrada continua em `OS ATIVAS/`, só oculta do
+  painel; mover a pasta para `OS ARQUIVADAS/` (convenção do README) é organização de
+  disco, feita à parte, quando o AFT quiser.
 
 ## Regras
 
-- **Somente leitura.** Esta skill nunca altera os `memory.md`. Para cadastrar/editar uma OS
-  ou um prazo de DET, use `/nova-os` (ou edite o `memory.md` da OS). Isso é garantido
-  tecnicamente pelo `allowed-tools` do frontmatter: as ferramentas de escrita (Write/Edit)
-  ficam indisponíveis enquanto a skill roda — quem grava o `painel.html` é o script Python.
-  (Única exceção de escrita: a linha `pasta_os:` no `aft-config.md` do Passo 0, gravada
-  pelo script/Bash.)
+- **A skill é somente leitura.** Ela nunca altera os `memory.md` — as ferramentas de
+  escrita (Write/Edit) ficam indisponíveis pelo `allowed-tools`; quem grava o
+  `painel.html` é o script Python. (Única exceção: a linha `pasta_os:` no `aft-config.md`
+  do Passo 0.) Quem edita `memory.md` no modo interativo é o **servir_painel.py**, por
+  clique do próprio AFT no navegador — só as 5 ações mecânicas listadas no Passo 3.5,
+  linha a linha, sempre com backup prévio; nada de decisão automática.
 - A detecção de notificações novas e a lista de autos são **determinísticas** (scripts
   Python) — o modelo apenas relata o que os scripts acharam; nunca "adivinhe" código,
   data ou número de AI que os scripts não extraíram.

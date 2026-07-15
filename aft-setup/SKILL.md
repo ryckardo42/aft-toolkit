@@ -345,6 +345,35 @@ computador rodando um programinha, sem abrir o Claude Code."*
 > para o último snapshot salvo; nunca falha por isso. Detalhes e como remover:
 > `painel/SKILL.md`, Passo 5.
 
+## Passo 7c — Painel interativo sempre ligado (opcional)
+
+Isso é **diferente** do Passo 7b: aquele só regenera o `painel.html` (arquivo estático) uma
+vez por dia; este mantém o **servidor interativo** (`http://127.0.0.1:8347`) sempre no ar,
+subindo sozinho a cada login. É o que os controles do painel (marcar DET, pendência,
+atividade, status, embargo) e a **sincronização automática do DET pela extensão Chrome**
+("SisOS — Sync DET") precisam para funcionar sem o AFT ter que abrir um terminal.
+
+Ofereça, em uma frase: *"Quer que o painel interativo fique sempre ligado no seu
+computador — sobe sozinho quando você liga a máquina, sem precisar abrir terminal? Só
+funciona na sua máquina (nada sai para a internet)."*
+
+- **Se não** → pule este passo; explique que dá para subir manualmente quando quiser
+  (`python servir_painel.py --abrir`, ou pedir "abre o painel interativo").
+- **Se sim**:
+  1. Use a pasta de OS ATIVAS e o `python_path` já resolvidos nos passos anteriores.
+  2. Instale:
+     ```bash
+     python "<python_path>" ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<pasta OS ATIVAS>"
+     ```
+  3. Leia o JSON de retorno (`ok`, `sistema`, `detalhe`) e traduza em uma frase — no
+     Windows isso usa o Agendador de Tarefas com gatilho "ao fazer logon" e reinício
+     automático (`pythonw.exe`, sem janela); no macOS um LaunchAgent com `KeepAlive`. Se
+     `ok: false`, explique o erro em linguagem simples — não é bloqueante.
+  4. Grave `servidor_painel: "ligado"` no front-matter do `aft-config.md`.
+
+> Para remover depois: `python instalar_servidor_painel.py remover`. Detalhes:
+> `painel/SKILL.md`, Passo 3.5.
+
 ## Passo 8 — Resumo final
 
 Apresente:

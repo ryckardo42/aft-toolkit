@@ -101,7 +101,7 @@ Capture o JSON do stdout. Estrutura:
 {
   "empresa": "...", "cnpj": "...",
   "pasta_pro": "C:\\SistemasAFT\\...\\PRO",
-  "pasta_auditor": "C:\\...\\CHANGAI_SORVETES_00241190" | null,
+  "pasta_auditor": "C:\\...\\EMPRESA_EXEMPLO_11222333" | null,
   "match_estrategia": "cnpj_raiz" | "nome_prefixo" | "nao_encontrado",
   "candidatos_alternativos": ["..."],
   "autos": [

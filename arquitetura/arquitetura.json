@@ -1,13 +1,13 @@
 {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-07-13",
+  "data": "2026-07-15",
   "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
     "skills": 30,
-    "scripts": 20,
+    "scripts": 22,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 13/07/2026"
+    "commit": "ver `git log -1` — atualizado em 15/07/2026"
   },
   "atores": [
     {
@@ -344,6 +344,30 @@
       "runtime": "Python stdlib (+pdfplumber opcional)"
     },
     {
+      "nome": "servir_painel.py",
+      "caminho": "_scripts/servir_painel.py",
+      "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 5 ações mecânicas por clique (marcar/reabrir DET respondida, resolver pendência, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "det_sync.py",
+      "caminho": "_scripts/det_sync.py",
+      "papel": "Sync local do DET (espelho do sync do SisOS): recebe o token de sessão do DET capturado pela extensão Chrome 'Sync DET' (v2.0; antes 'SisOS — Sync DET') via POST /api/det-sync do servir_painel.py, consulta a API oficial de pesquisa de notificações por CNPJ/CPF e filtra o resultado pelo RI da OS — a pesquisa por CNPJ devolve notificações de TODAS as fiscalizações já feitas naquele empregador, inclusive antigas já concluídas (bug real corrigido, ver decisão 'notificações de fiscalizações antigas'). RIs conhecidos da OS = ri: do front-matter ∪ RIs das notificações já registradas (cobre OS com duas fiscalizações simultâneas do mesmo empregador); sem RI conhecido, adota o da notificação mais recente (ri_mais_recente). Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe. Atualiza ## Notificações DET: notificação nova vira linha '- [ ] <COD> — prazo <data>'; um prazo alterado só atualiza a linha quando ela tem exatamente UM 'prazo'/'entrega até' escrito — linha com 2+ (ex.: um item vencido e outro não) fica intocada, pois a API informa um prazo por NOTIFICAÇÃO, não por item, e trocar sozinho corrompe dado (bug real corrigido, ver decisão 'sync de prazo'). Checkbox [ ]/[x] nunca muda; backup antes de cada escrita; token só em memória. Funções de edição puras e testáveis sem rede (consultar injetável); AFT_DET_DEBUG/AFT_DET_DRYRUN para inspecionar sem gravar.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "instalar_rotina_painel.py",
+      "caminho": "_scripts/instalar_rotina_painel.py",
+      "papel": "Instala/remove/consulta a rotina DIÁRIA do painel (regenera o painel.html estático 1x/dia, --scan incluso) como agendamento do SO — launchd no macOS, Agendador de Tarefas no Windows. Diferente do instalar_servidor_painel.py: aqui o processo roda, termina e some; não mantém nada no ar entre execuções. Oferecido no /aft-setup (Passo 7b) e /aft-atualizar (Passo 2b, uma única vez).",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "instalar_servidor_painel.py",
+      "caminho": "_scripts/instalar_servidor_painel.py",
+      "papel": "Instala/remove/consulta o SERVIDOR interativo do painel (servir_painel.py) como serviço em segundo plano do sistema operacional — diferente do instalar_rotina_painel.py, que só regenera o painel.html estático 1x/dia, este mantém o servidor SEMPRE ATIVO. macOS: LaunchAgent com RunAtLoad+KeepAlive (reinicia sozinho se cair). Windows: Tarefa Agendada via PowerShell Register-ScheduledTask com gatilho 'ao fazer logon' e RestartCount/RestartInterval (schtasks.exe básico não expõe reinício automático), usando pythonw.exe para não abrir janela de console. Necessário para os controles do painel funcionarem sem terminal aberto e para o sync automático do DET pela extensão Chrome. Oferecido opcionalmente no /aft-setup (Passo 7c) e /aft-atualizar (Passo 2c, uma única vez).",
+      "runtime": "Python stdlib (+ PowerShell no Windows)"
+    },
+    {
       "nome": "aft_doctor.py",
       "caminho": "_scripts/aft_doctor.py",
       "papel": "Verificação pós-instalação: checa Python, Git, descoberta das skills, config do repo, perfil, deny-list, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills — frontmatter (name = pasta), campo model contra config/models-validos.json e teste ao vivo dos modelos pinados (claude -p, 1 chamada por ID; falha de login/rede é inconclusiva, nunca veredito). Emite relatório legível + JSON. Só leitura.",
@@ -372,6 +396,12 @@
       "caminho": "autos-lavrados/scripts/scan_autos.py",
       "papel": "Extrai texto dos PDFs transmitidos (pypdf; pdftotext se no PATH) e parseia AI_[NUM]_[CNPJ]_[sufixo].PDF para o cruzamento.",
       "runtime": "Python · pypdf"
+    },
+    {
+      "nome": "gera_relacao_autos.py",
+      "caminho": "autos-lavrados/scripts/gera_relacao_autos.py",
+      "papel": "Gera a 'Relação de autos lavrados' (.docx, com tentativa de .pdf) a partir do autos-lavrados.md — só os autos válidos (seção Detalhamento), agrupados por data do mais antigo ao mais recente. Usa template-relacao-autos.docx (cabeçalho SIT/AFT fixo, nunca alterado); Times New Roman 12pt, texto justificado, filetes e barra lateral navy.",
+      "runtime": "Python (python-docx)"
     },
     {
       "nome": "inspecionar_assinatura.py",
@@ -534,6 +564,34 @@
     {
       "topico": "Onboarding de pastas pré-toolkit (/organiza-os)",
       "txt": "O colega chega ao toolkit com fiscalizações em andamento e documentos acumulados numa pasta do jeito dele. A /organiza-os faz o onboarding: joga-se a pasta em OS ATIVAS, ela lê a 1ª página de cada PDF, classifica (notificação DET, relação de autos do Sistema Auditor — que já alimenta a seção Autos lavrados do memory.md —, resposta do empregador item1..N, fotos), extrai empregador/identificador/prazos e propõe um plano antes-e-depois que só executa com aprovação. Convenção mantida: notificacao-<COD>.pdf na raiz + subpasta notificacao-<COD>/ para a resposta (onde analise-preliminar/det-630/painel já procuram), em vez de uma pasta 'Notificações' nova. Nada é apagado; arquivo não identificado fica intocado e listado."
+    },
+    {
+      "topico": "Painel ativo (modo interativo local)",
+      "txt": "O painel deixou de ser só visualização: o servir_painel.py serve o MESMO painel.html em http://127.0.0.1:8347 e, aberto por esse endereço, os cards ganham ações mecânicas — marcar DET respondida, resolver pendência, registrar atividade, status e embargo/interdição (campo embargo_interdicao do front-matter, preservando a descrição) — gravadas direto no memory.md com backup prévio. Divisão de responsabilidade: mecânico = servidor local (zero tokens); julgamento = botões 📋 que copiam o comando pronto (/gera-ai, /autos-lavrados, /det-630, /inspecao-fisica) para colar no Claude Code. Aberto pelo arquivo (file://) os controles somem — continua leitura pura. Custo: ~20 MB de RAM ocioso, CPU zero, só localhost."
+    },
+    {
+      "topico": "Extensão Chrome sincroniza o DET com o painel local",
+      "txt": "A extensão 'SisOS — Sync DET' (Chrome Web Store, código no repo SisOS) ganhou na v1.1 um segundo destino: além do SisOS na Vercel, um modo 'Painel local (AFT Toolkit)' opcional que envia o mesmo token de sessão do DET ao servir_painel.py (POST /api/det-sync, fetch feito no service worker da extensão — sem CORS). O det_sync.py replica em Python a lógica do sync do SisOS (lib/det/api-client + sync), trocando o Supabase pelos memory.md. Com isso um colega SEM SisOS/Vercel/Supabase instala a mesma extensão da loja, liga só o modo local e tem notificações e prazos do DET fluindo direto para as fichas — 100% na máquina dele. Decidido: quem consulta a API do DET é o servidor local (não a extensão), o gatilho é manual (botão), e o SisOS virou opcional na configuração da extensão."
+    },
+    {
+      "topico": "Servidor do painel sempre ligado (opt-in na instalação)",
+      "txt": "O servidor interativo (servir_painel.py) nasceu manual: só rodava enquanto o AFT mantivesse um terminal aberto. Como a sincronização automática do DET pela extensão Chrome depende do servidor estar no ar, e a maioria dos AFTs usa Windows, criamos o instalar_servidor_painel.py: instala como serviço do SO, subindo sozinho no login. No Windows isso exige PowerShell (Register-ScheduledTask com RestartCount/RestartInterval), já que o schtasks.exe básico usado na rotina diária não sustenta reinício automático; usa pythonw.exe para não abrir janela. No macOS, LaunchAgent com KeepAlive=true. Testado ciclo completo no Mac: instala, serve, sobrevive a kill -9 (respawn do launchd), remove, para de responder. Oferecido como passo OPCIONAL no /aft-setup e /aft-atualizar (uma vez), nunca forçado — o AFT que não quiser continua usando o painel estático ou subindo o servidor manualmente quando precisar."
+    },
+    {
+      "topico": "Bug crítico corrigido: notificações de fiscalizações antigas vazavam para a OS errada",
+      "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro."
+    },
+    {
+      "topico": "Bug corrigido: sync de prazo corrompia linha com dois prazos na mesma notificação",
+      "txt": "Segundo bug real: uma linha de DET escrita à mão continha dois prazos distintos para itens diferentes da mesma NAD (um item já vencido, outro com prazo futuro). O det_sync original achava o primeiro 'prazo dd/mm/aaaa' da linha por regex e sobrescrevia com o itemDataProximaEntrega da API (que é por NOTIFICAÇÃO, não por item) — trocou a data do item vencido pela do outro, corrompendo dado real. Efeito colateral no mesmo teste: numa linha sem a palavra 'prazo' mas que já citava a data em outra frase ('...vistoria de dd/mm/aaaa'), o script colava '— prazo dd/mm/aaaa' redundante no fim. Corrigido com duas guardas: (1) só atualiza a data quando a linha tem exatamente UM 'prazo'/'entrega até' — linha ambígua (2+) fica intocada, o AFT decide manualmente; (2) só acrescenta '— prazo X' quando essa data não aparece em NENHUMA forma na linha (BR ou ISO), evitando duplicar informação já escrita. As linhas reais corrompidas foram corrigidas manualmente (com backup); o conserto foi validado com 4 casos (linha ambígua intocada, data já presente não duplica, caso normal continua atualizando, linha sem prazo nenhum recebe o novo normalmente)."
+    },
+    {
+      "topico": "Extensão Chrome 2.0: independente do SisOS de fato (nome, permissões, código morto)",
+      "txt": "Antes de publicar a v2.0 na Chrome Web Store, auditoria encontrou duas pendências que atrapalhariam a revisão do Google: a permissão notifications declarada mas nunca usada (o toast é HTML injetado na página, não a API chrome.notifications), e o injected.js (captura de token da v1, substituída pelo webRequest do background.js) ainda exposto via web_accessible_resources sem que nada o injetasse — código morto e superfície de permissão desnecessária. Ambos removidos. Também renomeada de 'SisOS — Sync DET' para 'Sync DET — SisOS / AFT Toolkit' (manifest name, default_title, título e cabeçalho do popup) — o nome antigo sugeria SisOS obrigatório, quando a v1.1 já o tinha tornado opcional. Empacotada como sisos-sync-det-v2.0.0.zip (15 KB), com roteiro de publicação documentado, incluindo os textos de justificativa de permissão exigidos pela revisão do Google (em especial host_permissions para 127.0.0.1/localhost, incomum na loja)."
+    },
+    {
+      "topico": "Testes reais de ponta a ponta do sync do DET (2 novas OS)",
+      "txt": "Para validar os dois bugs corrigidos, duas OS novas foram criadas como campo de prova real (não simulado): uma via /organiza-os (testou o caminho 'RI já conhecido' e expôs o bug da linha com dois prazos) e outra via /nova-os + /inspecao-fisica, sem nenhuma notificação DET ainda (testou o caminho 'RI desconhecido, adota o da notificação mais recente'). De quebra, o /organiza-os teve o model pinado trocado de opus para sonnet (mais barato, suficiente para a classificação/extração da skill)."
     }
   ],
   "diferencas": [

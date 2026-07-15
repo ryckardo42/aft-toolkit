@@ -118,6 +118,25 @@ grep -q "rotina_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" ||
     `instalar_rotina_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados)
     e grave `rotina_painel: "07:00"` (ou o horário escolhido) no `aft-config.md`.
 
+## Passo 2c — Oferecer o painel interativo sempre ligado (só na primeira vez)
+
+Mesma lógica do Passo 2b, para a novidade do **servidor interativo** (Passo 7c do
+`/aft-setup` — controles do painel + sync do DET pela extensão Chrome). Confira:
+
+```bash
+grep -q "servidor_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
+```
+
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: o painel
+  agora pode ficar sempre ligado no seu computador (sobe sozinho ao ligar a máquina) — é
+  o que permite marcar DET/pendência direto no painel e sincronizar notificações do DET
+  automaticamente pela extensão do Chrome. Quer ativar?"*
+  - **Não** → grave `servidor_painel: ""` no `aft-config.md` e siga.
+  - **Sim** → siga exatamente o Passo 7c do `/aft-setup` (mesmo script
+    `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já
+    configurados) e grave `servidor_painel: "ligado"` no `aft-config.md`.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve

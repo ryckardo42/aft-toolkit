@@ -16,10 +16,13 @@ por duplo-clique, sem servidor) no estilo dashboard:
     substituídos, pendências, registro de atividades e notificações de DET
     encontradas na pasta mas ainda sem registro no memory.md.
 
-É um leitor: NUNCA altera os memory.md nem o Sistema Auditor.
+É um leitor: NUNCA altera os memory.md nem o Sistema Auditor. (Quem edita é
+o modo interativo — servir_painel.py — que serve este mesmo HTML por
+http://127.0.0.1:8347; aí os cards ganham ações mecânicas: marcar DET
+respondida, resolver pendência, registrar atividade, status e embargo.)
 
 Uso:
-    python gerar_painel.py [PASTA_OS_ATIVAS] [SAIDA_HTML] [SAIDA_ARTIFACT] [--scan]
+    python gerar_painel.py [PASTA_OS_ATIVAS] [SAIDA_HTML] [SAIDA_ARTIFACT] [--scan] [--todas]
 
   PASTA_OS_ATIVAS (opcional): padrão ~/Documents/AFT/OS ATIVAS
   SAIDA_HTML      (opcional): padrão <PASTA_OS_ATIVAS>/../painel.html
@@ -31,6 +34,11 @@ Uso:
                   scan_autos.py da skill /autos-lavrados. Se a pasta PRO não
                   estiver acessível (ex.: VM do Parallels desligada), degrada
                   em silêncio para o último autos-lavrados.md de cada OS.
+  --todas         (opcional): também mostra OS com status: encerrada (por
+                  padrão elas ficam de fora — é um dashboard do que está EM
+                  ANDAMENTO). Não confundir com arquivar: a OS encerrada
+                  continua em OS ATIVAS/, só sai da grade; mover a pasta para
+                  OS ARQUIVADAS/ é organização de disco, feita à parte.
 
 Compatível com os dois esquemas de memory.md em uso:
   - o padrão do toolkit (/nova-os), e
@@ -85,11 +93,15 @@ SCAN_TIMEOUT = 180  # segundos por OS no scan ao vivo
 
 
 def argv_posicionais() -> list[str]:
-    return [a for a in sys.argv[1:] if a != "--scan"]
+    return [a for a in sys.argv[1:] if a not in ("--scan", "--todas")]
 
 
 def quer_scan() -> bool:
     return "--scan" in sys.argv[1:]
+
+
+def quer_todas() -> bool:
+    return "--todas" in sys.argv[1:]
 
 
 def home_os() -> Path:
@@ -228,6 +240,7 @@ def parse_memory(path: Path) -> dict:
         "cnpj": cnpj,
         "municipio": parse_fm(fm, "municipio") or "",
         "status": parse_fm(fm, "status") or "em_andamento",
+        "embargo": parse_fm(fm, "embargo_interdicao") or "",
         "ri": ri,
         "num_trabalhadores": num_trab,
         "data_inicio": data_inicio,
@@ -543,13 +556,53 @@ background:var(--cream)}
 .auto .quando{font-size:12px;color:var(--t3);margin-top:4px}
 ul.lista{margin:0;padding-left:18px;font-size:13.5px}
 ul.lista li{margin-bottom:5px}
-.det-ok{color:var(--teal)} .det-aberto{color:var(--coral-deep)}
+/* Notificações DET no detalhe: coral só para o que realmente aperta o prazo. */
+.det-ok{color:var(--teal)}
+.det-aberto{color:var(--t1)}
+.det-aberto.vencido,.det-aberto.urgente{color:var(--coral-deep)}
+.selo{display:inline-block;font-size:11px;border-radius:20px;padding:1px 8px;
+margin-left:6px;background:var(--bds);color:var(--t3);white-space:nowrap}
+.selo.vencido,.selo.urgente{background:#F5E4E0;color:var(--coral-deep)}
+/* Seções sem conteúdo: presentes (informam ausência) mas discretas. */
+#detalhe h3.vazia{color:var(--bd);border-bottom-color:var(--bds);margin-bottom:4px}
+#detalhe h3.vazia + .vazio{margin:0 0 4px}
 table.ativ{width:100%;border-collapse:collapse;font-size:12.5px}
 table.ativ td{border-top:1px solid var(--bds);padding:5px 8px;vertical-align:top}
 table.ativ td:first-child{white-space:nowrap;color:var(--t3)}
 .vazio{color:var(--t3);font-style:italic;font-size:13px}
 .fonte{font-size:11.5px;color:var(--t3);margin-top:4px;word-break:break-all}
+.pasta-btn{font:11.5px var(--serif);background:none;border:none;padding:2px 0;
+cursor:pointer;color:var(--t3);text-decoration:underline;text-underline-offset:2px}
+.pasta-btn:hover{color:var(--coral-deep)}
 footer{margin-top:34px;color:var(--t3);font-size:12px}
+/* Modo interativo (servidor local) + botões de copiar comando */
+.chip.emb{background:#F5E4E0;color:var(--coral-deep)}
+.mini{font:12px var(--serif);background:var(--paper);border:1px solid var(--bd);
+border-radius:6px;padding:1px 9px;margin-left:8px;cursor:pointer;color:var(--t2)}
+.mini:hover{border-color:var(--coral);color:var(--coral-deep)}
+.acoes{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:14px 0 2px;
+background:var(--cream);border:1px solid var(--bds);border-radius:8px;padding:10px 14px;
+font-size:13px}
+.acoes label{color:var(--t3);font-size:12px}
+.acoes select,.acoes input{font:13px var(--serif);background:var(--paper);
+border:1px solid var(--bd);border-radius:6px;padding:3px 8px;color:var(--t1)}
+.acoes input{min-width:220px}
+.ri-tag{font-weight:700;color:var(--t1)}
+.cmds{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.cmds .rot{flex-basis:100%;font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+color:var(--t3)}
+.cmds button{font:12.5px var(--serif);background:var(--paper);border:1px solid var(--bd);
+border-radius:8px;padding:5px 12px;cursor:pointer;color:var(--t2);position:relative}
+.cmds button:hover{border-color:var(--coral);color:var(--coral-deep)}
+.cmds button::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:0;
+width:300px;max-width:70vw;background:var(--t1);color:var(--cream);font-size:12px;
+line-height:1.45;padding:9px 12px;border-radius:8px;z-index:30;display:none;
+text-align:left;white-space:normal;box-shadow:0 8px 24px rgba(20,20,19,.3);
+pointer-events:none}
+.cmds button:hover::after{display:block}
+#aviso-copiado{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+background:var(--t1);color:var(--cream);border-radius:8px;padding:8px 18px;
+font-size:13px;z-index:20;display:none}
 @media (prefers-color-scheme: dark){
 :root{--cream:#191917;--paper:#211F1C;--t1:#EDEAE0;--t2:#B5B0A1;--t3:#8F8B7D;
 --bd:#3A372F;--bds:#2E2B25}
@@ -561,29 +614,91 @@ footer{margin-top:34px;color:var(--t3);font-size:12px}
 
 JS = """
 const P=document.getElementById('detalhe'),V=document.getElementById('veu');
+// Modo interativo: só quando o painel vem do servidor local (servir_painel.py).
+const ATIVO=location.protocol==='http:'&&['127.0.0.1','localhost'].includes(location.hostname);
 function esc(s){const d=document.createElement('span');d.textContent=s==null?'':String(s);return d.innerHTML}
+function aviso(t){let a=document.getElementById('aviso-copiado');
+ if(!a){a=document.createElement('div');a.id='aviso-copiado';document.body.appendChild(a)}
+ a.textContent=t;a.style.display='block';clearTimeout(a._t);
+ a._t=setTimeout(()=>a.style.display='none',2200)}
+async function api(p){
+ try{const r=await fetch('/api/acao',{method:'POST',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+  const j=await r.json();
+  if(!j.ok){aviso('Erro: '+(j.erro||'?'));return}
+  sessionStorage.setItem('painel-reabrir',p.pasta);location.reload();
+ }catch(e){aviso('Servidor do painel não respondeu — abra pelo http://127.0.0.1:8347')}}
+function copia(t){
+ const fim=()=>aviso('Copiado — cole no Claude Code: '+t);
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(fim).catch(()=>copiaVelho(t,fim));
+ }else copiaVelho(t,fim)}
+function copiaVelho(t,fim){const ta=document.createElement('textarea');ta.value=t;
+ document.body.appendChild(ta);ta.select();
+ try{document.execCommand('copy');fim()}catch(e){aviso('Não consegui copiar')}
+ ta.remove()}
+// Ações mecânicas — referenciam DATA por índice (nada de string embutida no HTML).
+// Legendas dos comandos: resumo de cada skill vindo da arquitetura do toolkit.
+const CMDS=[
+ ['/inspecao-fisica','Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento.'],
+ ['/inspecao-inicial','Lê o relato de campo, identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
+ ['/gera-ai','Empacota os autos redigidos no TXT importável pelo Sistema Auditor, com anexos em PDF e pseudonimização reversível.'],
+ ['/autos-lavrados','Confere no Sistema Auditor o que já foi transmitido e marca [x]/[ ] no memory.md; cada auto identificado pelo número do AI.'],
+ ['/det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
+ ['/tn-nco','Redige a Notificação para Correção de Irregularidades, texto pronto para colar no DET, item por item.'],
+ ['/aft-rt-rgi','Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).'],
+ ['/sfitweb-rel','Relatório Final Simplificado consolidando autos, termos e notificações.']];
+function copiaCmd(i,k){copia(CMDS[k][0]+' — OS '+DATA.os[i].empregador)}
+function copiaCaminho(i){copia(DATA.os[i].caminho)}
+function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
+function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
+function agStatus(i,v){api({acao:'status',pasta:DATA.os[i].pasta,valor:v})}
+function agEmbargo(i,k){api({acao:'embargo',pasta:DATA.os[i].pasta,estado:k?'suspenso':'vigente'})}
+function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.value||'').trim();
+ if(v)api({acao:'atividade',pasta:DATA.os[i].pasta,texto:v})}
 function abre(i){
  const o=DATA.os[i];let h='<button class="fechar" onclick="fecha()">fechar ✕</button>';
  h+='<h2>'+esc(o.empregador)+'</h2>';
  h+='<div class="meta">'+esc(o.cnpj_fmt||'CNPJ não informado')+
-    (o.municipio?' · '+esc(o.municipio):'')+(o.ri?' · RI '+esc(o.ri):'')+'</div>';
+    (o.municipio?' · '+esc(o.municipio):'')+
+    (o.ri?' · <span class="ri-tag">RI '+esc(o.ri)+'</span>':'')+'</div>';
  const l2=[];
  if(o.inicio)l2.push('Início: '+esc(o.inicio)+' ('+esc(o.ha_dias)+')');
  if(o.vencimento)l2.push('Vence: '+esc(o.vencimento));
  if(o.num_trabalhadores)l2.push(esc(o.num_trabalhadores)+' trabalhadores');
+ if(o.embargo)l2.push('Embargo/interdição: '+esc(o.embargo));
  if(l2.length)h+='<div class="meta">'+l2.join(' · ')+'</div>';
- if(o.caminho)h+='<div class="fonte">'+esc(o.caminho)+'</div>';
- h+='<h3>Notificações DET ('+o.dets.length+')</h3>';
- h+=o.dets.length?'<ul class="lista">'+o.dets.map(d=>'<li class="'+(d.feito?'det-ok':'det-aberto')+'">'+
-    (d.feito?'✔ ':'◻ ')+esc(d.linha)+'</li>').join('')+'</ul>':'<p class="vazio">nenhuma registrada</p>';
+ if(o.caminho)h+='<div><button class="pasta-btn" onclick="copiaCaminho('+i+')">copiar caminho da pasta</button></div>';
+ if(ATIVO&&o.pasta){
+  const st=['em_andamento','aguardando_resposta','encerrada'];
+  if(o.status&&!st.includes(o.status))st.unshift(o.status);
+  h+='<div class="acoes"><span><label>status </label><select onchange="agStatus('+i+',this.value)">'+
+     st.map(s=>'<option'+(s===o.status?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select></span>'+
+     '<span><label>embargo/interdição </label>'+
+     '<button class="mini" onclick="agEmbargo('+i+',0)">vigente</button>'+
+     '<button class="mini" onclick="agEmbargo('+i+',1)">suspenso</button></span>'+
+     '<span><input id="ativ-txt" placeholder="registrar atividade de hoje..." '+
+     'onkeydown="if(event.key===&quot;Enter&quot;)agAtiv('+i+')">'+
+     '<button class="mini" onclick="agAtiv('+i+')">registrar</button></span></div>';}
+ h+='<div class="cmds"><span class="rot">comandos prontos para o Claude Code — clique para copiar, passe o mouse para a legenda</span>'+
+    CMDS.map((c,k)=>'<button data-tip="'+esc(c[1])+'" onclick="copiaCmd('+i+','+k+')">'+
+    esc(c[0])+'</button>').join('')+'</div>';
+ h+='<h3'+(o.dets.length?'':' class="vazia"')+'>Notificações DET ('+o.dets.length+')</h3>';
+ h+=o.dets.length?'<ul class="lista">'+o.dets.map((d,k)=>'<li class="'+
+    (d.feito?'det-ok':'det-aberto '+esc(d.urg))+'">'+
+    (d.feito?'✔ ':'◻ ')+esc(d.linha)+
+    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+
+    (ATIVO&&o.pasta&&d.codigo?'<button class="mini" onclick="agDet('+i+','+k+')">'+
+     (d.feito?'desmarcar':'marcar como checado')+'</button>':'')+
+    '</li>').join('')+'</ul>':'<p class="vazio">nenhuma registrada</p>';
  if(o.novas.length){h+='<h3>Notificações na pasta sem registro ('+o.novas.length+')</h3><ul class="lista">'+
     o.novas.map(n=>'<li>'+esc(n.codigo||n.arquivo)+(n.prazo?' — prazo '+esc(n.prazo):'')+
     (n.ciencia?' — ciência '+esc(n.ciencia):'')+'</li>').join('')+'</ul>';}
  if(o.inspecao && o.inspecao.bullets && o.inspecao.bullets.length){
     h+='<h3>Inspeção física'+(o.inspecao.data?' — '+esc(o.inspecao.data):'')+'</h3>';
     h+='<ul class="insp">'+o.inspecao.bullets.map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul>';}
- h+='<h3>Autos de infração lavrados ('+o.autos.length+')</h3>';
- if(o.fonte_autos)h+='<div class="fonte">fonte: '+esc(o.fonte_autos)+'</div>';
+ h+='<h3'+(o.autos.length?'':' class="vazia"')+'>Autos de infração lavrados ('+o.autos.length+')</h3>';
+ if(o.fonte_autos&&o.autos.length)h+='<div class="fonte">fonte: '+esc(o.fonte_autos)+'</div>';
  h+=o.autos.length?'<div class="autos-grid">'+o.autos.map(a=>'<div class="auto"><b class="num">Nº '+esc(a.numero_ai)+'</b>'+
     ' <span class="em">Ementa '+esc(a.ementa)+(a.base?' · '+esc(a.base):'')+'</span>'+
     (a.descricao?'<p>'+esc(a.descricao)+'</p>':'')+
@@ -595,7 +710,9 @@ function abre(i){
  if(o.autos_pendentes.length){h+='<h3>Pendentes de transmissão</h3><ul class="lista">'+
     o.autos_pendentes.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';}
  if(o.pendencias.length){h+='<h3>Pendências da OS</h3><ul class="lista">'+
-    o.pendencias.map(s=>'<li>◻ '+esc(s)+'</li>').join('')+'</ul>';}
+    o.pendencias.map((s,k)=>'<li>◻ '+esc(s)+
+    (ATIVO&&o.pasta?'<button class="mini" onclick="agPend('+i+','+k+')">resolver</button>':'')+
+    '</li>').join('')+'</ul>';}
  if(o.atividades.length){h+='<h3>Registro de atividades (recentes)</h3><table class="ativ">'+
     o.atividades.map(a=>'<tr><td>'+esc(a.data)+'</td><td>'+esc(a.acao)+
     (a.detalhe?' — '+esc(a.detalhe):'')+'</td></tr>').join('')+'</table>';}
@@ -604,7 +721,18 @@ function abre(i){
 function fecha(){P.classList.remove('aberto');V.classList.remove('aberto')}
 V.addEventListener('click',fecha);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
+// Depois de uma ação, reabre o mesmo card (a página recarrega para refletir a edição).
+(function(){const alvo=sessionStorage.getItem('painel-reabrir');
+ if(!alvo)return;sessionStorage.removeItem('painel-reabrir');
+ const i=DATA.os.findIndex(o=>o.pasta===alvo);if(i>=0)abre(i)})();
 """
+
+
+def datas_para_br(texto: str) -> str:
+    """Troca datas ISO (aaaa-mm-dd) por dd/mm/aaaa NA EXIBIÇÃO. As fichas do
+    schema v2 usam ISO nas linhas de DET e o resto do painel usa dd/mm/aaaa;
+    misturar os dois no mesmo modal confunde. Os memory.md não são tocados."""
+    return RE_DATA_ISO.sub(lambda m: f"{m.group(3)}/{m.group(2)}/{m.group(1)}", texto)
 
 
 def dias_humano(d: datetime.date | None, hoje: datetime.date) -> str:
@@ -640,6 +768,23 @@ def badge_os(os_: dict, hoje: datetime.date) -> tuple[str, str]:
     return "futuro", f"DET em {d}d"
 
 
+def selo_det(d: dict, hoje: datetime.date) -> tuple[str, str]:
+    """(classe, rótulo) da urgência de UMA notificação DET, para o detalhe.
+    A grade já mostra a urgência da OS; aqui o AFT vê de qual DET ela vem."""
+    if d["feito"]:
+        return "ok", ""
+    if not d["prazo"]:
+        return "neutro", ""
+    n = (d["prazo"] - hoje).days
+    if n < 0:
+        return "vencido", f"vencido há {-n}d"
+    if n == 0:
+        return "urgente", "vence HOJE"
+    if n <= 7:
+        return "urgente", f"vence em {n}d"
+    return "neutro", f"em {n}d"
+
+
 def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> list[dict]:
     out = []
     for o in oss:
@@ -647,6 +792,10 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "empregador": o["empregador"],
             "cnpj_fmt": fmt_cnpj(o["cnpj"]) if o["cnpj"] else "",
             "municipio": o["municipio"],
+            # Nome da pasta = chave das ações do modo interativo (só local).
+            "pasta": o["pasta"] if com_pasta else "",
+            "status": o["status"],
+            "embargo": o["embargo"],
             "ri": o["ri"],
             "num_trabalhadores": o["num_trabalhadores"] or "",
             "inicio": o["data_inicio"].strftime("%d/%m/%Y") if o["data_inicio"] else "",
@@ -656,15 +805,19 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             # Relato de campo tem PII (nomes/CPF): só na versão local (com_pasta),
             # nunca na versão publicada como Artifact.
             "inspecao": (o.get("inspecao_fisica") or {}) if com_pasta else {},
-            "dets": [{"codigo": d["codigo"], "feito": d["feito"], "linha": d["linha"]}
+            "dets": [{"codigo": d["codigo"], "feito": d["feito"],
+                      "linha": datas_para_br(d["linha"]),
+                      "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
             "novas": o.get("novas") or [],
             "autos": o["autos"],
             "fonte_autos": o["fonte_autos"],
             "substituidos": o["autos_lavrados_md"]["substituidos"],
             "autos_pendentes": o["autos_lavrados_md"]["pendentes"],
-            "pendencias": o["pendencias"],
-            "atividades": o["atividades"][-12:][::-1],
+            "pendencias": [datas_para_br(p) for p in o["pendencias"]],
+            "atividades": [{"data": datas_para_br(a["data"]), "acao": a["acao"],
+                            "detalhe": datas_para_br(a["detalhe"])}
+                           for a in o["atividades"][-12:][::-1]],
         })
     return out
 
@@ -675,6 +828,8 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos,
     for i, o in enumerate(oss):
         classe, rotulo = badge_os(o, hoje)
         chips = "".join(f'<span class="chip">{html.escape(nr)}</span>' for nr in o["nrs"])
+        if o["embargo"]:
+            chips += f'<span class="chip emb">⛔ {html.escape(o["embargo"][:42])}</span>'
         dets_abertos = sum(1 for d in o["dets"] if not d["feito"])
         cards.append(f"""
 <div class="card {classe}" onclick="abre({i})">
@@ -697,8 +852,9 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos,
     rodape = ("AFT Toolkit · painel publicado como artefato · snapshot de "
               f"{hoje.strftime('%d/%m/%Y')} · regenere com a skill /painel."
               if artifact else
-              "AFT Toolkit · painel local, somente leitura · regenere com a "
-              "skill /painel (ou pela rotina diária) sempre que algo mudar.")
+              "AFT Toolkit · painel local · aberto pelo arquivo é somente "
+              "leitura; pelo modo interativo (http://127.0.0.1:8347, via "
+              "servir_painel.py) os cards ganham ações — ver skill /painel.")
     return f"""{titulo_art}<style>{CSS}</style>
 <h1>Painel <em>AFT</em></h1>
 <p class="sub">Gerado em {hoje.strftime("%d/%m/%Y")} a partir das fichas locais (memory.md) · clique num card para o detalhe da auditoria</p>
@@ -747,11 +903,22 @@ def main() -> int:
                 oss.append({
                     "pasta": mem.parent.name, "caminho": str(mem.parent),
                     "empregador": mem.parent.name, "cnpj": "", "municipio": "",
-                    "status": "erro", "ri": "", "num_trabalhadores": None,
+                    "status": "erro", "embargo": "", "ri": "", "num_trabalhadores": None,
                     "data_inicio": None, "data_vencimento": None,
                     "dets": [], "pendencias": [], "atividades": [],
                     "autos_mem": "", "memoria": "", "erro": str(e),
                 })
+
+    # Por padrão, OS encerradas somem do painel (é um dashboard de auditorias
+    # EM ANDAMENTO) — mudar o status para "encerrada" pelo modo interativo já
+    # basta para o card sumir na próxima geração. --todas mostra tudo, para
+    # conferência pontual. Não confundir com arquivar (mover a pasta para
+    # OS ARQUIVADAS/, convenção do README): aqui a OS continua em OS ATIVAS,
+    # só oculta; arquivar é organização de disco, feita à parte quando o AFT
+    # quiser.
+    n_encerradas = sum(1 for o in oss if o.get("status") == "encerrada")
+    if not quer_todas():
+        oss = [o for o in oss if o.get("status") != "encerrada"]
 
     n_scan_ok = 0
     for os_ in oss:
@@ -813,6 +980,7 @@ def main() -> int:
         "painel": str(destino),
         "artifact_html": str(destino_art) if destino_art else None,
         "os_ativas": len(oss),
+        "os_encerradas_ocultas": 0 if quer_todas() else n_encerradas,
         "dets_vencidos": n_vencidos,
         "dets_vencendo_7d": n_urgentes,
         "notificacoes_nao_cadastradas": n_novas,

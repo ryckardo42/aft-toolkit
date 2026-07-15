@@ -1,6 +1,6 @@
 ---
 name: organiza-os
-model: opus
+model: sonnet
 description: >
   Use SEMPRE que o AFT jogar/copiar uma pasta bagunçada de fiscalização dentro
   de OS ATIVAS (documentos acumulados antes do toolkit: notificações do DET,
@@ -86,22 +86,25 @@ Extraia, quando presentes:
 
 Monte e apresente o plano completo. Exemplo:
 
-```
-📦 Organização proposta — pasta "Joao Vander"
+> Exemplo abaixo com dados **fictícios** — nunca use uma fiscalização real como
+> exemplo em documentação: este arquivo vai para um repositório público.
 
-Empregador identificado: JOAO VANDER FERREIRA · CPF 124.401.911-91 · Nova Crixás/GO
+```
+📦 Organização proposta — pasta "Jose fazenda"
+
+Empregador identificado: JOSE DA SILVA SANTOS · CPF 111.222.333-44 · Cidade/UF
 
 1. Renomear a pasta:
-   Joao Vander  →  JOAO VANDER FERREIRA 12440191191
+   Jose fazenda  →  JOSE DA SILVA SANTOS 11122233344
 
 2. Criar memory.md com:
-   • Notificações DET: S8JHJEYM2OC4VE — prazo 19/06/2026
+   • Notificações DET: ABCDE12345FGHIJ — prazo 19/06/2026
    • Autos lavrados: 14 autos (23.324.310-1 ... de 22/06/2026, NR-33)
 
 3. Renomear/mover arquivos:
-   notificacao-S8JHJEYM2OC4VE.pdf        → (já no padrão, fica na raiz)
-   JOAO_VANDER_FERREIRA_2026-07-13_*/    → notificacao-S8JHJEYM2OC4VE/   (resposta do empregador, item1..4)
-   relacao autos joao vander RR_*.PDF    → Relacao de autos/relacao-autos-2026-07-13.PDF
+   notificacao-ABCDE12345FGHIJ.pdf       → (já no padrão, fica na raiz)
+   JOSE_DA_SILVA_SANTOS_2026-07-13_*/    → notificacao-ABCDE12345FGHIJ/   (resposta do empregador, item1..4)
+   relacao autos jose RR_*.PDF           → Relacao de autos/relacao-autos-2026-07-13.PDF
    fotos/ (16 imagens)                   → fotos/   (fica como está)
 
 4. Não identificados (ficam onde estão — me diga o que são, se quiser):
