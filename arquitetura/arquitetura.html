@@ -137,10 +137,10 @@ const ARCH = {
   "data": "2026-07-15",
   "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 30,
+    "skills": 31,
     "scripts": 22,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 15/07/2026"
+    "commit": "ver `git log -1` — atualizado em 16/07/2026"
   },
   "atores": [
     {
@@ -270,8 +270,12 @@ const ARCH = {
         },
         {
           "nome": "/painel",
-          "role": "Dashboard local em cards (estilo SisOS, sem servidor/nuvem): um card por OS colorido pela urgência do DET; clique abre o detalhe (modal central amplo) — DETs, relato da inspeção física completo (inspecao-fisica.md, só na versão local por conter PII), TODOS os autos lavrados em grade (nº do AI, ementa, constatação), autos substituídos, pendências e atividades. Detecta notificações DET não cadastradas; com --scan puxa os autos ao vivo do Sistema Auditor (Windows/Mac+Parallels), degradando para o último autos-lavrados.md. Rotina diária opcional (launchd/Task Scheduler) regenera o painel de manhã sem gastar IA. Publicação como Artifact segue opt-in.",
+          "role": "Dashboard local em cards (estilo SisOS, sem servidor/nuvem): um card por OS colorido pela urgência do DET; clique abre o detalhe (modal central amplo) — DETs, relato da inspeção física completo (inspecao-fisica.md, só na versão local por conter PII), TODOS os autos lavrados em grade (nº do AI, ementa, constatação), autos substituídos, pendências e atividades. Detecta notificações DET não cadastradas; com --scan puxa os autos ao vivo do Sistema Auditor (Windows/Mac+Parallels), degradando para o último autos-lavrados.md. Rotina diária opcional (launchd/Task Scheduler) regenera o painel de manhã sem gastar IA. Publicação como Artifact segue opt-in. Bloco 'Próximos vencimentos' abaixo dos contadores: agenda consolidada de todas as OS (DETs abertos + pendências com 'prazo <data>' no texto), ordenada por vencimento, com selo de urgência e botão 'agendar no Google Calendar' por notificação — URL de template pré-preenchida, sem login e sem API (o AFT só clica em Salvar).",
           "tech": "gerar_painel.py (parser tolerante aos 2 schemas de memory.md + autos-lavrados.md + scan_autos.py) · model: haiku · allowed-tools sem Write/Edit"
+        },
+        {
+          "nome": "/agenda-det",
+          "role": "Espelha os prazos das notificações DET no Google Calendar do AFT, pelo conector oficial do Claude (login único do Google pela interface do Claude — nenhuma senha ou token passa pelo toolkit): um evento de DIA INTEIRO por notificação, título na convenção 'DET <código> <12 primeiros caracteres do empregador>'. Reconciliação idempotente pelo código (chave única): cria só o que falta (e só prazo de hoje em diante — evento no passado não notifica ninguém), atualiza a data quando o prazo é prorrogado e renomeia com ✓ quando a notificação é marcada como checada no memory.md. Nunca apaga eventos nem toca em eventos fora do padrão 'DET ...'. Consome o campo 'vencimentos' do JSON do gerar_painel.py — a lista já sai pronta e determinística do script; o modelo só executa a reconciliação. Direção única memory.md → calendário (nunca escreve nas fichas). Oferecida no /aft-setup (Passo 7d) e /aft-atualizar (Passo 2d), chave agenda_det no aft-config.md."
         },
         {
           "nome": "/nova-skill",
@@ -725,6 +729,14 @@ const ARCH = {
     {
       "topico": "Testes reais de ponta a ponta do sync do DET (2 novas OS)",
       "txt": "Para validar os dois bugs corrigidos, duas OS novas foram criadas como campo de prova real (não simulado): uma via /organiza-os (testou o caminho 'RI já conhecido' e expôs o bug da linha com dois prazos) e outra via /nova-os + /inspecao-fisica, sem nenhuma notificação DET ainda (testou o caminho 'RI desconhecido, adota o da notificação mais recente'). De quebra, o /organiza-os teve o model pinado trocado de opus para sonnet (mais barato, suficiente para a classificação/extração da skill)."
+    },
+    {
+      "topico": "Subtítulos dos autos em algarismos romanos (I -, II -, III -)",
+      "txt": "A pedido do Ricardo, os subtítulos dos autos de infração deixaram de ser '1) DA FISCALIZAÇÃO' / '2) IRREGULARIDADE' / '3) OBSERVAÇÕES' e passaram a 'I - DA FISCALIZAÇÃO:' / 'II - IRREGULARIDADE:' / 'III - OBSERVAÇÕES:', sempre com quebra de linha após o subtítulo — no TXT do Sistema Auditor isso é o separador '#13#10 . #13#10' (a linha com ponto é o 'espaço em branco', já que o sistema não renderiza linha vazia). A mudança tocou 16 arquivos, mas foi barata porque o formato tem fonte única: o bloco 3 canônico vive em config/blocos_auto.md (injetado pelo bloco3_inject.py, cujo detector de 'já tem bloco 3' agora reconhece os dois formatos para nunca duplicar) e as regras de #13#10 vivem na FASE 3 do /gera-ai. Compatibilidade com o legado: rascunho antigo redigido com '1)/2)/3)' é NORMALIZADO pelo /gera-ai na hora de empacotar o TXT (troca determinística de subtítulo) — todo TXT sai no formato novo, mesmo de auto redigido antes da mudança."
+    },
+    {
+      "topico": "Google Calendar: conector do Claude, não OAuth próprio",
+      "txt": "Para levar os prazos de DET ao Google Calendar foram avaliados três caminhos: (A) o conector Google Calendar do próprio Claude, (B) OAuth próprio contra a API do Google e (C) botões de URL de template no painel, sem login. O caminho B foi rejeitado para um toolkit distribuído: exigiria projeto Google Cloud do mantenedor, app 'não verificado' (tela de aviso), limite de 100 usuários de teste cadastrados por e-mail um a um e credencial de cliente num repositório público. Ficou A+C: a skill /agenda-det usa o conector (autenticação delegada à interface do Claude, zero segredo no repo) para a sincronização de verdade — criar, atualizar prazo prorrogado e marcar ✓ ao responder —, e o painel ganhou o botão 'agendar no Google Calendar' por notificação (URL de template, funciona sem login nenhum). Assinatura de .ics foi descartada porque os servidores do Google não alcançam 127.0.0.1. Regras de segurança da skill: nunca apagar eventos, nunca tocar em evento fora do padrão 'DET ...', evento carrega apenas código + nome do empregador (nada de CNPJ, RI ou conteúdo da fiscalização na nuvem do Google)."
     }
   ],
   "diferencas": [

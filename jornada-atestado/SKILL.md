@@ -208,10 +208,10 @@ jornada-auto-afd-aej). **Texto puro**, sem markdown. Gere **um** auto por docume
 === AUTO DE INFRAÇÃO #1 ===
 Ementa: 002278-0 - Deixar o empregador de manter à disposição da fiscalização o Atestado Técnico e Termo de Responsabilidade do Programa de Tratamento de Registro de Ponto (PTRP), ou mantê-lo em desconformidade com o art. 89 da Portaria MTP nº 671/2021.
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada, na qual a inspeção física foi conjugada com a auditoria do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 Constatou-se que a autuada deixou de manter disponível para apresentação à Auditoria-Fiscal do Trabalho o Atestado Técnico e Termo de Responsabilidade referente ao seu programa de tratamento de registro de ponto. A irregularidade foi constatada mediante análise documental, oportunidade em que a empregadora, instada a comprovar a regularidade do software de controle de jornada utilizado, não apresentou o referido documento (ou o apresentou em desconformidade técnica/sem a assinatura eletrônica qualificada do responsável técnico e do representante legal da empresa desenvolvedora). A ausência do atestado legalmente válido impede a garantia formal de que o programa atende aos requisitos de tratamento e geração de arquivos exigidos pela Seção IV da Portaria MTP nº 671/2021.
 Destaca-se que a adoção de sistema eletrônico vincula o empregador aos parâmetros técnicos vigentes, não sendo admitida a alegação de integração com aplicativos de gestão de terceiros ou eventuais acordos coletivos para afastar a exigência da documentação de conformidade tecnológica. Tal conduta afronta diretamente o art. 89 da Portaria MTP nº 671/2021, caracterizando o descumprimento do dever de manter controle fidedigno da jornada nos termos do art. 74, § 2º, da CLT.
 
@@ -221,7 +221,7 @@ ELEMENTOS DE CONVICÇÃO:
 - Parecer de auditoria do Atestado Técnico e resultado da inspeção estrutural de assinatura do documento (ANEXO).
 ```
 
-> **Não escreva o rótulo `3) OBSERVAÇÕES`.** O parágrafo sobre a frustração da conformidade do sistema de ponto (acima) fica como parágrafo final do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o bloco 2 e os ELEMENTOS DE CONVICÇÃO.
+> **Não escreva o rótulo `III - OBSERVAÇÕES`.** O parágrafo sobre a frustração da conformidade do sistema de ponto (acima) fica como parágrafo final do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o bloco 2 e os ELEMENTOS DE CONVICÇÃO.
 
 ### Modelo — Atestado do EQUIPAMENTO (REP) — Ementa 002277-2
 

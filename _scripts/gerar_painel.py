@@ -511,6 +511,12 @@ padding:10px 18px;min-width:118px}
 .contador b{display:block;font-size:24px;line-height:1.1}
 .contador span{font-size:12px;color:var(--t2)}
 .contador.alerta b{color:var(--coral-deep)}
+.venc{background:var(--paper);border:1px solid var(--bds);border-radius:10px;
+padding:12px 18px 14px;margin-bottom:24px}
+.venc h3{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
+color:var(--t3);margin:0 0 8px}
+.venc ul{margin:0;padding-left:18px;font-size:13.5px}
+.venc li{margin-bottom:5px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .card{background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
 border-radius:10px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s}
@@ -650,6 +656,15 @@ const CMDS=[
  ['/sfitweb-rel','Relatório Final Simplificado consolidando autos, termos e notificações.']];
 function copiaCmd(i,k){copia(CMDS[k][0]+' — OS '+DATA.os[i].empregador)}
 function copiaCaminho(i){copia(DATA.os[i].caminho)}
+// "Agendar no Google Calendar": URL de template pré-preenchida (evento de dia
+// inteiro na data do prazo) — sem login e sem API; o AFT só confirma o Salvar.
+function agCal(j){const v=DATA.venc[j];
+ const ini=v.prazo_iso.replaceAll('-','');
+ const d=new Date(v.prazo_iso+'T12:00:00');d.setDate(d.getDate()+1);
+ const fim=d.toISOString().slice(0,10).replaceAll('-','');
+ window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+
+  encodeURIComponent(v.titulo)+'&dates='+ini+'/'+fim+'&details='+
+  encodeURIComponent('Notificação DET '+v.codigo+' — '+v.empregador+' (AFT Toolkit)'),'_blank')}
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
 function agStatus(i,v){api({acao:'status',pasta:DATA.os[i].pasta,valor:v})}
@@ -785,6 +800,48 @@ def selo_det(d: dict, hoje: datetime.date) -> tuple[str, str]:
     return "neutro", f"em {n}d"
 
 
+def coletar_vencimentos(oss: list[dict], hoje: datetime.date) -> list[dict]:
+    """Agenda única de prazos de TODAS as OS, ordenada por data: notificações
+    DET com prazo (abertas e checadas — as checadas servem ao /agenda-det, que
+    marca ✓ no Google Calendar) e pendências datadas (só as com "prazo <data>"
+    no texto; datas soltas — ex. "apólice vencida em 31/05/2025" — não são
+    vencimento da pendência). O título dos eventos DET segue a convenção
+    'DET <código> <12 primeiros caracteres do empregador>'."""
+    itens = []
+    for o in oss:
+        emp12 = o["empregador"][:12].strip()
+        for d in o["dets"]:
+            if not d["prazo"]:
+                continue
+            itens.append({
+                "tipo": "det",
+                "titulo": f"DET {d['codigo'] or '?'} {emp12}",
+                "empregador": o["empregador"],
+                "codigo": d["codigo"] or "",
+                "prazo_iso": d["prazo"].isoformat(),
+                "prazo_br": d["prazo"].strftime("%d/%m/%Y"),
+                "dias": (d["prazo"] - hoje).days,
+                "checado": d["feito"],
+            })
+        for p in o["pendencias"]:
+            m = RE_PRAZO.search(p)
+            dt = parse_data(m.group(1)) if m else None
+            if not dt:
+                continue
+            itens.append({
+                "tipo": "pendencia",
+                "titulo": datas_para_br(p),
+                "empregador": o["empregador"],
+                "codigo": "",
+                "prazo_iso": dt.isoformat(),
+                "prazo_br": dt.strftime("%d/%m/%Y"),
+                "dias": (dt - hoje).days,
+                "checado": False,
+            })
+    itens.sort(key=lambda x: (x["prazo_iso"], x["tipo"]))
+    return itens
+
+
 def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> list[dict]:
     out = []
     for o in oss:
@@ -822,7 +879,39 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
     return out
 
 
-def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos,
+def render_vencimentos(venc: list[dict]) -> str:
+    """Bloco 'Próximos vencimentos', abaixo da grade de cards: a agenda
+    consolidada (DETs abertos + pendências datadas) que AINDA NÃO VENCEU —
+    o vencido já grita no card e nos contadores, aqui é só o que vem pela
+    frente —, com botão que abre o Google Calendar já preenchido (URL de
+    template — sem login, sem API)."""
+    abertos = [(j, v) for j, v in enumerate(venc) if not v["checado"] and v["dias"] >= 0]
+    if not abertos:
+        return ""
+    lis = []
+    for j, v in abertos[:15]:
+        classe = classifica(v["dias"])
+        if v["dias"] == 0:
+            selo = "vence HOJE"
+        else:
+            selo = f"em {v['dias']}d"
+        if v["tipo"] == "det":
+            corpo = f"<b>{html.escape(v['titulo'])}</b>"
+            botao = (f'<button class="mini" onclick="agCal({j})">'
+                     'agendar no Google Calendar</button>' if v["codigo"] else "")
+        else:
+            corpo = (f"Pendência · {html.escape(v['empregador'][:12].strip())}: "
+                     f"{html.escape(v['titulo'][:90])}")
+            botao = ""
+        lis.append(f'<li class="det-aberto {classe}">{corpo} » {v["prazo_br"]}'
+                   f'<span class="selo {classe}">{selo}</span>{botao}</li>')
+    resto = ("" if len(abertos) <= 15 else
+             f'<li class="vazio">… e mais {len(abertos) - 15} (veja nos cards)</li>')
+    return ('<div class="venc"><h3>Próximos vencimentos</h3><ul class="lista">'
+            + "".join(lis) + resto + "</ul></div>")
+
+
+def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
                  com_pasta: bool, artifact: bool) -> str:
     cards = []
     for i, o in enumerate(oss):
@@ -846,7 +935,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos,
     grade = ("".join(cards) if cards else
              '<div class="aviso-vazio">Nenhuma OS encontrada em OS ATIVAS. '
              'Use /nova-os para cadastrar a primeira.</div>')
-    dados = {"os": montar_json_os(oss, hoje, com_pasta)}
+    dados = {"os": montar_json_os(oss, hoje, com_pasta), "venc": venc}
     json_js = json.dumps(dados, ensure_ascii=False).replace("</", "<\\/")
     titulo_art = "<title>Painel AFT</title>\n" if artifact else ""
     rodape = ("AFT Toolkit · painel publicado como artefato · snapshot de "
@@ -866,14 +955,15 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos,
   <div class="contador"><b>{n_autos}</b><span>autos lavrados</span></div>
 </div>
 <div class="grid">{grade}</div>
+{render_vencimentos(venc)}
 <div id="veu"></div><div id="detalhe"></div>
 <footer>{rodape}</footer>
 <script>const DATA={json_js};{JS}</script>
 """
 
 
-def render_html(oss, hoje, n_venc, n_urg, n_novas, n_autos) -> str:
-    miolo = render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos,
+def render_html(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc) -> str:
+    miolo = render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
                          com_pasta=True, artifact=False)
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -962,7 +1052,9 @@ def main() -> int:
         return (o["dias_top"] is None, o["dias_top"] if o["dias_top"] is not None else 0)
     oss.sort(key=chave)
 
-    html_out = render_html(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos)
+    venc = coletar_vencimentos(oss, hoje)
+
+    html_out = render_html(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos, venc)
     destino = saida_html(base)
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html_out, encoding="utf-8")
@@ -971,7 +1063,7 @@ def main() -> int:
     if destino_art:
         destino_art.parent.mkdir(parents=True, exist_ok=True)
         destino_art.write_text(
-            render_miolo(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos,
+            render_miolo(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos, venc,
                          com_pasta=False, artifact=True),
             encoding="utf-8")
 
@@ -986,6 +1078,9 @@ def main() -> int:
         "notificacoes_nao_cadastradas": n_novas,
         "autos_lavrados": n_autos,
         "scan_ao_vivo": {"pedido": scan, "os_com_scan_ok": n_scan_ok},
+        # Agenda consolidada de prazos (DETs — inclusive checados, para o
+        # /agenda-det marcar ✓ no calendário — e pendências datadas).
+        "vencimentos": venc,
         "novas": [
             {"empregador": o["empregador"], **n}
             for o in oss for n in (o.get("novas") or [])

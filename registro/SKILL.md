@@ -121,11 +121,11 @@ Monte os três blocos no formato consumido pelo `/gera-ai`. **Texto puro**, sem 
 === AUTO DE INFRAÇÃO #1 ===
 Ementa: [codigo_art41] - [texto da ementa conforme ME/EPP]
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 
 [BLOCO_FISC]
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 Na referida fiscalização, constatou-se que o empregador ora autuado admitiu e manteve
 trabalhador(es) sem o devido registro em livro, ficha ou sistema eletrônico competente,
@@ -186,11 +186,11 @@ planejamento e no curso da ação fiscal, que evidenciou a omissão do empregado
 === AUTO DE INFRAÇÃO #2 ===
 Ementa: [codigo_art29] - [texto da ementa conforme ME/EPP]
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 
 [BLOCO_FISC]
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 Em outro Auto de Infração capitulado no art. 41 da CLT, lavrado nesta mesma ação
 fiscal, constatou-se que o empregador ora autuado admitiu e manteve trabalhador(es)
@@ -230,11 +230,11 @@ do eSocial.
 === AUTO DE INFRAÇÃO #3 ===
 Ementa: 107110-6 - Deixar de submeter o trabalhador a exame médico admissional.
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 
 [BLOCO_FISC]
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 Constatou-se que o empregador ora autuado deixou de submeter a exame médico admissional
 o(s) trabalhador(es) abaixo relacionado(s), encontrado(s) em atividade no estabelecimento

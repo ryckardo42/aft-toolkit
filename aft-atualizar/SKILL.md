@@ -147,7 +147,7 @@ Mesma lógica do Passo 2b, para a novidade do **servidor interativo** (Passo 7c 
 grep -q "servidor_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
 ```
 
-- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 2d.
 - **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: o painel
   agora pode ficar sempre ligado no seu computador (sobe sozinho ao ligar a máquina) — é
   o que permite marcar DET/pendência direto no painel e sincronizar notificações do DET
@@ -156,6 +156,26 @@ grep -q "servidor_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" 
   - **Sim** → siga exatamente o Passo 7c do `/aft-setup` (mesmo script
     `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já
     configurados) e grave `servidor_painel: "ligado"` no `aft-config.md`.
+
+## Passo 2d — Oferecer os prazos de DET no Google Calendar (só na primeira vez)
+
+Mesma lógica do Passo 2b, para a novidade do **Google Calendar** (Passo 7d do
+`/aft-setup` — skill `/agenda-det`). Confira:
+
+```bash
+grep -q "agenda_det" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
+```
+
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: os
+  prazos das notificações DET podem aparecer direto no seu Google Calendar — um evento
+  por notificação, atualizado quando o prazo muda e marcado com ✓ quando você responde.
+  Quer ativar?"*
+  - **Não** → grave `agenda_det: ""` no `aft-config.md` e siga (lembre que o painel tem
+    o botão "agendar no Google Calendar", sem login).
+  - **Sim** → siga exatamente o Passo 7d do `/aft-setup` (conector Google Calendar +
+    primeira sincronização pela `/agenda-det`) e grave `agenda_det: "diario"` ou
+    `"manual"` conforme a escolha.
 
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 

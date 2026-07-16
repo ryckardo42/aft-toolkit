@@ -6,7 +6,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as **29 ementas de NR-18** m
 - **Descrição** — texto oficial da ementa
 - **Itens NR-18 violados** — para compor a capitulação
 - **Capitulação sugerida** — fundamento legal formal (a quase totalidade das ementas da NR-18 segue a redação da **Portaria SEPRT nº 3.733/2020**)
-- **Texto-base** — corpo pronto para o subtítulo *2) IRREGULARIDADE*, deve ser **adaptado** ao caso concreto (frente de serviço, pavimento, condições observadas, equipamento atingido)
+- **Texto-base** — corpo pronto para o subtítulo *II - IRREGULARIDADE*, deve ser **adaptado** ao caso concreto (frente de serviço, pavimento, condições observadas, equipamento atingido)
 - **Gatilhos de matching** — palavras/expressões da narrativa do AFT que apontam para esta ementa
 
 > **Como usar:** dada uma narrativa do AFT, varra os "Gatilhos" abaixo para localizar a ementa. Se mais de uma bater, escolha a mais específica e mantenha as outras como candidatas — em obras é comum que vários fatos distintos coexistam, cada um gerando um auto. Se nenhuma bater, vá ao fallback NotebookLM.

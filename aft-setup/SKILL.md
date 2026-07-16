@@ -374,6 +374,25 @@ funciona na sua máquina (nada sai para a internet)."*
 > Para remover depois: `python instalar_servidor_painel.py remover`. Detalhes:
 > `painel/SKILL.md`, Passo 3.5.
 
+## Passo 7d — Prazos de DET no Google Calendar (opcional)
+
+Ofereça, em uma frase: *"Quer que os prazos das notificações DET apareçam também no seu
+Google Calendar (um evento por notificação, com atualização quando o prazo muda)? É um
+login único do Google, feito com segurança pela interface do Claude."*
+
+- **Se não** → grave `agenda_det: ""` no `aft-config.md` (para não perguntar de novo) e
+  siga. Mencione que os botões "agendar no Google Calendar" do painel funcionam sem
+  login nenhum (um clique por evento).
+- **Se sim**:
+  1. Verifique se o **conector Google Calendar** do Claude já está conectado (tente
+     listar os calendários). Se não estiver, oriente: aplicativo do Claude/claude.ai →
+     **Configurações → Conectores → Google Calendar → Conectar** (na CLI, `/mcp`) —
+     nenhuma senha passa pelo toolkit.
+  2. Rode a primeira sincronização seguindo a skill `/agenda-det` (Passos 1–3).
+  3. Ofereça a rotina diária do Passo 4 da `/agenda-det` (tarefas agendadas do Claude
+     Code, se disponíveis) e grave `agenda_det: "diario"` ou `agenda_det: "manual"` no
+     `aft-config.md`, conforme a escolha.
+
 ## Passo 8 — Resumo final
 
 Apresente:

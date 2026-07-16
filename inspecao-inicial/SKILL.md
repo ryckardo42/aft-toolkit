@@ -268,7 +268,7 @@ A primeira frase é a âncora legal e permanece fixa. A partir dela, **interpret
 
 **Frase-âncora (sempre presente):**
 ```
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 
 Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º,
 do Decreto nº 4.552/2002, iniciada em [data_inspecao] e ainda em curso
@@ -291,7 +291,7 @@ na presente data no empregador acima qualificado.
 #### SUBTÍTULO 2 — IRREGULARIDADE (redação contextual)
 
 ```
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 [Texto a ser redigido conforme as regras abaixo]
 ```
@@ -354,7 +354,7 @@ SIT/n.2/2022).
 > idêntico, byte a byte, em todos os autos.
 >
 > Portanto, **termine o auto no Subtítulo 2 (IRREGULARIDADE) seguido direto dos ELEMENTOS
-> DE CONVICÇÃO** — sem o `3) OBSERVAÇÕES`. (Para conferência, o texto canônico é o de
+> DE CONVICÇÃO** — sem o `III - OBSERVAÇÕES`. (Para conferência, o texto canônico é o de
 > `config/blocos_auto.md`, marcas `<BLOCO3>`.)
 
 #### ELEMENTOS DE CONVICÇÃO (logo após o Subtítulo 2)

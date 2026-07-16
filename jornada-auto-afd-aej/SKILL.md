@@ -99,10 +99,10 @@ como abaixo.
 === AUTO DE INFRAÇÃO #1 ===
 Ementa: 002279-9 - Deixar o empregador de gerar e manter o Arquivo Fonte de Dados (AFD) conforme as especificações técnicas disponíveis no portal gov.br, quando adotar qualquer tipo de sistema de registro eletrônico de ponto (REP-A, REP-P ou REP-C).
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada, na qual a inspeção física foi conjugada com a auditoria digital da jornada de trabalho, mediante análise do arquivo do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 <HISTORICO_AFD>
 
 A ausência de Arquivo Fonte de Dados íntegro e em conformidade com o padrão normatizado inviabiliza a auditoria fiscal da jornada de toda a coletividade de trabalhadores do estabelecimento, frustrando a fiscalização do controle de horário a que o empregador está obrigado. Trata-se de bem jurídico de natureza difusa, cuja lesão dispensa a individualização dos trabalhadores prejudicados (Orientação Técnica SIT nº 2/2022).
@@ -117,10 +117,10 @@ ELEMENTOS DE CONVICÇÃO:
 === AUTO DE INFRAÇÃO #2 ===
 Ementa: 002280-2 - Deixar o empregador de gerar e manter o Arquivo Eletrônico de Jornada (AEJ) conforme especificações disponíveis no portal gov.br, quando adotar qualquer tipo de sistema de registro eletrônico de ponto (REP-A, REP-P ou REP-C).
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada, na qual a inspeção física foi conjugada com a auditoria digital da jornada de trabalho, mediante análise do arquivo do sistema de registro eletrônico de ponto adotado pela autuada, nos termos da Portaria MTP nº 671/2021.
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 <HISTORICO_AEJ>
 
 A ausência de Arquivo Eletrônico de Jornada íntegro e em conformidade com o padrão normatizado inviabiliza a auditoria fiscal da jornada de toda a coletividade de trabalhadores do estabelecimento, frustrando a fiscalização do controle de horário a que o empregador está obrigado. Trata-se de bem jurídico de natureza difusa, cuja lesão dispensa a individualização dos trabalhadores prejudicados (Orientação Técnica SIT nº 2/2022).
@@ -129,7 +129,7 @@ ELEMENTOS DE CONVICÇÃO:
 - <ELEMENTO_CONVICCAO_AEJ> (ANEXO).
 ```
 
-> **Não escreva o rótulo `3) OBSERVAÇÕES`** em nenhum dos dois autos (AFD e AEJ). O parágrafo sobre a frustração da auditoria de jornada (acima) fica como parágrafo final do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o bloco 2 e os ELEMENTOS DE CONVICÇÃO.
+> **Não escreva o rótulo `III - OBSERVAÇÕES`** em nenhum dos dois autos (AFD e AEJ). O parágrafo sobre a frustração da auditoria de jornada (acima) fica como parágrafo final do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o bloco 2 e os ELEMENTOS DE CONVICÇÃO.
 
 > Se **só um** arquivo reprovou, gere apenas o bloco correspondente como `#1`.
 

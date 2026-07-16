@@ -6,7 +6,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 - **Descrição** — texto oficial da ementa
 - **Itens NR-12 violados** — para compor a capitulação
 - **Capitulação sugerida** — fundamento legal formal
-- **Texto-base** — corpo pronto para o subtítulo *2) IRREGULARIDADE*, deve ser **adaptado** ao caso concreto (citar 1–2 trabalhadores, fatos observados, máquinas atingidas)
+- **Texto-base** — corpo pronto para o subtítulo *II - IRREGULARIDADE*, deve ser **adaptado** ao caso concreto (citar 1–2 trabalhadores, fatos observados, máquinas atingidas)
 - **Aplicabilidade a Termo de Interdição** — quando o texto também serve para fundamentar TI/TE
 - **Gatilhos de matching** — palavras/expressões da narrativa do AFT que apontam para esta ementa
 

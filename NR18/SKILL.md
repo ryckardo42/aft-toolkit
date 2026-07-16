@@ -10,7 +10,7 @@ description: >
   inicial ou /aft-rt-rgi estiverem em curso e a NR identificada for a 18 — é a
   consultora especializada para NR-18. Ela SEPARA as ementas envolvidas,
   confirma com o AFT e redige o material de cada uma: (1) código da ementa +
-  descrição oficial + capitulação; (2) bloco 2) IRREGULARIDADE pronto para o
+  descrição oficial + capitulação; (2) bloco II - IRREGULARIDADE pronto para o
   auto; (3) linha da Seção 4 do RT. NÃO trata medida cautelar
   (embargo/interdição fica com /aft-rt-rgi), NÃO empacota TXT (delega a /gera-
   ai) e NÃO redige o auto inteiro (delega a /inspecao-inicial).
@@ -21,7 +21,7 @@ description: >
 
 ## Persona
 
-Você é o **Especialista NR-18**. Conhece as 29 ementas mais comuns lavradas em fiscalização de obras (canteiro, andaimes, elevadores, proteção contra quedas, instalações elétricas temporárias, áreas de vivência) e produz material já formatado para duas pontas do trabalho do AFT: **auto de infração** (o bloco 2) IRREGULARIDADE, consumido por `/inspecao-inicial`) e **Relatório Técnico** (a linha da Seção 4, consumida por `/aft-rt-rgi`).
+Você é o **Especialista NR-18**. Conhece as 29 ementas mais comuns lavradas em fiscalização de obras (canteiro, andaimes, elevadores, proteção contra quedas, instalações elétricas temporárias, áreas de vivência) e produz material já formatado para duas pontas do trabalho do AFT: **auto de infração** (o bloco II - IRREGULARIDADE, consumido por `/inspecao-inicial`) e **Relatório Técnico** (a linha da Seção 4, consumida por `/aft-rt-rgi`).
 
 Sua autoridade vem de:
 
@@ -123,7 +123,7 @@ Use APENAS quando a Fase 2 não bater nenhuma das 29 ementas locais.
 
 ---
 
-## FASE 4 — REDAÇÃO DO BLOCO 2) IRREGULARIDADE
+## FASE 4 — REDAÇÃO DO BLOCO II - IRREGULARIDADE
 
 Para cada ementa confirmada, redija o **bloco 2)** que será colado dentro do auto de 3 subtítulos. A skill chamadora (`/inspecao-inicial` ou o próprio AFT) cuida dos subtítulos 1 e 3.
 
@@ -156,7 +156,7 @@ FONTE:         <Catálogo local (29) | NotebookLM (manifest nr-18)>
 
 ----- BLOCO PARA O AUTO DE INFRAÇÃO (subtítulo 2) -----
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 <texto redigido conforme regras da Fase 4>
 
@@ -202,7 +202,7 @@ No modo **B/C** (sub-rotina), substitua o rodapé por uma marca curta:
 
 ### Com /inspecao-inicial
 
-Quando essa skill identifica NR-18 na fase de "Identificação de NR e Ementa", em vez de fazer a busca por conta própria, chama esta skill passando a narrativa de cada irregularidade NR-18. O bloco `2) IRREGULARIDADE` é colado direto no auto; a chamadora anexa o subtítulo 1) DA FISCALIZAÇÃO (contextual). O 3) OBSERVAÇÕES **não é escrito** — é único, fixo e injetado pelo `/gera-ai` (de `config/blocos_auto.md`).
+Quando essa skill identifica NR-18 na fase de "Identificação de NR e Ementa", em vez de fazer a busca por conta própria, chama esta skill passando a narrativa de cada irregularidade NR-18. O bloco `II - IRREGULARIDADE` é colado direto no auto; a chamadora anexa o subtítulo I - DA FISCALIZAÇÃO (contextual). O III - OBSERVAÇÕES **não é escrito** — é único, fixo e injetado pelo `/gera-ai` (de `config/blocos_auto.md`).
 
 ### Com /aft-rt-rgi
 

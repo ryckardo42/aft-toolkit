@@ -270,10 +270,10 @@ Para cada ementa, monte um bloco EXATAMENTE neste formato:
 === AUTO DE INFRAÇÃO #{N} ===
 Ementa: {codigo} - {descricao_curta}
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em {data_inspecao}.
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 DA INFRAÇÃO COMETIDA: Constatou-se que o empregador aqui autuado incorreu na ementa supracitada, ao {descricao_ementa_min}, {trecho_objetos}, resultando no termo de embargo/interdição em anexo.
 
 O quadro resultante dessa sistematização e análise de informações levou à caracterização da condição de RISCO GRAVE E IMINENTE à saúde e à integridade física dos trabalhadores expostos, na forma conceituada pelo subitem 3.2.1 da Norma Regulamentadora nº 3 do Ministério do Trabalho e Previdência, com atualização dada pela Portaria nº 1.068, de 23 de setembro de 2019: "Considera-se grave e iminente risco toda condição ou situação de trabalho que possa causar acidente ou doença com lesão grave ao trabalhador.", resultando na lavratura do termo de interdição/embargo em anexo.

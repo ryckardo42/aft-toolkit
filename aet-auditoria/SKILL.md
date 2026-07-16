@@ -335,14 +335,14 @@ Para cada ementa irregular, gere um bloco no formato consumido pelo `/gera-ai`:
 === AUTO DE INFRAÇÃO #[N] ===
 Ementa: [código, ex: 117244-1] - [descrição curta da ementa]
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 
 Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º,
 do Decreto nº 4.552/2002, iniciada em [data_inspecao] e ainda em curso
 na presente data no empregador acima qualificado, que desenvolve a
 atividade econômica de [atividade_economica].
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 Em auditoria da Análise Ergonômica do Trabalho (AET) apresentada pela
 autuada, constatou-se que o empregador incorreu na ementa supracitada.

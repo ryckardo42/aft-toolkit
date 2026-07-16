@@ -65,6 +65,9 @@ ficha. Imprime no stdout um JSON de resumo:
   "os_ativas": N, "os_encerradas_ocultas": E, "dets_vencidos": X, "dets_vencendo_7d": Y,
   "notificacoes_nao_cadastradas": Z, "autos_lavrados": A,
   "scan_ao_vivo": {"pedido": true|false, "os_com_scan_ok": K},
+  "vencimentos": [ {"tipo": "det"|"pendencia", "titulo": "DET <cod> <emp 12 chars>",
+                    "codigo": "...", "empregador": "...", "prazo_iso": "aaaa-mm-dd",
+                    "prazo_br": "dd/mm/aaaa", "dias": D, "checado": true|false} ],
   "novas": [ {"empregador": "...", "arquivo": "....pdf", "codigo": "ABC...",
               "ciencia": "dd/mm/aaaa"|null, "prazo": "dd/mm/aaaa"|null,
               "data_arquivo": "dd/mm/aaaa"} ],
@@ -226,6 +229,16 @@ rotina nunca falha por causa disso.
 
 - Contadores: OS ativas, DET vencidos, DET vencendo em 7 dias, notificações não
   cadastradas, autos lavrados.
+- **Próximos vencimentos** (bloco abaixo da grade de cards): a agenda consolidada de
+  TODAS as OS — cada notificação DET aberta e cada pendência datada (as com "prazo
+  <data>" no texto) que **ainda não venceram**, em ordem de vencimento, com selo de
+  urgência (`DET <código> <12 primeiros caracteres do empregador> » dd/mm/aaaa`). O
+  vencido não entra aqui — já grita nos contadores e no card da OS; este bloco é só o
+  que vem pela frente. Cada DET tem o botão **"agendar no Google Calendar"**: abre o
+  Google Calendar com o evento de dia inteiro já preenchido (URL de template — sem
+  login, sem API; o AFT só clica em Salvar). Para sincronização automática
+  (criar/atualizar/marcar ✓ sozinho), a skill é a `/agenda-det`, via conector Google
+  Calendar do Claude.
 - **Um card por OS**: empregador, CNPJ, município, badge de urgência (vencido / vence em
   Xd / no prazo / sem prazo), chips das NRs autuadas, nº de autos e DETs abertos, "há N
   dias" desde o início.

@@ -9,7 +9,7 @@ description: >
   apresentados DET", "auto art 630", "auto omissão documentos". A skill redige
   o auto de infração da Ementa 001168-1 (art. 630, §4º CLT) já no formato
   estruturado consumido por /gera-ai (=== AUTO DE INFRAÇÃO #1 === / 1) DA
-  FISCALIZAÇÃO / 2) IRREGULARIDADE / 3) OBSERVAÇÕES / ELEMENTOS DE CONVICÇÃO)
+  FISCALIZAÇÃO / II - IRREGULARIDADE / III - OBSERVAÇÕES / ELEMENTOS DE CONVICÇÃO)
   e prepara o Relatório de Atendimento do DET como anexo do auto.
 ---
 
@@ -76,10 +76,10 @@ Monte o bloco abaixo. Não use markdown bold (`**…**`) — o parser do `/gera-
 === AUTO DE INFRAÇÃO #1 ===
 Ementa: 001168-1 - Deixar de apresentar documentos sujeitos à inspeção do trabalho no dia e hora previamente fixados pelo AFT.
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 Trata-se de ação fiscal em curso, na modalidade fiscalização mista (nos termos do § 3º do art. 30 do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento supracitado.
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 O empregador acima identificado foi notificado, nos termos do disposto nos parágrafos 3º e 4º do art. 630 da Consolidação das Leis do Trabalho - CLT, para a apresentação de documentos.
 
 A notificação foi lavrada em <DATA_NOTIFICACAO> por meio do Domicílio Eletrônico Trabalhista - DET, notificação <NUMERO_NOTIFICACAO>, sistema do Governo Federal, administrado pela Secretaria de Inspeção do Trabalho (SIT) do Ministério do Trabalho e Emprego, para facilitar a comunicação eletrônica entre a Inspeção do Trabalho e os empregadores, visando cumprir as disposições do artigo 628-A da CLT. O empregador teve ciência da notificação em <DATA_CIENCIA>.
@@ -96,7 +96,7 @@ ELEMENTOS DE CONVICÇÃO:
 - Relatório de <ATEND_OU_NAO_ATEND> à notificação emitido pelo DET (ANEXO).
 ```
 
-> **Não escreva o rótulo `3) OBSERVAÇÕES`.** As observações específicas deste auto (Precedente nº 92, referência ao Relatório do DET, dano coletivo) ficam como os parágrafos finais do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o último parágrafo do bloco 2 e os ELEMENTOS DE CONVICÇÃO.
+> **Não escreva o rótulo `III - OBSERVAÇÕES`.** As observações específicas deste auto (Precedente nº 92, referência ao Relatório do DET, dano coletivo) ficam como os parágrafos finais do Subtítulo 2. O Subtítulo 3 canônico é injetado automaticamente pelo `/gera-ai` (de `config/blocos_auto.md`) entre o último parágrafo do bloco 2 e os ELEMENTOS DE CONVICÇÃO.
 
 ### Tabela de substituições
 

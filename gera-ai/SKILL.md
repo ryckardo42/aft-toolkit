@@ -55,20 +55,22 @@ parsear, rode sobre o `autos.md` (passe o `python_path` do aft-config.md):
 python ~/.claude/skills/_scripts/bloco3_inject.py "[caminho do autos.md]"
 ```
 
-O script é idempotente e compatível com o legado: se um auto **já** tiver `3) OBSERVAÇÕES`
-(auto antigo escrito à mão), ele é mantido como está; os demais recebem o bloco canônico
-entre o bloco 2 e `ELEMENTOS DE CONVICÇÃO:`. Depois disso, parseie o `autos.md` já completo.
+O script é idempotente e compatível com o legado: se um auto **já** tiver o bloco de
+observações (`III - OBSERVAÇÕES` ou o antigo `3) OBSERVAÇÕES`), ele é mantido como está;
+os demais recebem o bloco canônico entre o bloco 2 e `ELEMENTOS DE CONVICÇÃO:`. Depois
+disso, parseie o `autos.md` já completo.
 
-Identifique cada **bloco de auto** procurando estes marcadores:
+Identifique cada **bloco de auto** procurando estes marcadores (aceite também o formato
+legado `1)`/`2)`/`3)` em rascunhos antigos — a normalização é na FASE 3):
 - Cabeçalho `=== AUTO DE INFRAÇÃO #N ===` ou `=== AUTO #N ===`
 - Linha `Ementa: [codigo] - [descricao]`
-- Subtítulo `1) DA FISCALIZAÇÃO:`
-- Subtítulo `2) IRREGULARIDADE:`
-- Subtítulo `3) OBSERVAÇÕES:` (injetado no Passo 0b; ver `config/blocos_auto.md`)
+- Subtítulo `I - DA FISCALIZAÇÃO:`
+- Subtítulo `II - IRREGULARIDADE:`
+- Subtítulo `III - OBSERVAÇÕES:` (injetado no Passo 0b; ver `config/blocos_auto.md`)
 - Bloco `ELEMENTOS DE CONVICÇÃO:`
 
 Para cada bloco extraia:
-- **Texto completo** (subtítulos 1+2+3 concatenados com os separadores corretos)
+- **Texto completo** (subtítulos I+II+III concatenados com os separadores corretos)
 - **Código da ementa** (formato `\d{6}-\d`)
 - **Descrição da ementa**
 - **NR e item violado** (se mencionados)
@@ -354,9 +356,12 @@ Linhas separadas por `\n`.
 
 - `[TAB]` = caractere literal `\t`.
 - `[texto_autuacao]` é uma **única linha contínua** (sem `\n` reais). Use `#13#10` como comando de quebra de linha:
-  - **Separador de seção** (entre subtítulos 1→2 e 2→3): `#13#10 . #13#10`
+  - **Subtítulos em algarismos romanos com hífen**: `I - DA FISCALIZAÇÃO:`, `II - IRREGULARIDADE:`, `III - OBSERVAÇÕES:`.
+  - **Após CADA subtítulo**: `#13#10 . #13#10` (o subtítulo fica sozinho na linha; a linha com `.` é o "espaço em branco" — o Sistema Auditor não entende linha vazia).
+  - **Separador de seção** (entre o fim de uma seção e o subtítulo seguinte): `#13#10 . #13#10`
   - **Separador de parágrafo** (dentro de um subtítulo): `#13#10`
-  - Exemplo: `...atividade economica de X.#13#10 . #13#102) IRREGULARIDADE: ...#13#10Dano de natureza coletiva...#13#10 . #13#103) OBSERVACOES: a) ...#13#10b) ...`
+  - Exemplo: `I - DA FISCALIZACAO:#13#10 . #13#10Trata-se de acao fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalizacao...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVACOES:#13#10 . #13#10a) ...#13#10b) ...`
+  - **Normalização do legado (obrigatória)**: rascunho antigo redigido com `1) DA FISCALIZAÇÃO:` / `2) IRREGULARIDADE:` / `3) OBSERVAÇÕES:` é convertido para o formato romano ao montar o `[texto_autuacao]` (troca determinística de subtítulo, sem tocar no resto do texto) — todo TXT sai no formato novo, mesmo de rascunho antigo.
 - `[cod_3]` = código da ementa com o hífen removido, mantendo TODOS os dígitos. Ex: `312358-8` → `3123588`; `000361-0` → `0003610`. Nunca usar zero-padding de 7 dígitos — o dígito verificador faz parte do código.
 - Todos os autos da mesma empresa concatenados no mesmo arquivo, um bloco após o outro, sem linhas em branco.
 

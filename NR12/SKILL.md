@@ -9,7 +9,7 @@ description: >
   riscos de máquina", "partida inesperada", "capacitação NR-12". Acione também
   quando /inspecao-inicial ou /aft-rt-rgi estiverem em curso e a NR
   identificada for a 12 — é a consultora especializada para NR-12. Retorna:
-  (1) código da ementa + descrição oficial; (2) bloco 2) IRREGULARIDADE pronto
+  (1) código da ementa + descrição oficial; (2) bloco II - IRREGULARIDADE pronto
   para o auto de infração; (3) linha formatada para a Seção 4 do RT; (4)
   fragmento de fundamentação para o Termo de Interdição. NÃO empacota TXT
   (delega a /gera-ai) e NÃO redige o auto inteiro (delega a /inspecao-
@@ -112,7 +112,7 @@ Use APENAS quando a Fase 2 não bater nenhuma das 16 ementas locais.
 
 ---
 
-## FASE 4 — REDAÇÃO DO BLOCO 2) IRREGULARIDADE
+## FASE 4 — REDAÇÃO DO BLOCO II - IRREGULARIDADE
 
 Para cada ementa confirmada, redija o **bloco 2)** que será colado dentro do auto de infração padrão de 3 subtítulos. A skill chamadora (`/inspecao-inicial` ou o próprio AFT) cuida dos subtítulos 1 e 3.
 
@@ -149,7 +149,7 @@ RISCO GRAVE?:  <SIM | NÃO | Indireto>
 
 ----- BLOCO PARA O AUTO DE INFRAÇÃO (subtítulo 2) -----
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 <texto redigido conforme regras da Fase 4>
 
@@ -218,7 +218,7 @@ No modo **B/C** (sub-rotina), substitua o rodapé por uma marca curta:
 
 ### Com /inspecao-inicial
 
-Quando essa skill identifica NR-12 na Fase 2 ("Identificação de NR e Ementa"), em vez de fazer a busca por conta própria, chama esta skill passando a narrativa de cada irregularidade NR-12. O bloco `2) IRREGULARIDADE` retornado é colado direto no auto; a chamadora anexa o subtítulo 1) DA FISCALIZAÇÃO (contextual). O 3) OBSERVAÇÕES **não é escrito** — é único, fixo e injetado pelo `/gera-ai` (de `config/blocos_auto.md`).
+Quando essa skill identifica NR-12 na Fase 2 ("Identificação de NR e Ementa"), em vez de fazer a busca por conta própria, chama esta skill passando a narrativa de cada irregularidade NR-12. O bloco `II - IRREGULARIDADE` retornado é colado direto no auto; a chamadora anexa o subtítulo I - DA FISCALIZAÇÃO (contextual). O III - OBSERVAÇÕES **não é escrito** — é único, fixo e injetado pelo `/gera-ai` (de `config/blocos_auto.md`).
 
 ### Com /aft-rt-rgi
 

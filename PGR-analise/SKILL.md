@@ -464,14 +464,14 @@ Para cada ementa irregular, gere um bloco no formato consumido pelo `/gera-ai`:
 === AUTO DE INFRAÇÃO #[N] ===
 Ementa: [codigo com hífen, ex: 101059-0] - [descrição curta da ementa]
 
-1) DA FISCALIZAÇÃO:
+I - DA FISCALIZAÇÃO:
 
 Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º,
 do Decreto nº 4.552/2002, iniciada em [data_inspecao] e ainda em curso
 na presente data no empregador acima qualificado, que desenvolve a
 atividade econômica de [atividade_economica].
 
-2) IRREGULARIDADE:
+II - IRREGULARIDADE:
 
 [Conteúdo específico da ementa, com base na análise — ver regras abaixo]
 

@@ -26,7 +26,9 @@ except Exception:
 
 HEADER_RE = re.compile(r"(=== AUTO(?: DE INFRAÇÃO)? #\d+ ===)")
 ELEM_RE = re.compile(r"^ELEMENTOS DE CONVICÇÃO:", re.MULTILINE)
-JA_TEM_OBS = re.compile(r"^\s*3\)\s*OBSERVA", re.MULTILINE | re.IGNORECASE)
+# Reconhece o formato atual ("III - OBSERVAÇÕES") e o legado ("3) OBSERVAÇÕES"),
+# para nunca duplicar o bloco num auto que ja o tenha.
+JA_TEM_OBS = re.compile(r"^\s*(?:3\)|III\s*[-–)])\s*OBSERVA", re.MULTILINE | re.IGNORECASE)
 
 
 def carregar_bloco3():
