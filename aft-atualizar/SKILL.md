@@ -37,9 +37,8 @@ git log HEAD..origin/main --oneline   # commits novos disponíveis
 ```
 
 - **Lista vazia** → já está na última versão; informe isso e siga para o Passo 2.
-- **Lista com commits** → **antes de baixar**, faça a varredura de segurança abaixo
-  (Passo 1a). Só depois de ela passar, atualize e guarde as mensagens para o resumo
-  final:
+- **Lista com commits** → **antes de baixar**, faça a varredura de segurança (Passo 1a) e
+  capture as novidades para o AFT (Passo 1b). Só depois das duas, atualize:
   ```bash
   git pull origin main
   ```
@@ -68,6 +67,27 @@ python ~/.claude/skills/_scripts/checar_diff.py        # varredura das linhas no
 
 O `checar_diff.py` é um alarme: nunca bloqueia nem altera nada, só relata. Quem decide
 seguir é sempre o AFT.
+
+### Passo 1b — Capturar as novidades (antes do pull)
+
+O `NOVIDADES.md` na raiz do repositório é o changelog escrito **para o AFT** (sem jargão
+de programador) — é o que você vai apresentar no resumo final, não as mensagens de commit
+(essas são para quem mantém o código). Capture as entradas que ainda não chegaram nesta
+máquina:
+
+```bash
+git diff HEAD..origin/main -- NOVIDADES.md
+```
+
+- **Diff com linhas `+`** → são as entradas novas. Guarde o texto (ignore linhas `+++` de
+  cabeçalho e comentários `<!-- commit: ... -->`, que são só para rastreamento interno) —
+  vai direto no resumo do Passo 4, praticamente sem reescrever.
+- **Diff vazio, mas havia commits na lista do Passo 1** → essa atualização não teve
+  entrada de changelog (pode acontecer: nem toda mudança é relevante o bastante para o
+  AFT, ou foi esquecida). Não deixe isso desaparecer: liste os títulos desses commits
+  (`git log HEAD..origin/main --oneline`) como "outras alterações desta atualização",
+  traduzindo cada título para uma frase simples — é a rede de segurança para quando o
+  `NOVIDADES.md` não foi atualizado junto.
 
 ## Passo 2 — Atualizar o `notebooklm` (notebooklm-py)
 
@@ -153,15 +173,20 @@ algo sem explicação.
 
 ## Passo 4 — Resumo final ao AFT
 
-Uma mensagem só, juntando os três passos, por exemplo:
+Uma mensagem só, juntando os passos. As novidades vêm do `NOVIDADES.md` capturado no
+Passo 1b — apresente o conteúdo das entradas, não os títulos de commit. Exemplo:
 
 ```
 🔄 Atualização do AFT Toolkit
 
-✅ Skills: 3 novidades baixadas
-   • Nova skill /analise-acidente
-   • Apostila: nova seção sobre os modelos do Claude
-   • Guard-rail de PII (checar_pii.py)
+✅ Skills atualizadas — novidades para você:
+
+📋 Painel interativo — agora dá para marcar DET como checada, resolver pendência e
+   mudar status direto pelo navegador, sem pedir ao Claude.
+🔄 Sincronização automática do DET — a extensão do Chrome importa notificações e
+   prazos direto nas suas fichas.
+🐛 2 correções: notificações de fiscalizações antigas não vazam mais para a OS
+   errada; prazo de item de NAD não é mais sobrescrito por engano.
 
 ✅ notebooklm: atualizado de 0.6.0 → 0.7.2
 
@@ -169,7 +194,9 @@ Uma mensagem só, juntando os três passos, por exemplo:
 ```
 
 Se nada mudou em nenhuma das duas fontes, diga isso em uma frase e confirme o
-diagnóstico — não é preciso alarde.
+diagnóstico — não é preciso alarde. Se houve commits sem entrada no `NOVIDADES.md`
+(rede de segurança do Passo 1b), inclua-os como "outras alterações desta atualização",
+separados das novidades principais.
 
 ## Regras
 
