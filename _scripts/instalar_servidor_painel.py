@@ -123,17 +123,24 @@ def _ps_aspas(s: str) -> str:
 
 def instalar_windows(python_path: str, pasta_os: str, porta: int) -> int:
     exe = pythonw_de(python_path)
+    # Gatilho e principal ESCOPADOS ao usuario atual: -AtLogOn sem -User cria uma
+    # tarefa que dispara no logon de QUALQUER usuario, o que exige privilegio de
+    # administrador e falha com "Acesso negado" (HRESULT 0x80070005) numa conta
+    # padrao. Escopando ao proprio usuario (LogonType Interactive, RunLevel
+    # Limited), um usuario comum registra a tarefa sem elevacao.
     script_ps = f"""
 $ErrorActionPreference = 'Stop'
+$user = "$env:USERDOMAIN\\$env:USERNAME"
 $action = New-ScheduledTaskAction -Execute {_ps_aspas(exe)} `
   -Argument ('"{script_servidor()}" "{pasta_os}" --porta {porta}')
-$trigger = New-ScheduledTaskTrigger -AtLogOn
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+$principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
 $settings = New-ScheduledTaskSettingsSet -RestartCount 3 `
   -RestartInterval (New-TimeSpan -Minutes 1) `
-  -ExecutionTimeLimit (New-TimeSpan -Zero) `
+  -ExecutionTimeLimit ([TimeSpan]::Zero) `
   -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 Register-ScheduledTask -TaskName {_ps_aspas(NOME_TAREFA)} -Action $action `
-  -Trigger $trigger -Settings $settings -Force | Out-Null
+  -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
 Start-ScheduledTask -TaskName {_ps_aspas(NOME_TAREFA)}
 """
     r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script_ps],

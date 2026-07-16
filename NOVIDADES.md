@@ -7,6 +7,14 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 16/07/2026
+<!-- commit: fix-servidor-painel-windows -->
+
+**Painel sempre ligado agora funciona no Windows** — o recurso de deixar o painel
+interativo subindo sozinho a cada login (oferecido no `/aft-setup` e no `/aft-atualizar`)
+tinha uma falha que fazia a instalação dar erro no Windows ("Acesso negado"). Corrigido:
+agora a tarefa é registrada no seu próprio usuário, sem exigir administrador. Quem já
+tinha tentado ativar e não conseguiu, é só pedir de novo.
+
 <!-- commit: agenda-google -->
 
 **Prazos de DET no seu Google Calendar** — nova skill `/agenda-det`: cria um evento de

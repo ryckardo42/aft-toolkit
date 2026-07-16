@@ -26,6 +26,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Raiz das skills: avo deste arquivo (.../skills/_scripts/checar_diff.py).
 SKILLS_DIR = Path(__file__).resolve().parent.parent
 
@@ -86,6 +90,7 @@ def obter_diff():
         out = subprocess.run(
             ["git", "-C", str(SKILLS_DIR), "diff", f"{base}..{topo}"],
             capture_output=True, text=True, timeout=30,
+            encoding="utf-8", errors="replace",
         )
     except (OSError, subprocess.SubprocessError) as e:
         print(f"aviso: nao consegui rodar o git diff ({e}). Pulei a varredura.", file=sys.stderr)
