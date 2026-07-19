@@ -552,7 +552,7 @@ padding:26px;text-align:center;color:var(--t3)}
 /* Detalhe — modal central amplo */
 #veu{display:none;position:fixed;inset:0;background:rgba(20,20,19,.55);z-index:8}
 #detalhe{display:none;position:fixed;top:3vh;left:50%;transform:translateX(-50%);
-z-index:9;width:min(1060px,95vw);max-height:94vh;background:var(--paper);
+z-index:9;width:80vw;max-height:94vh;background:var(--paper);
 border:1px solid var(--bd);border-radius:14px;
 box-shadow:0 24px 70px rgba(20,20,19,.35);overflow-y:auto;padding:28px clamp(18px,3vw,40px) 44px}
 #detalhe.aberto,#veu.aberto{display:block}
@@ -610,8 +610,8 @@ border:1px solid var(--bd);border-radius:6px;padding:3px 8px;color:var(--t1)}
 .acoes input{min-width:220px}
 .ri-tag{font-weight:700;color:var(--t1)}
 .cmds{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
-.cmds .rot{flex-basis:100%;font-size:11px;letter-spacing:.07em;text-transform:uppercase;
-color:var(--t3)}
+.cmds .rot{flex-basis:100%;font-size:12px;font-weight:700;letter-spacing:.07em;
+text-transform:uppercase;color:var(--t1)}
 .cmds button{font:12.5px var(--serif);background:var(--paper);border:1px solid var(--bd);
 border-radius:8px;padding:5px 12px;cursor:pointer;color:var(--t2);position:relative}
 .cmds button:hover{border-color:var(--coral);color:var(--coral-deep)}
@@ -630,6 +630,123 @@ font-size:13px;z-index:20;display:none}
 .badge{background:#233530}.chip{background:#3A2C22}
 .badge.vencido,.badge.urgente{background:#3D2521}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
+}
+/* ---- Dossiê da OS (tela de detalhe) ---- */
+:root{--sans:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;--ochre:#A8842C}
+#detalhe{top:2vh;width:min(1280px,96vw);max-height:96vh;border-radius:18px;
+  padding:0 0 34px}
+#detalhe .topo{display:flex;justify-content:space-between;align-items:center;
+  padding:20px 34px 0}
+#detalhe .voltar{font:13px var(--sans);color:var(--t3);cursor:pointer;background:none;border:none;padding:0}
+#detalhe .voltar:hover{color:var(--coral-deep)}
+#detalhe .status-pill{font:600 11.5px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  background:#E1ECE8;color:#38665A;border-radius:20px;padding:6px 12px}
+#detalhe .cab{padding:14px 34px 22px;border-bottom:1px solid #E2DECF;
+  display:flex;flex-direction:column;gap:6px}
+#detalhe h2{font:500 30px var(--serif);letter-spacing:-.01em;margin:0}
+#detalhe .cab .meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+#detalhe .cab .meta .sep{color:#C4BFB0}
+/* stepper de andamento */
+.stepper-os{display:flex;align-items:flex-start;padding:24px 34px 20px;border-bottom:1px solid #E2DECF}
+.stepper-os .marco{display:flex;flex-direction:column;align-items:center;gap:7px;width:110px}
+.stepper-os .pt{width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid #C4BFB0}
+.stepper-os .marco.feito .pt{background:var(--teal);border:3px solid var(--paper);box-shadow:0 0 0 1px var(--teal)}
+.stepper-os .marco.atual .pt{width:16px;height:16px;background:var(--coral-deep);
+  border:3px solid var(--paper);box-shadow:0 0 0 2px var(--coral-deep);margin-top:-1px}
+.stepper-os .rot{font:600 12px/1.3 var(--sans);color:var(--t3);text-align:center}
+.stepper-os .marco.feito .rot{color:var(--t1)}
+.stepper-os .marco.atual .rot{font-weight:700;color:var(--coral-deep)}
+.stepper-os .sub{font-size:11px;color:var(--t3);text-align:center}
+.stepper-os .lig{flex:1;height:2px;background:#DCD7C8;margin-top:6px}
+.stepper-os .lig.feito{background:var(--teal)}
+/* próximo passo */
+.hero-passo{margin:22px 34px 0;background:#F7E8E2;border:1px solid #E8C7B9;
+  border-left:5px solid var(--coral-deep);border-radius:12px;padding:16px 20px;
+  display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.hero-passo .rotulo{font:700 11px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#9E4C34}
+.hero-passo p{font:16px/1.45 var(--serif);margin:4px 0 0;color:var(--t1)}
+.hero-passo .b1{font:600 13px var(--sans);background:var(--coral-deep);color:var(--paper);
+  border:none;border-radius:8px;padding:9px 16px;cursor:pointer}
+.hero-passo .b2{font:600 13px var(--sans);background:var(--paper);color:#9E4C34;
+  border:1px solid #DCB4A3;border-radius:8px;padding:9px 16px;cursor:pointer}
+/* corpo em duas colunas + cards */
+#detalhe .corpo2{display:grid;grid-template-columns:1.7fr 1fr;gap:20px;
+  padding:20px 34px 6px;align-items:start}
+#detalhe .corpo2>div>.cartao{margin-bottom:14px}
+#detalhe .cartao{background:var(--paper);border:1px solid var(--bds);border-radius:12px;padding:18px 20px}
+#detalhe .cartao h3{font:700 12px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--t3);margin:0 0 12px;border:none;padding:0}
+#detalhe .cartao .cont{float:right;font:12px var(--sans);color:var(--t3);letter-spacing:0;text-transform:none}
+/* DETs como cards com checkbox */
+.det-item{display:flex;align-items:flex-start;gap:12px;border:1px solid var(--bds);
+  border-radius:10px;padding:11px 14px;cursor:pointer;margin-bottom:8px}
+.det-item:hover{border-color:#D2CDBC;background:#FFF}
+.det-item .cx{width:18px;height:18px;flex:none;border-radius:5px;border:2px solid #C4BFB0;margin-top:1px}
+.det-item.feito .cx{border:none;background:var(--teal);color:var(--paper);
+  font:700 12px/18px var(--sans);text-align:center}
+.det-item .cod{font:600 13.5px var(--sans);color:var(--t1)}
+.det-item .info{font-size:12px;color:var(--t3);line-height:1.45}
+.det-item .selo{margin:1px 0 0}
+/* timeline */
+.tl{display:flex;gap:14px}
+.tl .eixo{display:flex;flex-direction:column;align-items:center;width:10px;flex:none}
+.tl .pt{width:10px;height:10px;border-radius:50%;background:#C4BFB0;margin-top:3px;flex:none}
+.tl.recente .pt{background:var(--coral-deep)}
+.tl .fio{flex:1;width:2px;background:#E4E0D2}
+.tl .txt{padding-bottom:16px;min-width:0}
+.tl .data{font:600 11.5px var(--sans);color:var(--t3)}
+.tl .desc{font-size:13.5px;color:#33312C;line-height:1.45;margin-top:2px}
+/* coluna direita: comandos por fase */
+.fase .frot{font:700 10.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;
+  color:#A5A092;display:block;margin:10px 0 6px}
+.fase .cmds{margin:0;padding:0;border:none;background:none}
+.fase .cmds button{background:#FFF}
+/* AUTOS: seção solo, largura total */
+.autos-solo-cab{margin:4px 34px 0;padding-top:24px;border-top:1px solid #E2DECF;
+  display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px}
+.autos-solo-cab h3{font:500 23px var(--serif);margin:0;color:var(--t1);
+  border:none;padding:0;letter-spacing:0;text-transform:none}
+.autos-solo-cab h3 em{color:var(--coral-deep)}
+.autos-solo-cab .fonte{font-size:11.5px;color:#A5A092;margin:0}
+.autos-chips{margin:12px 34px 0;display:flex;gap:7px;flex-wrap:wrap}
+.autos-chips span{font:600 12px var(--sans);background:var(--bds);color:var(--t2);
+  border-radius:20px;padding:6px 12px}
+.autos-corpo{padding:10px 34px 0;display:flex;flex-direction:column;gap:22px}
+.grupo-cab{display:flex;align-items:center;gap:12px;margin-top:4px}
+.grupo-cab .grot{font:700 12px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--t3);white-space:nowrap}
+.grupo-cab .linha{flex:1;height:1px;background:#E2DECF}
+.grupo-cab .gcont{font-size:12px;color:#A5A092;white-space:nowrap}
+.autos-grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
+  gap:12px;align-items:start;margin-top:10px}
+.auto-card{background:var(--paper);border:1px solid var(--bds);border-radius:12px;
+  padding:15px 18px;display:flex;flex-direction:column;gap:8px}
+.auto-card:hover{border-color:#D2CDBC;box-shadow:0 3px 12px rgba(20,20,19,.06)}
+.auto-card .lin1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.auto-card .num{font:600 16px var(--serif);color:var(--coral-deep)}
+.auto-card .quando{font-size:11.5px;color:#A5A092;white-space:nowrap}
+.auto-card .tags{display:flex;gap:6px;flex-wrap:wrap}
+.auto-card .tag{font:600 11px var(--sans);background:var(--bds);color:var(--t2);border-radius:6px;padding:3px 8px}
+.auto-card .tag.base{background:#EFE2D5;color:#8A5A3C}
+.auto-card .desc{font:14px/1.5 var(--serif);color:#33312C;margin:0}
+.auto-card .constat{font-size:12.5px;line-height:1.55;color:var(--t2);margin:0}
+.auto-card .constat b{color:var(--t1)}
+/* rodapé da seção de autos */
+.autos-rodape{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;margin:0 34px}
+.autos-rodape .cartao h4{font:700 11.5px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin:0 0 7px}
+.autos-rodape .alerta{background:#F5EEDD;border:1px solid #E4D5AE;border-left:5px solid var(--ochre)}
+.autos-rodape .alerta h4{color:#7C5A1E}
+.autos-rodape p{margin:0 0 5px;font-size:12.5px;line-height:1.55;color:var(--t2)}
+@media (prefers-color-scheme: dark){
+  #detalhe .cab,.stepper-os,.autos-solo-cab{border-color:#34302A}
+  .hero-passo{background:#3D2521;border-color:#5A3327}
+  .det-item:hover,.auto-card:hover{background:#26241F}
+  .det-item:hover,.auto-card:hover{border-color:#4A4438}
+  .fase .cmds button{background:var(--paper)}
+  .tl .fio{background:#3A362E}
+  .tl .desc,.auto-card .desc{color:var(--t2)}
+  .autos-rodape .alerta{background:#332C1B;border-color:#4A3F22}
+  #detalhe .status-pill{background:#233530;color:#8FBCAC}
 }
 """
 
@@ -694,70 +811,167 @@ function linkDocs(i,t){const o=DATA.os[i];let s=esc(t);
  for(const d of o.docs){const e=esc(d);
   s=s.split(e).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>')}
  return s}
+// ---- Dossiê da OS (tela de detalhe) ----------------------------------------
+// Estágio do andamento da OS: régua fixa de 5 marcos.
+const STAGES=['Aberta','Inspecionada','Em instrução','Autuada','Encerrada'];
+function stageOS(o){
+ if(o.status==='encerrada')return 4;
+ if((o.autos||[]).length)return 3;
+ if((o.dets||[]).length)return 2;
+ if(o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)return 1;
+ return 0}
+// Grupo de um auto a partir da base legal (fallback: descrição); senão CLT.
+function grupoAuto(a){
+ const re=/NR[- ]?0?([0-9]{1,2})/i;
+ const m=re.exec(a.base||'')||re.exec(a.descricao||'');
+ return m?('NR-'+('0'+m[1]).slice(-2)):'CLT / legislação'}
+// Próximo passo sugerido — primeira regra que casar; null = sem hero.
+function proximoPasso(o){
+ const venc=(o.dets||[]).find(d=>!d.feito&&d.urg==='vencido');
+ if(venc)return{html:'O DET <b>'+esc(venc.codigo||'?')+'</b> está <b>'+esc(venc.selo||'vencido')+
+  '</b> sem entrega — cabe auto por omissão (art. 630 §4º CLT).',cmds:['/det-630','/tn-nco']};
+ if((o.pendencias||[]).length)return{html:'Pendência aberta: '+esc(o.pendencias[0]),cmds:[]};
+ if(!(o.autos||[]).length&&o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)
+  return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/inspecao-inicial']};
+ return null}
+function copiaPasso(i,k){const pp=proximoPasso(DATA.os[i]);
+ if(pp)copia(pp.cmds[k]+' — OS '+DATA.os[i].empregador)}
+// Comandos agrupados por fase (índices do array CMDS).
+const FASES=[['Campo',[0]],['Autuação',[1,2,3]],['DET / documentos',[4,5]],['Encerramento',[6,7]]];
+function stepperHTML(o,st){
+ const venc=(o.dets||[]).filter(d=>!d.feito&&d.urg==='vencido').length;
+ const autos=o.autos||[],datas=autos.map(a=>a.data).filter(Boolean);
+ const subs=[o.inicio||'—',
+  (o.inspecao&&o.inspecao.data)||((o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)?'relato registrado':'sem relato de campo'),
+  (o.dets||[]).length?(o.dets.length+' DET'+(venc?' · '+venc+' vencido(s)':'')):'sem DET',
+  autos.length?(autos.length+' auto(s)'+(datas.length?' · '+datas[0]+(datas.length>1?'–'+datas[datas.length-1]:''):'')):'—',
+  o.status==='encerrada'?'concluída':'—'];
+ let h='<div class="stepper-os">';
+ STAGES.forEach((r,k)=>{
+  if(k)h+='<div class="lig'+(k<=st?' feito':'')+'"></div>';
+  h+='<div class="marco'+(k<st?' feito':k===st?' atual':'')+'"><span class="pt"></span>'+
+   '<span class="rot">'+esc(r)+'</span><span class="sub">'+esc(subs[k])+'</span></div>'});
+ return h+'</div>'}
+function cartaoDets(o,i){
+ let h='<div class="cartao"><h3>Notificações DET <span class="cont">'+(o.dets||[]).length+'</span></h3>';
+ if(!(o.dets||[]).length)return h+'<p class="vazio">nenhuma registrada</p></div>';
+ h+=o.dets.map((d,k)=>{
+  const info=esc((d.codigo?d.linha.replace(d.codigo,''):d.linha).replace(/^[ —–-]+/,''));
+  return '<div class="det-item'+(d.feito?' feito':'')+'"'+
+   (ATIVO&&o.pasta&&d.codigo?' onclick="agDet('+i+','+k+')" title="clique para '+
+    (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
+   '<span class="cx">'+(d.feito?'✓':'')+'</span><div><div class="cod">'+esc(d.codigo||'?')+'</div>'+
+   (info?'<div class="info">'+info+'</div>':'')+
+   (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+'</div></div>'}).join('');
+ return h+'</div>'}
+function cartaoNovas(o){
+ return '<div class="cartao"><h3>Notificações na pasta sem registro <span class="cont">'+o.novas.length+
+  '</span></h3><ul class="lista">'+o.novas.map(n=>'<li>'+esc(n.codigo||n.arquivo)+
+  (n.prazo?' — prazo '+esc(n.prazo):'')+(n.ciencia?' — ciência '+esc(n.ciencia):'')+
+  '</li>').join('')+'</ul></div>'}
+function cartaoPendencias(o,i){
+ return '<div class="cartao"><h3>Pendências da OS <span class="cont">'+o.pendencias.length+
+  '</span></h3><ul class="lista">'+o.pendencias.map((s,k)=>'<li>◻ '+esc(s)+
+  (ATIVO&&o.pasta?'<button class="mini" onclick="agPend('+i+','+k+')">resolver</button>':'')+
+  '</li>').join('')+'</ul></div>'}
+function cartaoInspecao(o){
+ return '<div class="cartao"><h3>Inspeção física'+
+  (o.inspecao.data?' <span class="cont">'+esc(o.inspecao.data)+'</span>':'')+'</h3>'+
+  '<ul class="insp">'+o.inspecao.bullets.map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul></div>'}
+function cartaoTimeline(o,i){
+ let h='<div class="cartao"><h3>Registro de atividades <span class="cont">'+(o.atividades||[]).length+'</span></h3>';
+ if(!(o.atividades||[]).length)return h+'<p class="vazio">nenhuma atividade registrada</p></div>';
+ h+=o.atividades.map((a,k)=>'<div class="tl'+(k===0?' recente':'')+'"><div class="eixo"><span class="pt"></span>'+
+  (k<o.atividades.length-1?'<span class="fio"></span>':'')+'</div><div class="txt">'+
+  '<div class="data">'+esc(a.data)+'</div><div class="desc">'+linkDocs(i,a.acao)+
+  (a.detalhe?' — '+linkDocs(i,a.detalhe):'')+'</div></div></div>').join('');
+ return h+'</div>'}
+function cartaoAcoes(o,i){
+ if(!(ATIVO&&o.pasta))return '';
+ const st=['em_andamento','aguardando_resposta','encerrada'];
+ if(o.status&&!st.includes(o.status))st.unshift(o.status);
+ return '<div class="cartao"><h3>Ações rápidas</h3>'+
+  '<div class="acoes" style="margin:0;border:none;background:none;padding:0">'+
+  '<span><label>status </label><select onchange="agStatus('+i+',this.value)">'+
+  st.map(s=>'<option'+(s===o.status?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select></span>'+
+  '<span><label>embargo/interdição </label>'+
+  '<button class="mini" onclick="agEmbargo('+i+',0)">vigente</button>'+
+  '<button class="mini" onclick="agEmbargo('+i+',1)">suspenso</button></span>'+
+  '<span><input id="ativ-txt" placeholder="registrar atividade de hoje..." '+
+  'onkeydown="if(event.key===&quot;Enter&quot;)agAtiv('+i+')">'+
+  '<button class="mini" onclick="agAtiv('+i+')">registrar</button></span></div></div>'}
+function cartaoComandosPorFase(o,i){
+ return '<div class="cartao"><h3>Comandos para o Claude Code</h3>'+
+  FASES.map(f=>'<div class="fase"><span class="frot">'+esc(f[0])+'</span><div class="cmds">'+
+  f[1].map(k=>'<button data-tip="'+esc(CMDS[k][1])+'" onclick="copiaCmd('+i+','+k+')">'+
+  esc(CMDS[k][0])+'</button>').join('')+'</div></div>').join('')+'</div>'}
+function cartaoRelatorios(o){
+ if(!(o.docs&&o.docs.length))return '';
+ return '<div class="cartao"><h3>Relatórios da OS <span class="cont">'+o.docs.length+
+  '</span></h3><ul class="lista">'+o.docs.map(d=>'<li>'+
+  (ATIVO&&o.pasta?'<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+esc(d)+'</a>':esc(d))+
+  '</li>').join('')+'</ul></div>'}
+// AUTOS — seção solo, largura total, sempre por último.
+function secaoAutos(o,i){
+ const autos=o.autos||[];let h='';
+ h+='<div class="autos-solo-cab"><h3>Autos de infração <em>lavrados</em> '+
+  '<span style="color:var(--t3);font-size:15px">· '+autos.length+'</span></h3>'+
+  (o.fonte_autos&&autos.length?'<span class="fonte">fonte: '+esc(o.fonte_autos)+'</span>':'')+'</div>';
+ if(!autos.length)return h+'<p class="vazio" style="margin:12px 34px">nenhum auto lavrado encontrado</p>';
+ const grupos=new Map();
+ autos.forEach(a=>{const g=grupoAuto(a);if(!grupos.has(g))grupos.set(g,[]);grupos.get(g).push(a)});
+ h+='<div class="autos-chips">'+[...grupos].map(g=>'<span>'+esc(g[0])+' · '+g[1].length+'</span>').join('')+'</div>';
+ h+='<div class="autos-corpo">'+[...grupos].sort((a,b)=>b[1].length-a[1].length).map(g=>
+  '<div><div class="grupo-cab"><span class="grot">'+esc(g[0])+'</span><span class="linha"></span>'+
+  '<span class="gcont">'+g[1].length+(g[1].length===1?' auto':' autos')+'</span></div>'+
+  '<div class="autos-grid2">'+g[1].map(a=>
+   '<div class="auto-card"><div class="lin1"><span class="num">Nº '+esc(a.numero_ai)+'</span>'+
+   (a.data?'<span class="quando">Lavrado em '+esc(a.data)+'</span>':'')+'</div>'+
+   '<div class="tags"><span class="tag">Ementa '+esc(a.ementa)+'</span>'+
+   (a.base?'<span class="tag base">'+esc(a.base)+'</span>':'')+'</div>'+
+   (a.descricao?'<p class="desc">'+esc(a.descricao)+'</p>':'')+
+   (a.constatacao?'<p class="constat"><b>Constatação:</b> '+esc(a.constatacao)+'</p>':'')+
+   '</div>').join('')+'</div></div>').join('')+'</div>';
+ if((o.substituidos||[]).length||(o.autos_pendentes||[]).length){
+  h+='<div class="autos-rodape" style="margin-top:16px">';
+  if(o.substituidos.length)h+='<div class="cartao"><h4>Autos substituídos (re-lavratura)</h4>'+
+   o.substituidos.map(s=>'<p>'+esc(s)+'</p>').join('')+'</div>';
+  if(o.autos_pendentes.length)h+='<div class="cartao alerta"><h4>Pendente de transmissão · '+
+   o.autos_pendentes.length+'</h4>'+o.autos_pendentes.map(s=>'<p>'+esc(s)+'</p>').join('')+'</div>';
+  h+='</div>'}
+ return h}
 function abre(i){
- const o=DATA.os[i];let h='<button class="fechar" onclick="fecha()">fechar ✕</button>';
- h+='<h2>'+esc(o.empregador)+'</h2>';
- h+='<div class="meta">'+esc(o.cnpj_fmt||'CNPJ não informado')+
-    (o.municipio?' · '+esc(o.municipio):'')+
-    (o.ri?' · <span class="ri-tag">RI '+esc(o.ri)+'</span>':'')+'</div>';
- const l2=[];
- if(o.inicio)l2.push('Início: '+esc(o.inicio)+' ('+esc(o.ha_dias)+')');
- if(o.vencimento)l2.push('Vence: '+esc(o.vencimento));
- if(o.num_trabalhadores)l2.push(esc(o.num_trabalhadores)+' trabalhadores');
- if(o.embargo)l2.push('Embargo/interdição: '+esc(o.embargo));
- if(l2.length)h+='<div class="meta">'+l2.join(' · ')+'</div>';
- if(o.caminho)h+='<div><button class="pasta-btn" onclick="copiaCaminho('+i+')">copiar caminho da pasta</button></div>';
- if(ATIVO&&o.pasta){
-  const st=['em_andamento','aguardando_resposta','encerrada'];
-  if(o.status&&!st.includes(o.status))st.unshift(o.status);
-  h+='<div class="acoes"><span><label>status </label><select onchange="agStatus('+i+',this.value)">'+
-     st.map(s=>'<option'+(s===o.status?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select></span>'+
-     '<span><label>embargo/interdição </label>'+
-     '<button class="mini" onclick="agEmbargo('+i+',0)">vigente</button>'+
-     '<button class="mini" onclick="agEmbargo('+i+',1)">suspenso</button></span>'+
-     '<span><input id="ativ-txt" placeholder="registrar atividade de hoje..." '+
-     'onkeydown="if(event.key===&quot;Enter&quot;)agAtiv('+i+')">'+
-     '<button class="mini" onclick="agAtiv('+i+')">registrar</button></span></div>';}
- h+='<div class="cmds"><span class="rot">comandos prontos para o Claude Code — clique para copiar, passe o mouse para a legenda</span>'+
-    CMDS.map((c,k)=>'<button data-tip="'+esc(c[1])+'" onclick="copiaCmd('+i+','+k+')">'+
-    esc(c[0])+'</button>').join('')+'</div>';
- h+='<h3'+(o.dets.length?'':' class="vazia"')+'>Notificações DET ('+o.dets.length+')</h3>';
- h+=o.dets.length?'<ul class="lista">'+o.dets.map((d,k)=>'<li class="'+
-    (d.feito?'det-ok':'det-aberto '+esc(d.urg))+'">'+
-    (d.feito?'✔ ':'◻ ')+esc(d.linha)+
-    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+
-    (ATIVO&&o.pasta&&d.codigo?'<button class="mini" onclick="agDet('+i+','+k+')">'+
-     (d.feito?'desmarcar':'marcar como checado')+'</button>':'')+
-    '</li>').join('')+'</ul>':'<p class="vazio">nenhuma registrada</p>';
- if(o.novas.length){h+='<h3>Notificações na pasta sem registro ('+o.novas.length+')</h3><ul class="lista">'+
-    o.novas.map(n=>'<li>'+esc(n.codigo||n.arquivo)+(n.prazo?' — prazo '+esc(n.prazo):'')+
-    (n.ciencia?' — ciência '+esc(n.ciencia):'')+'</li>').join('')+'</ul>';}
- if(ATIVO&&o.pasta&&o.docs&&o.docs.length){
-    h+='<h3>Relatórios da OS ('+o.docs.length+')</h3><ul class="lista">'+
-    o.docs.map(d=>'<li><a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+
-    esc(d)+'</a></li>').join('')+'</ul>';}
- if(o.inspecao && o.inspecao.bullets && o.inspecao.bullets.length){
-    h+='<h3>Inspeção física'+(o.inspecao.data?' — '+esc(o.inspecao.data):'')+'</h3>';
-    h+='<ul class="insp">'+o.inspecao.bullets.map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul>';}
- h+='<h3'+(o.autos.length?'':' class="vazia"')+'>Autos de infração lavrados ('+o.autos.length+')</h3>';
- if(o.fonte_autos&&o.autos.length)h+='<div class="fonte">fonte: '+esc(o.fonte_autos)+'</div>';
- h+=o.autos.length?'<div class="autos-grid">'+o.autos.map(a=>'<div class="auto"><b class="num">Nº '+esc(a.numero_ai)+'</b>'+
-    ' <span class="em">Ementa '+esc(a.ementa)+(a.base?' · '+esc(a.base):'')+'</span>'+
-    (a.descricao?'<p>'+esc(a.descricao)+'</p>':'')+
-    (a.constatacao?'<p><b>Constatação:</b> '+esc(a.constatacao)+'</p>':'')+
-    (a.data?'<div class="quando">Lavrado em '+esc(a.data)+'</div>':'')+'</div>').join('')+'</div>'
-    :'<p class="vazio">nenhum auto lavrado encontrado</p>';
- if(o.substituidos.length){h+='<h3>Autos substituídos (cancelados)</h3><ul class="lista">'+
-    o.substituidos.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';}
- if(o.autos_pendentes.length){h+='<h3>Pendentes de transmissão</h3><ul class="lista">'+
-    o.autos_pendentes.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';}
- if(o.pendencias.length){h+='<h3>Pendências da OS</h3><ul class="lista">'+
-    o.pendencias.map((s,k)=>'<li>◻ '+esc(s)+
-    (ATIVO&&o.pasta?'<button class="mini" onclick="agPend('+i+','+k+')">resolver</button>':'')+
-    '</li>').join('')+'</ul>';}
- if(o.atividades.length){h+='<h3>Registro de atividades (recentes)</h3><table class="ativ">'+
-    o.atividades.map(a=>'<tr><td>'+esc(a.data)+'</td><td>'+linkDocs(i,a.acao)+
-    (a.detalhe?' — '+linkDocs(i,a.detalhe):'')+'</td></tr>').join('')+'</table>';}
+ const o=DATA.os[i],st=stageOS(o);
+ let h='<div class="topo"><button class="voltar" onclick="fecha()">← voltar ao painel</button>'+
+  '<span class="status-pill">'+esc((o.status||'').replace(/_/g,' '))+'</span></div>';
+ const meta=[esc(o.cnpj_fmt||'CNPJ não informado'),esc(o.municipio),
+  o.ri?'<b>RI '+esc(o.ri)+'</b>':'',
+  o.inicio?'Início '+esc(o.inicio)+' ('+esc(o.ha_dias)+')':'',
+  o.vencimento?'Vence '+esc(o.vencimento):'',
+  o.num_trabalhadores?esc(o.num_trabalhadores)+' trabalhadores':'',
+  o.embargo?'Embargo/interdição: '+esc(o.embargo):'',
+  o.caminho?'<span class="pasta-btn" onclick="copiaCaminho('+i+')">copiar caminho da pasta</span>':''
+ ].filter(Boolean);
+ h+='<div class="cab"><h2>'+esc(o.empregador)+'</h2><div class="meta">'+
+  meta.join('<span class="sep">·</span>')+'</div></div>';
+ h+=stepperHTML(o,st);
+ const pp=proximoPasso(o);
+ if(pp)h+='<div class="hero-passo"><div><span class="rotulo">Próximo passo sugerido</span>'+
+  '<p>'+pp.html+'</p></div>'+(pp.cmds.length?'<div>'+
+  pp.cmds.map((c,k)=>'<button class="'+(k?'b2':'b1')+'" onclick="copiaPasso('+i+','+k+')">'+
+  esc(c)+'</button>').join(' ')+'</div>':'')+'</div>';
+ h+='<div class="corpo2"><div>';
+ h+=cartaoDets(o,i);
+ if((o.novas||[]).length)h+=cartaoNovas(o);
+ if((o.pendencias||[]).length)h+=cartaoPendencias(o,i);
+ if(o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)h+=cartaoInspecao(o);
+ h+=cartaoTimeline(o,i);
+ h+='</div><div>';
+ h+=cartaoAcoes(o,i);
+ h+=cartaoComandosPorFase(o,i);
+ h+=cartaoRelatorios(o);
+ h+='</div></div>';
+ h+=secaoAutos(o,i);
  P.innerHTML=h;P.classList.add('aberto');V.classList.add('aberto');P.scrollTop=0;
 }
 function fecha(){P.classList.remove('aberto');V.classList.remove('aberto')}
