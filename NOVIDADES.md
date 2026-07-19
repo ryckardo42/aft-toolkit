@@ -7,6 +7,15 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 19/07/2026
+<!-- commit: skills-interdicao-laudos -->
+
+**Duas skills novas para interdição e laudos de máquina** — `/auditoria-AR-NR12` julga o
+laudo de adequação/apreciação de riscos de máquinas (NBR ISO 12100 e NBR 14153) que a
+empresa apresenta ao pedir a suspensão de uma interdição ou ao responder notificação, em 6
+blocos de verificação, com parecer pronto. E `/rt-manutencao` redige o Relatório Técnico de
+MANUTENÇÃO da interdição/embargo (.docx no modelo oficial) quando o pedido de suspensão é
+negado. As duas se encadeiam: laudo insuficiente → RT de manutenção.
+
 <!-- commit: painel-interativo-padrao -->
 
 **Painel interativo já vem ligado de fábrica** — antes o toolkit perguntava, na
@@ -50,7 +59,7 @@ Usa o conector Google Calendar do Claude (login único do Google, pela interface
 Claude — nenhuma senha passa pelo toolkit). O `/aft-atualizar` vai te oferecer a
 ativação.
 
-**"Próximos vencimentos" no painel** — bloco novo logo abaixo dos contadores: todas as
+**"Próximos vencimentos" no painel** — bloco novo logo abaixo dos cards das auditorias: todas as
 notificações DET e pendências datadas, de todas as OS, em ordem de vencimento, cada uma
 com selo de urgência e botão "agendar no Google Calendar" (esse funciona sem login
 nenhum — abre o evento pronto, você só clica em Salvar).

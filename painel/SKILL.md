@@ -11,7 +11,7 @@ description: >
   autocontido: um CARD por OS colorido por urgência e, ao clicar, o detalhe —
   DETs, TODOS os autos lavrados (nº do AI, ementa, constatação), inspeção
   física, pendências e atividades. Com --scan, puxa os autos ao vivo do
-  Sistema Auditor. Tem MODO INTERATIVO opcional (servir_painel.py,
+  Sistema Auditor. Tem MODO INTERATIVO padrão (servir_painel.py,
   http://127.0.0.1:8347, 100% local): ações mecânicas nos cards — marcar DET
   respondida, resolver pendência, registrar atividade, status e
   embargo/interdição — gravadas no memory.md com backup, e botões que copiam
@@ -158,9 +158,10 @@ python ~/.claude/skills/_scripts/servir_painel.py "<PASTA_OS_ATIVAS>" --abrir
   somente leitura.
 - Para encerrar o servidor: `Ctrl+C` no terminal onde roda (ou reiniciar o computador —
   ele não se instala sozinho, só roda quando chamado).
-- **Sempre ligado (opcional):** para não depender de abrir terminal toda vez — necessário
-  para a sincronização automática do DET pela extensão Chrome (abaixo) —, instale como
-  serviço do sistema (o `/aft-setup`/`/aft-atualizar` já oferecem isso na instalação):
+- **Sempre ligado (padrão da instalação):** para não depender de abrir terminal —
+  necessário para a sincronização automática do DET pela extensão Chrome (abaixo). O
+  `/aft-setup` instala isso por padrão e o `/aft-atualizar` garante em quem ainda não tem;
+  se faltar nesta máquina, instale com:
   ```bash
   python ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<PASTA_OS_ATIVAS>"
   ```

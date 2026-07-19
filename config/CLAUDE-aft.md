@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v1 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v2 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -116,10 +116,14 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Analisar acidente ou doença do trabalho (relatório da IN 2/2022) → `/analise-acidente`
 - Notificar a empresa para corrigir irregularidades → `/tn-nco`
 - Interdição/embargo (risco grave e iminente) → `/aft-rt-rgi`
+- Empresa pediu suspensão da interdição e mandou laudo de máquina → `/auditoria-AR-NR12` (julga o laudo)
+- Manter a interdição/embargo (negar a suspensão) → `/rt-manutencao`
 - Empregador não entregou documentos do DET → `/det-630`
 - Pacote de ponto eletrônico (AFD/AEJ/atestado) → `/jornada-analise`
+- Revisar as minutas dos autos antes de empacotar (5W1H) → `/revisa-auto`
 - Gerar o TXT do Sistema Auditor → `/gera-ai`
 - Conferir o que foi transmitido → `/autos-lavrados`
+- Prazos de DET no meu Google Calendar → `/agenda-det`
 - Relatório final da ação fiscal → `/sfitweb-rel`
 - Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/nova-skill`
 

@@ -60,6 +60,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/det-630` | Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT) |
 | `/tn-nco` | Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item) |
 | `/aft-rt-rgi` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
+| `/auditoria-AR-NR12` | Julga o laudo de adequação à NR-12 / apreciação de riscos de máquinas (NBR ISO 12100, NBR 14153) apresentado pela empresa — em pedido de suspensão de interdição ou resposta a notificação — em 6 blocos de verificação, com parecer |
+| `/rt-manutencao` | Relatório Técnico de MANUTENÇÃO de interdição/embargo em .docx: analisa o requerimento de suspensão do empregador e conclui pela manutenção da medida (encadeia após `/auditoria-AR-NR12` com parecer insuficiente) |
 | `/analise-acidente` | Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx |
 
 ### Consultoras especializadas por NR
@@ -158,7 +160,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel, servir_painel, det_sync, instalar_rotina_painel, instalar_servidor_painel)
 ├── aft-setup/ · aft-doctor/ · aft-atualizar/ · nova-skill/ · notebooklm-login/ · nova-os/ · organiza-os/ · painel/ · agenda-det/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
 ├── preparacao-acao-fiscal/ · NAD/   (planejamento pré-visita e notificação de documentos)
-├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · analise-acidente/ · autos-lavrados/ · revisa-auto/
+├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · auditoria-AR-NR12/ · rt-manutencao/ · analise-acidente/ · autos-lavrados/ · revisa-auto/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 ├── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 └── minha-*/   (SUAS skills próprias — criadas pelo /nova-skill; git-ignoradas, sobrevivem a toda atualização)

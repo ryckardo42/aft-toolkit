@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AFT Toolkit — Arquitetura em passo a passo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --laranja:#f4661b; --tinta:#1a1a1a; --cinza:#555; --claro:#777;
+    --borda:#e5e5e5; --fundo:#ffffff; --suave:#fafafa;
+    --verde:#16a34a; --azul:#2563eb; --roxo:#9333ea; --ceu:#0ea5e9;
+    --teal:#0d9488; --vermelho:#dc2626; --ambar:#d97706;
+  }
+  body { background:var(--fundo); color:var(--tinta);
+         font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         line-height:1.55; }
+  .pagina { max-width:920px; margin:0 auto; padding:56px 28px 72px; }
+
+  h1 { text-align:center; font-size:52px; font-weight:800; letter-spacing:-1px; }
+  h1 b { color:var(--laranja); }
+  .sub { text-align:center; font-size:20px; color:var(--cinza); margin-top:8px; }
+
+  .oque { margin:40px auto 0; padding:26px 30px; background:var(--suave);
+          border:1px solid var(--borda); border-radius:16px; font-size:16.5px; }
+  .oque p + p { margin-top:12px; }
+
+  h2 { font-size:26px; font-weight:800; margin:56px 0 6px; }
+  h2 span { color:var(--laranja); }
+  .h2sub { color:var(--claro); font-size:15.5px; margin-bottom:26px; }
+
+  /* trilha do passo a passo */
+  .trilha { position:relative; }
+  .trilha::before { content:""; position:absolute; left:27px; top:14px; bottom:14px;
+                    width:3px; background:linear-gradient(var(--laranja), #fcd9c4); border-radius:2px; }
+  .passo { position:relative; padding:0 0 30px 84px; }
+  .passo:last-child { padding-bottom:0; }
+  .num { position:absolute; left:0; top:0; width:56px; height:56px; border-radius:50%;
+         background:var(--laranja); color:#fff; font-size:23px; font-weight:800;
+         display:flex; align-items:center; justify-content:center;
+         box-shadow:0 6px 16px rgba(244,102,27,.28); }
+  .passo h3 { font-size:19px; font-weight:800; padding-top:4px; }
+  .passo .txt { color:var(--cinza); font-size:15.5px; margin-top:6px; max-width:720px; }
+  .chips { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13.5px; font-weight:700;
+          padding:5px 12px; border-radius:999px; border:1.5px solid; background:#fff; }
+  .c-verde   { color:var(--verde);    border-color:var(--verde); }
+  .c-azul    { color:var(--azul);     border-color:var(--azul); }
+  .c-roxo    { color:var(--roxo);     border-color:var(--roxo); }
+  .c-ceu     { color:var(--ceu);      border-color:var(--ceu); }
+  .c-teal    { color:var(--teal);     border-color:var(--teal); }
+  .c-verm    { color:var(--vermelho); border-color:var(--vermelho); }
+  .c-ambar   { color:var(--ambar);    border-color:var(--ambar); }
+  .c-laranja { color:var(--laranja);  border-color:var(--laranja); }
+  .dica { margin-top:10px; font-size:14px; color:var(--claro); }
+  .dica b { color:var(--cinza); }
+
+  /* caixas finais */
+  .caixas { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:26px; }
+  .caixa { border:1px solid var(--borda); border-radius:16px; padding:22px 24px; background:#fff; }
+  .caixa h3 { font-size:17px; font-weight:800; margin-bottom:10px; }
+  .caixa h3 em { font-style:normal; color:var(--laranja); }
+  .caixa p, .caixa li { font-size:14.5px; color:var(--cinza); }
+  .caixa ul { padding-left:18px; margin-top:6px; }
+  .caixa li + li { margin-top:6px; }
+  .arvore { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13px; color:var(--cinza);
+            background:var(--suave); border:1px solid var(--borda); border-radius:10px;
+            padding:14px 16px; margin-top:10px; white-space:pre; overflow-x:auto; }
+  @media (max-width:700px){ .caixas { grid-template-columns:1fr; } h1{font-size:38px;} }
+
+  .rodape { margin-top:56px; text-align:center; }
+  .pill { display:inline-block; padding:13px 28px; border:1px solid var(--borda);
+          border-radius:14px; background:var(--suave); font-size:16.5px; font-weight:600; }
+  .pill span { color:var(--laranja); }
+  .credito { margin-top:14px; font-size:13px; color:var(--claro); }
+</style>
+</head>
+<body>
+<div class="pagina">
+
+  <h1>O <b>AFT-TOOLKIT</b></h1>
+  <div class="sub">A arquitetura em passo a passo — para quem está começando.</div>
+
+  <div class="oque">
+    <p><b>O que é.</b> O AFT Toolkit é um conjunto de <b>skills</b> (roteiros especializados)
+    para o <b>Claude Code</b>, o assistente de IA da Anthropic que roda no seu computador.
+    Cada skill ensina a IA a executar uma tarefa da fiscalização do trabalho do jeito certo:
+    registrar o relato da inspeção, enquadrar a irregularidade na NR e na ementa, redigir o
+    auto de infração, gerar o TXT que o Sistema Auditor importa, analisar PGR, validar ponto
+    eletrônico e muito mais.</p>
+    <p><b>Como você usa.</b> Conversando em português, como num chat. Quando o seu pedido
+    casa com uma skill, ela entra em ação sozinha (ou você chama pelo nome, ex.:
+    <code>/painel</code>). Você não precisa saber programar — quem digita comandos é o
+    Claude, nunca você.</p>
+  </div>
+
+  <h2>Passo a passo <span>da instalação ao relatório final</span></h2>
+  <div class="h2sub">A ordem natural de quem nunca usou: instale uma vez, cadastre a auditoria e siga o fluxo.</div>
+
+  <div class="trilha">
+
+    <div class="passo">
+      <div class="num">1</div>
+      <h3>Instale uma vez</h3>
+      <div class="txt">Cria sua pasta de trabalho (<b>~/Documents/AFT</b>), grava seus dados
+      de auditor (CIF, UORG), instala o seu perfil no Claude, as proteções de privacidade e
+      deixa o <b>painel</b> sempre ligado na sua máquina. Guiado, do início ao fim.</div>
+      <div class="chips"><span class="chip c-laranja">/aft-setup</span></div>
+    </div>
+
+    <div class="passo">
+      <div class="num">2</div>
+      <h3>Confira se está tudo certo</h3>
+      <div class="txt">Diagnóstico completo em linguagem simples (🟢 🟡 🔴). Não altera nada —
+      só verifica e explica como resolver. Rode sempre que algo parecer estranho.</div>
+      <div class="chips"><span class="chip c-laranja">/aft-doctor</span></div>
+    </div>
+
+    <div class="passo">
+      <div class="num">3</div>
+      <h3>Já fiscalizava antes do toolkit?</h3>
+      <div class="txt">Jogue a pasta antiga da fiscalização dentro de <b>OS ATIVAS/</b> e peça
+      para organizar: ela monta tudo no padrão do toolkit, com um plano que <b>você aprova
+      antes</b> de qualquer arquivo ser mexido.</div>
+      <div class="chips"><span class="chip c-ambar">/organiza-os</span></div>
+    </div>
+
+    <div class="passo">
+      <div class="num">4</div>
+      <h3>Abra a auditoria</h3>
+      <div class="txt">Uma pasta por empresa fiscalizada, com a ficha <b>memory.md</b> — a
+      "capa da OS" onde ficam status, notificações DET, pendências e autos. O CNPJ é opcional
+      aqui (só vira obrigatório na hora de gerar os autos).</div>
+      <div class="chips"><span class="chip c-verde">/nova-os</span></div>
+    </div>
+
+    <div class="passo">
+      <div class="num">5</div>
+      <h3>Prepare a ação fiscal</h3>
+      <div class="txt">Antes de ir a campo: planeje a visita (denúncia, dados prévios,
+      checklist) e, se for o caso, notifique a empresa pelo DET para apresentar documentos.</div>
+      <div class="chips">
+        <span class="chip c-azul">/preparacao-acao-fiscal</span>
+        <span class="chip c-azul">/NAD</span>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">6</div>
+      <h3>Voltou da inspeção? Narre</h3>
+      <div class="txt">Conte o que viu — por voz ou texto corrido. O relato vira uma lista
+      organizada de achados, fiel ao que você disse, pronta para embasar autos e análises.</div>
+      <div class="chips"><span class="chip c-ceu">/inspecao-fisica</span></div>
+    </div>
+
+    <div class="passo">
+      <div class="num">7</div>
+      <h3>Analise os documentos da empresa</h3>
+      <div class="txt">Cada tipo de documento tem uma especialista: PGR, ergonomia (AET),
+      pacote de ponto eletrônico (AFD/AEJ/atestados), laudos de máquinas (NR-12) e
+      acidentes de trabalho. Dúvida de enquadramento? A consulta busca ementa e fundamentação
+      na base <b>NotebookLM</b>.</div>
+      <div class="chips">
+        <span class="chip c-teal">/PGR-analise</span>
+        <span class="chip c-teal">/aet-auditoria</span>
+        <span class="chip c-teal">/jornada-analise</span>
+        <span class="chip c-teal">/auditoria-AR-NR12</span>
+        <span class="chip c-teal">/analise-acidente</span>
+        <span class="chip c-ceu">/consulta</span>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">8</div>
+      <h3>Lavre os autos</h3>
+      <div class="txt">A redação parte do seu relato e das análises; casos comuns têm skill
+      própria (falta de registro, omissão de documentos do DET). Tudo passa pela revisão
+      5W1H e termina no <b>TXT importável pelo Sistema Auditor</b> — com anexos e com os
+      dados pessoais protegidos. <b>Você revisa e você transmite</b>: o toolkit prepara,
+      quem decide é o AFT.</div>
+      <div class="chips">
+        <span class="chip c-verde">/inspecao-inicial</span>
+        <span class="chip c-verde">/registro</span>
+        <span class="chip c-verde">/det-630</span>
+        <span class="chip c-verde">/revisa-auto</span>
+        <span class="chip c-verde">/gera-ai</span>
+      </div>
+      <div class="dica"><b>Consultoras de NR:</b> /NR12 (máquinas) e /NR18 (obras) ajudam no
+      enquadramento durante a redação.</div>
+    </div>
+
+    <div class="passo">
+      <div class="num">9</div>
+      <h3>Risco grave e iminente</h3>
+      <div class="txt">Interdição ou embargo: o relatório técnico sai em .docx no modelo
+      oficial, já com os autos derivados. Se a empresa pedir a suspensão com um laudo, a
+      auditoria do laudo alimenta o RT de manutenção.</div>
+      <div class="chips">
+        <span class="chip c-verm">/aft-rt-rgi</span>
+        <span class="chip c-verm">/rt-manutencao</span>
+        <span class="chip c-teal">/auditoria-AR-NR12</span>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">10</div>
+      <h3>Acompanhe prazos sem esforço</h3>
+      <div class="txt">O painel mostra todas as auditorias em cards, com notificações DET,
+      pendências e vencimentos — direto no navegador, só na sua máquina. Os prazos podem ir
+      para o seu <b>Google Calendar</b> (evento por notificação, ✓ quando você responde).</div>
+      <div class="chips">
+        <span class="chip c-roxo">/painel</span>
+        <span class="chip c-roxo">/agenda-det</span>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">11</div>
+      <h3>Feche a ação fiscal</h3>
+      <div class="txt">Confira o que já foi efetivamente transmitido no Sistema Auditor e
+      gere o relatório final da ação.</div>
+      <div class="chips">
+        <span class="chip c-azul">/autos-lavrados</span>
+        <span class="chip c-azul">/sfitweb-rel</span>
+      </div>
+    </div>
+
+    <div class="passo">
+      <div class="num">12</div>
+      <h3>Mantenha o toolkit em dia</h3>
+      <div class="txt">Uma frase e pronto: baixa a versão nova, confere a segurança do que
+      chegou, atualiza seu perfil e te conta <b>as novidades em português</b>, sem jargão.
+      Suas skills pessoais (<code>minha-*</code>) nunca são tocadas.</div>
+      <div class="chips"><span class="chip c-laranja">/aft-atualizar</span></div>
+    </div>
+
+  </div>
+
+  <h2>O essencial <span>em duas caixas</span></h2>
+  <div class="h2sub">Onde ficam as coisas e o que roda por trás.</div>
+
+  <div class="caixas">
+    <div class="caixa">
+      <h3>📁 Onde ficam <em>as coisas</em></h3>
+      <p>Tudo em pastas normais do seu computador — dá para abrir no Explorer/Finder a
+      qualquer momento:</p>
+      <div class="arvore">~/Documents/AFT/
+├─ aft-config.md      ← seus dados (CIF, UORG…)
+├─ OS ATIVAS/
+│   └─ EMPRESA X/
+│       ├─ memory.md  ← a ficha da auditoria
+│       ├─ Autos 18-07/
+│       └─ interdicao-embargo/
+└─ OS ARQUIVADAS/</div>
+    </div>
+    <div class="caixa">
+      <h3>⚙️ Scripts locais <em>(Python), em resumo</em></h3>
+      <ul>
+        <li><b>Função:</b> fazem o trabalho mecânico e repetitivo — montar o painel, validar
+        arquivos de ponto, empacotar o TXT, gerar .docx e PDF.</li>
+        <li><b>Execução:</b> rodam <b>no seu computador</b>, e é o Claude quem os executa por
+        você — você nunca abre um terminal.</li>
+        <li><b>Privacidade:</b> nada é enviado para serviços externos; nomes e CPFs de
+        trabalhadores viram códigos (e só voltam ao normal dentro do documento final, na sua
+        máquina).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <div class="pill"><span>✦</span> Uma IA. Toda a ação fiscal. Do campo ao Sistema Auditor.</div>
+    <div class="credito">AFT Toolkit · github.com/ryckardo42/aft-toolkit · Para a arquitetura
+    técnica completa, veja <b>arquitetura.html</b> nesta mesma pasta.</div>
+  </div>
+
+</div>
+</body>
+</html>

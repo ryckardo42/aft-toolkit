@@ -436,6 +436,70 @@ if n_proprias:
             f"{n_proprias} skill(s) propria(s) valida(s) e {nota_protecao}: "
             + ", ".join(proprias_ok))
 
+# 12. Servidor do painel interativo (parte padrao da instalacao) --------------
+# O /aft-setup instala o servidor sempre ligado (127.0.0.1:8347) por padrao e o
+# /aft-atualizar garante em quem nao tem. Aqui so conferimos se esta no ar.
+import urllib.request as _url
+
+try:
+    with _url.urlopen("http://127.0.0.1:8347/", timeout=3) as _r:
+        _no_ar = 200 <= _r.status < 500
+except Exception:
+    _no_ar = False
+
+if _no_ar:
+    add("Painel interativo (servidor)", "ok",
+        "no ar em http://127.0.0.1:8347 (so na sua maquina)")
+else:
+    add("Painel interativo (servidor)", "aviso",
+        "servidor do painel nao esta respondendo em 127.0.0.1:8347",
+        "Ele faz parte da instalacao padrao (sobe sozinho no login). Rode "
+        "'Atualize o AFT Toolkit' (/aft-atualizar) para instalar/reparar, ou "
+        "peca 'abre o painel interativo' para subir agora. Sem ele, o painel "
+        "continua funcionando aberto por duplo-clique (somente leitura).")
+
+# 13. Perfil do auditor (CLAUDE.md) em dia? -----------------------------------
+# O perfil instalado carrega um marcador com versao (AFT-TOOLKIT-PERFIL:INICIO vN).
+# O /aft-atualizar (Passo 2e) atualiza sozinho quando o template avanca.
+_re_marc = _re2.compile(r"AFT-TOOLKIT-PERFIL:INICIO\s+v(\d+)")
+_tpl = SKILLS_DIR / "config" / "CLAUDE-aft.md"
+_alvo = HOME / ".claude" / "CLAUDE.md"
+_v_tpl = None
+if _tpl.is_file():
+    try:
+        _m = _re_marc.search(_tpl.read_text(encoding="utf-8"))
+        _v_tpl = int(_m.group(1)) if _m else None
+    except OSError:
+        pass
+
+if _v_tpl is None:
+    add("Perfil do auditor - versao", "aviso",
+        "nao foi possivel ler a versao do template do perfil",
+        "Rode 'Atualize o AFT Toolkit' (/aft-atualizar); se persistir, avise o "
+        "mantenedor.")
+elif not _alvo.is_file():
+    pass  # a checagem 'Perfil do auditor' (acima) ja acusa a ausencia do arquivo
+else:
+    try:
+        _m = _re_marc.search(_alvo.read_text(encoding="utf-8"))
+    except OSError:
+        _m = None
+    if not _m:
+        add("Perfil do auditor - versao", "aviso",
+            "perfil de versao antiga (sem marcador de versao)",
+            "O /aft-atualizar vai oferecer, uma unica vez, adotar o perfil novo "
+            "- que traz protecoes importantes das versoes recentes. Depois "
+            "disso ele passa a se atualizar sozinho.")
+    elif int(_m.group(1)) < _v_tpl:
+        add("Perfil do auditor - versao", "aviso",
+            f"perfil desatualizado (v{_m.group(1)} instalada, v{_v_tpl} "
+            "disponivel)",
+            "Rode 'Atualize o AFT Toolkit' (/aft-atualizar) - a atualizacao do "
+            "perfil e automatica e preserva o que voce escreveu por fora.")
+    else:
+        add("Perfil do auditor - versao", "ok",
+            f"perfil em dia (v{_m.group(1)})")
+
 # ----------------------------------------------------------------------------
 resumo = {
     "ok": sum(1 for c in checks if c["status"] == "ok"),

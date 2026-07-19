@@ -410,6 +410,10 @@ Apresente:
 🐍 Python:            [versão] · pillow/pikepdf instalados
 📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]
 📊 Painel diário:      [instalado, roda às HH:MM / não instalado — peça a qualquer hora]
+🖥️ Painel interativo:  sempre ligado (sobe sozinho no login; só na sua máquina — peça
+                       "remover o painel sempre ligado" se não quiser)
+📅 Google Calendar:    [prazos de DET sincronizando via /agenda-det / não ativado —
+                       peça a qualquer hora]
 
 Fluxo típico de uma fiscalização:
   1. /nova-os           → cadastra a empresa e o prazo do DET

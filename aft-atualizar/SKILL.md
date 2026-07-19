@@ -128,7 +128,7 @@ Confira se já foi oferecida:
 grep -q "rotina_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
 ```
 
-- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 2c.
 - **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: o
   painel pode se atualizar sozinho toda manhã, sem você pedir — não gasta nada, é o
   próprio computador rodando um programinha. Quer ativar?"*
@@ -152,7 +152,9 @@ grep -q 'servidor_painel: *"ligado"' ~/Documents/AFT/aft-config.md && echo "ja_l
 - **`ja_ligado`** → nada a fazer; siga para o Passo 2d.
 - **`instalar`** → rode o Passo 7c do `/aft-setup` (mesmo script
   `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados) e
-  grave `servidor_painel: "ligado"` no `aft-config.md`. **Avise no resumo** (Passo 4), em
+  grave `servidor_painel: "ligado"` no `aft-config.md` — se a chave já existir com outro
+  valor (ex.: `servidor_painel: ""`, de quem recusou quando era opcional), **substitua o
+  valor na linha existente**, nunca acrescente uma segunda linha. **Avise no resumo** (Passo 4), em
   uma linha, que o painel interativo agora fica sempre ligado (sobe sozinho no login, só
   na máquina dele) — e que, se ele não quiser, é só pedir para remover
   (`instalar_servidor_painel.py remover`). Isso inclui quem tinha recusado antes: a função
@@ -212,9 +214,15 @@ Aja conforme a **única linha** de saída:
   eu (a) substitua o CLAUDE.md pelo perfil novo, (b) acrescente o perfil novo ao final do
   que você já tem, ou (c) deixe como está? Depois de adotado, as próximas atualizações do
   perfil passam a ser automáticas."*
-  - **(a)** → `python ~/.claude/skills/_scripts/sync_perfil.py --adotar-substituir …`
-  - **(b)** → `python ~/.claude/skills/_scripts/sync_perfil.py --adotar-acrescentar …`
-    (recomende (b) se o AFT disser que personalizou o CLAUDE.md, para não perder o dele)
+  Antes de executar, pergunte se ele alguma vez **escreveu algo próprio** no CLAUDE.md:
+  - **Nunca mexeu** (o arquivo é só o perfil antigo do toolkit) → recomende e execute **(a)**:
+    `python ~/.claude/skills/_scripts/sync_perfil.py --adotar-substituir …` — substituir é
+    seguro aqui e evita ficar com o texto antigo duplicado.
+  - **Personalizou** → recomende **(b)**:
+    `python ~/.claude/skills/_scripts/sync_perfil.py --adotar-acrescentar …` — preserva o
+    arquivo dele e anexa o bloco novo ao final. **Avise** que o texto antigo do perfil
+    (se ainda estiver lá) fica duplicado acima do bloco novo; ofereça-se para apagar só os
+    trechos antigos do toolkit, mantendo o que é pessoal dele (com backup antes).
   - **(c)** → não faça nada; o script não grava. (Volta a perguntar na próxima vez.)
 - **`SEM_ARQUIVO`** → o AFT nunca instalou o perfil. Fora do escopo desta skill: sugira
   rodar `/aft-setup` (Passo 5b) numa próxima vez. Não crie o arquivo aqui.

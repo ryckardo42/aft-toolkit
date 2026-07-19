@@ -5,7 +5,7 @@
  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
   "skills": 33,
-  "scripts": 23,
+  "scripts": 25,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 19/07/2026"
  },
@@ -107,7 +107,7 @@
    "skills": [
     {
      "nome": "/aft-setup",
-     "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, deny-list de segurança, dependências, NotebookLM. Oferece (opt-in) instalar a rotina diária do painel via instalar_rotina_painel.py.",
+     "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global (bloco gerenciado com marcadores versionados — Passo 5b), deny-list de segurança, dependências, NotebookLM. Instala POR PADRÃO o servidor do painel interativo sempre ligado (Passo 7c, instalar_servidor_painel.py) e oferece (opt-in) a rotina diária do painel (7b) e os prazos de DET no Google Calendar (7d, /agenda-det).",
      "tech": "winget · pipx · uorgs.csv · model: sonnet"
     },
     {
@@ -117,7 +117,7 @@
     },
     {
      "nome": "/aft-atualizar",
-     "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou. Antes do pull, o checar_diff.py varre o diff por sinais de adulteração. Em usuários existentes, oferece a rotina diária do painel uma única vez (marcada no aft-config.md) e roda /aft-doctor ao final.",
+     "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI). Antes do pull, o checar_diff.py varre o diff por sinais de adulteração. Em usuários existentes: oferece a rotina diária do painel uma vez (2b), GARANTE o servidor do painel sempre ligado — agora padrão, instala em quem não tem (2c) —, oferece o Google Calendar uma vez (2d) e re-sincroniza o perfil CLAUDE.md automaticamente pelo bloco marcado (2e, sync_perfil.py; instalação antiga sem marcador recebe uma oferta de adoção). Ao final roda o /aft-doctor para confirmar que nada quebrou.",
      "tech": "git pull · pipx upgrade · checar_diff.py · model: sonnet"
     },
     {
