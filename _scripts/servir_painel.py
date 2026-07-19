@@ -316,7 +316,8 @@ DOC_CSS = """
 --teal:#4F8A7C;--serif:'Source Serif 4',Georgia,'Times New Roman',serif;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--cream);color:var(--t1);font:15.5px/1.6 var(--serif)}
-main{max-width:860px;margin:0 auto;padding:36px clamp(16px,4vw,48px) 80px;
+main{width:min(96vw,max(80vw,860px));margin:0 auto;
+padding:36px clamp(16px,4vw,48px) 80px;
 background:var(--paper);min-height:100vh;border-left:1px solid var(--bds);
 border-right:1px solid var(--bds)}
 h1{font-size:25px;font-weight:600;margin:0 0 14px;line-height:1.3}
