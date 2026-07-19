@@ -10,8 +10,8 @@ description: >
   documentos solicitados e conclusão, mantendo todo o conteúdo fixo
   (cabeçalho, seções legais, imagens, tabelas NR-3). Logo após o RT,
   OBRIGATORIAMENTE redige os autos de infração derivados das ementas da seção
-  4 (um por ementa, no formato do /gera-ai) e salva na pasta `Autos TE-TI DD-
-  MM/` da OS. Acione TAMBÉM quando o AFT ANEXAR um RT ou Termo de Interdição
+  4 (um por ementa, no formato do /gera-ai) e salva na pasta
+  `interdicao-embargo/` da OS. Acione TAMBÉM quando o AFT ANEXAR um RT ou Termo de Interdição
   já pronto e pedir os autos de infração dele: é esta skill que redige esses
   autos, nunca improvisar por fora.
 ---
@@ -41,7 +41,7 @@ com os dados fornecidos pelo AFT.
   passos 2 a 6). Resolva a pasta da OS (passo 1, mínimo: empregador/CNPJ/CPF), **extraia as
   irregularidades/ementas e os objetos interditados do documento anexado** e vá direto ao
   **passo 7** para redigir os autos. Use o `.docx`/PDF anexado como o RT da OS (copie-o para a
-  pasta `Autos TE-TI DD-MM/` como elemento de convicção, fazendo backup/checagem de arquivo
+  pasta `interdicao-embargo/` como elemento de convicção, fazendo backup/checagem de arquivo
   aberto antes de sobrescrever).
 
 > Em ambos os modos, os autos são redigidos AQUI (nesta skill) — nunca improvisados fora dela.
@@ -227,18 +227,24 @@ O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o
 
 ### 6. Salvar na pasta da OS
 
-Calcule a data de hoje (`date +%d-%m`) e crie a pasta de saída. **Antes de copiar**: (1)
-se já existir um RT nessa pasta e ele estiver **aberto no Word**, a cópia falharia com erro
-de permissão — cheque e peça para fechar ANTES; (2) faça backup do RT anterior (o backup é
-silencioso se não houver arquivo a salvar):
+Salve na pasta **canônica de interdição/embargo** da OS: `interdicao-embargo/` (pasta única
+por OS, sem sufixo de data — é onde mora TODA a documentação de interdição/embargo da OS: RT,
+autos derivados, termo assinado, requerimento e juntados do empregador e, depois, o RT de
+manutenção). **Antes de copiar**: (1) se já existir um RT nessa pasta e ele estiver **aberto
+no Word**, a cópia falharia com erro de permissão — cheque e peça para fechar ANTES; (2) faça
+backup do RT anterior (o backup é silencioso se não houver arquivo a salvar):
 
 ```bash
-mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/
-DEST=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"Autos TE-TI [DD-MM]"/RT_Interdicao.docx
+mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/interdicao-embargo/
+DEST=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/interdicao-embargo/RT_Interdicao.docx
 python ~/.claude/skills/_scripts/checar_arquivo_aberto.py "$DEST"
 python ~/.claude/skills/_scripts/backup_arquivo.py "$DEST"
 cp /tmp/RT_temp/RT_Interdicao.docx "$DEST"
 ```
+
+> Se a pasta `interdicao-embargo/` já tiver RT/autos de OUTRO termo, sufixe os arquivos novos
+> com o nº do termo (ex.: `RT_Interdicao_4140033-0.docx`, `autos_4140033-0.md`) para não
+> sobrescrever o anterior.
 
 > Se o `checar_arquivo_aberto.py` retornar **ABERTO** (exit 1), **pare** e peça ao AFT, em
 > uma frase: *"Feche o arquivo `RT_Interdicao.docx` no Word para eu poder salvar."* Assim
@@ -314,7 +320,7 @@ apenas como "termo de interdição em anexo" / "termo de embargo/interdição em
 
 #### 7.4. Persistir na pasta dedicada
 
-Na mesma pasta `Autos TE-TI {DD-MM}/` criada no passo 6, salve:
+Na mesma pasta `interdicao-embargo/` criada no passo 6, salve:
 
 1. **`autos.md`** — todos os N blocos `=== AUTO DE INFRAÇÃO #N ===` concatenados em ordem,
    separados por uma linha em branco. Encoding UTF-8. Esse arquivo é o input direto do
@@ -342,7 +348,7 @@ python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[ca
 - **Imprima no chat os N blocos `=== AUTO DE INFRAÇÃO #N ===` na íntegra** (para o AFT revisar
   visualmente) e indique o caminho da pasta e os arquivos gerados. Exemplo:
 
-  > RT e autos salvos em `~/Documents/AFT/OS ATIVAS/{PASTA_EMPRESA}/Autos TE-TI 26-05/`
+  > RT e autos salvos em `~/Documents/AFT/OS ATIVAS/{PASTA_EMPRESA}/interdicao-embargo/`
   > (`autos.md` + RT em .docx).
 
 - **Encerramento conforme o modo de entrada:**
@@ -413,5 +419,6 @@ Competência delegada pela Portaria 1719/2014...
 | Múltiplas irregularidades | Consultar NotebookLM em paralelo, uma pergunta por irregularidade |
 | Mesma ementa atinge múltiplos objetos | 1 único auto na Fase 7, listando todos os objetos na parte 2 (não duplicar) |
 | Ementa ficou como `[EMENTA A PREENCHER]` no RT | Pular esta ementa na Fase 7 e avisar o AFT no fechamento |
-| Pasta `Autos TE-TI DD-MM/` já existe | Sobrescrever `autos.md` e a cópia do `.docx` (idempotente) |
+| Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
+| Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
 | AFT de outra SRTE (não GO) | Avisar que o template é da SRTE/GO; preencher cidade/UF do aft-config.md e sugerir ajustar o cabeçalho no Word após gerar |

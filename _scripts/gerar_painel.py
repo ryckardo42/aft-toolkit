@@ -296,6 +296,19 @@ def parse_autos_lavrados_md(pasta: Path) -> dict:
     return out
 
 
+def listar_docs(pasta: Path) -> list[str]:
+    """Relatórios .md na raiz da pasta da OS (analise-preliminar-*.md,
+    autos-lavrados.md...), para o modal linkar na rota /doc/ do modo
+    interativo. Ficam de fora os .md que o modal já exibe por inteiro:
+    memory.md (o card é a ficha) e inspecao-fisica.md (seção própria)."""
+    try:
+        return sorted(p.name for p in pasta.glob("*.md")
+                      if p.is_file()
+                      and p.name not in ("memory.md", "inspecao-fisica.md"))
+    except OSError:
+        return []
+
+
 def parse_inspecao_fisica(pasta: Path) -> dict:
     """Lê o inspecao-fisica.md da OS (relato de campo da /inspecao-fisica) e
     devolve {data, bullets}. ATENÇÃO: pode conter nome/CPF de trabalhador — só
@@ -580,6 +593,8 @@ table.ativ td:first-child{white-space:nowrap;color:var(--t3)}
 .pasta-btn{font:11.5px var(--serif);background:none;border:none;padding:2px 0;
 cursor:pointer;color:var(--t3);text-decoration:underline;text-underline-offset:2px}
 .pasta-btn:hover{color:var(--coral-deep)}
+.doc-link{color:var(--coral-deep);text-decoration:underline;text-underline-offset:2px}
+.doc-link:hover{color:var(--coral)}
 footer{margin-top:34px;color:var(--t3);font-size:12px}
 /* Modo interativo (servidor local) + botões de copiar comando */
 .chip.emb{background:#F5E4E0;color:var(--coral-deep)}
@@ -671,6 +686,14 @@ function agStatus(i,v){api({acao:'status',pasta:DATA.os[i].pasta,valor:v})}
 function agEmbargo(i,k){api({acao:'embargo',pasta:DATA.os[i].pasta,estado:k?'suspenso':'vigente'})}
 function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.value||'').trim();
  if(v)api({acao:'atividade',pasta:DATA.os[i].pasta,texto:v})}
+// Relatórios .md da OS: no modo interativo viram links para a rota /doc/
+// (renderização legível em outra aba); fora dele, texto simples.
+function urlDoc(o,d){return '/doc/'+encodeURIComponent(o.pasta)+'/'+encodeURIComponent(d)}
+function linkDocs(i,t){const o=DATA.os[i];let s=esc(t);
+ if(!ATIVO||!o.pasta||!o.docs)return s;
+ for(const d of o.docs){const e=esc(d);
+  s=s.split(e).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>')}
+ return s}
 function abre(i){
  const o=DATA.os[i];let h='<button class="fechar" onclick="fecha()">fechar ✕</button>';
  h+='<h2>'+esc(o.empregador)+'</h2>';
@@ -709,6 +732,10 @@ function abre(i){
  if(o.novas.length){h+='<h3>Notificações na pasta sem registro ('+o.novas.length+')</h3><ul class="lista">'+
     o.novas.map(n=>'<li>'+esc(n.codigo||n.arquivo)+(n.prazo?' — prazo '+esc(n.prazo):'')+
     (n.ciencia?' — ciência '+esc(n.ciencia):'')+'</li>').join('')+'</ul>';}
+ if(ATIVO&&o.pasta&&o.docs&&o.docs.length){
+    h+='<h3>Relatórios da OS ('+o.docs.length+')</h3><ul class="lista">'+
+    o.docs.map(d=>'<li><a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+
+    esc(d)+'</a></li>').join('')+'</ul>';}
  if(o.inspecao && o.inspecao.bullets && o.inspecao.bullets.length){
     h+='<h3>Inspeção física'+(o.inspecao.data?' — '+esc(o.inspecao.data):'')+'</h3>';
     h+='<ul class="insp">'+o.inspecao.bullets.map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul>';}
@@ -729,8 +756,8 @@ function abre(i){
     (ATIVO&&o.pasta?'<button class="mini" onclick="agPend('+i+','+k+')">resolver</button>':'')+
     '</li>').join('')+'</ul>';}
  if(o.atividades.length){h+='<h3>Registro de atividades (recentes)</h3><table class="ativ">'+
-    o.atividades.map(a=>'<tr><td>'+esc(a.data)+'</td><td>'+esc(a.acao)+
-    (a.detalhe?' — '+esc(a.detalhe):'')+'</td></tr>').join('')+'</table>';}
+    o.atividades.map(a=>'<tr><td>'+esc(a.data)+'</td><td>'+linkDocs(i,a.acao)+
+    (a.detalhe?' — '+linkDocs(i,a.detalhe):'')+'</td></tr>').join('')+'</table>';}
  P.innerHTML=h;P.classList.add('aberto');V.classList.add('aberto');P.scrollTop=0;
 }
 function fecha(){P.classList.remove('aberto');V.classList.remove('aberto')}
@@ -862,6 +889,8 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             # Relato de campo tem PII (nomes/CPF): só na versão local (com_pasta),
             # nunca na versão publicada como Artifact.
             "inspecao": (o.get("inspecao_fisica") or {}) if com_pasta else {},
+            # Relatórios .md também podem conter PII: idem, só na versão local.
+            "docs": (o.get("docs") or []) if com_pasta else [],
             "dets": [{"codigo": d["codigo"], "feito": d["feito"],
                       "linha": datas_para_br(d["linha"]),
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
@@ -1020,6 +1049,8 @@ def main() -> int:
             os_["novas"] = []
         # Relato de campo (só entra na versão local — ver montar_json_os).
         os_["inspecao_fisica"] = parse_inspecao_fisica(Path(os_["caminho"]))
+        # Relatórios .md da pasta (idem: só na versão local).
+        os_["docs"] = listar_docs(Path(os_["caminho"]))
         # Autos lavrados: autos-lavrados.md + scan ao vivo (opcional).
         os_["autos_lavrados_md"] = parse_autos_lavrados_md(Path(os_["caminho"]))
         vivo = scan_ao_vivo(os_) if scan else None

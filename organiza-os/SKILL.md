@@ -64,6 +64,7 @@ Classifique cada item pelas assinaturas (nome do arquivo + texto da 1ª página)
 | **Resposta do empregador ao DET** | pasta com subpastas `item1`, `item2`... (padrão do download do DET) ou ZIP/pasta com nome `<EMPREGADOR>_<data>` |
 | **Fotos de inspeção** | `.jpeg/.jpg/.png/.heic` (soltas ou em subpasta) |
 | **Auto de infração (PDF)** | "AUTO DE INFRAÇÃO Nº" — nome `AI_<9 díg>.PDF` |
+| **Interdição/embargo** | nome com `interdicao`/`interdição`/`embargo`/`TE-TI`; ou 1ª página com "TERMO DE INTERDIÇÃO"/"TERMO DE EMBARGO"/"TERMO DE MANUTENÇÃO"/"RELATÓRIO TÉCNICO" + interdição/embargo. Inclui o termo assinado, o RT que o fundamenta (`RT_Interdicao.docx`), o RT de manutenção, o requerimento de suspensão e seus juntados |
 | **Não identificado** | sem texto extraível (escaneado) ou sem assinatura conhecida |
 
 Extraia, quando presentes:
@@ -105,6 +106,8 @@ Empregador identificado: JOSE DA SILVA SANTOS · CPF 111.222.333-44 · Cidade/UF
    notificacao-ABCDE12345FGHIJ.pdf       → (já no padrão, fica na raiz)
    JOSE_DA_SILVA_SANTOS_2026-07-13_*/    → notificacao-ABCDE12345FGHIJ/   (resposta do empregador, item1..4)
    relacao autos jose RR_*.PDF           → Relacao de autos/relacao-autos-2026-07-13.PDF
+   TERMO_interdicao_assinado.pdf         → interdicao-embargo/   (termo/RT/embargo)
+   RT_Interdicao.docx                    → interdicao-embargo/
    fotos/ (16 imagens)                   → fotos/   (fica como está)
 
 4. Não identificados (ficam onde estão — me diga o que são, se quiser):
@@ -122,6 +125,12 @@ Regras do plano:
   `/analise-preliminar`, `/det-630` e `/painel` procuram.
 - **Relação de autos**: subpasta `Relacao de autos/` (mesma que o `/autos-lavrados` usa
   para a relação .docx).
+- **Interdição/embargo**: subpasta `interdicao-embargo/` — pasta **única por OS** (sem sufixo
+  de data) onde vai TODO o material da medida: termo assinado, RT que a fundamenta, RT de
+  manutenção, requerimento de suspensão e juntados do empregador, e os autos derivados
+  (`autos.md` + TXT do `/gera-ai`). É a mesma pasta que o `/aft-rt-rgi` e o `/rt-manutencao`
+  escrevem. Se já existir uma pasta antiga `Autos TE-TI DD-MM/`, proponha renomeá-la para
+  `interdicao-embargo/` (ou mover o conteúdo dela para lá).
 - Fotos: subpasta `fotos/` (crie se estiverem soltas).
 - Ambiguidade real (ex.: dois empregadores diferentes nos documentos) → **pergunte**, não
   escolha em silêncio.

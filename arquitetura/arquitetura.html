@@ -132,648 +132,670 @@
 
 <script>
 const ARCH = {
-  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
-  "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-07-15",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
-  "stats": {
-    "skills": 31,
-    "scripts": 22,
-    "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 16/07/2026"
+ "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
+ "repo": "github.com/ryckardo42/aft-toolkit",
+ "data": "2026-07-15",
+ "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+ "stats": {
+  "skills": 33,
+  "scripts": 23,
+  "dados": 6,
+  "commit": "ver `git log -1` — atualizado em 19/07/2026"
+ },
+ "atores": [
+  {
+   "nome": "AFT colega (novo usuário)",
+   "papel": "Auditor no Windows",
+   "descricao": "Instala o toolkit no próprio PC; não é programador — o Claude executa os comandos por ele. Único responsável jurídico por cada auto/termo."
   },
-  "atores": [
+  {
+   "nome": "Claude Code",
+   "papel": "Assistente técnico",
+   "descricao": "App desktop no Windows; descobre as skills no 1º nível de ~/.claude/skills e executa os scripts locais pedindo permissão."
+  },
+  {
+   "nome": "Sistema Auditor",
+   "papel": "App oficial do MTE",
+   "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\\SistemasAFT\\...\\PRO."
+  },
+  {
+   "nome": "NotebookLM",
+   "papel": "Fonte de ementas",
+   "descricao": "Consultado via CLI notebooklm-py (e pela skill /consulta) para achar/fundamentar o código da ementa; recebe apenas a descrição da irregularidade, nunca dados pessoais."
+  },
+  {
+   "nome": "Ricardo (mantenedor)",
+   "papel": "AFT — SRTE/GO",
+   "descricao": "Adapta as skills pessoais para o toolkit e publica no GitHub; o template do RT segue o modelo SRTE/GO."
+  }
+ ],
+ "fluxo": [
+  {
+   "who": "/preparacao-acao-fiscal",
+   "act": "Opcional, antes da visita: resolve/cria a OS (chama /nova-os), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /NAD ao final. Salva preparacao.md."
+  },
+  {
+   "who": "/nova-os",
+   "act": "Cadastra a empresa, o CNPJ, o município e o 1º DET com prazo. Cria OS ATIVAS/<NOME> <CNPJ>/ e o memory.md no esquema padrão. Começo do fluxo (direto, ou chamado por /preparacao-acao-fiscal)."
+  },
+  {
+   "who": "/painel",
+   "act": "A qualquer momento: varre os memory.md e gera o painel.html com os prazos de DET coloridos por urgência; detecta PDFs de notificação DET nas pastas das OS ainda não cadastrados na ficha (código e datas). Opcionalmente (opt-in) publica o painel como Artifact privado na aba Artefatos. Só leitura nas fichas."
+  },
+  {
+   "who": "Visita ao estabelecimento",
+   "act": "Inspeção física presencial."
+  },
+  {
+   "who": "/inspecao-fisica",
+   "act": "Transcreve a narrativa ditada num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento."
+  },
+  {
+   "who": "/inspecao-inicial",
+   "act": "Lê o relato, identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise, /aet-auditoria ou /analise-acidente (quando há acidente/doença do trabalho). Gate de dupla visita (ME/EPP)."
+  },
+  {
+   "who": "/revisa-auto",
+   "act": "Gate de qualidade antes de empacotar: confere o checklist 5W1H em cada auto e, em autos de SST, garante o parágrafo de dano coletivo (Portaria MTP 667/2021). Roda automaticamente dentro do /gera-ai."
+  },
+  {
+   "who": "/gera-ai",
+   "act": "Empacota os autos no TXT importável (latin-1) + anexos PDF. Pseudonimização reversível: rehydrate.py re-injeta nomes/CPFs reais — nunca o LLM."
+  },
+  {
+   "who": "Sistema Auditor",
+   "act": "Botão imp. txt → revisão do AFT → transmissão."
+  },
+  {
+   "who": "/autos-lavrados",
+   "act": "Lê os PDFs transmitidos em ...\\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]."
+  },
+  {
+   "who": "/sfitweb-rel",
+   "act": "Relatório Final Simplificado consolidando autos, termos e notificações."
+  }
+ ],
+ "instalacao": [
+  {
+   "who": "Instalar o app Claude",
+   "act": "claude.com/claude-code — único passo realmente inicial."
+  },
+  {
+   "who": "Instalar o Git + reiniciar pela bandeja",
+   "act": "git-scm.com. O app desktop exige Git para abrir sessões locais no Windows; sair pela bandeja (não só o X)."
+  },
+  {
+   "who": "Colar o prompt de instalação no </> Code",
+   "act": "O próprio Claude instala o Python (winget), o notebooklm-py (pipx, repo teng-lin, com `notebooklm skill install` para registrar a skill /notebooklm) e clona este repositório direto em ~/.claude/skills, pedindo permissão a cada comando."
+  },
+  {
+   "who": "/aft-setup",
+   "act": "Cria as pastas de trabalho, coleta nome/CIF/lotação (basta a cidade — o toolkit resolve o código de 9 dígitos da UORG via uorgs.csv), instala dependências, o perfil CLAUDE.md e a deny-list de segurança (settings-aft.json)."
+  }
+ ],
+ "camadas": [
+  {
+   "nome": "Configuração e visão geral",
+   "cor": "accent2",
+   "skills": [
     {
-      "nome": "AFT colega (novo usuário)",
-      "papel": "Auditor no Windows",
-      "descricao": "Instala o toolkit no próprio PC; não é programador — o Claude executa os comandos por ele. Único responsável jurídico por cada auto/termo."
+     "nome": "/aft-setup",
+     "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, deny-list de segurança, dependências, NotebookLM. Oferece (opt-in) instalar a rotina diária do painel via instalar_rotina_painel.py.",
+     "tech": "winget · pipx · uorgs.csv · model: sonnet"
     },
     {
-      "nome": "Claude Code",
-      "papel": "Assistente técnico",
-      "descricao": "App desktop no Windows; descobre as skills no 1º nível de ~/.claude/skills e executa os scripts locais pedindo permissão."
+     "nome": "/aft-doctor",
+     "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta (só leitura; allowed-tools sem Write/Edit).",
+     "tech": "aft_doctor.py · model: sonnet"
     },
     {
-      "nome": "Sistema Auditor",
-      "papel": "App oficial do MTE",
-      "descricao": "Importa o TXT (botão imp. txt, latin-1) e transmite os autos; grava os PDFs transmitidos em C:\\SistemasAFT\\...\\PRO."
+     "nome": "/aft-atualizar",
+     "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou. Antes do pull, o checar_diff.py varre o diff por sinais de adulteração. Em usuários existentes, oferece a rotina diária do painel uma única vez (marcada no aft-config.md) e roda /aft-doctor ao final.",
+     "tech": "git pull · pipx upgrade · checar_diff.py · model: sonnet"
     },
     {
-      "nome": "NotebookLM",
-      "papel": "Fonte de ementas",
-      "descricao": "Consultado via CLI notebooklm-py (e pela skill /consulta) para achar/fundamentar o código da ementa; recebe apenas a descrição da irregularidade, nunca dados pessoais."
+     "nome": "/notebooklm-login",
+     "role": "Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge/Chrome) — o Claude conduz tudo, sem terminal.",
+     "tech": "notebooklm auth · NOTEBOOKLM_REFRESH_CMD · model: sonnet"
     },
     {
-      "nome": "Ricardo (mantenedor)",
-      "papel": "AFT — SRTE/GO",
-      "descricao": "Adapta as skills pessoais para o toolkit e publica no GitHub; o template do RT segue o modelo SRTE/GO."
+     "nome": "/nova-os",
+     "role": "Cadastra uma auditoria (nome livre — razão social, fantasia ou o que o AFT preferir; CNPJ/CPF opcional, município, DET com prazo) — o começo do fluxo. Idempotente.",
+     "tech": "cria memory.md · model: sonnet"
+    },
+    {
+     "nome": "/organiza-os",
+     "role": "Importa uma pasta bagunçada de fiscalização pré-toolkit jogada em OS ATIVAS: classifica os documentos pela 1ª página (notificação DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos lavrados, apresenta plano antes-e-depois e — só com aprovação — renomeia a pasta para o padrão, cria o memory.md completo e move os arquivos para onde as demais skills esperam. Nunca apaga nada; não identificado fica onde está.",
+     "tech": "pdftotext/pdfplumber (1ª página) · checar_pii.py · gerar_painel.py p/ conferir · model: opus"
+    },
+    {
+     "nome": "/painel",
+     "role": "Dashboard local em cards (estilo SisOS, sem servidor/nuvem): um card por OS colorido pela urgência do DET; clique abre o detalhe (modal central amplo) — DETs, relato da inspeção física completo (inspecao-fisica.md, só na versão local por conter PII), TODOS os autos lavrados em grade (nº do AI, ementa, constatação), autos substituídos, pendências e atividades. Detecta notificações DET não cadastradas; com --scan puxa os autos ao vivo do Sistema Auditor (Windows/Mac+Parallels), degradando para o último autos-lavrados.md. Rotina diária opcional (launchd/Task Scheduler) regenera o painel de manhã sem gastar IA. Publicação como Artifact segue opt-in. Bloco 'Próximos vencimentos' abaixo dos contadores: agenda consolidada de todas as OS (DETs abertos + pendências com 'prazo <data>' no texto), ordenada por vencimento, com selo de urgência e botão 'agendar no Google Calendar' por notificação — URL de template pré-preenchida, sem login e sem API (o AFT só clica em Salvar).",
+     "tech": "gerar_painel.py (parser tolerante aos 2 schemas de memory.md + autos-lavrados.md + scan_autos.py) · model: haiku · allowed-tools sem Write/Edit"
+    },
+    {
+     "nome": "/agenda-det",
+     "role": "Espelha os prazos das notificações DET no Google Calendar do AFT, pelo conector oficial do Claude (login único do Google pela interface do Claude — nenhuma senha ou token passa pelo toolkit): um evento de DIA INTEIRO por notificação, título na convenção 'DET <código> <12 primeiros caracteres do empregador>'. Reconciliação idempotente pelo código (chave única): cria só o que falta (e só prazo de hoje em diante — evento no passado não notifica ninguém), atualiza a data quando o prazo é prorrogado e renomeia com ✓ quando a notificação é marcada como checada no memory.md. Nunca apaga eventos nem toca em eventos fora do padrão 'DET ...'. Consome o campo 'vencimentos' do JSON do gerar_painel.py — a lista já sai pronta e determinística do script; o modelo só executa a reconciliação. Direção única memory.md → calendário (nunca escreve nas fichas). Oferecida no /aft-setup (Passo 7d) e /aft-atualizar (Passo 2d), chave agenda_det no aft-config.md."
+    },
+    {
+     "nome": "/nova-skill",
+     "role": "Ajuda o AFT (leigo) a criar uma skill PRÓPRIA para uma tarefa que o toolkit oficial não cobre: coleta objetivo, gatilhos e passos em linguagem simples e grava ~/.claude/skills/minha-<nome>/SKILL.md com frontmatter válido. Só cria/edita skills próprias (prefixo minha-), nunca as oficiais.",
+     "tech": "prefixo reservado minha- (1o nível, git-ignorado) · model: sonnet"
     }
-  ],
-  "fluxo": [
+   ]
+  },
+  {
+   "nome": "Preparação da ação fiscal (antes da visita)",
+   "cor": "accent2",
+   "skills": [
     {
-      "who": "/preparacao-acao-fiscal",
-      "act": "Opcional, antes da visita: resolve/cria a OS (chama /nova-os), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /NAD ao final. Salva preparacao.md."
+     "nome": "/preparacao-acao-fiscal",
+     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /nova-os), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /NAD ao final. Salva preparacao.md na pasta da OS.",
+     "tech": "chama /nova-os · .depara_[CNPJ].json na raiz da OS · model: opus"
     },
     {
-      "who": "/nova-os",
-      "act": "Cadastra a empresa, o CNPJ, o município e o 1º DET com prazo. Cria OS ATIVAS/<NOME> <CNPJ>/ e o memory.md no esquema padrão. Começo do fluxo (direto, ou chamado por /preparacao-acao-fiscal)."
-    },
-    {
-      "who": "/painel",
-      "act": "A qualquer momento: varre os memory.md e gera o painel.html com os prazos de DET coloridos por urgência; detecta PDFs de notificação DET nas pastas das OS ainda não cadastrados na ficha (código e datas). Opcionalmente (opt-in) publica o painel como Artifact privado na aba Artefatos. Só leitura nas fichas."
-    },
-    {
-      "who": "Visita ao estabelecimento",
-      "act": "Inspeção física presencial."
-    },
-    {
-      "who": "/inspecao-fisica",
-      "act": "Transcreve a narrativa ditada num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento."
-    },
-    {
-      "who": "/inspecao-inicial",
-      "act": "Lê o relato, identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise, /aet-auditoria ou /analise-acidente (quando há acidente/doença do trabalho). Gate de dupla visita (ME/EPP)."
-    },
-    {
-      "who": "/revisa-auto",
-      "act": "Gate de qualidade antes de empacotar: confere o checklist 5W1H em cada auto e, em autos de SST, garante o parágrafo de dano coletivo (Portaria MTP 667/2021). Roda automaticamente dentro do /gera-ai."
-    },
-    {
-      "who": "/gera-ai",
-      "act": "Empacota os autos no TXT importável (latin-1) + anexos PDF. Pseudonimização reversível: rehydrate.py re-injeta nomes/CPFs reais — nunca o LLM."
-    },
-    {
-      "who": "Sistema Auditor",
-      "act": "Botão imp. txt → revisão do AFT → transmissão."
-    },
-    {
-      "who": "/autos-lavrados",
-      "act": "Lê os PDFs transmitidos em ...\\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]."
-    },
-    {
-      "who": "/sfitweb-rel",
-      "act": "Relatório Final Simplificado consolidando autos, termos e notificações."
+     "nome": "/NAD",
+     "role": "Notificação para Apresentação de Documentos — documentos que se presume existir (verbo central: Apresentar). Introdução fixa (art. 630 §§3º/4º CLT c/c art. 23 Lei 8.036/90 c/c art. 18, IV/V, Dec. 4.552/02) + um item por documento (NR ou artigo de lei) + ementa via NotebookLM só quando existir, bloco a bloco para colar no DET. Origem natural: /preparacao-acao-fiscal; também standalone.",
+     "tech": "espelha /tn-nco · model: sonnet"
     }
-  ],
-  "instalacao": [
+   ]
+  },
+  {
+   "nome": "Inspeção e lavratura",
+   "cor": "accent",
+   "skills": [
     {
-      "who": "Instalar o app Claude",
-      "act": "claude.com/claude-code — único passo realmente inicial."
+     "nome": "/inspecao-fisica",
+     "role": "Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md) — fiel, sem enquadramento.",
+     "tech": "relato → memory.md · model: sonnet"
     },
     {
-      "who": "Instalar o Git + reiniciar pela bandeja",
-      "act": "git-scm.com. O app desktop exige Git para abrir sessões locais no Windows; sair pela bandeja (não só o X)."
+     "nome": "/consulta",
+     "role": "Consulta os ementários do NotebookLM com missão tripla: identifica a ementa, fundamenta capitulação/gradação/notas e redige a minuta do campo Histórico anti-nulidade. Só consulta — não lavra.",
+     "tech": "notebooklm ask · herda o modelo da sessão"
     },
     {
-      "who": "Colar o prompt de instalação no </> Code",
-      "act": "O próprio Claude instala o Python (winget), o notebooklm-py (pipx, repo teng-lin, com `notebooklm skill install` para registrar a skill /notebooklm) e clona este repositório direto em ~/.claude/skills, pedindo permissão a cada comando."
+     "nome": "/inspecao-inicial",
+     "role": "Lê o relato, identifica NR/ementa (via /consulta) e redige os autos (NRs + CLT), com gate de dupla visita.",
+     "tech": "orquestra consultoras · herda o modelo da sessão"
     },
     {
-      "who": "/aft-setup",
-      "act": "Cria as pastas de trabalho, coleta nome/CIF/lotação (basta a cidade — o toolkit resolve o código de 9 dígitos da UORG via uorgs.csv), instala dependências, o perfil CLAUDE.md e a deny-list de segurança (settings-aft.json)."
+     "nome": "/registro",
+     "role": "Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) + exame admissional (NR-07).",
+     "tech": "data de admissão dd/mm/aaaa · model: sonnet"
+    },
+    {
+     "nome": "/PGR-analise",
+     "role": "Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas.",
+     "tech": "handoff p/ gera-ai · model: opus 1M"
+    },
+    {
+     "nome": "/aet-auditoria",
+     "role": "Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e a AET anexada a cada auto.",
+     "tech": "handoff p/ gera-ai · model: opus 1M"
+    },
+    {
+     "nome": "/auditoria-AR-NR12",
+     "role": "Julga o laudo de adequação à NR-12 / apreciação de riscos (ABNT NBR ISO 12100) apresentado pela empresa, em pedido de suspensão de interdição ou resposta a notificação. Checklist de 6 blocos (método de estimativa; HRN como priorização, não substituto; categoria de segurança S/F/P → B-1-2-3-4, sempre na saída; requisitos NR-12 dependentes da apreciação — redundância 12.4.14, IHM, rearme, monitoramento 12.5.2-e; PLH/ART/TRT com recusa ancorada em atividade × atribuição; interface de segurança relé/CLP) e entrega resumo + análise didática + parecer (APTO / APTO COM RESSALVAS / INSUFICIENTE). Saída numerada auditoria-X-AR-NR12.md por OS.",
+     "tech": "notebooklm NR-12 (opcional, fallback) · handoff p/ /tn-nco e /rt-manutencao · model: opus 1M"
+    },
+    {
+     "nome": "/det-630",
+     "role": "Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).",
+     "tech": "escreve em ## Notificações DET · model: sonnet"
+    },
+    {
+     "nome": "/tn-nco",
+     "role": "Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item; preenchimento manual).",
+     "tech": "limite 1000 char/campo · model: sonnet"
+    },
+    {
+     "nome": "/aft-rt-rgi",
+     "role": "Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).",
+     "tech": "template.docx SRTE/GO · herda o modelo da sessão"
+    },
+    {
+     "nome": "/rt-manutencao",
+     "role": "Relatório Técnico de Manutenção de Interdição/Embargo em .docx: analisa o requerimento de suspensão do empregador (documentos solicitados × apresentados, cumprimento das medidas de proteção, resultado da inspeção física se houve) e conclui pela manutenção da medida quando o único ou todos os objetos são mantidos. NUNCA deduz os argumentos do auditor — pergunta. Estrutura: 1) OBJETIVO, 2) DA ANÁLISE DOS DOCUMENTOS SOLICITADOS E APRESENTADOS E DO CUMPRIMENTO DAS MEDIDAS, 3) CONCLUSÃO (texto padrão de manutenção + observação SEI), 4) REQUISITOS PARA NOVO REQUERIMENTO (opcional). Reaproveita o parecer da /auditoria-AR-NR12 como núcleo da seção 2.",
+     "tech": "montar_rt_manutencao.py (reusa o cabeçalho do template.docx do /aft-rt-rgi; stdlib, roda no Git Bash) · model: opus 1M"
+    },
+    {
+     "nome": "/analise-acidente",
+     "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx; ao final, oferece encadear /inspecao-inicial + /gera-ai.",
+     "tech": "gerar_relatorio_docx.py · model: opus 1M"
     }
-  ],
-  "camadas": [
+   ]
+  },
+  {
+   "nome": "Consultoras especializadas por NR",
+   "cor": "warn",
+   "skills": [
     {
-      "nome": "Configuração e visão geral",
-      "cor": "accent2",
-      "skills": [
-        {
-          "nome": "/aft-setup",
-          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global, deny-list de segurança, dependências, NotebookLM. Oferece (opt-in) instalar a rotina diária do painel via instalar_rotina_painel.py.",
-          "tech": "winget · pipx · uorgs.csv · model: sonnet"
-        },
-        {
-          "nome": "/aft-doctor",
-          "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta (só leitura; allowed-tools sem Write/Edit).",
-          "tech": "aft_doctor.py · model: sonnet"
-        },
-        {
-          "nome": "/aft-atualizar",
-          "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI) e roda o /aft-doctor ao final para confirmar que nada quebrou. Antes do pull, o checar_diff.py varre o diff por sinais de adulteração. Em usuários existentes, oferece a rotina diária do painel uma única vez (marcada no aft-config.md) e roda /aft-doctor ao final.",
-          "tech": "git pull · pipx upgrade · checar_diff.py · model: sonnet"
-        },
-        {
-          "nome": "/notebooklm-login",
-          "role": "Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge/Chrome) — o Claude conduz tudo, sem terminal.",
-          "tech": "notebooklm auth · NOTEBOOKLM_REFRESH_CMD · model: sonnet"
-        },
-        {
-          "nome": "/nova-os",
-          "role": "Cadastra uma auditoria (nome livre — razão social, fantasia ou o que o AFT preferir; CNPJ/CPF opcional, município, DET com prazo) — o começo do fluxo. Idempotente.",
-          "tech": "cria memory.md · model: sonnet"
-        },
-        {
-          "nome": "/organiza-os",
-          "role": "Importa uma pasta bagunçada de fiscalização pré-toolkit jogada em OS ATIVAS: classifica os documentos pela 1ª página (notificação DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos lavrados, apresenta plano antes-e-depois e — só com aprovação — renomeia a pasta para o padrão, cria o memory.md completo e move os arquivos para onde as demais skills esperam. Nunca apaga nada; não identificado fica onde está.",
-          "tech": "pdftotext/pdfplumber (1ª página) · checar_pii.py · gerar_painel.py p/ conferir · model: opus"
-        },
-        {
-          "nome": "/painel",
-          "role": "Dashboard local em cards (estilo SisOS, sem servidor/nuvem): um card por OS colorido pela urgência do DET; clique abre o detalhe (modal central amplo) — DETs, relato da inspeção física completo (inspecao-fisica.md, só na versão local por conter PII), TODOS os autos lavrados em grade (nº do AI, ementa, constatação), autos substituídos, pendências e atividades. Detecta notificações DET não cadastradas; com --scan puxa os autos ao vivo do Sistema Auditor (Windows/Mac+Parallels), degradando para o último autos-lavrados.md. Rotina diária opcional (launchd/Task Scheduler) regenera o painel de manhã sem gastar IA. Publicação como Artifact segue opt-in. Bloco 'Próximos vencimentos' abaixo dos contadores: agenda consolidada de todas as OS (DETs abertos + pendências com 'prazo <data>' no texto), ordenada por vencimento, com selo de urgência e botão 'agendar no Google Calendar' por notificação — URL de template pré-preenchida, sem login e sem API (o AFT só clica em Salvar).",
-          "tech": "gerar_painel.py (parser tolerante aos 2 schemas de memory.md + autos-lavrados.md + scan_autos.py) · model: haiku · allowed-tools sem Write/Edit"
-        },
-        {
-          "nome": "/agenda-det",
-          "role": "Espelha os prazos das notificações DET no Google Calendar do AFT, pelo conector oficial do Claude (login único do Google pela interface do Claude — nenhuma senha ou token passa pelo toolkit): um evento de DIA INTEIRO por notificação, título na convenção 'DET <código> <12 primeiros caracteres do empregador>'. Reconciliação idempotente pelo código (chave única): cria só o que falta (e só prazo de hoje em diante — evento no passado não notifica ninguém), atualiza a data quando o prazo é prorrogado e renomeia com ✓ quando a notificação é marcada como checada no memory.md. Nunca apaga eventos nem toca em eventos fora do padrão 'DET ...'. Consome o campo 'vencimentos' do JSON do gerar_painel.py — a lista já sai pronta e determinística do script; o modelo só executa a reconciliação. Direção única memory.md → calendário (nunca escreve nas fichas). Oferecida no /aft-setup (Passo 7d) e /aft-atualizar (Passo 2d), chave agenda_det no aft-config.md."
-        },
-        {
-          "nome": "/nova-skill",
-          "role": "Ajuda o AFT (leigo) a criar uma skill PRÓPRIA para uma tarefa que o toolkit oficial não cobre: coleta objetivo, gatilhos e passos em linguagem simples e grava ~/.claude/skills/minha-<nome>/SKILL.md com frontmatter válido. Só cria/edita skills próprias (prefixo minha-), nunca as oficiais.",
-          "tech": "prefixo reservado minha- (1o nível, git-ignorado) · model: sonnet"
-        }
-      ]
+     "nome": "/NR12",
+     "role": "Máquinas e equipamentos: identifica a ementa (catálogo de 16 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE, a linha do RT e o fragmento de interdição.",
+     "tech": "references/ementas-comuns.md · herda o modelo da sessão"
     },
     {
-      "nome": "Preparação da ação fiscal (antes da visita)",
-      "cor": "accent2",
-      "skills": [
-        {
-          "nome": "/preparacao-acao-fiscal",
-          "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /nova-os), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /NAD ao final. Salva preparacao.md na pasta da OS.",
-          "tech": "chama /nova-os · .depara_[CNPJ].json na raiz da OS · model: opus"
-        },
-        {
-          "nome": "/NAD",
-          "role": "Notificação para Apresentação de Documentos — documentos que se presume existir (verbo central: Apresentar). Introdução fixa (art. 630 §§3º/4º CLT c/c art. 23 Lei 8.036/90 c/c art. 18, IV/V, Dec. 4.552/02) + um item por documento (NR ou artigo de lei) + ementa via NotebookLM só quando existir, bloco a bloco para colar no DET. Origem natural: /preparacao-acao-fiscal; também standalone.",
-          "tech": "espelha /tn-nco · model: sonnet"
-        }
-      ]
-    },
-    {
-      "nome": "Inspeção e lavratura",
-      "cor": "accent",
-      "skills": [
-        {
-          "nome": "/inspecao-fisica",
-          "role": "Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md) — fiel, sem enquadramento.",
-          "tech": "relato → memory.md · model: sonnet"
-        },
-        {
-          "nome": "/consulta",
-          "role": "Consulta os ementários do NotebookLM com missão tripla: identifica a ementa, fundamenta capitulação/gradação/notas e redige a minuta do campo Histórico anti-nulidade. Só consulta — não lavra.",
-          "tech": "notebooklm ask · herda o modelo da sessão"
-        },
-        {
-          "nome": "/inspecao-inicial",
-          "role": "Lê o relato, identifica NR/ementa (via /consulta) e redige os autos (NRs + CLT), com gate de dupla visita.",
-          "tech": "orquestra consultoras · herda o modelo da sessão"
-        },
-        {
-          "nome": "/registro",
-          "role": "Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) + exame admissional (NR-07).",
-          "tech": "data de admissão dd/mm/aaaa · model: sonnet"
-        },
-        {
-          "nome": "/PGR-analise",
-          "role": "Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas.",
-          "tech": "handoff p/ gera-ai · model: opus 1M"
-        },
-        {
-          "nome": "/aet-auditoria",
-          "role": "Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e a AET anexada a cada auto.",
-          "tech": "handoff p/ gera-ai · model: opus 1M"
-        },
-        {
-          "nome": "/det-630",
-          "role": "Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).",
-          "tech": "escreve em ## Notificações DET · model: sonnet"
-        },
-        {
-          "nome": "/tn-nco",
-          "role": "Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item; preenchimento manual).",
-          "tech": "limite 1000 char/campo · model: sonnet"
-        },
-        {
-          "nome": "/aft-rt-rgi",
-          "role": "Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).",
-          "tech": "template.docx SRTE/GO · herda o modelo da sessão"
-        },
-        {
-          "nome": "/analise-acidente",
-          "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx; ao final, oferece encadear /inspecao-inicial + /gera-ai.",
-          "tech": "gerar_relatorio_docx.py · model: opus 1M"
-        }
-      ]
-    },
-    {
-      "nome": "Consultoras especializadas por NR",
-      "cor": "warn",
-      "skills": [
-        {
-          "nome": "/NR12",
-          "role": "Máquinas e equipamentos: identifica a ementa (catálogo de 16 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE, a linha do RT e o fragmento de interdição.",
-          "tech": "references/ementas-comuns.md · herda o modelo da sessão"
-        },
-        {
-          "nome": "/NR18",
-          "role": "Indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE e a linha do RT.",
-          "tech": "references/ementas-comuns.md · herda o modelo da sessão"
-        }
-      ]
-    },
-    {
-      "nome": "Jornada / ponto eletrônico (Portaria 671/2021)",
-      "cor": "accent2",
-      "skills": [
-        {
-          "nome": "/jornada-analise",
-          "role": "Orquestrador: tria o pacote entregue (AFD/AEJ/atestados) e consolida os pareceres.",
-          "tech": "roteador · model: sonnet"
-        },
-        {
-          "nome": "/jornada-valida-afd-aej",
-          "role": "Validador determinístico do AEJ: estrutura, trailer, integridade referencial, decimais e jornada flexível calibrados pelo sistema oficial.",
-          "tech": "validar.py · model: sonnet"
-        },
-        {
-          "nome": "/jornada-atestado",
-          "role": "Auditoria do Atestado Técnico/Termo de Responsabilidade do REP/PTRP (art. 89), com inspeção de assinatura por código.",
-          "tech": "inspecionar_assinatura.py · herda o modelo da sessão"
-        },
-        {
-          "nome": "/jornada-auto-afd-aej",
-          "role": "Autos por AFD/AEJ ausente ou fora do padrão (ementas 002279-9 / 002280-2).",
-          "tech": "handoff p/ gera-ai · model: sonnet"
-        }
-      ]
-    },
-    {
-      "nome": "Empacotamento, rastreamento e relatórios",
-      "cor": "ok",
-      "skills": [
-        {
-          "nome": "/revisa-auto",
-          "role": "Gate de qualidade antes do empacotamento: checklist 5W1H em cada auto e parágrafo de dano coletivo obrigatório em SST (Portaria MTP 667/2021). Roda dentro do /gera-ai, mas pode ser chamada isolada.",
-          "tech": "gate dentro do /gera-ai · model: sonnet"
-        },
-        {
-          "nome": "/gera-ai",
-          "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento — é aqui que o CNPJ/CPF da fiscalizada se torna obrigatório: se a OS ainda não tinha, o gera-ai pergunta, grava no memory.md e renomeia a pasta prefixando o CNPJ na frente do nome original.",
-          "tech": "rehydrate.py · bloco3_inject.py · validar_txt.py · model: sonnet"
-        },
-        {
-          "nome": "/autos-lavrados",
-          "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos, marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto.",
-          "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
-        },
-        {
-          "nome": "/sfitweb-rel",
-          "role": "Relatório Final Simplificado consolidando autos, termos e notificações.",
-          "tech": "lê memory.md · model: sonnet"
-        }
-      ]
+     "nome": "/NR18",
+     "role": "Indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco 2) IRREGULARIDADE e a linha do RT.",
+     "tech": "references/ementas-comuns.md · herda o modelo da sessão"
     }
-  ],
-  "scripts": [
+   ]
+  },
+  {
+   "nome": "Jornada / ponto eletrônico (Portaria 671/2021)",
+   "cor": "accent2",
+   "skills": [
     {
-      "nome": "rehydrate.py",
-      "caminho": "_scripts/rehydrate.py",
-      "papel": "Re-injeta nomes/CPFs reais no TXT tokenizado e grava direto em ISO-8859-1. Aborta em valor ausente, CPF inválido, token órfão ou caractere fora do latin-1. Nunca é o LLM que re-hidrata.",
-      "runtime": "Python stdlib"
+     "nome": "/jornada-analise",
+     "role": "Orquestrador: tria o pacote entregue (AFD/AEJ/atestados) e consolida os pareceres.",
+     "tech": "roteador · model: sonnet"
     },
     {
-      "nome": "bloco3_inject.py",
-      "caminho": "_scripts/bloco3_inject.py",
-      "papel": "Injeta o Subtítulo 3 (OBSERVAÇÕES) canônico — lido de config/blocos_auto.md — em todo auto, byte a byte idêntico. As skills de redação não escrevem mais esse bloco; só o /gera-ai injeta.",
-      "runtime": "Python stdlib"
+     "nome": "/jornada-valida-afd-aej",
+     "role": "Validador determinístico do AEJ: estrutura, trailer, integridade referencial, decimais e jornada flexível calibrados pelo sistema oficial.",
+     "tech": "validar.py · model: sonnet"
     },
     {
-      "nome": "validar_txt.py",
-      "caminho": "_scripts/validar_txt.py",
-      "papel": "Valida o TXT do Sistema Auditor ANTES da importação: pega erros de encoding/formato que travariam o botão imp. txt, antes mesmo do AFT tentar.",
-      "runtime": "Python stdlib"
+     "nome": "/jornada-atestado",
+     "role": "Auditoria do Atestado Técnico/Termo de Responsabilidade do REP/PTRP (art. 89), com inspeção de assinatura por código.",
+     "tech": "inspecionar_assinatura.py · herda o modelo da sessão"
     },
     {
-      "nome": "checar_pii.py",
-      "caminho": "_scripts/checar_pii.py",
-      "papel": "Guard-rail de PII de alto dano: varre um relato/texto/pasta e avisa (não bloqueia) se houver CPF ou PIS/PASEP com dígito verificador válido escapando da anonimização.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "checar_diff.py",
-      "caminho": "_scripts/checar_diff.py",
-      "papel": "Guard-rail de supply-chain: varre o diff de uma atualização (linhas que chegam) por Unicode invisível e padrões de exfiltração/execução remota, e avisa antes do git pull (chamado pelo /aft-atualizar). Só alarme — quem decide é o AFT.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "checar_arquivo_aberto.py",
-      "caminho": "_scripts/checar_arquivo_aberto.py",
-      "papel": "Detecta se um .docx (RT, autos) está aberto/bloqueado no Word antes de tentar sobrescrevê-lo no Windows — evita erro silencioso de gravação.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "backup_arquivo.py",
-      "caminho": "_scripts/backup_arquivo.py",
-      "papel": "Cópia de segurança automática antes de editar um arquivo legal já existente (.docx do RT, autos) — convenção do toolkit para nunca perder uma versão anterior.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "checar_rt_autos.py",
-      "caminho": "_scripts/checar_rt_autos.py",
-      "papel": "Confere a coerência entre a Seção 4 do RT (.docx) e os autos (autos.md) — pega divergência quando um é editado e o outro não acompanha.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "gerar_painel.py",
-      "caminho": "_scripts/gerar_painel.py",
-      "papel": "Varre OS ATIVAS/*/memory.md (parser tolerante), calcula dias-para-o-prazo com date.today(), detecta PDFs de notificação DET não cadastrados (código por regex + 1ª página via pdfplumber, comparado ao memory.md) e gera o painel.html autocontido; 3º argumento opcional grava a versão para a tool Artifact (sem wrapper HTML e sem a coluna Pasta). Imprime resumo JSON no stdout.",
-      "runtime": "Python stdlib (+pdfplumber opcional)"
-    },
-    {
-      "nome": "servir_painel.py",
-      "caminho": "_scripts/servir_painel.py",
-      "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 5 ações mecânicas por clique (marcar/reabrir DET respondida, resolver pendência, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "det_sync.py",
-      "caminho": "_scripts/det_sync.py",
-      "papel": "Sync local do DET (espelho do sync do SisOS): recebe o token de sessão do DET capturado pela extensão Chrome 'Sync DET' (v2.0; antes 'SisOS — Sync DET') via POST /api/det-sync do servir_painel.py, consulta a API oficial de pesquisa de notificações por CNPJ/CPF e filtra o resultado pelo RI da OS — a pesquisa por CNPJ devolve notificações de TODAS as fiscalizações já feitas naquele empregador, inclusive antigas já concluídas (bug real corrigido, ver decisão 'notificações de fiscalizações antigas'). RIs conhecidos da OS = ri: do front-matter ∪ RIs das notificações já registradas (cobre OS com duas fiscalizações simultâneas do mesmo empregador); sem RI conhecido, adota o da notificação mais recente (ri_mais_recente). Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe. Atualiza ## Notificações DET: notificação nova vira linha '- [ ] <COD> — prazo <data>'; um prazo alterado só atualiza a linha quando ela tem exatamente UM 'prazo'/'entrega até' escrito — linha com 2+ (ex.: um item vencido e outro não) fica intocada, pois a API informa um prazo por NOTIFICAÇÃO, não por item, e trocar sozinho corrompe dado (bug real corrigido, ver decisão 'sync de prazo'). Checkbox [ ]/[x] nunca muda; backup antes de cada escrita; token só em memória. Funções de edição puras e testáveis sem rede (consultar injetável); AFT_DET_DEBUG/AFT_DET_DRYRUN para inspecionar sem gravar.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "instalar_rotina_painel.py",
-      "caminho": "_scripts/instalar_rotina_painel.py",
-      "papel": "Instala/remove/consulta a rotina DIÁRIA do painel (regenera o painel.html estático 1x/dia, --scan incluso) como agendamento do SO — launchd no macOS, Agendador de Tarefas no Windows. Diferente do instalar_servidor_painel.py: aqui o processo roda, termina e some; não mantém nada no ar entre execuções. Oferecido no /aft-setup (Passo 7b) e /aft-atualizar (Passo 2b, uma única vez).",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "instalar_servidor_painel.py",
-      "caminho": "_scripts/instalar_servidor_painel.py",
-      "papel": "Instala/remove/consulta o SERVIDOR interativo do painel (servir_painel.py) como serviço em segundo plano do sistema operacional — diferente do instalar_rotina_painel.py, que só regenera o painel.html estático 1x/dia, este mantém o servidor SEMPRE ATIVO. macOS: LaunchAgent com RunAtLoad+KeepAlive (reinicia sozinho se cair). Windows: Tarefa Agendada via PowerShell Register-ScheduledTask com gatilho 'ao fazer logon' e RestartCount/RestartInterval (schtasks.exe básico não expõe reinício automático), usando pythonw.exe para não abrir janela de console. Necessário para os controles do painel funcionarem sem terminal aberto e para o sync automático do DET pela extensão Chrome. Oferecido opcionalmente no /aft-setup (Passo 7c) e /aft-atualizar (Passo 2c, uma única vez).",
-      "runtime": "Python stdlib (+ PowerShell no Windows)"
-    },
-    {
-      "nome": "aft_doctor.py",
-      "caminho": "_scripts/aft_doctor.py",
-      "papel": "Verificação pós-instalação: checa Python, Git, descoberta das skills, config do repo, perfil, deny-list, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills — frontmatter (name = pasta), campo model contra config/models-validos.json e teste ao vivo dos modelos pinados (claude -p, 1 chamada por ID; falha de login/rede é inconclusiva, nunca veredito). Emite relatório legível + JSON. Só leitura.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "fotos_para_pdf.py",
-      "caminho": "_scripts/fotos_para_pdf.py",
-      "papel": "Converte as fotos da inspeção em PDF (anexo do auto).",
-      "runtime": "Python · pillow"
-    },
-    {
-      "nome": "comprimir_pdf.py",
-      "caminho": "_scripts/comprimir_pdf.py",
-      "papel": "Comprime PDFs grandes para caber no limite de tamanho do Sistema Auditor.",
-      "runtime": "Python · pikepdf/pypdf"
-    },
-    {
-      "nome": "docx_pack.py / docx_unpack.py",
-      "caminho": "_scripts/docx_*.py",
-      "papel": "Empacota e desempacota .docx (geração e validação de RT/relatórios sem libs externas).",
-      "runtime": "Python stdlib · zipfile"
-    },
-    {
-      "nome": "scan_autos.py",
-      "caminho": "autos-lavrados/scripts/scan_autos.py",
-      "papel": "Extrai texto dos PDFs transmitidos (pypdf; pdftotext se no PATH) e parseia AI_[NUM]_[CNPJ]_[sufixo].PDF para o cruzamento.",
-      "runtime": "Python · pypdf"
-    },
-    {
-      "nome": "gera_relacao_autos.py",
-      "caminho": "autos-lavrados/scripts/gera_relacao_autos.py",
-      "papel": "Gera a 'Relação de autos lavrados' (.docx, com tentativa de .pdf) a partir do autos-lavrados.md — só os autos válidos (seção Detalhamento), agrupados por data do mais antigo ao mais recente. Usa template-relacao-autos.docx (cabeçalho SIT/AFT fixo, nunca alterado); Times New Roman 12pt, texto justificado, filetes e barra lateral navy.",
-      "runtime": "Python (python-docx)"
-    },
-    {
-      "nome": "inspecionar_assinatura.py",
-      "caminho": "jornada-atestado/scripts/inspecionar_assinatura.py",
-      "papel": "Inspeciona a assinatura/identificação do atestado técnico do REP por código.",
-      "runtime": "Python"
-    },
-    {
-      "nome": "validar.py",
-      "caminho": "jornada-valida-afd-aej/validar.py",
-      "papel": "Valida a estrutura, o trailer e a integridade referencial do AEJ — calibrado pelos decimais e pela jornada flexível do sistema oficial.",
-      "runtime": "Python stdlib"
-    },
-    {
-      "nome": "gerar_relatorio_docx.py",
-      "caminho": "analise-acidente/scripts/gerar_relatorio_docx.py",
-      "papel": "Gera o Relatório de Análise de Acidente em .docx, no roteiro fixo de 6 seções da IN GMTP/MTP nº 2/2022.",
-      "runtime": "Python stdlib · zipfile"
+     "nome": "/jornada-auto-afd-aej",
+     "role": "Autos por AFD/AEJ ausente ou fora do padrão (ementas 002279-9 / 002280-2).",
+     "tech": "handoff p/ gera-ai · model: sonnet"
     }
-  ],
-  "dados": [
+   ]
+  },
+  {
+   "nome": "Empacotamento, rastreamento e relatórios",
+   "cor": "ok",
+   "skills": [
     {
-      "arquivo": "config/notebooks.json",
-      "conteudo": "49 notebooks (IDs do NotebookLM, ex.: nr-12, nr-18, ementario-sst)",
-      "uso": "Consulta de ementa pelas skills (especialmente /consulta)."
+     "nome": "/revisa-auto",
+     "role": "Gate de qualidade antes do empacotamento: checklist 5W1H em cada auto e parágrafo de dano coletivo obrigatório em SST (Portaria MTP 667/2021). Roda dentro do /gera-ai, mas pode ser chamada isolada.",
+     "tech": "gate dentro do /gera-ai · model: sonnet"
     },
     {
-      "arquivo": "config/uorgs.csv",
-      "conteudo": "1012 UORGs oficiais (CDUORG;NOME;UF;MUNICIPIO;...)",
-      "uso": "O /aft-setup resolve o código de 9 dígitos pela cidade informada."
+     "nome": "/gera-ai",
+     "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento — é aqui que o CNPJ/CPF da fiscalizada se torna obrigatório: se a OS ainda não tinha, o gera-ai pergunta, grava no memory.md e renomeia a pasta prefixando o CNPJ na frente do nome original.",
+     "tech": "rehydrate.py · bloco3_inject.py · validar_txt.py · model: sonnet"
     },
     {
-      "arquivo": "config/CLAUDE-aft.md",
-      "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho, privacidade e roteamento das skills",
-      "uso": "Instalado pelo /aft-setup em ~/.claude/CLAUDE.md (carregado em toda conversa)."
+     "nome": "/autos-lavrados",
+     "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos, marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto.",
+     "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
     },
     {
-      "arquivo": "config/blocos_auto.md",
-      "conteudo": "Texto fixo e literal do Subtítulo 3 (OBSERVAÇÕES) do auto de infração",
-      "uso": "Fonte única lida pelo bloco3_inject.py — nenhuma skill de redação escreve esse bloco na mão."
-    },
-    {
-      "arquivo": "config/settings-aft.json",
-      "conteudo": "Deny-list de segurança: bloqueia leitura de credenciais (~/.ssh, ~/.aws, .env), dos mapas .depara_*.json e comandos de acesso remoto (ssh/scp/nc)",
-      "uso": "Instalada pelo /aft-setup em ~/.claude/settings.json — última linha de defesa contra exfiltração induzida por documento."
-    },
-    {
-      "arquivo": "config/models-validos.json",
-      "conteudo": "Apelidos e IDs de modelo aceitos no campo model: dos SKILL.md",
-      "uso": "O aft_doctor.py valida os frontmatters contra ela; quando um modelo for descontinuado, o mantenedor atualiza a lista e as skills, e os AFTs recebem via /aft-atualizar."
+     "nome": "/sfitweb-rel",
+     "role": "Relatório Final Simplificado consolidando autos, termos e notificações.",
+     "tech": "lê memory.md · model: sonnet"
     }
-  ],
-  "ementas": [
-    {
-      "camada": "1. NotebookLM (recomendado)",
-      "txt": "CLI notebooklm-py + skill /consulta; IDs em config/notebooks.json; acesso em notebooks-aft.vercel.app. Envia só a descrição da irregularidade."
-    },
-    {
-      "camada": "2. Google Drive compartilhado",
-      "txt": "Ementários por NR em Markdown, pasta pública — fallback quando o NotebookLM falha."
-    },
-    {
-      "camada": "3. O AFT informa o código",
-      "txt": "Formato XXXXXX-X, conferido no ementário oficial."
-    }
-  ],
-  "anonimizacao": [
-    "No chat e nas consultas à IA, trabalhadores viram tokens [[TRAB_NN]] / [[CPF_NN]] e a empresa vira [[AUTUADA]]; o CNPJ nunca é tokenizado.",
-    "O mapa token↔dados reais fica em .depara_<CNPJ>.json (sensível: não exibir, não compartilhar, não commitar).",
-    "Os dados reais entram no TXT final apenas pelo script determinístico rehydrate.py — nunca pelo modelo. Um nome/CPF trocado num documento legal é inaceitável.",
-    "A cópia *.tokenized.txt é a única versão segura para compartilhar com colegas.",
-    "Guard-rail extra: checar_pii.py varre relatos/pastas e avisa se um CPF ou PIS/PASEP com dígito verificador válido escapou da anonimização (não bloqueia — a troca real continua só pelo rehydrate.py).",
-    "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais. Única exceção, opt-in e com consentimento por sessão: o /painel pode publicar o painel (empresas e prazos, sem dados de trabalhador) como Artifact privado na conta claude.ai do AFT."
-  ],
-  "decisoes": [
-    {
-      "topico": "Instalação",
-      "txt": "O repositório É a pasta ~/.claude/skills do colega (clone direto). O Claude Code só descobre skills no 1º nível dessa pasta — clone aninhado deixa todas invisíveis."
-    },
-    {
-      "topico": "Git obrigatório",
-      "txt": "O app desktop Windows exige Git antes de abrir sessão local; Git é passo manual (galinha-e-ovo); o Claude instala só Python/toolkit."
-    },
-    {
-      "topico": "Sem SISOS/Supabase",
-      "txt": "O toolkit é offline: os memory.md são o banco local e o /painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /nova-os."
-    },
-    {
-      "topico": "Pasta de trabalho fixa",
-      "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /nova-os, conferida pelo /aft-doctor (mostra quantas empresas há dentro) e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Mantido como subpasta de AFT/ (não achatada para a raiz de Documentos) porque agrupa também aft-config.md e o painel.html — 22 arquivos do toolkit fixam esse caminho."
-    },
-    {
-      "topico": "Empacotamento único",
-      "txt": "Todo TXT é gerado no /gera-ai; /registro, /PGR-analise, /aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
-    },
-    {
-      "topico": "Latin-1 sem iconv",
-      "txt": "rehydrate.py grava o TXT final direto em ISO-8859-1 — iconv/sips não existem garantidamente no Windows."
-    },
-    {
-      "topico": "Lotação pela cidade",
-      "txt": "O /aft-setup resolve o código da UORG pela cidade (uorgs.csv) — o AFT raramente sabe o código de 9 dígitos."
-    },
-    {
-      "topico": "Ementas em 3 camadas",
-      "txt": "NotebookLM (via /consulta) primeiro → Drive compartilhado → o AFT digita o código. Nunca inventar ementa."
-    },
-    {
-      "topico": "Bloco 3 centralizado",
-      "txt": "O Subtítulo 3 (OBSERVAÇÕES) de todo auto vem de config/blocos_auto.md, injetado só pelo /gera-ai (bloco3_inject.py) — nenhuma skill de redação o escreve na mão, evitando divergência e economizando tokens."
-    },
-    {
-      "topico": "Atualização separada do diagnóstico",
-      "txt": "/aft-doctor só lê (nunca instala); quem efetivamente atualiza skills e o notebooklm-py é o /aft-atualizar, que chama o /aft-doctor ao final para confirmar."
-    },
-    {
-      "topico": "Política de model por skill",
-      "txt": "Três faixas: claude-opus-4-8[1m] para auditoria de documento longo (/PGR-analise, /aet-auditoria, /analise-acidente); sonnet/haiku para o formular e o mecânico (empacotar, validar, painel, setup); sem pin nas skills de redação jurídica pesada (herdam o melhor modelo da sessão do AFT — um pin de opus quebraria em plano sem acesso). O /aft-doctor valida os pins contra config/models-validos.json e testa a disponibilidade ao vivo."
-    },
-    {
-      "topico": "allowed-tools como garantia",
-      "txt": "Promessa de 'somente leitura' virou restrição técnica: /aft-doctor e /painel rodam sem Write/Edit (frontmatter allowed-tools); /autos-lavrados precisa escrever (relatório + memory.md), então seu fence corta as ferramentas de rede — ela processa PDFs com dados pessoais."
-    },
-    {
-      "topico": "Tokenização antes da lavratura (.depara na raiz da OS)",
-      "txt": "Até 2026-07-13, o .depara_[CNPJ].json (mapa token↔dado real de trabalhador) só nascia dentro da pasta Autos DD-MM/, criado pelo /gera-ai. Com /preparacao-acao-fiscal, a tokenização pode acontecer ANTES de qualquer lavratura, então o mapa passou a poder viver também na raiz da pasta da OS. O /gera-ai foi ajustado (FASE 2.5 Passo 1) para procurar nos dois locais — raiz da OS primeiro, depois lavraturas anteriores — e reaproveitar, nunca recriar do zero se já existir."
-    },
-    {
-      "topico": "Detecção determinística no /painel",
-      "txt": "A identificação de notificações DET não cadastradas é do script (regex de código + 1ª página via pdfplumber, comparada ao memory.md) — o modelo (haiku) só relata o que o script achou e encaminha o cadastro ao /nova-os. Heurística: o painel apresenta como 'confira e cadastre', nunca como fato."
-    },
-    {
-      "topico": "Bases distintas",
-      "txt": "Nunca mexer nas skills pessoais do mantenedor (~/.claude/skills do Ricardo) ao trabalhar no toolkit; o toolkit é uma adaptação à parte."
-    },
-    {
-      "topico": "CNPJ/CPF opcional na /nova-os, obrigatório só no /gera-ai",
-      "txt": "A /nova-os deixou de exigir CNPJ/CPF: o AFT nomeia a auditoria livremente (razão social, fantasia, com ou sem identificador). O CNPJ/CPF só se torna obrigatório no /gera-ai (exigência do próprio Sistema Auditor para o TXT) — se a OS ainda não tiver, o gera-ai pergunta, grava no memory.md e RENOMEIA a pasta da OS prefixando o CNPJ na frente do nome original (mv, não recria). Reflexo no .depara: quando a tokenização de trabalhadores (preparacao-acao-fiscal) roda antes do CNPJ ser conhecido, o arquivo nasce como .depara.json (sem sufixo) e o gera-ai sabe procurar os dois nomes."
-    },
-    {
-      "topico": "autos-lavrados: Mac+Parallels e match por 8 dígitos",
-      "txt": "scan_autos.py passou a autodetectar a pasta PRO do Sistema Auditor também no Mac com Parallels (glob em /Volumes/*/SistemasAFT/Auditor/Docs/AutosDeInfracao/PRO, o disco C: da VM montado no Finder), além do padrão Windows e do 3º argumento manual. E aceita identificador de 8, 11 ou 14 dígitos (antes exigia 14, o que rejeitava CPF/CAEPF) — como toda pasta do Sistema Auditor termina com os 8 primeiros dígitos do CNPJ/CPF, esse prefixo basta para achar os autos. Reflexo da /nova-os sem CNPJ: quando a OS não tem identificador, a skill pergunta os 8 dígitos ao AFT (modo OS única) ou pula a OS com aviso (modo lote)."
-    },
-    {
-      "topico": "autos-lavrados: uma ementa = um auto válido (dedup por re-lavratura)",
-      "txt": "Em regra cada ementa corresponde a um único auto: quando o AFT erra e re-lavra, o PDF cancelado resiste na pasta. Como a numeração dos autos é crescente (último dígito = verificador), scan_autos.py agrupa por ementa e marca status_duplicidade: mantido_ultimo (maior número-base = válido) vs cancelado_presumido (substituido_por). Exceções fixas no script: 001960-7 nunca deduplica (todos válidos); 001775-2/001774-4/002270-5/002269-1 avisam e o AFT decide (relacionar todos ou só o último). No relatório, cancelados vão numa seção 'Autos substituídos' à parte; no memory.md as linhas [x] passam a ser chaveadas pelo número do AI (permite ementas legitimamente repetidas)."
-    },
-    {
-      "topico": "Painel virou dashboard de cards (SISOS local, offline)",
-      "txt": "O /painel deixou de ser tabela e virou dashboard de cards com detalhe por auditoria, espelhando o SisOS pessoal do Ricardo mas 100% local (sem Vercel/Supabase): os memory.md são o banco, o autos-lavrados.md dá os autos com constatação, e o scan_autos.py (--scan) dá a lista fria ao vivo do Sistema Auditor — mesclados por número de AI, com degradação graciosa quando a pasta PRO está inacessível. Atualização diária é agendador do SO (launchd/schtasks) rodando o script determinístico, sem gastar tokens. No Mac a pasta das OS é perguntada uma vez e gravada como pasta_os: no aft-config.md; no Windows é o padrão."
-    },
-    {
-      "topico": "Rotina diária do painel entra no /aft-setup e no /aft-atualizar",
-      "txt": "Criado _scripts/instalar_rotina_painel.py (cross-platform: launchd no macOS, Agendador de Tarefas no Windows) para instalar/remover/consultar a rotina do /painel sem gastar tokens (chama gerar_painel.py --scan direto pelo SO). O /aft-setup passou a oferecer isso (opt-in) no Passo 7b, usando o python_path e a pasta OS ATIVAS já coletados. O /aft-atualizar oferece a mesma coisa, uma única vez, para quem instalou o toolkit antes dessa novidade — controla isso com o campo rotina_painel no aft-config.md (vazio = já perguntado e recusado; HH:MM = instalado) para nunca perguntar duas vezes."
-    },
-    {
-      "topico": "Skills próprias do colega, à prova de atualização (namespace minha-)",
-      "txt": "O toolkit passou a suportar skills criadas pelo próprio AFT/colega. Como o Claude Code só descobre skills no 1o nível de ~/.claude/skills (o repo É essa pasta), uma pasta 'Minhas Skills' aninhada não funcionaria — as skills ficariam invisíveis. Solução: namespace reservado 'minha-' (nenhuma skill oficial começa assim) + '.gitignore' com 'minha-*/'. Isso mantém a skill própria no 1o nível (visível), fora do versionamento e intocada pelo git pull do /aft-atualizar. O aft_doctor valida essas skills à parte, com tolerância (aviso, não erro) e confirma a proteção. A skill oficial /nova-skill faz o scaffold guiado para leigos. CLAUDE-aft.md instrui o Claude a tratar minha-* como primeira classe e a nunca editar skill oficial a título de personalização."
-    },
-    {
-      "topico": "Onboarding de pastas pré-toolkit (/organiza-os)",
-      "txt": "O colega chega ao toolkit com fiscalizações em andamento e documentos acumulados numa pasta do jeito dele. A /organiza-os faz o onboarding: joga-se a pasta em OS ATIVAS, ela lê a 1ª página de cada PDF, classifica (notificação DET, relação de autos do Sistema Auditor — que já alimenta a seção Autos lavrados do memory.md —, resposta do empregador item1..N, fotos), extrai empregador/identificador/prazos e propõe um plano antes-e-depois que só executa com aprovação. Convenção mantida: notificacao-<COD>.pdf na raiz + subpasta notificacao-<COD>/ para a resposta (onde analise-preliminar/det-630/painel já procuram), em vez de uma pasta 'Notificações' nova. Nada é apagado; arquivo não identificado fica intocado e listado."
-    },
-    {
-      "topico": "Painel ativo (modo interativo local)",
-      "txt": "O painel deixou de ser só visualização: o servir_painel.py serve o MESMO painel.html em http://127.0.0.1:8347 e, aberto por esse endereço, os cards ganham ações mecânicas — marcar DET respondida, resolver pendência, registrar atividade, status e embargo/interdição (campo embargo_interdicao do front-matter, preservando a descrição) — gravadas direto no memory.md com backup prévio. Divisão de responsabilidade: mecânico = servidor local (zero tokens); julgamento = botões 📋 que copiam o comando pronto (/gera-ai, /autos-lavrados, /det-630, /inspecao-fisica) para colar no Claude Code. Aberto pelo arquivo (file://) os controles somem — continua leitura pura. Custo: ~20 MB de RAM ocioso, CPU zero, só localhost."
-    },
-    {
-      "topico": "Extensão Chrome sincroniza o DET com o painel local",
-      "txt": "A extensão 'SisOS — Sync DET' (Chrome Web Store, código no repo SisOS) ganhou na v1.1 um segundo destino: além do SisOS na Vercel, um modo 'Painel local (AFT Toolkit)' opcional que envia o mesmo token de sessão do DET ao servir_painel.py (POST /api/det-sync, fetch feito no service worker da extensão — sem CORS). O det_sync.py replica em Python a lógica do sync do SisOS (lib/det/api-client + sync), trocando o Supabase pelos memory.md. Com isso um colega SEM SisOS/Vercel/Supabase instala a mesma extensão da loja, liga só o modo local e tem notificações e prazos do DET fluindo direto para as fichas — 100% na máquina dele. Decidido: quem consulta a API do DET é o servidor local (não a extensão), o gatilho é manual (botão), e o SisOS virou opcional na configuração da extensão."
-    },
-    {
-      "topico": "Servidor do painel sempre ligado (opt-in na instalação)",
-      "txt": "O servidor interativo (servir_painel.py) nasceu manual: só rodava enquanto o AFT mantivesse um terminal aberto. Como a sincronização automática do DET pela extensão Chrome depende do servidor estar no ar, e a maioria dos AFTs usa Windows, criamos o instalar_servidor_painel.py: instala como serviço do SO, subindo sozinho no login. No Windows isso exige PowerShell (Register-ScheduledTask com RestartCount/RestartInterval), já que o schtasks.exe básico usado na rotina diária não sustenta reinício automático; usa pythonw.exe para não abrir janela. No macOS, LaunchAgent com KeepAlive=true. Testado ciclo completo no Mac: instala, serve, sobrevive a kill -9 (respawn do launchd), remove, para de responder. Oferecido como passo OPCIONAL no /aft-setup e /aft-atualizar (uma vez), nunca forçado — o AFT que não quiser continua usando o painel estático ou subindo o servidor manualmente quando precisar."
-    },
-    {
-      "topico": "Bug crítico corrigido: notificações de fiscalizações antigas vazavam para a OS errada",
-      "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro."
-    },
-    {
-      "topico": "Bug corrigido: sync de prazo corrompia linha com dois prazos na mesma notificação",
-      "txt": "Segundo bug real: uma linha de DET escrita à mão continha dois prazos distintos para itens diferentes da mesma NAD (um item já vencido, outro com prazo futuro). O det_sync original achava o primeiro 'prazo dd/mm/aaaa' da linha por regex e sobrescrevia com o itemDataProximaEntrega da API (que é por NOTIFICAÇÃO, não por item) — trocou a data do item vencido pela do outro, corrompendo dado real. Efeito colateral no mesmo teste: numa linha sem a palavra 'prazo' mas que já citava a data em outra frase ('...vistoria de dd/mm/aaaa'), o script colava '— prazo dd/mm/aaaa' redundante no fim. Corrigido com duas guardas: (1) só atualiza a data quando a linha tem exatamente UM 'prazo'/'entrega até' — linha ambígua (2+) fica intocada, o AFT decide manualmente; (2) só acrescenta '— prazo X' quando essa data não aparece em NENHUMA forma na linha (BR ou ISO), evitando duplicar informação já escrita. As linhas reais corrompidas foram corrigidas manualmente (com backup); o conserto foi validado com 4 casos (linha ambígua intocada, data já presente não duplica, caso normal continua atualizando, linha sem prazo nenhum recebe o novo normalmente)."
-    },
-    {
-      "topico": "Extensão Chrome 2.0: independente do SisOS de fato (nome, permissões, código morto)",
-      "txt": "Antes de publicar a v2.0 na Chrome Web Store, auditoria encontrou duas pendências que atrapalhariam a revisão do Google: a permissão notifications declarada mas nunca usada (o toast é HTML injetado na página, não a API chrome.notifications), e o injected.js (captura de token da v1, substituída pelo webRequest do background.js) ainda exposto via web_accessible_resources sem que nada o injetasse — código morto e superfície de permissão desnecessária. Ambos removidos. Também renomeada de 'SisOS — Sync DET' para 'Sync DET — SisOS / AFT Toolkit' (manifest name, default_title, título e cabeçalho do popup) — o nome antigo sugeria SisOS obrigatório, quando a v1.1 já o tinha tornado opcional. Empacotada como sisos-sync-det-v2.0.0.zip (15 KB), com roteiro de publicação documentado, incluindo os textos de justificativa de permissão exigidos pela revisão do Google (em especial host_permissions para 127.0.0.1/localhost, incomum na loja)."
-    },
-    {
-      "topico": "Testes reais de ponta a ponta do sync do DET (2 novas OS)",
-      "txt": "Para validar os dois bugs corrigidos, duas OS novas foram criadas como campo de prova real (não simulado): uma via /organiza-os (testou o caminho 'RI já conhecido' e expôs o bug da linha com dois prazos) e outra via /nova-os + /inspecao-fisica, sem nenhuma notificação DET ainda (testou o caminho 'RI desconhecido, adota o da notificação mais recente'). De quebra, o /organiza-os teve o model pinado trocado de opus para sonnet (mais barato, suficiente para a classificação/extração da skill)."
-    },
-    {
-      "topico": "Subtítulos dos autos em algarismos romanos (I -, II -, III -)",
-      "txt": "A pedido do Ricardo, os subtítulos dos autos de infração deixaram de ser '1) DA FISCALIZAÇÃO' / '2) IRREGULARIDADE' / '3) OBSERVAÇÕES' e passaram a 'I - DA FISCALIZAÇÃO:' / 'II - IRREGULARIDADE:' / 'III - OBSERVAÇÕES:', sempre com quebra de linha após o subtítulo — no TXT do Sistema Auditor isso é o separador '#13#10 . #13#10' (a linha com ponto é o 'espaço em branco', já que o sistema não renderiza linha vazia). A mudança tocou 16 arquivos, mas foi barata porque o formato tem fonte única: o bloco 3 canônico vive em config/blocos_auto.md (injetado pelo bloco3_inject.py, cujo detector de 'já tem bloco 3' agora reconhece os dois formatos para nunca duplicar) e as regras de #13#10 vivem na FASE 3 do /gera-ai. Compatibilidade com o legado: rascunho antigo redigido com '1)/2)/3)' é NORMALIZADO pelo /gera-ai na hora de empacotar o TXT (troca determinística de subtítulo) — todo TXT sai no formato novo, mesmo de auto redigido antes da mudança."
-    },
-    {
-      "topico": "Google Calendar: conector do Claude, não OAuth próprio",
-      "txt": "Para levar os prazos de DET ao Google Calendar foram avaliados três caminhos: (A) o conector Google Calendar do próprio Claude, (B) OAuth próprio contra a API do Google e (C) botões de URL de template no painel, sem login. O caminho B foi rejeitado para um toolkit distribuído: exigiria projeto Google Cloud do mantenedor, app 'não verificado' (tela de aviso), limite de 100 usuários de teste cadastrados por e-mail um a um e credencial de cliente num repositório público. Ficou A+C: a skill /agenda-det usa o conector (autenticação delegada à interface do Claude, zero segredo no repo) para a sincronização de verdade — criar, atualizar prazo prorrogado e marcar ✓ ao responder —, e o painel ganhou o botão 'agendar no Google Calendar' por notificação (URL de template, funciona sem login nenhum). Assinatura de .ics foi descartada porque os servidores do Google não alcançam 127.0.0.1. Regras de segurança da skill: nunca apagar eventos, nunca tocar em evento fora do padrão 'DET ...', evento carrega apenas código + nome do empregador (nada de CNPJ, RI ou conteúdo da fiscalização na nuvem do Google)."
-    }
-  ],
-  "diferencas": [
-    {
-      "topico": "Plataforma",
-      "txt": "Pessoal: macOS/Parallels (iconv, sips). Toolkit: Windows, tudo em Python stdlib e latin-1 direto."
-    },
-    {
-      "topico": "Estado central",
-      "txt": "Pessoal: SISOS (Next.js + Supabase + Vercel) + cron de DET. Toolkit: memory.md locais + /painel, sem servidor."
-    },
-    {
-      "topico": "Empacotamento",
-      "txt": "Pessoal: cada skill empacota. Toolkit: centralizado no /gera-ai, com /revisa-auto como gate de qualidade antes."
-    },
-    {
-      "topico": "Identidade do AFT",
-      "txt": "Pessoal: dados SRTE/GO hardcoded. Toolkit: aft-config.md + UORG resolvida pela cidade."
-    }
-  ],
-  "foraDoToolkit": [
-    "nad-tn — eixo B (--conteudo=docs, modo=texto) adaptado no toolkit como /NAD (2026-07-13); o eixo A (--modo=template, automação Chrome+DET) e o eixo A de correção (--conteudo=correcao, que no toolkit já é a /tn-nco) permanecem infra pessoal, não distribuídos.",
-    "det-baixar-empregador (Chrome + credenciais) — fase futura possível.",
-    "analise-preliminar (triagem de resposta documental ao DET) — infra pessoal, não distribuída.",
-    "cowork-ingest / cowork-manifest / cowork-ementas — pipeline RAG do NotebookLM (ecossistema pessoal).",
-    "cowork-sync / sisos-sync / notebooklm-conf / aft-grant — infra pessoal, não distribuída."
-  ],
-  "avisos": [
-    "As skills são apoio à redação e organização; o conteúdo jurídico de cada auto, termo e relatório é responsabilidade do AFT, que revisa tudo antes de transmitir.",
-    "Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.",
-    "/autos-lavrados: a extração por pypdf precisa de calibração/verificação na 1ª execução contra os PDFs reais do Sistema Auditor.",
-    "O template do RT (aft-rt-rgi/template.docx) segue o modelo SRTE/GO — auditores de outras SRTEs ajustam o cabeçalho.",
-    "/aft-atualizar atualiza o notebooklm-py automaticamente, sem perguntar antes — é uma dependência de terceiro (teng-lin/notebooklm-py) fora do controle de versão do toolkit.",
-    "As skills com model: claude-opus-4-8[1m] dependem do plano do AFT ter acesso ao modelo — o /aft-doctor testa e explica em linguagem simples se faltar.",
-    "A detecção de notificações DET do /painel é heurística (pode dar falso positivo) — o AFT confere antes de cadastrar.",
-    "Validação end-to-end de /NR12, /NR18, /tn-nco e do fluxo de Artifact do /painel depende de interação e de máquina real com o app logado; testar no Windows real."
-  ]
+   ]
+  }
+ ],
+ "scripts": [
+  {
+   "nome": "rehydrate.py",
+   "caminho": "_scripts/rehydrate.py",
+   "papel": "Re-injeta nomes/CPFs reais no TXT tokenizado e grava direto em ISO-8859-1. Aborta em valor ausente, CPF inválido, token órfão ou caractere fora do latin-1. Nunca é o LLM que re-hidrata.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "bloco3_inject.py",
+   "caminho": "_scripts/bloco3_inject.py",
+   "papel": "Injeta o Subtítulo 3 (OBSERVAÇÕES) canônico — lido de config/blocos_auto.md — em todo auto, byte a byte idêntico. As skills de redação não escrevem mais esse bloco; só o /gera-ai injeta.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "validar_txt.py",
+   "caminho": "_scripts/validar_txt.py",
+   "papel": "Valida o TXT do Sistema Auditor ANTES da importação: pega erros de encoding/formato que travariam o botão imp. txt, antes mesmo do AFT tentar.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "checar_pii.py",
+   "caminho": "_scripts/checar_pii.py",
+   "papel": "Guard-rail de PII de alto dano: varre um relato/texto/pasta e avisa (não bloqueia) se houver CPF ou PIS/PASEP com dígito verificador válido escapando da anonimização.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "checar_diff.py",
+   "caminho": "_scripts/checar_diff.py",
+   "papel": "Guard-rail de supply-chain: varre o diff de uma atualização (linhas que chegam) por Unicode invisível e padrões de exfiltração/execução remota, e avisa antes do git pull (chamado pelo /aft-atualizar). Só alarme — quem decide é o AFT.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "checar_arquivo_aberto.py",
+   "caminho": "_scripts/checar_arquivo_aberto.py",
+   "papel": "Detecta se um .docx (RT, autos) está aberto/bloqueado no Word antes de tentar sobrescrevê-lo no Windows — evita erro silencioso de gravação.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "backup_arquivo.py",
+   "caminho": "_scripts/backup_arquivo.py",
+   "papel": "Cópia de segurança automática antes de editar um arquivo legal já existente (.docx do RT, autos) — convenção do toolkit para nunca perder uma versão anterior.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "checar_rt_autos.py",
+   "caminho": "_scripts/checar_rt_autos.py",
+   "papel": "Confere a coerência entre a Seção 4 do RT (.docx) e os autos (autos.md) — pega divergência quando um é editado e o outro não acompanha.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "gerar_painel.py",
+   "caminho": "_scripts/gerar_painel.py",
+   "papel": "Varre OS ATIVAS/*/memory.md (parser tolerante), calcula dias-para-o-prazo com date.today(), detecta PDFs de notificação DET não cadastrados (código por regex + 1ª página via pdfplumber, comparado ao memory.md) e gera o painel.html autocontido; 3º argumento opcional grava a versão para a tool Artifact (sem wrapper HTML e sem a coluna Pasta). Imprime resumo JSON no stdout.",
+   "runtime": "Python stdlib (+pdfplumber opcional)"
+  },
+  {
+   "nome": "servir_painel.py",
+   "caminho": "_scripts/servir_painel.py",
+   "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 5 ações mecânicas por clique (marcar/reabrir DET respondida, resolver pendência, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "det_sync.py",
+   "caminho": "_scripts/det_sync.py",
+   "papel": "Sync local do DET (espelho do sync do SisOS): recebe o token de sessão do DET capturado pela extensão Chrome 'Sync DET' (v2.0; antes 'SisOS — Sync DET') via POST /api/det-sync do servir_painel.py, consulta a API oficial de pesquisa de notificações por CNPJ/CPF e filtra o resultado pelo RI da OS — a pesquisa por CNPJ devolve notificações de TODAS as fiscalizações já feitas naquele empregador, inclusive antigas já concluídas (bug real corrigido, ver decisão 'notificações de fiscalizações antigas'). RIs conhecidos da OS = ri: do front-matter ∪ RIs das notificações já registradas (cobre OS com duas fiscalizações simultâneas do mesmo empregador); sem RI conhecido, adota o da notificação mais recente (ri_mais_recente). Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe. Atualiza ## Notificações DET: notificação nova vira linha '- [ ] <COD> — prazo <data>'; um prazo alterado só atualiza a linha quando ela tem exatamente UM 'prazo'/'entrega até' escrito — linha com 2+ (ex.: um item vencido e outro não) fica intocada, pois a API informa um prazo por NOTIFICAÇÃO, não por item, e trocar sozinho corrompe dado (bug real corrigido, ver decisão 'sync de prazo'). Checkbox [ ]/[x] nunca muda; backup antes de cada escrita; token só em memória. Funções de edição puras e testáveis sem rede (consultar injetável); AFT_DET_DEBUG/AFT_DET_DRYRUN para inspecionar sem gravar.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "instalar_rotina_painel.py",
+   "caminho": "_scripts/instalar_rotina_painel.py",
+   "papel": "Instala/remove/consulta a rotina DIÁRIA do painel (regenera o painel.html estático 1x/dia, --scan incluso) como agendamento do SO — launchd no macOS, Agendador de Tarefas no Windows. Diferente do instalar_servidor_painel.py: aqui o processo roda, termina e some; não mantém nada no ar entre execuções. Oferecido no /aft-setup (Passo 7b) e /aft-atualizar (Passo 2b, uma única vez).",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "instalar_servidor_painel.py",
+   "caminho": "_scripts/instalar_servidor_painel.py",
+   "papel": "Instala/remove/consulta o SERVIDOR interativo do painel (servir_painel.py) como serviço em segundo plano do sistema operacional — diferente do instalar_rotina_painel.py, que só regenera o painel.html estático 1x/dia, este mantém o servidor SEMPRE ATIVO. macOS: LaunchAgent com RunAtLoad+KeepAlive (reinicia sozinho se cair). Windows: Tarefa Agendada via PowerShell Register-ScheduledTask com gatilho 'ao fazer logon' e RestartCount/RestartInterval (schtasks.exe básico não expõe reinício automático), usando pythonw.exe para não abrir janela de console. Necessário para os controles do painel funcionarem sem terminal aberto e para o sync automático do DET pela extensão Chrome. Oferecido opcionalmente no /aft-setup (Passo 7c) e /aft-atualizar (Passo 2c, uma única vez).",
+   "runtime": "Python stdlib (+ PowerShell no Windows)"
+  },
+  {
+   "nome": "aft_doctor.py",
+   "caminho": "_scripts/aft_doctor.py",
+   "papel": "Verificação pós-instalação: checa Python, Git, descoberta das skills, config do repo, perfil, deny-list, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills — frontmatter (name = pasta), campo model contra config/models-validos.json e teste ao vivo dos modelos pinados (claude -p, 1 chamada por ID; falha de login/rede é inconclusiva, nunca veredito). Emite relatório legível + JSON. Só leitura.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "fotos_para_pdf.py",
+   "caminho": "_scripts/fotos_para_pdf.py",
+   "papel": "Converte as fotos da inspeção em PDF (anexo do auto).",
+   "runtime": "Python · pillow"
+  },
+  {
+   "nome": "comprimir_pdf.py",
+   "caminho": "_scripts/comprimir_pdf.py",
+   "papel": "Comprime PDFs grandes para caber no limite de tamanho do Sistema Auditor.",
+   "runtime": "Python · pikepdf/pypdf"
+  },
+  {
+   "nome": "docx_pack.py / docx_unpack.py",
+   "caminho": "_scripts/docx_*.py",
+   "papel": "Empacota e desempacota .docx (geração e validação de RT/relatórios sem libs externas).",
+   "runtime": "Python stdlib · zipfile"
+  },
+  {
+   "nome": "scan_autos.py",
+   "caminho": "autos-lavrados/scripts/scan_autos.py",
+   "papel": "Extrai texto dos PDFs transmitidos (pypdf; pdftotext se no PATH) e parseia AI_[NUM]_[CNPJ]_[sufixo].PDF para o cruzamento.",
+   "runtime": "Python · pypdf"
+  },
+  {
+   "nome": "gera_relacao_autos.py",
+   "caminho": "autos-lavrados/scripts/gera_relacao_autos.py",
+   "papel": "Gera a 'Relação de autos lavrados' (.docx, com tentativa de .pdf) a partir do autos-lavrados.md — só os autos válidos (seção Detalhamento), agrupados por data do mais antigo ao mais recente. Usa template-relacao-autos.docx (cabeçalho SIT/AFT fixo, nunca alterado); Times New Roman 12pt, texto justificado, filetes e barra lateral navy.",
+   "runtime": "Python (python-docx)"
+  },
+  {
+   "nome": "inspecionar_assinatura.py",
+   "caminho": "jornada-atestado/scripts/inspecionar_assinatura.py",
+   "papel": "Inspeciona a assinatura/identificação do atestado técnico do REP por código.",
+   "runtime": "Python"
+  },
+  {
+   "nome": "validar.py",
+   "caminho": "jornada-valida-afd-aej/validar.py",
+   "papel": "Valida a estrutura, o trailer e a integridade referencial do AEJ — calibrado pelos decimais e pela jornada flexível do sistema oficial.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "gerar_relatorio_docx.py",
+   "caminho": "analise-acidente/scripts/gerar_relatorio_docx.py",
+   "papel": "Gera o Relatório de Análise de Acidente em .docx, no roteiro fixo de 6 seções da IN GMTP/MTP nº 2/2022.",
+   "runtime": "Python stdlib · zipfile"
+  }
+ ],
+ "dados": [
+  {
+   "arquivo": "config/notebooks.json",
+   "conteudo": "49 notebooks (IDs do NotebookLM, ex.: nr-12, nr-18, ementario-sst)",
+   "uso": "Consulta de ementa pelas skills (especialmente /consulta)."
+  },
+  {
+   "arquivo": "config/uorgs.csv",
+   "conteudo": "1012 UORGs oficiais (CDUORG;NOME;UF;MUNICIPIO;...)",
+   "uso": "O /aft-setup resolve o código de 9 dígitos pela cidade informada."
+  },
+  {
+   "arquivo": "config/CLAUDE-aft.md",
+   "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho, privacidade e roteamento das skills",
+   "uso": "Instalado pelo /aft-setup em ~/.claude/CLAUDE.md (carregado em toda conversa)."
+  },
+  {
+   "arquivo": "config/blocos_auto.md",
+   "conteudo": "Texto fixo e literal do Subtítulo 3 (OBSERVAÇÕES) do auto de infração",
+   "uso": "Fonte única lida pelo bloco3_inject.py — nenhuma skill de redação escreve esse bloco na mão."
+  },
+  {
+   "arquivo": "config/settings-aft.json",
+   "conteudo": "Deny-list de segurança: bloqueia leitura de credenciais (~/.ssh, ~/.aws, .env), dos mapas .depara_*.json e comandos de acesso remoto (ssh/scp/nc)",
+   "uso": "Instalada pelo /aft-setup em ~/.claude/settings.json — última linha de defesa contra exfiltração induzida por documento."
+  },
+  {
+   "arquivo": "config/models-validos.json",
+   "conteudo": "Apelidos e IDs de modelo aceitos no campo model: dos SKILL.md",
+   "uso": "O aft_doctor.py valida os frontmatters contra ela; quando um modelo for descontinuado, o mantenedor atualiza a lista e as skills, e os AFTs recebem via /aft-atualizar."
+  }
+ ],
+ "ementas": [
+  {
+   "camada": "1. NotebookLM (recomendado)",
+   "txt": "CLI notebooklm-py + skill /consulta; IDs em config/notebooks.json; acesso em notebooks-aft.vercel.app. Envia só a descrição da irregularidade."
+  },
+  {
+   "camada": "2. Google Drive compartilhado",
+   "txt": "Ementários por NR em Markdown, pasta pública — fallback quando o NotebookLM falha."
+  },
+  {
+   "camada": "3. O AFT informa o código",
+   "txt": "Formato XXXXXX-X, conferido no ementário oficial."
+  }
+ ],
+ "anonimizacao": [
+  "No chat e nas consultas à IA, trabalhadores viram tokens [[TRAB_NN]] / [[CPF_NN]] e a empresa vira [[AUTUADA]]; o CNPJ nunca é tokenizado.",
+  "O mapa token↔dados reais fica em .depara_<CNPJ>.json (sensível: não exibir, não compartilhar, não commitar).",
+  "Os dados reais entram no TXT final apenas pelo script determinístico rehydrate.py — nunca pelo modelo. Um nome/CPF trocado num documento legal é inaceitável.",
+  "A cópia *.tokenized.txt é a única versão segura para compartilhar com colegas.",
+  "Guard-rail extra: checar_pii.py varre relatos/pastas e avisa se um CPF ou PIS/PASEP com dígito verificador válido escapou da anonimização (não bloqueia — a troca real continua só pelo rehydrate.py).",
+  "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais. Única exceção, opt-in e com consentimento por sessão: o /painel pode publicar o painel (empresas e prazos, sem dados de trabalhador) como Artifact privado na conta claude.ai do AFT."
+ ],
+ "decisoes": [
+  {
+   "topico": "Instalação",
+   "txt": "O repositório É a pasta ~/.claude/skills do colega (clone direto). O Claude Code só descobre skills no 1º nível dessa pasta — clone aninhado deixa todas invisíveis."
+  },
+  {
+   "topico": "Git obrigatório",
+   "txt": "O app desktop Windows exige Git antes de abrir sessão local; Git é passo manual (galinha-e-ovo); o Claude instala só Python/toolkit."
+  },
+  {
+   "topico": "Sem SISOS/Supabase",
+   "txt": "O toolkit é offline: os memory.md são o banco local e o /painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /nova-os."
+  },
+  {
+   "topico": "Pasta de trabalho fixa",
+   "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /nova-os, conferida pelo /aft-doctor (mostra quantas empresas há dentro) e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Mantido como subpasta de AFT/ (não achatada para a raiz de Documentos) porque agrupa também aft-config.md e o painel.html — 22 arquivos do toolkit fixam esse caminho."
+  },
+  {
+   "topico": "Empacotamento único",
+   "txt": "Todo TXT é gerado no /gera-ai; /registro, /PGR-analise, /aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
+  },
+  {
+   "topico": "Latin-1 sem iconv",
+   "txt": "rehydrate.py grava o TXT final direto em ISO-8859-1 — iconv/sips não existem garantidamente no Windows."
+  },
+  {
+   "topico": "Lotação pela cidade",
+   "txt": "O /aft-setup resolve o código da UORG pela cidade (uorgs.csv) — o AFT raramente sabe o código de 9 dígitos."
+  },
+  {
+   "topico": "Ementas em 3 camadas",
+   "txt": "NotebookLM (via /consulta) primeiro → Drive compartilhado → o AFT digita o código. Nunca inventar ementa."
+  },
+  {
+   "topico": "Bloco 3 centralizado",
+   "txt": "O Subtítulo 3 (OBSERVAÇÕES) de todo auto vem de config/blocos_auto.md, injetado só pelo /gera-ai (bloco3_inject.py) — nenhuma skill de redação o escreve na mão, evitando divergência e economizando tokens."
+  },
+  {
+   "topico": "Atualização separada do diagnóstico",
+   "txt": "/aft-doctor só lê (nunca instala); quem efetivamente atualiza skills e o notebooklm-py é o /aft-atualizar, que chama o /aft-doctor ao final para confirmar."
+  },
+  {
+   "topico": "Política de model por skill",
+   "txt": "Três faixas: claude-opus-4-8[1m] para auditoria de documento longo (/PGR-analise, /aet-auditoria, /analise-acidente); sonnet/haiku para o formular e o mecânico (empacotar, validar, painel, setup); sem pin nas skills de redação jurídica pesada (herdam o melhor modelo da sessão do AFT — um pin de opus quebraria em plano sem acesso). O /aft-doctor valida os pins contra config/models-validos.json e testa a disponibilidade ao vivo."
+  },
+  {
+   "topico": "allowed-tools como garantia",
+   "txt": "Promessa de 'somente leitura' virou restrição técnica: /aft-doctor e /painel rodam sem Write/Edit (frontmatter allowed-tools); /autos-lavrados precisa escrever (relatório + memory.md), então seu fence corta as ferramentas de rede — ela processa PDFs com dados pessoais."
+  },
+  {
+   "topico": "Tokenização antes da lavratura (.depara na raiz da OS)",
+   "txt": "Até 2026-07-13, o .depara_[CNPJ].json (mapa token↔dado real de trabalhador) só nascia dentro da pasta Autos DD-MM/, criado pelo /gera-ai. Com /preparacao-acao-fiscal, a tokenização pode acontecer ANTES de qualquer lavratura, então o mapa passou a poder viver também na raiz da pasta da OS. O /gera-ai foi ajustado (FASE 2.5 Passo 1) para procurar nos dois locais — raiz da OS primeiro, depois lavraturas anteriores — e reaproveitar, nunca recriar do zero se já existir."
+  },
+  {
+   "topico": "Detecção determinística no /painel",
+   "txt": "A identificação de notificações DET não cadastradas é do script (regex de código + 1ª página via pdfplumber, comparada ao memory.md) — o modelo (haiku) só relata o que o script achou e encaminha o cadastro ao /nova-os. Heurística: o painel apresenta como 'confira e cadastre', nunca como fato."
+  },
+  {
+   "topico": "Bases distintas",
+   "txt": "Nunca mexer nas skills pessoais do mantenedor (~/.claude/skills do Ricardo) ao trabalhar no toolkit; o toolkit é uma adaptação à parte."
+  },
+  {
+   "topico": "CNPJ/CPF opcional na /nova-os, obrigatório só no /gera-ai",
+   "txt": "A /nova-os deixou de exigir CNPJ/CPF: o AFT nomeia a auditoria livremente (razão social, fantasia, com ou sem identificador). O CNPJ/CPF só se torna obrigatório no /gera-ai (exigência do próprio Sistema Auditor para o TXT) — se a OS ainda não tiver, o gera-ai pergunta, grava no memory.md e RENOMEIA a pasta da OS prefixando o CNPJ na frente do nome original (mv, não recria). Reflexo no .depara: quando a tokenização de trabalhadores (preparacao-acao-fiscal) roda antes do CNPJ ser conhecido, o arquivo nasce como .depara.json (sem sufixo) e o gera-ai sabe procurar os dois nomes."
+  },
+  {
+   "topico": "autos-lavrados: Mac+Parallels e match por 8 dígitos",
+   "txt": "scan_autos.py passou a autodetectar a pasta PRO do Sistema Auditor também no Mac com Parallels (glob em /Volumes/*/SistemasAFT/Auditor/Docs/AutosDeInfracao/PRO, o disco C: da VM montado no Finder), além do padrão Windows e do 3º argumento manual. E aceita identificador de 8, 11 ou 14 dígitos (antes exigia 14, o que rejeitava CPF/CAEPF) — como toda pasta do Sistema Auditor termina com os 8 primeiros dígitos do CNPJ/CPF, esse prefixo basta para achar os autos. Reflexo da /nova-os sem CNPJ: quando a OS não tem identificador, a skill pergunta os 8 dígitos ao AFT (modo OS única) ou pula a OS com aviso (modo lote)."
+  },
+  {
+   "topico": "autos-lavrados: uma ementa = um auto válido (dedup por re-lavratura)",
+   "txt": "Em regra cada ementa corresponde a um único auto: quando o AFT erra e re-lavra, o PDF cancelado resiste na pasta. Como a numeração dos autos é crescente (último dígito = verificador), scan_autos.py agrupa por ementa e marca status_duplicidade: mantido_ultimo (maior número-base = válido) vs cancelado_presumido (substituido_por). Exceções fixas no script: 001960-7 nunca deduplica (todos válidos); 001775-2/001774-4/002270-5/002269-1 avisam e o AFT decide (relacionar todos ou só o último). No relatório, cancelados vão numa seção 'Autos substituídos' à parte; no memory.md as linhas [x] passam a ser chaveadas pelo número do AI (permite ementas legitimamente repetidas)."
+  },
+  {
+   "topico": "Painel virou dashboard de cards (SISOS local, offline)",
+   "txt": "O /painel deixou de ser tabela e virou dashboard de cards com detalhe por auditoria, espelhando o SisOS pessoal do Ricardo mas 100% local (sem Vercel/Supabase): os memory.md são o banco, o autos-lavrados.md dá os autos com constatação, e o scan_autos.py (--scan) dá a lista fria ao vivo do Sistema Auditor — mesclados por número de AI, com degradação graciosa quando a pasta PRO está inacessível. Atualização diária é agendador do SO (launchd/schtasks) rodando o script determinístico, sem gastar tokens. No Mac a pasta das OS é perguntada uma vez e gravada como pasta_os: no aft-config.md; no Windows é o padrão."
+  },
+  {
+   "topico": "Rotina diária do painel entra no /aft-setup e no /aft-atualizar",
+   "txt": "Criado _scripts/instalar_rotina_painel.py (cross-platform: launchd no macOS, Agendador de Tarefas no Windows) para instalar/remover/consultar a rotina do /painel sem gastar tokens (chama gerar_painel.py --scan direto pelo SO). O /aft-setup passou a oferecer isso (opt-in) no Passo 7b, usando o python_path e a pasta OS ATIVAS já coletados. O /aft-atualizar oferece a mesma coisa, uma única vez, para quem instalou o toolkit antes dessa novidade — controla isso com o campo rotina_painel no aft-config.md (vazio = já perguntado e recusado; HH:MM = instalado) para nunca perguntar duas vezes."
+  },
+  {
+   "topico": "Skills próprias do colega, à prova de atualização (namespace minha-)",
+   "txt": "O toolkit passou a suportar skills criadas pelo próprio AFT/colega. Como o Claude Code só descobre skills no 1o nível de ~/.claude/skills (o repo É essa pasta), uma pasta 'Minhas Skills' aninhada não funcionaria — as skills ficariam invisíveis. Solução: namespace reservado 'minha-' (nenhuma skill oficial começa assim) + '.gitignore' com 'minha-*/'. Isso mantém a skill própria no 1o nível (visível), fora do versionamento e intocada pelo git pull do /aft-atualizar. O aft_doctor valida essas skills à parte, com tolerância (aviso, não erro) e confirma a proteção. A skill oficial /nova-skill faz o scaffold guiado para leigos. CLAUDE-aft.md instrui o Claude a tratar minha-* como primeira classe e a nunca editar skill oficial a título de personalização."
+  },
+  {
+   "topico": "Onboarding de pastas pré-toolkit (/organiza-os)",
+   "txt": "O colega chega ao toolkit com fiscalizações em andamento e documentos acumulados numa pasta do jeito dele. A /organiza-os faz o onboarding: joga-se a pasta em OS ATIVAS, ela lê a 1ª página de cada PDF, classifica (notificação DET, relação de autos do Sistema Auditor — que já alimenta a seção Autos lavrados do memory.md —, resposta do empregador item1..N, fotos), extrai empregador/identificador/prazos e propõe um plano antes-e-depois que só executa com aprovação. Convenção mantida: notificacao-<COD>.pdf na raiz + subpasta notificacao-<COD>/ para a resposta (onde analise-preliminar/det-630/painel já procuram), em vez de uma pasta 'Notificações' nova. Nada é apagado; arquivo não identificado fica intocado e listado."
+  },
+  {
+   "topico": "Painel ativo (modo interativo local)",
+   "txt": "O painel deixou de ser só visualização: o servir_painel.py serve o MESMO painel.html em http://127.0.0.1:8347 e, aberto por esse endereço, os cards ganham ações mecânicas — marcar DET respondida, resolver pendência, registrar atividade, status e embargo/interdição (campo embargo_interdicao do front-matter, preservando a descrição) — gravadas direto no memory.md com backup prévio. Divisão de responsabilidade: mecânico = servidor local (zero tokens); julgamento = botões 📋 que copiam o comando pronto (/gera-ai, /autos-lavrados, /det-630, /inspecao-fisica) para colar no Claude Code. Aberto pelo arquivo (file://) os controles somem — continua leitura pura. Custo: ~20 MB de RAM ocioso, CPU zero, só localhost."
+  },
+  {
+   "topico": "Extensão Chrome sincroniza o DET com o painel local",
+   "txt": "A extensão 'SisOS — Sync DET' (Chrome Web Store, código no repo SisOS) ganhou na v1.1 um segundo destino: além do SisOS na Vercel, um modo 'Painel local (AFT Toolkit)' opcional que envia o mesmo token de sessão do DET ao servir_painel.py (POST /api/det-sync, fetch feito no service worker da extensão — sem CORS). O det_sync.py replica em Python a lógica do sync do SisOS (lib/det/api-client + sync), trocando o Supabase pelos memory.md. Com isso um colega SEM SisOS/Vercel/Supabase instala a mesma extensão da loja, liga só o modo local e tem notificações e prazos do DET fluindo direto para as fichas — 100% na máquina dele. Decidido: quem consulta a API do DET é o servidor local (não a extensão), o gatilho é manual (botão), e o SisOS virou opcional na configuração da extensão."
+  },
+  {
+   "topico": "Servidor do painel sempre ligado (padrão na instalação)",
+   "txt": "O servidor interativo (servir_painel.py) nasceu manual: só rodava enquanto o AFT mantivesse um terminal aberto. Como a sincronização automática do DET pela extensão Chrome depende do servidor estar no ar, e a maioria dos AFTs usa Windows, criamos o instalar_servidor_painel.py: instala como serviço do SO, subindo sozinho no login. No Windows isso exige PowerShell (Register-ScheduledTask com RestartCount/RestartInterval), já que o schtasks.exe básico usado na rotina diária não sustenta reinício automático; usa pythonw.exe para não abrir janela. No macOS, LaunchAgent com KeepAlive=true. Testado ciclo completo no Mac: instala, serve, sobrevive a kill -9 (respawn do launchd), remove, para de responder. Começou opcional, mas a pedido do Ricardo (19/07) virou PADRÃO: o /aft-setup Passo 7c instala sem perguntar, e o /aft-atualizar Passo 2c garante que quem ainda não tem passe a ter (inclusive quem havia recusado antes) — o painel estático e os controles interativos deixaram de depender de o AFT ter dito sim. Continua com escape hatch: instalar_servidor_painel.py remover desliga, se o AFT pedir. Roda só em 127.0.0.1."
+  },
+  {
+   "topico": "Bug crítico corrigido: notificações de fiscalizações antigas vazavam para a OS errada",
+   "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro."
+  },
+  {
+   "topico": "Bug corrigido: sync de prazo corrompia linha com dois prazos na mesma notificação",
+   "txt": "Segundo bug real: uma linha de DET escrita à mão continha dois prazos distintos para itens diferentes da mesma NAD (um item já vencido, outro com prazo futuro). O det_sync original achava o primeiro 'prazo dd/mm/aaaa' da linha por regex e sobrescrevia com o itemDataProximaEntrega da API (que é por NOTIFICAÇÃO, não por item) — trocou a data do item vencido pela do outro, corrompendo dado real. Efeito colateral no mesmo teste: numa linha sem a palavra 'prazo' mas que já citava a data em outra frase ('...vistoria de dd/mm/aaaa'), o script colava '— prazo dd/mm/aaaa' redundante no fim. Corrigido com duas guardas: (1) só atualiza a data quando a linha tem exatamente UM 'prazo'/'entrega até' — linha ambígua (2+) fica intocada, o AFT decide manualmente; (2) só acrescenta '— prazo X' quando essa data não aparece em NENHUMA forma na linha (BR ou ISO), evitando duplicar informação já escrita. As linhas reais corrompidas foram corrigidas manualmente (com backup); o conserto foi validado com 4 casos (linha ambígua intocada, data já presente não duplica, caso normal continua atualizando, linha sem prazo nenhum recebe o novo normalmente)."
+  },
+  {
+   "topico": "Extensão Chrome 2.0: independente do SisOS de fato (nome, permissões, código morto)",
+   "txt": "Antes de publicar a v2.0 na Chrome Web Store, auditoria encontrou duas pendências que atrapalhariam a revisão do Google: a permissão notifications declarada mas nunca usada (o toast é HTML injetado na página, não a API chrome.notifications), e o injected.js (captura de token da v1, substituída pelo webRequest do background.js) ainda exposto via web_accessible_resources sem que nada o injetasse — código morto e superfície de permissão desnecessária. Ambos removidos. Também renomeada de 'SisOS — Sync DET' para 'Sync DET — SisOS / AFT Toolkit' (manifest name, default_title, título e cabeçalho do popup) — o nome antigo sugeria SisOS obrigatório, quando a v1.1 já o tinha tornado opcional. Empacotada como sisos-sync-det-v2.0.0.zip (15 KB), com roteiro de publicação documentado, incluindo os textos de justificativa de permissão exigidos pela revisão do Google (em especial host_permissions para 127.0.0.1/localhost, incomum na loja)."
+  },
+  {
+   "topico": "Testes reais de ponta a ponta do sync do DET (2 novas OS)",
+   "txt": "Para validar os dois bugs corrigidos, duas OS novas foram criadas como campo de prova real (não simulado): uma via /organiza-os (testou o caminho 'RI já conhecido' e expôs o bug da linha com dois prazos) e outra via /nova-os + /inspecao-fisica, sem nenhuma notificação DET ainda (testou o caminho 'RI desconhecido, adota o da notificação mais recente'). De quebra, o /organiza-os teve o model pinado trocado de opus para sonnet (mais barato, suficiente para a classificação/extração da skill)."
+  },
+  {
+   "topico": "Subtítulos dos autos em algarismos romanos (I -, II -, III -)",
+   "txt": "A pedido do Ricardo, os subtítulos dos autos de infração deixaram de ser '1) DA FISCALIZAÇÃO' / '2) IRREGULARIDADE' / '3) OBSERVAÇÕES' e passaram a 'I - DA FISCALIZAÇÃO:' / 'II - IRREGULARIDADE:' / 'III - OBSERVAÇÕES:', sempre com quebra de linha após o subtítulo — no TXT do Sistema Auditor isso é o separador '#13#10 . #13#10' (a linha com ponto é o 'espaço em branco', já que o sistema não renderiza linha vazia). A mudança tocou 16 arquivos, mas foi barata porque o formato tem fonte única: o bloco 3 canônico vive em config/blocos_auto.md (injetado pelo bloco3_inject.py, cujo detector de 'já tem bloco 3' agora reconhece os dois formatos para nunca duplicar) e as regras de #13#10 vivem na FASE 3 do /gera-ai. Compatibilidade com o legado: rascunho antigo redigido com '1)/2)/3)' é NORMALIZADO pelo /gera-ai na hora de empacotar o TXT (troca determinística de subtítulo) — todo TXT sai no formato novo, mesmo de auto redigido antes da mudança."
+  },
+  {
+   "topico": "Google Calendar: conector do Claude, não OAuth próprio",
+   "txt": "Para levar os prazos de DET ao Google Calendar foram avaliados três caminhos: (A) o conector Google Calendar do próprio Claude, (B) OAuth próprio contra a API do Google e (C) botões de URL de template no painel, sem login. O caminho B foi rejeitado para um toolkit distribuído: exigiria projeto Google Cloud do mantenedor, app 'não verificado' (tela de aviso), limite de 100 usuários de teste cadastrados por e-mail um a um e credencial de cliente num repositório público. Ficou A+C: a skill /agenda-det usa o conector (autenticação delegada à interface do Claude, zero segredo no repo) para a sincronização de verdade — criar, atualizar prazo prorrogado e marcar ✓ ao responder —, e o painel ganhou o botão 'agendar no Google Calendar' por notificação (URL de template, funciona sem login nenhum). Assinatura de .ics foi descartada porque os servidores do Google não alcançam 127.0.0.1. Regras de segurança da skill: nunca apagar eventos, nunca tocar em evento fora do padrão 'DET ...', evento carrega apenas código + nome do empregador (nada de CNPJ, RI ou conteúdo da fiscalização na nuvem do Google)."
+  },
+  {
+   "topico": "Relatórios ad-hoc (fora das skills): .docx, não markdown solto",
+   "txt": "Quando o AFT pede um documento/relatório que não corresponde a nenhuma skill do toolkit, o Claude gera o arquivo final em .docx (python-docx, já usado no /autos-lavrados e na apostila) em vez de só despejar texto em markdown no chat ou salvar um .md. Isso é regra de comportamento (CLAUDE-aft.md), não uma skill nova: não há um gerador genérico de docx no _scripts, o Claude monta o documento com python-docx caso a caso, como foi feito para a apostila. Ficou de fora do escopo o memory.md (estado interno, lido por regex pelas skills e pelo gerar_painel.py — virar .docx quebraria isso) e os textos que as skills já produzem para copiar e colar (ex.: /NAD e /tn-nco, que já usam bloco de código no chat, texto puro, para o AFT colar direto no campo do DET sem sobra de markdown)."
+  },
+  {
+   "topico": "Pasta única interdicao-embargo/ por OS",
+   "txt": "Toda a documentação de interdição/embargo de uma auditoria mora numa pasta única 'interdicao-embargo/' (sem sufixo de data): o termo assinado, o RT que a fundamenta (/aft-rt-rgi) e seus autos derivados (autos.md + TXT do /gera-ai + termo anexo), o RT de manutenção (/rt-manutencao) e o requerimento de suspensão com os juntados do empregador. Substituiu a antiga 'Autos TE-TI DD-MM/'. O /organiza-os classifica arquivos com 'interdicao'/'embargo'/'TE-TI' no nome (ou 'TERMO DE INTERDIÇÃO/EMBARGO/MANUTENÇÃO' na 1ª página) e os roteia para lá; /aft-rt-rgi e /rt-manutencao escrevem direto nela. Com 2+ termos na mesma OS, sufixam-se os arquivos com o nº do termo (RT_Interdicao_<termo>.docx) para não sobrescrever."
+  },
+  {
+   "topico": "CLAUDE.md do AFT: bloco gerenciado com marcadores, atualizado sozinho",
+   "txt": "O perfil ~/.claude/CLAUDE.md é cópia do template config/CLAUDE-aft.md e nunca foi tocado pelo git pull — então quem instalava cedo ficava sem as regras acrescentadas depois (a defesa anti-prompt-injection de 28/06, a robustez de Windows, o namespace minha-*, skills novas no roteador). O template dobrou (84->214 linhas) desde a 1ª versão. Solução: o conteúdo do toolkit passa a ser cercado por marcadores invisíveis (comentários HTML AFT-TOOLKIT-PERFIL:INICIO vN / :FIM) com número de versão, e o script _scripts/sync_perfil.py compara a versão instalada com a do template. O /aft-atualizar (Passo 2e) roda --status e: EM_DIA não faz nada; DESATUALIZADO roda --aplicar automaticamente (backup + troca só o miolo entre os marcadores, preservando o que o AFT escreveu fora deles — sem perguntar, é obrigatório e seguro); SEM_MARCADOR (instalação antiga, sem como isolar o texto velho do que é do AFT) dispara UMA oferta de adoção (--adotar-substituir troca o arquivo todo, ou --adotar-acrescentar anexa o bloco, mesma escolha a/b/c do /aft-setup Passo 5b), e dali em diante vira automática. Por que marcadores em vez de sobrescrever o arquivo todo: a propriedade 'quem personalizou não perde nada' só existe porque o toolkit sabe exatamente onde começa e termina o pedaço dele; sem os marcadores, atualização silenciosa = sobrescrever = perder as edições do colega. O /aft-setup instala o perfil já marcado (o cp e a opção append carregam os marcadores do próprio template)."
+  }
+ ],
+ "diferencas": [
+  {
+   "topico": "Plataforma",
+   "txt": "Pessoal: macOS/Parallels (iconv, sips). Toolkit: Windows, tudo em Python stdlib e latin-1 direto."
+  },
+  {
+   "topico": "Estado central",
+   "txt": "Pessoal: SISOS (Next.js + Supabase + Vercel) + cron de DET. Toolkit: memory.md locais + /painel, sem servidor."
+  },
+  {
+   "topico": "Empacotamento",
+   "txt": "Pessoal: cada skill empacota. Toolkit: centralizado no /gera-ai, com /revisa-auto como gate de qualidade antes."
+  },
+  {
+   "topico": "Identidade do AFT",
+   "txt": "Pessoal: dados SRTE/GO hardcoded. Toolkit: aft-config.md + UORG resolvida pela cidade."
+  }
+ ],
+ "foraDoToolkit": [
+  "nad-tn — eixo B (--conteudo=docs, modo=texto) adaptado no toolkit como /NAD (2026-07-13); o eixo A (--modo=template, automação Chrome+DET) e o eixo A de correção (--conteudo=correcao, que no toolkit já é a /tn-nco) permanecem infra pessoal, não distribuídos.",
+  "det-baixar-empregador (Chrome + credenciais) — fase futura possível.",
+  "analise-preliminar (triagem de resposta documental ao DET) — infra pessoal, não distribuída.",
+  "cowork-ingest / cowork-manifest / cowork-ementas — pipeline RAG do NotebookLM (ecossistema pessoal).",
+  "cowork-sync / sisos-sync / notebooklm-conf / aft-grant — infra pessoal, não distribuída."
+ ],
+ "avisos": [
+  "As skills são apoio à redação e organização; o conteúdo jurídico de cada auto, termo e relatório é responsabilidade do AFT, que revisa tudo antes de transmitir.",
+  "Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.",
+  "/autos-lavrados: a extração por pypdf precisa de calibração/verificação na 1ª execução contra os PDFs reais do Sistema Auditor.",
+  "O template do RT (aft-rt-rgi/template.docx) segue o modelo SRTE/GO — auditores de outras SRTEs ajustam o cabeçalho.",
+  "/aft-atualizar atualiza o notebooklm-py automaticamente, sem perguntar antes — é uma dependência de terceiro (teng-lin/notebooklm-py) fora do controle de versão do toolkit.",
+  "As skills com model: claude-opus-4-8[1m] dependem do plano do AFT ter acesso ao modelo — o /aft-doctor testa e explica em linguagem simples se faltar.",
+  "A detecção de notificações DET do /painel é heurística (pode dar falso positivo) — o AFT confere antes de cadastrar.",
+  "Validação end-to-end de /NR12, /NR18, /tn-nco e do fluxo de Artifact do /painel depende de interação e de máquina real com o app logado; testar no Windows real."
+ ]
 };
 
 const $=s=>document.querySelector(s), el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};

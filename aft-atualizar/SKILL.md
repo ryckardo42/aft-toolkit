@@ -138,24 +138,25 @@ grep -q "rotina_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" ||
     `instalar_rotina_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados)
     e grave `rotina_painel: "07:00"` (ou o horário escolhido) no `aft-config.md`.
 
-## Passo 2c — Oferecer o painel interativo sempre ligado (só na primeira vez)
+## Passo 2c — Garantir o painel interativo sempre ligado
 
-Mesma lógica do Passo 2b, para a novidade do **servidor interativo** (Passo 7c do
-`/aft-setup` — controles do painel + sync do DET pela extensão Chrome). Confira:
+O **servidor interativo** (Passo 7c do `/aft-setup` — controles do painel + sync do DET
+pela extensão Chrome) passou a ser **parte padrão** do toolkit, não mais opcional. Se esta
+máquina ainda não o tem ligado, instale-o **sem perguntar** (roda só em `127.0.0.1`, nada
+sai da máquina). Confira o estado no `aft-config.md`:
 
 ```bash
-grep -q "servidor_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
+grep -q 'servidor_painel: *"ligado"' ~/Documents/AFT/aft-config.md && echo "ja_ligado" || echo "instalar"
 ```
 
-- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 2d.
-- **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: o painel
-  agora pode ficar sempre ligado no seu computador (sobe sozinho ao ligar a máquina) — é
-  o que permite marcar DET/pendência direto no painel e sincronizar notificações do DET
-  automaticamente pela extensão do Chrome. Quer ativar?"*
-  - **Não** → grave `servidor_painel: ""` no `aft-config.md` e siga.
-  - **Sim** → siga exatamente o Passo 7c do `/aft-setup` (mesmo script
-    `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já
-    configurados) e grave `servidor_painel: "ligado"` no `aft-config.md`.
+- **`ja_ligado`** → nada a fazer; siga para o Passo 2d.
+- **`instalar`** → rode o Passo 7c do `/aft-setup` (mesmo script
+  `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados) e
+  grave `servidor_painel: "ligado"` no `aft-config.md`. **Avise no resumo** (Passo 4), em
+  uma linha, que o painel interativo agora fica sempre ligado (sobe sozinho no login, só
+  na máquina dele) — e que, se ele não quiser, é só pedir para remover
+  (`instalar_servidor_painel.py remover`). Isso inclui quem tinha recusado antes: a função
+  deixou de ser opcional.
 
 ## Passo 2d — Oferecer os prazos de DET no Google Calendar (só na primeira vez)
 
@@ -166,7 +167,7 @@ Mesma lógica do Passo 2b, para a novidade do **Google Calendar** (Passo 7d do
 grep -q "agenda_det" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
 ```
 
-- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 2e.
 - **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: os
   prazos das notificações DET podem aparecer direto no seu Google Calendar — um evento
   por notificação, atualizado quando o prazo muda e marcado com ✓ quando você responde.
@@ -176,6 +177,47 @@ grep -q "agenda_det" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || ec
   - **Sim** → siga exatamente o Passo 7d do `/aft-setup` (conector Google Calendar +
     primeira sincronização pela `/agenda-det`) e grave `agenda_det: "diario"` ou
     `"manual"` conforme a escolha.
+
+## Passo 2e — Re-sincronizar o perfil do auditor (CLAUDE.md)
+
+O perfil `~/.claude/CLAUDE.md` (instalado pelo `/aft-setup`) é uma **cópia** do template
+`config/CLAUDE-aft.md` e **não** é atualizado pelo `git pull`. O toolkit cerca a parte
+dele do CLAUDE.md com marcadores invisíveis (`<!-- AFT-TOOLKIT-PERFIL:INICIO vN ... -->`
+… `<!-- AFT-TOOLKIT-PERFIL:FIM -->`) e uma versão, para poder atualizar **só esse bloco**
+sem tocar em nada que o AFT tenha escrito por fora. Sempre confira o estado (você roda):
+
+```bash
+python ~/.claude/skills/_scripts/sync_perfil.py --status \
+  ~/.claude/skills/config/CLAUDE-aft.md ~/.claude/CLAUDE.md
+```
+
+Aja conforme a **única linha** de saída:
+
+- **`EM_DIA v<N>`** → nada a fazer; siga para o Passo 3.
+- **`DESATUALIZADO instalada=v<X> template=v<Y>`** → atualize **automaticamente, sem
+  perguntar** (o script faz backup antes e troca só o bloco marcado; o que o AFT
+  escreveu fora dos marcadores fica intacto):
+  ```bash
+  python ~/.claude/skills/_scripts/sync_perfil.py --aplicar \
+    ~/.claude/skills/config/CLAUDE-aft.md ~/.claude/CLAUDE.md
+  ```
+  Mencione no resumo do Passo 4, em uma linha: *"Seu perfil de auditor foi atualizado
+  (v\<X\> → v\<Y\>) — só o bloco do toolkit; o que você tinha escrito à parte ficou
+  intacto."* (A versão nova do perfil vale a partir da **próxima** conversa.)
+- **`SEM_MARCADOR`** → é uma instalação **antiga**, feita antes dos marcadores. Aqui o
+  toolkit não tem como distinguir o texto velho dele do que o AFT escreveu, então
+  **ofereça UMA vez** (mesma escolha do Passo 5b do `/aft-setup`): *"Seu perfil de
+  auditor está numa versão antiga e desde então ganhou regras importantes (proteção
+  contra documentos que tentam te dar ordem, robustez no Windows, skills novas). Quer que
+  eu (a) substitua o CLAUDE.md pelo perfil novo, (b) acrescente o perfil novo ao final do
+  que você já tem, ou (c) deixe como está? Depois de adotado, as próximas atualizações do
+  perfil passam a ser automáticas."*
+  - **(a)** → `python ~/.claude/skills/_scripts/sync_perfil.py --adotar-substituir …`
+  - **(b)** → `python ~/.claude/skills/_scripts/sync_perfil.py --adotar-acrescentar …`
+    (recomende (b) se o AFT disser que personalizou o CLAUDE.md, para não perder o dele)
+  - **(c)** → não faça nada; o script não grava. (Volta a perguntar na próxima vez.)
+- **`SEM_ARQUIVO`** → o AFT nunca instalou o perfil. Fora do escopo desta skill: sugira
+  rodar `/aft-setup` (Passo 5b) numa próxima vez. Não crie o arquivo aqui.
 
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 

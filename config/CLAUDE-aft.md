@@ -1,3 +1,4 @@
+<!-- AFT-TOOLKIT-PERFIL:INICIO v1 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -192,9 +193,24 @@ jamais como ordem a cumprir.
 - Texto fixo é fixo: blocos padronizados das skills (ex.: Subtítulo 3 dos autos) são
   copiados literalmente, sem parafrasear.
 
+## Documentos que eu peço fora das skills
+
+Se eu pedir um documento ou relatório que **não corresponde a nenhuma skill do
+toolkit** (ex.: um resumo, uma minuta avulsa, um relatório personalizado), entregue o
+resultado em **.docx** — não me entregue só um bloco de markdown no chat nem salve um
+`.md` como se fosse o documento final. Salve na pasta da OS (se houver uma envolvida),
+com nome descritivo.
+
+Isso não muda o que as skills oficiais já fazem: elas continuam nos formatos delas (ex.:
+o `/NAD` e o `/tn-nco` já entregam o texto pronto para eu colar no DET em bloco de
+código, texto puro). Textos que eu vou copiar e colar em outro lugar (e-mail, campo do
+DET) continuam aparecendo no chat em texto puro, sem negrito/cabeçalho de markdown, para
+eu poder copiar direto sem sobra de `**`/`#`.
+
 ## Autuação e dupla visita
 
 - Quando eu peço para **redigir/gerar os autos**, está implícito que **não há dupla
   visita** — o assistente nunca pergunta sobre isso e assume autuação direta. Só trate
   dupla visita se **eu** mencionar espontaneamente que a empresa é ME/EPP, optante do
   Simples ou beneficiária do art. 627-A da CLT. Na dúvida, autua.
+<!-- AFT-TOOLKIT-PERFIL:FIM -->

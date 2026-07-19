@@ -34,11 +34,13 @@ e sai — pode chamar quantas vezes quiser.
 from __future__ import annotations
 
 import datetime
+import html
 import json
 import re
 import socket
 import subprocess
 import sys
+import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -229,6 +231,137 @@ ACOES = {
 }
 
 
+# ── Visualização de relatórios .md (rota /doc/) ──────────────────────────────
+# Os relatórios das skills (analise-preliminar-*.md, autos-lavrados.md etc.)
+# são a fonte de verdade em markdown; esta rota os converte em HTML legível
+# on-the-fly, na mesma paleta do painel. Nada é gravado em disco.
+
+def _md_inline(s: str) -> str:
+    s = html.escape(s)
+    s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+    s = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
+    s = re.sub(r"(?<!\*)\*([^*\s][^*]*)\*(?!\*)", r"<i>\1</i>", s)
+    return s
+
+
+def md_para_html(md: str) -> str:
+    """Conversor mínimo (stdlib) do subconjunto de markdown usado nos
+    relatórios do ecossistema: títulos, negrito/itálico/código, listas,
+    tabelas e réguas. O que não reconhece vira parágrafo."""
+    m = RE_FM.match(md)
+    if m:  # front-matter não interessa ao leitor
+        md = md[m.end():]
+    out: list[str] = []
+    lista: str | None = None   # "ul" | "ol" abertas
+    tabela: list[str] = []
+
+    def fecha_lista():
+        nonlocal lista
+        if lista:
+            out.append(f"</{lista}>")
+            lista = None
+
+    def fecha_tabela():
+        nonlocal tabela
+        if not tabela:
+            return
+        linhas = [l for l in tabela if not re.match(r"^\s*\|?[\s:|-]+\|?\s*$", l)]
+        for j, l in enumerate(linhas):
+            cels = [c.strip() for c in l.strip().strip("|").split("|")]
+            tag = "th" if j == 0 else "td"
+            out.append("<tr>" + "".join(f"<{tag}>{_md_inline(c)}</{tag}>"
+                                        for c in cels) + "</tr>")
+        if linhas:
+            out.insert(len(out) - len(linhas), "<table>")
+            out.append("</table>")
+        tabela = []
+
+    for linha in md.splitlines():
+        s = linha.strip()
+        if s.startswith("|"):
+            fecha_lista()
+            tabela.append(s)
+            continue
+        fecha_tabela()
+        m_h = re.match(r"^(#{1,4})\s+(.*)$", s)
+        m_ul = re.match(r"^[-*]\s+(.*)$", s)
+        m_ol = re.match(r"^\d+[.)]\s+(.*)$", s)
+        if m_h:
+            fecha_lista()
+            n = len(m_h.group(1))
+            out.append(f"<h{n}>{_md_inline(m_h.group(2))}</h{n}>")
+        elif m_ul or m_ol:
+            tipo = "ul" if m_ul else "ol"
+            if lista != tipo:
+                fecha_lista()
+                out.append(f"<{tipo}>")
+                lista = tipo
+            out.append(f"<li>{_md_inline((m_ul or m_ol).group(1))}</li>")
+        elif s in ("---", "***", "___"):
+            fecha_lista()
+            out.append("<hr>")
+        elif s:
+            fecha_lista()
+            out.append(f"<p>{_md_inline(s)}</p>")
+        else:
+            fecha_lista()
+    fecha_lista()
+    fecha_tabela()
+    return "\n".join(out)
+
+
+DOC_CSS = """
+:root{--cream:#F0EEE6;--paper:#FAF9F5;--coral:#CC785C;--coral-deep:#B0593E;
+--t1:#141413;--t2:#5A574E;--t3:#8F8B7D;--bd:#DDD9CC;--bds:#E8E4D6;
+--teal:#4F8A7C;--serif:'Source Serif 4',Georgia,'Times New Roman',serif;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--t1);font:15.5px/1.6 var(--serif)}
+main{max-width:860px;margin:0 auto;padding:36px clamp(16px,4vw,48px) 80px;
+background:var(--paper);min-height:100vh;border-left:1px solid var(--bds);
+border-right:1px solid var(--bds)}
+h1{font-size:25px;font-weight:600;margin:0 0 14px;line-height:1.3}
+h1 em{color:var(--coral);font-style:italic}
+h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);
+border-bottom:1px solid var(--bds);padding-bottom:5px;margin:32px 0 12px}
+h3{font-size:16.5px;font-weight:600;margin:24px 0 8px;color:var(--coral-deep)}
+h4{font-size:14.5px;margin:18px 0 6px}
+p{margin:8px 0}
+ul,ol{margin:8px 0;padding-left:24px}
+li{margin-bottom:6px}
+code{background:var(--cream);border:1px solid var(--bds);border-radius:4px;
+padding:1px 5px;font-size:13px}
+hr{border:none;border-top:1px solid var(--bds);margin:24px 0}
+table{border-collapse:collapse;margin:12px 0;font-size:14px;width:100%}
+th,td{border:1px solid var(--bds);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--cream);font-weight:600}
+.topo{font-size:12.5px;color:var(--t3);margin-bottom:22px}
+.topo a{color:var(--coral-deep)}
+@media print{main{border:none}.topo{display:none}}
+@media (prefers-color-scheme: dark){
+:root{--cream:#191917;--paper:#211F1C;--t1:#EDEAE0;--t2:#B5B0A1;--t3:#8F8B7D;
+--bd:#3A372F;--bds:#2E2B25}}
+"""
+
+
+def pagina_doc(titulo: str, corpo: str, pasta: str) -> str:
+    return f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html.escape(titulo)}</title>
+<style>{DOC_CSS}</style>
+</head>
+<body>
+<main>
+<div class="topo"><a href="/">← painel</a> · {html.escape(pasta)} · {html.escape(titulo)}</div>
+{corpo}
+</main>
+</body>
+</html>
+"""
+
+
 # ── Servidor ─────────────────────────────────────────────────────────────────
 
 class Handler(BaseHTTPRequestHandler):
@@ -271,8 +404,36 @@ class Handler(BaseHTTPRequestHandler):
             self._responde(200, painel.read_bytes(), "text/html; charset=utf-8")
         elif self.path == "/api/ping":
             self._json(200, {"ok": True, "painel_aft": True})
+        elif self.path.startswith("/doc/"):
+            self._serve_doc()
         else:
             self._json(404, {"ok": False, "erro": "rota desconhecida"})
+
+    def _serve_doc(self):
+        """GET /doc/<pasta-da-OS>/<arquivo>.md — renderiza o relatório em HTML.
+        Mesma validação de caminho do /api/acao: só .md dentro de OS ATIVAS."""
+        try:
+            partes = self.path[len("/doc/"):].split("/")
+            if len(partes) != 2:
+                raise ValueError("use /doc/<pasta>/<arquivo>.md")
+            pasta = urllib.parse.unquote(partes[0]).strip()
+            arquivo = urllib.parse.unquote(partes[1]).strip()
+            if (not pasta or "/" in pasta or "\\" in pasta or pasta.startswith(".")
+                    or not arquivo or "/" in arquivo or "\\" in arquivo
+                    or arquivo.startswith(".") or not arquivo.endswith(".md")):
+                raise ValueError("caminho inválido")
+            alvo = (self.base / pasta / arquivo).resolve()
+            if self.base.resolve() not in alvo.parents or not alvo.exists():
+                raise ValueError(f"{arquivo} não encontrado em {pasta}")
+            corpo = md_para_html(alvo.read_text(encoding="utf-8", errors="replace"))
+            pag = pagina_doc(arquivo, corpo, pasta)
+            self._responde(200, pag.encode("utf-8"), "text/html; charset=utf-8")
+        except ValueError as e:
+            self._responde(404, html.escape(str(e)).encode("utf-8"),
+                           "text/plain; charset=utf-8")
+        except Exception as e:
+            self._responde(500, f"{type(e).__name__}: {e}".encode("utf-8"),
+                           "text/plain; charset=utf-8")
 
     def do_OPTIONS(self):
         # Preflight do navegador para o POST /api/det-sync vindo do site do DET.
