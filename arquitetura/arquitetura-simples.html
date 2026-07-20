@@ -55,6 +55,14 @@
   .dica { margin-top:10px; font-size:14px; color:var(--claro); }
   .dica b { color:var(--cinza); }
 
+  /* "fale assim": exemplo de pedido em linguagem natural que ativa a skill */
+  .fala { margin-top:10px; font-size:14.5px; color:var(--tinta); background:var(--suave);
+          border:1px solid var(--borda); border-left:3px solid var(--laranja);
+          border-radius:0 10px 10px 0; padding:8px 13px; font-style:italic; max-width:720px; }
+  .fala::before { content:"💬 "; font-style:normal; }
+  .fala + .fala { margin-top:6px; }
+  .fala + .chips { margin-top:12px; }
+
   /* caixas finais */
   .caixas { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:26px; }
   .caixa { border:1px solid var(--borda); border-radius:16px; padding:22px 24px; background:#fff; }
@@ -88,14 +96,18 @@
     registrar o relato da inspeção, enquadrar a irregularidade na NR e na ementa, redigir o
     auto de infração, gerar o TXT que o Sistema Auditor importa, analisar PGR, validar ponto
     eletrônico e muito mais.</p>
-    <p><b>Como você usa.</b> Conversando em português, como num chat. Quando o seu pedido
-    casa com uma skill, ela entra em ação sozinha (ou você chama pelo nome, ex.:
-    <code>/painel</code>). Você não precisa saber programar — quem digita comandos é o
-    Claude, nunca você.</p>
+    <p><b>Como você usa.</b> Conversando em português, como num chat — esse é o jeito normal
+    de trabalhar. <b>Você não precisa saber o nome de nenhuma skill</b>: peça a tarefa com as
+    suas palavras ("me ajuda a fazer um relatório técnico de interdição para um elevador
+    cremalheira sem interface de segurança", "quero relatar minha inspeção física") e o
+    Claude ativa a skill certa sozinho, no meio do trabalho. Chamar pelo nome
+    (ex.: <code>/painel</code>) é só um atalho opcional. Você não precisa saber programar —
+    quem digita comandos é o Claude, nunca você.</p>
   </div>
 
   <h2>Passo a passo <span>da instalação ao relatório final</span></h2>
-  <div class="h2sub">A ordem natural de quem nunca usou: instale uma vez, cadastre a auditoria e siga o fluxo.</div>
+  <div class="h2sub">A ordem natural de quem nunca usou: instale uma vez, cadastre a auditoria e siga o fluxo.
+  Em cada passo, o balão 💬 mostra um pedido em português que ativa a skill — sem digitar o nome dela.</div>
 
   <div class="trilha">
 
@@ -105,6 +117,7 @@
       <div class="txt">Cria sua pasta de trabalho (<b>~/Documents/AFT</b>), grava seus dados
       de auditor (CIF, UORG), instala o seu perfil no Claude, as proteções de privacidade e
       deixa o <b>painel</b> sempre ligado na sua máquina. Guiado, do início ao fim.</div>
+      <div class="fala">"instala o AFT Toolkit para mim"</div>
       <div class="chips"><span class="chip c-laranja">/aft-setup</span></div>
     </div>
 
@@ -113,6 +126,7 @@
       <h3>Confira se está tudo certo</h3>
       <div class="txt">Diagnóstico completo em linguagem simples (🟢 🟡 🔴). Não altera nada —
       só verifica e explica como resolver. Rode sempre que algo parecer estranho.</div>
+      <div class="fala">"confere se o toolkit está funcionando direito"</div>
       <div class="chips"><span class="chip c-laranja">/aft-doctor</span></div>
     </div>
 
@@ -122,6 +136,7 @@
       <div class="txt">Jogue a pasta antiga da fiscalização dentro de <b>OS ATIVAS/</b> e peça
       para organizar: ela monta tudo no padrão do toolkit, com um plano que <b>você aprova
       antes</b> de qualquer arquivo ser mexido.</div>
+      <div class="fala">"joguei a pasta da fiscalização antiga em OS ATIVAS — organiza para mim"</div>
       <div class="chips"><span class="chip c-ambar">/organiza-os</span></div>
     </div>
 
@@ -131,6 +146,7 @@
       <div class="txt">Uma pasta por empresa fiscalizada, com a ficha <b>memory.md</b> — a
       "capa da OS" onde ficam status, notificações DET, pendências e autos. O CNPJ é opcional
       aqui (só vira obrigatório na hora de gerar os autos).</div>
+      <div class="fala">"abre uma auditoria nova para a CONSTRUTORA EXEMPLO"</div>
       <div class="chips"><span class="chip c-verde">/nova-os</span></div>
     </div>
 
@@ -139,6 +155,8 @@
       <h3>Prepare a ação fiscal</h3>
       <div class="txt">Antes de ir a campo: planeje a visita (denúncia, dados prévios,
       checklist) e, se for o caso, notifique a empresa pelo DET para apresentar documentos.</div>
+      <div class="fala">"vou fiscalizar uma obra semana que vem, me ajuda a planejar a visita"</div>
+      <div class="fala">"notifica a empresa a apresentar o PGR e os controles de ponto"</div>
       <div class="chips">
         <span class="chip c-azul">/preparacao-acao-fiscal</span>
         <span class="chip c-azul">/NAD</span>
@@ -150,6 +168,7 @@
       <h3>Voltou da inspeção? Narre</h3>
       <div class="txt">Conte o que viu — por voz ou texto corrido. O relato vira uma lista
       organizada de achados, fiel ao que você disse, pronta para embasar autos e análises.</div>
+      <div class="fala">"quero relatar minha inspeção física"</div>
       <div class="chips"><span class="chip c-ceu">/inspecao-fisica</span></div>
     </div>
 
@@ -160,6 +179,9 @@
       pacote de ponto eletrônico (AFD/AEJ/atestados), laudos de máquinas (NR-12) e
       acidentes de trabalho. Dúvida de enquadramento? A consulta busca ementa e fundamentação
       na base <b>NotebookLM</b>.</div>
+      <div class="fala">"analisa o PGR que a empresa entregou no DET"</div>
+      <div class="fala">"valida os arquivos de ponto AFD e AEJ que a empresa mandou"</div>
+      <div class="fala">"qual ementa uso para serra circular sem coifa de proteção?"</div>
       <div class="chips">
         <span class="chip c-teal">/PGR-analise</span>
         <span class="chip c-teal">/aet-auditoria</span>
@@ -178,6 +200,9 @@
       5W1H e termina no <b>TXT importável pelo Sistema Auditor</b> — com anexos e com os
       dados pessoais protegidos. <b>Você revisa e você transmite</b>: o toolkit prepara,
       quem decide é o AFT.</div>
+      <div class="fala">"redige os autos do que encontrei na inspeção"</div>
+      <div class="fala">"achei dois trabalhadores sem registro na obra"</div>
+      <div class="fala">"gera o TXT para eu importar no Sistema Auditor"</div>
       <div class="chips">
         <span class="chip c-verde">/inspecao-inicial</span>
         <span class="chip c-verde">/registro</span>
@@ -195,6 +220,8 @@
       <div class="txt">Interdição ou embargo: o relatório técnico sai em .docx no modelo
       oficial, já com os autos derivados. Se a empresa pedir a suspensão com um laudo, a
       auditoria do laudo alimenta o RT de manutenção.</div>
+      <div class="fala">"me ajuda a fazer um relatório técnico de interdição para um elevador cremalheira por falta de interface de segurança"</div>
+      <div class="fala">"a empresa pediu a suspensão da interdição e mandou um laudo — analisa para mim"</div>
       <div class="chips">
         <span class="chip c-verm">/aft-rt-rgi</span>
         <span class="chip c-verm">/rt-manutencao</span>
@@ -208,6 +235,8 @@
       <div class="txt">O painel mostra todas as auditorias em cards, com notificações DET,
       pendências e vencimentos — direto no navegador, só na sua máquina. Os prazos podem ir
       para o seu <b>Google Calendar</b> (evento por notificação, ✓ quando você responde).</div>
+      <div class="fala">"abre o painel das minhas auditorias"</div>
+      <div class="fala">"coloca os prazos do DET no meu Google Calendar"</div>
       <div class="chips">
         <span class="chip c-roxo">/painel</span>
         <span class="chip c-roxo">/agenda-det</span>
@@ -219,6 +248,8 @@
       <h3>Feche a ação fiscal</h3>
       <div class="txt">Confira o que já foi efetivamente transmitido no Sistema Auditor e
       gere o relatório final da ação.</div>
+      <div class="fala">"quais autos dessa empresa eu já transmiti?"</div>
+      <div class="fala">"gera o relatório final da fiscalização da CONSTRUTORA EXEMPLO"</div>
       <div class="chips">
         <span class="chip c-azul">/autos-lavrados</span>
         <span class="chip c-azul">/sfitweb-rel</span>
@@ -231,6 +262,7 @@
       <div class="txt">Uma frase e pronto: baixa a versão nova, confere a segurança do que
       chegou, atualiza seu perfil e te conta <b>as novidades em português</b>, sem jargão.
       Suas skills pessoais (<code>minha-*</code>) nunca são tocadas.</div>
+      <div class="fala">"atualiza o toolkit e me conta o que mudou"</div>
       <div class="chips"><span class="chip c-laranja">/aft-atualizar</span></div>
     </div>
 
