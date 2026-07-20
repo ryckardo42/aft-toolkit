@@ -18,9 +18,10 @@ e aplica o resultado na seção `## Notificações DET` do memory.md:
     (preservando o formato da linha — dd/mm/aaaa ou aaaa-mm-dd);
   - sob cada checkbox, mantém uma SUB-LINHA DE DETALHES gerada do DET
     (`  - lavrada dd/mm/aaaa · ciência dd/mm/aaaa · última entrega
-    dd/mm/aaaa · Confirmada`) — essa linha pertence ao sync: é criada se
-    faltar e regravada quando o DET mudar. O gerar_painel a ignora (ele só
-    lê linhas checkbox);
+    dd/mm/aaaa · Confirmada[ · ⚠️ atualização pendente]`) — essa linha
+    pertence ao sync: é criada se faltar e regravada quando o DET mudar.
+    A flag final espelha o triângulo amarelo do DET (campo itemAtualizado
+    da API). O gerar_painel a ignora (ele só lê linhas checkbox);
   - `ri:` vazio no front-matter → preenche (ver ris_conhecidos/ri_mais_recente).
 
 Filtros, nesta ordem:
@@ -216,7 +217,10 @@ def _mesma_data(txt: str, iso: str | None) -> bool:
 
 def _linha_detalhe(n: dict) -> str:
     """Sub-linha de detalhes de uma notificação (dados vindos do DET).
-    Campos vazios são omitidos; status 1 = Confirmada (único elegível)."""
+    Campos vazios são omitidos; status 1 = Confirmada (único elegível).
+    `itemAtualizado` é o triângulo amarelo da tela Notificações do DET
+    ("Existe atualização pendente": pedido de prazo, dispensa, item não
+    aberto...) — some daqui quando o AFT resolve lá, no sync seguinte."""
     partes = []
     if n.get("dataEnvio"):
         partes.append(f"lavrada {_data_br(n['dataEnvio'])}")
@@ -226,6 +230,8 @@ def _linha_detalhe(n: dict) -> str:
         partes.append(f"última entrega {_data_br(n['itemDataUltimaEntrega'])}")
     partes.append("Confirmada" if n.get("status") == 1
                   else f"status {n.get('status')}")
+    if n.get("itemAtualizado"):
+        partes.append("⚠️ atualização pendente")
     return "  - " + " · ".join(partes) + "\n"
 
 
