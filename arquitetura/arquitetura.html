@@ -137,10 +137,10 @@ const ARCH = {
  "data": "2026-07-15",
  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 33,
+  "skills": 34,
   "scripts": 25,
   "dados": 6,
-  "commit": "ver `git log -1` — atualizado em 19/07/2026"
+  "commit": "ver `git log -1` — atualizado em 20/07/2026"
  },
  "atores": [
   {
@@ -431,7 +431,12 @@ const ARCH = {
      "nome": "/sfitweb-rel",
      "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia\u00b7MPT.",
      "tech": "lê memory.md, autos-lavrados.md e interdicao-embargo/ · gera .docx · model: sonnet"
-    }
+    },
+   {
+    "nome": "/modelo-docx",
+    "role": "Padrão visual de todo .docx do toolkit: template com cabeçalho AFT·SIT, Times 12, azul institucional, tabelas zebradas.",
+    "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /sfitweb-rel e docs avulsos · model: sonnet"
+   }
    ]
   }
  ],

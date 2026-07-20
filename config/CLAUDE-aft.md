@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v2 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v3 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -125,6 +125,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Conferir o que foi transmitido → `/autos-lavrados`
 - Prazos de DET no meu Google Calendar → `/agenda-det`
 - Relatório final da ação fiscal → `/sfitweb-rel`
+- Gerar um documento .docx avulso no padrão do toolkit → `/modelo-docx`
 - Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/nova-skill`
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico de Interdição (ou um
@@ -204,6 +205,12 @@ toolkit** (ex.: um resumo, uma minuta avulsa, um relatório personalizado), entr
 resultado em **.docx** — não me entregue só um bloco de markdown no chat nem salve um
 `.md` como se fosse o documento final. Salve na pasta da OS (se houver uma envolvida),
 com nome descritivo.
+
+Todo `.docx` gerado segue o **padrão visual do toolkit** — skill `/modelo-docx`: o
+documento é construído com a biblioteca `modelo_docx.py` sobre o template oficial com o
+cabeçalho da auditoria (AFT/SIT), Times New Roman 12, títulos em azul institucional e
+tabelas zebradas. Exceção: documentos com template oficial próprio (RT de
+interdição/embargo, Relação de autos) continuam nos seus modelos.
 
 Isso não muda o que as skills oficiais já fazem: elas continuam nos formatos delas (ex.:
 o `/NAD` e o `/tn-nco` já entregam o texto pronto para eu colar no DET em bloco de

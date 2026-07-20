@@ -104,11 +104,9 @@ Redija no formato de saída abaixo e entregue:
    ```
    python3 ~/.claude/skills/sfitweb-rel/scripts/gera_relatorio_docx.py "<pasta-OS>/relatorio-final.json"
    ```
-   O script usa SEMPRE o template oficial com o cabeçalho da auditoria
-   (`scripts/template-cabecalho.docx`, cópia de `Template/Template com cabeçalho.docx` do
-   toolkit) e aplica a formatação institucional: Times New Roman 12, margens 2/2/2/2,5 cm,
-   paleta azul (#1F3864 títulos e cabeçalho de tabela, #2E5496 subtítulos e subcabeçalhos),
-   corpo justificado com entrelinhas 1,15, e os autos em **tabela zebrada** (#EBF3FB/#F5F5F5)
+   O script constrói o documento com a biblioteca do **padrão visual do toolkit** (skill
+   `/modelo-docx` — template oficial com o cabeçalho da auditoria, Times New Roman 12,
+   paleta azul institucional, corpo justificado 1,15) e monta os autos em **tabela zebrada**
    com uma linha de subcabeçalho azul por tema.
 
 Ao final, registre a atividade no `## Registro de atividades` do memory.md
