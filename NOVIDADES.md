@@ -6,6 +6,23 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 19/07/2026 (4)
+<!-- commit: sfitweb-rel-v2 -->
+
+**Relatório final de fiscalização muito mais completo** — o `/sfitweb-rel` foi
+reescrito para acompanhar tudo o que o toolkit passou a registrar desde que ele
+nasceu. Agora ele lê a ficha da OS (memory.md, com as datas sincronizadas do
+DET), o espelho do Sistema Auditor (autos-lavrados.md, com os números oficiais
+dos AIs) e a pasta de interdição/embargo, e monta o relatório com seções
+obrigatórias: notificações lavradas (com lavratura, ciência, prazo e estado do
+atendimento), autos de infração agrupados por tema (SESMT/CIPA, obra,
+inflamáveis, jornada...), e interdições com o estado atual e as condicionantes
+— não só a lavratura. Sai em três formatos: texto limpo para colar no SFITWEB,
+`.md` e `.docx` na pasta da OS, pronto para encaminhar à chefia ou ao MPT.
+Regras novas de qualidade: toda sigla explicada na primeira menção (o leitor
+pode ser de fora da Inspeção), prazo vencido dito como vencido, distinção entre
+auto transmitido e pendente de transmissão, e nenhum fato citado sem desfecho.
+
 ## 19/07/2026 (3)
 <!-- commit: painel-det-datas-detalhe -->
 

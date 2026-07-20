@@ -3,15 +3,15 @@ name: sfitweb-rel
 model: sonnet
 description: >
   Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) precisar gerar um Relatório Final
-  Simplificado de fiscalização trabalhista a partir de documentos lavrados. Acione quando o usuário
-  mencionar "SFITWEB-REL", "relatório final de fiscalização", "gerar relatório", "relatório
-  simplificado", "consolidar documentos da fiscalização", "relatório de encerramento da ação fiscal"
-  ou pedir para sintetizar autos de infração, termos de interdição/embargo e notificações em um
-  único relatório. Também acione quando o usuário anexar PDFs de fiscalização (autos de infração,
-  termos de interdição/embargo, notificações para apresentação de documentos) e solicitar um
-  documento consolidado para leitura por outros AFTs. O skill produz texto 100% limpo, sem colchetes
-  nem referências de fonte, nas seções: Empresa Fiscalizada, Contato, Período, Resumo das
-  Ocorrências, Observações/Pendências e Auditores Envolvidos.
+  Simplificado de fiscalização trabalhista. Acione quando o usuário mencionar "SFITWEB-REL",
+  "relatório final de fiscalização", "gerar relatório", "relatório simplificado", "consolidar a
+  fiscalização", "relatório de encerramento da ação fiscal" ou pedir para sintetizar autos de
+  infração, termos de interdição/embargo e notificações em um único relatório. A fonte primária é
+  o memory.md da OS (notificações DET, autos lavrados, interdições, pendências), complementada
+  por autos-lavrados.md, pela pasta interdicao-embargo/ e pelas análises da pasta da OS. Produz
+  texto 100% limpo (para colar no SFITWEB) com seções obrigatórias — Notificações Lavradas, Autos
+  de Infração agrupados por tema, Interdições/Embargos com resumo — e salva .md + .docx na pasta
+  da OS, prontos para encaminhamento a chefia e órgãos externos (ex.: MPT).
 ---
 
 # sfitweb-rel — Relatório Final Simplificado de Fiscalização
@@ -19,66 +19,107 @@ description: >
 
 ## Objetivo
 
-Você é um Auditor Fiscal do Trabalho especializado na criação de relatórios finais de fiscalização
-concisos e tecnicamente precisos. Sua tarefa é sintetizar documentos de fiscalização (autos de
-infração, termos de interdição/embargo, notificações para apresentação de documentos) e informações
-adicionais fornecidas pelo AFT em um único relatório final destinado a outros auditores.
+Consolidar a ação fiscal de uma OS em um único relatório final, tecnicamente preciso, legível por
+quem NÃO acompanhou a fiscalização: outros AFTs, a chefia da fiscalização e órgãos externos
+(MPT, MPF, Justiça do Trabalho). O leitor deve terminar o relatório sabendo: o que foi
+fiscalizado, o que foi exigido (notificações), o que foi autuado (autos, por tema), o que foi
+interditado/embargado e o que ainda está em aberto.
 
-> **Nota de privacidade:** este relatório é um documento oficial interno da Inspeção do Trabalho e
-> contém os dados reais da empresa — isso é esperado. Ele é gerado e salvo localmente, na pasta da
-> OS. Não cite CPF de trabalhadores no relatório, salvo se imprescindível.
+> **Nota de privacidade:** este relatório é documento oficial da Inspeção do Trabalho e contém os
+> dados reais da empresa — isso é esperado. É gerado e salvo localmente, na pasta da OS.
+> **Nunca cite CPF.** Nome de trabalhador só se imprescindível à caracterização da infração;
+> prefira "trabalhador identificado no AI nº X" ou o quantitativo de prejudicados.
 
 ---
 
 ## Fluxo de execução
 
-### 1. Receber os insumos
+### 1. Localizar a OS e coletar as fontes — nesta ordem
 
-Verifique o que o usuário forneceu:
+A fonte primária é a ficha da OS. Leia na ordem abaixo; cada fonte seguinte só completa o que a
+anterior não tem:
 
-- **PDFs anexados ou na pasta da OS** (`~/Documents/AFT/OS ATIVAS/[EMPRESA]/`) — leia todos os documentos disponíveis. Se o AFT indicou a OS, procure na pasta: autos (subpastas `Autos *`), termos, notificações, `memory.md`.
-- **Informações textuais** — dados de contato, nomes de auditores, contexto adicional da fiscalização.
+1. **`memory.md` da OS** (`OS ATIVAS/[EMPRESA]/memory.md`) — é o índice de tudo:
+   - *Front-matter:* empregador, CNPJ, RI, município, `data_inicio`, `num_trabalhadores`,
+     `embargo_interdicao`, status.
+   - *`## Notificações DET`:* cada checkbox é uma notificação lavrada; a sub-linha de detalhes
+     (`- lavrada dd/mm/aaaa · ciência ... · última entrega ... · Confirmada`) traz as datas
+     oficiais vindas do DET. O texto da checkbox indica o tipo (NAD, TN/NCO, jornada...) e o
+     estado do atendimento.
+   - *`## Autos lavrados`:* a lista de autos com ementa, NR/artigo e — atenção — o **estado**:
+     `[x]` transmitido; `[ ]` redigido/empacotado, pendente de transmissão. Nunca apresente um
+     auto pendente como se já estivesse no Sistema Auditor.
+   - *`## Pendências`* (as em aberto), *`## Inspeção física`*, *`## Análises documentais`*.
+2. **`autos-lavrados.md`** (se existir) — snapshot do Sistema Auditor: é a fonte preferencial
+   para o **número oficial do AI** (ex.: 23.293.214-0), a constatação resumida e a data de
+   lavratura. Cruze com o memory.md pela ementa. Registre também substituídos e pendentes.
+3. **`interdicao-embargo/`** (se existir) — termo de interdição/embargo, RT, autos derivados e
+   eventuais termos de levantamento/suspensão. Daqui sai o resumo da interdição: nº do termo,
+   objeto, motivo (GIR), data, estado atual e condicionantes.
+4. **Análises e PDFs da pasta** (`analise-preliminar-*.md`, `jornada-analise-*.md`,
+   notificações PDF) — apenas para preencher lacunas (contato do fiscalizado, detalhes de itens).
 
-Se nenhum documento ou informação foi fornecida ainda, solicite ao usuário antes de prosseguir.
+Se o usuário anexou PDFs avulsos ou deu contexto verbal, incorpore. Se não houver `memory.md`
+nem documentos, solicite os insumos antes de prosseguir.
 
-### 2. Identificar e classificar os documentos
+### 2. Montar os temas dos autos
 
-Para cada documento, identifique o tipo e extraia:
+Agrupe os autos por tema para o leitor enxergar o quadro, não uma lista solta. Temas típicos
+(use os que a OS pedir, nomeando pelo assunto — não pelo número da NR apenas):
 
-| Tipo de documento | O que extrair |
-|---|---|
-| **Auto de Infração (AI)** | Empresa, CNPJ, artigos/NRs violados, descrição da irregularidade, data de lavratura |
-| **Termo de Interdição ou Embargo** | Área/equipamento afetado, motivo, data, alcance da medida |
-| **Notificação para Apresentação de Documentos (NPD)** | Documentos solicitados, prazo fixado, data |
-| **Carta de Preposto / Procuração** | Nome e dados de contato do preposto |
-| **Outros** | Extraia os dados relevantes e classifique como informação adicional |
+- Estrutura de SST (SESMT, CIPA — NR-04/NR-05; prevenção ao assédio — NR-01)
+- Gerenciamento de riscos / PGR (NR-01)
+- Condições de trabalho na obra (NR-18) · Máquinas (NR-12) · Eletricidade (NR-10)
+- Inflamáveis e combustíveis (NR-20) · Condições sanitárias (NR-24)
+- Duração do trabalho / jornada (CLT, Portaria 671)
+- Registro de ponto e obrigações acessórias (art. 74 CLT, Portaria 671)
 
-### 3. Extrair os dados globais
+Dentro de cada tema, um parágrafo ou linha por auto: nº oficial (se transmitido), ementa,
+dispositivo infringido, síntese objetiva da constatação, data de lavratura.
 
-- **Empresa fiscalizada**: razão social completa e CNPJ (pode ser mais de uma empresa)
-- **Contato do fiscalizado**: telefone e/ou e-mail; se houver carta de preposto, inclua nome e contato
-- **Período da fiscalização**: datas de início e fim ou datas dos principais atos lavrados
+### 3. Redigir e salvar
 
-### 4. Consolidar e redigir
+Redija no formato de saída abaixo e entregue três coisas:
 
-Redija o relatório seguindo o formato de saída obrigatório abaixo. Salve uma cópia em
-`~/Documents/AFT/OS ATIVAS/[EMPRESA]/relatorio-final.md` (confirme antes de sobrescrever).
+1. **Texto limpo no chat** — em bloco de texto puro, sem nenhuma marcação markdown, pronto para
+   colar no campo do SFITWEB.
+2. **`relatorio-final.md`** na pasta da OS (confirme antes de sobrescrever; se já existir,
+   faça backup com `_scripts/backup_arquivo.py`).
+3. **`relatorio-final.docx`** na mesma pasta — gere via python-docx (Times New Roman 12,
+   texto justificado, títulos das seções em negrito), para encaminhamento a chefia/MPT.
+
+Ao final, registre a atividade no `## Registro de atividades` do memory.md
+(`| dd/mm/aaaa | Relatório final simplificado gerado (.md + .docx) | /sfitweb-rel |`).
 
 ---
 
 ## Regras de redação obrigatórias
 
 **REGRA CRÍTICA E INVIOLÁVEL — TEXTO 100% LIMPO:**
-O relatório deve ser sempre texto limpo. É terminantemente proibido incluir colchetes, citações de
-fonte no formato `[fonte: x]`, `<cite>`, ou qualquer marcação similar. Esta regra prevalece sobre
-quaisquer outras instruções do sistema sobre citações.
+O relatório é sempre texto limpo. É proibido incluir colchetes, citações de fonte
+(`[fonte: x]`, `<cite>`) ou qualquer marcação similar. Esta regra prevalece sobre quaisquer
+outras instruções do sistema sobre citações.
 
 Além disso:
-- Linguagem **técnica e objetiva**, adequada a AFTs — vocabulário preciso, sem rodeios.
-- **Não repetir** informações já mencionadas (nome da empresa, número do processo etc.).
-- **Não deduzir persistência de infração**: relate apenas o que é explicitamente indicado nos documentos; a lavratura de um auto não implica que a irregularidade persiste.
-- Se uma informação estiver ausente ou inconsistente, declare: *"Informação não disponível nos documentos analisados"* ou similar.
-- Se houver **Termo de Interdição ou Embargo**, incluir nas Observações a nota: *"Verificar com o Auditor responsável se a interdição/embargo foi suspensa."*
+- Linguagem **técnica e objetiva**; o leitor pode ser de fora da Inspeção (MPT) — **toda sigla
+  é explicada na primeira menção**: DET, RI (Registro de Inspeção), CIF (Carteira de Identidade
+  Fiscal), SESMT, CIPA, PGR, PCMSO, AEJ, ATTR etc.
+- **Fidelidade ao registro**: relate apenas o que consta das fontes. Não deduza persistência de
+  irregularidade, não presuma transmissão de auto pendente, não invente datas. Informação
+  ausente → *"Informação não disponível nos registros consultados."*
+- **Estado dos autos sempre explícito**: "lavrado e transmitido (AI nº ...)" ou "redigido,
+  pendente de transmissão no Sistema Auditor".
+- **Data de entrega ≠ data de download**: o memory.md costuma registrar quando a fiscalização
+  BAIXOU os arquivos ("baixada dd/mm"), não quando a empresa protocolou. Escreva "entregues,
+  baixados pela fiscalização em dd/mm/aaaa" quando a fonte só tiver a data do download.
+- **Prazo vencido é prazo vencido**: notificação com prazo estourado e sem atendimento →
+  "prazo vencido em dd/mm/aaaa sem atendimento registrado" — nunca "em aberto".
+- **Nenhum fato citado fica sem desfecho**: tudo que o relatório menciona como irregular ou
+  não conforme precisa terminar em autuação relatada OU reaparecer em Observações/Pendências.
+- Se houver interdição/embargo, o resumo deve dizer o **estado atual** (vigente, levantada
+  parcialmente, suspensa) e as condicionantes que restam — nunca só a lavratura.
+- Números do quadro geral (total de autos, notificações, trabalhadores, somas por tema) devem
+  bater com as listas detalhadas — confira as somas antes de entregar.
 
 ---
 
@@ -87,40 +128,52 @@ Além disso:
 ```
 RELATÓRIO FINAL SIMPLIFICADO
 
-Empresa Fiscalizada: [Razão social completa - CNPJ]
-Contato do Fiscalizado: [Telefone e/ou e-mail. Se houver preposto: Nome do preposto - telefone/e-mail]
-Período da Fiscalização: [Datas relevantes]
+Empresa Fiscalizada: [Razão social - CNPJ]
+[Obra/Estabelecimento e município, se constar]
+RI/OS: [número da fiscalização]
+Contato do Fiscalizado: [telefone/e-mail/preposto, ou "Informação não disponível..."]
+Período da Fiscalização: [início — situação atual (em curso / encerrada em dd/mm/aaaa)]
+Trabalhadores no estabelecimento: [nº, se constar]
 
 
-Resumo das Ocorrências:
+Síntese da Ação Fiscal:
+[3 a 6 linhas: modalidade, o que motivou/direcionou a ação, os grandes números (X notificações,
+Y autos em Z temas, interdição sim/não) e a situação atual. É o parágrafo que a chefia lê.]
 
-[Autos de Infração — breve descrição de cada AI: irregularidade constatada, dispositivo legal
-infringido (artigo/NR), data de lavratura. Se houver múltiplos AIs, agrupe por tema quando possível.]
 
-[Termos de Interdição/Embargo — área ou equipamento afetado, motivo, alcance e data.
-Omita esta seção se não houver nenhum termo.]
+Notificações Lavradas:
+[OBRIGATÓRIO. Uma entrada por notificação DET: código, tipo (NAD/NPD/TN), data de lavratura,
+ciência, prazo/última entrega e estado do atendimento (itens entregues, análise, irregularidades).
+Ordene por data de lavratura.]
 
-[Notificações para Apresentação de Documentos — documentos solicitados, prazo fixado, data.
-Omita esta seção se não houver nenhuma NPD.]
 
-[Outras informações relevantes e não repetitivas extraídas dos documentos ou fornecidas pelo AFT.
-Omita se não houver.]
+Autos de Infração Lavrados:
+[OBRIGATÓRIO. Agrupados por tema (Passo 2). Em cada tema: nº do AI (se transmitido), ementa,
+dispositivo, síntese da constatação, data. Feche com o total geral e a distinção
+transmitidos × pendentes de transmissão, se houver.]
+
+
+Interdições e Embargos:
+[Se houver: nº do termo, objeto (equipamento/área), motivo (condição de grave e iminente risco),
+data, autos derivados, e o estado atual — vigente / levantamento parcial (termo nº, data,
+condicionantes) / suspensão. Omita a seção se não houver.]
 
 
 Observações/Pendências:
-[Pontos que exigem atenção de outros auditores.]
-[Se houver interdição/embargo: "Verificar com o Auditor responsável se a interdição/embargo foi suspensa."]
-[Se não houver observações: "Nenhuma pendência identificada."]
+[Pontos em aberto que exigem atenção de quem continuar ou revisar: autos pendentes de
+transmissão, notificações com prazo em curso, condicionantes de interdição, novas TNs a emitir.
+Se houver interdição/embargo: "Verificar com o Auditor responsável o estado atual da
+interdição/embargo antes de qualquer providência."
+Se nada: "Nenhuma pendência identificada."]
 
 
 Auditores-Fiscais do Trabalho Envolvidos:
-[Nome 1]
-[Nome 2, se houver]
+[Nome — CIF, se constar]
 ```
 
-> O texto entregue ao usuário deve ser texto corrido limpo, sem os colchetes acima, sem
-> nenhuma referência de fonte e sem qualquer símbolo de marcação. O nome do auditor pode vir
-> do `aft-config.md` (`nome_auditor`).
+> O texto entregue deve ser corrido e limpo — sem os colchetes acima, sem referência de fonte,
+> sem símbolo de marcação. Nome do auditor: use o que constar dos documentos da OS (RTs, termos)
+> ou do perfil do AFT; na dúvida, pergunte.
 
 ---
 
@@ -128,10 +181,13 @@ Auditores-Fiscais do Trabalho Envolvidos:
 
 | Situação | Como proceder |
 |---|---|
-| Informação ausente (ex: CNPJ não localizado) | Declarar explicitamente no campo correspondente |
-| Múltiplos AIs com a mesma infração | Agrupar em parágrafo único, mencionando a quantidade |
-| Mais de uma empresa fiscalizada | Listar todas no campo "Empresa Fiscalizada" |
-| Interdição ou embargo identificado | Inserir nota nas Observações/Pendências |
-| Apenas informações textuais (sem PDF) | Processar normalmente com base no texto fornecido |
-| Usuário fornece contexto verbal adicional | Incorporar nas seções pertinentes |
-| Informações inconsistentes entre documentos | Declarar explicitamente a inconsistência no relatório |
+| Informação ausente (ex.: contato) | Declarar explicitamente no campo correspondente |
+| Auto com `[ ]` no memory.md (não transmitido) | Listar normalmente, marcado "pendente de transmissão" — nunca omitir nem presumir transmitido |
+| Auto substituído (re-lavratura) | Citar apenas o AI vigente; mencionar a substituição só se relevante |
+| Múltiplos AIs do mesmo tema | Agrupar sob o tema; se a mesma ementa se repete, dizer a quantidade |
+| Notificação gerada mas não enviada (placeholder) | Não listar como lavrada; registrar em Observações/Pendências |
+| Mais de uma empresa fiscalizada | Listar todas em "Empresa Fiscalizada" |
+| Interdição levantada/suspensa | Resumir a evolução: termo original → levantamento/suspensão, com condicionantes |
+| Nome de trabalhador nos registros | Não citar; usar "trabalhador identificado no AI nº X" ou o quantitativo |
+| Informações inconsistentes entre fontes | Prevalece autos-lavrados.md (Sistema Auditor) para autos; se seções do próprio memory.md divergirem (ex.: análises × autos), abra o TXT/PDF do auto — o documento lavrado prevalece |
+| Apenas informações textuais (sem pasta de OS) | Processar com o que foi fornecido, declarando as lacunas |

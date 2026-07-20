@@ -84,7 +84,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/revisa-auto` | Revisa o rascunho dos autos antes do empacotamento: checklist 5W1H e parágrafo de dano coletivo (SST) — gate automático dentro do `/gera-ai` |
 | `/gera-ai` | Empacota autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível |
 | `/autos-lavrados` | Lê os PDFs já transmitidos no Sistema Auditor (`C:\SistemasAFT\...\PRO`), cruza com os rascunhos e marca no `memory.md` o que está lavrado `[x]` / pendente `[ ]` — read-only sobre o Sistema Auditor |
-| `/sfitweb-rel` | Relatório Final Simplificado consolidando autos, termos e notificações |
+| `/sfitweb-rel` | Relatório Final Simplificado a partir do `memory.md`: notificações lavradas, autos por tema e interdições com estado atual — texto para o SFITWEB + `.docx` para chefia/MPT |
 
 ## Modo rápido: cada skill funciona isolada
 
