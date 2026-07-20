@@ -24,6 +24,13 @@ criação da sessão de cada auditoria nova; o `/organiza-os` confere as sessõe
 final do lote (organizou empresas novas → oferece criar as sessões delas); e o
 `/aft-setup` e o `/aft-atualizar` conferem se está tudo sincronizado.
 
+Com isso, o **caminho de chegada** de quem já fiscaliza ficou oficial e está
+documentado na instalação: depois do `/aft-setup` e do `/aft-doctor`, copie as
+pastas das suas auditorias em andamento para `Documentos/AFT/OS ATIVAS/` e rode
+o `/organiza-os` — com uma aprovação só, ele organiza tudo, roda o
+`/autos-lavrados` (busca no Sistema Auditor os autos já transmitidos e registra
+na ficha de cada empresa) e cria as sessões no grupo "OS ATIVAS".
+
 ## 20/07/2026 (2)
 <!-- commit: sfitweb-rel-embaraco-extras-pasta -->
 

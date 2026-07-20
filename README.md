@@ -25,6 +25,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 
 **Conferir:** a qualquer momento, rode **`/aft-doctor`** para checar se está tudo no lugar (Python, Git, skills, configuração) — ele diz, em linguagem simples, o que falta e como resolver.
 
+**Primeiro passo essencial (quem já fiscaliza):** copie as pastas das suas auditorias em andamento — do jeito que estiverem — para `~/Documents/AFT/OS ATIVAS/` e rode **`/organiza-os`**. Com uma única aprovação, ele organiza tudo no padrão do toolkit, roda o `/autos-lavrados` (busca no Sistema Auditor os autos já transmitidos de cada empresa e os registra no `memory.md`) e cria uma **sessão de chat por empresa** no grupo "OS ATIVAS" do menu lateral (via `/sessoes-os`). Quem começa do zero pula direto para o `/nova-os`.
+
 **Atualização:** peça ao Claude *"Atualize o AFT Toolkit"* (ou `/aft-atualizar`) — ele atualiza as skills (`git pull`) **e** o comando `notebooklm` (`notebooklm-py`), se houver versão nova, e confirma com o `/aft-doctor` que nada quebrou.
 
 ## Skills incluídas

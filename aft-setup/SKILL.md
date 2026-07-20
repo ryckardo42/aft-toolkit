@@ -427,6 +427,12 @@ Apresente:
 📅 Google Calendar:    [prazos de DET sincronizando via /agenda-det / não ativado —
                        peça a qualquer hora]
 
+➡️ JÁ FISCALIZAVA ANTES DO TOOLKIT? Primeiro passo essencial:
+   copie as pastas das suas auditorias (do jeito que estiverem) para
+   ~/Documents/AFT/OS ATIVAS/ e me peça /organiza-os — eu organizo tudo,
+   trago os autos do Sistema Auditor (/autos-lavrados) e crio uma sessão
+   por empresa no grupo "OS ATIVAS" do menu lateral.
+
 Fluxo típico de uma fiscalização:
   1. /nova-os           → cadastra a empresa e o prazo do DET
   2. /painel            → vê todas as OS e os prazos vencendo
@@ -436,6 +442,11 @@ Fluxo típico de uma fiscalização:
   6. /autos-lavrados    → confere o que foi transmitido
 Outras: /registro · /PGR-analise · /aft-rt-rgi · /det-630 · /jornada-analise · /sfitweb-rel
 ```
+
+Se a pasta `OS ATIVAS/` estiver vazia, pergunte ativamente: *"Você já tem fiscalizações
+em andamento? Copie as pastas delas para ~/Documents/AFT/OS ATIVAS/ (do jeito que
+estiverem) e me avise — eu rodo o /organiza-os, que organiza tudo, busca os autos já
+transmitidos no Sistema Auditor e cria uma sessão por empresa no menu lateral."*
 
 Feche sugerindo o diagnóstico: *"Sempre que quiser confirmar que está tudo no lugar
 (ou se algo parar de funcionar), rode `/aft-doctor` — ele confere a instalação e diz o

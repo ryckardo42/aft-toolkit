@@ -239,15 +239,17 @@ Depois de organizar tudo:
    como reserva: `start "" "<pasta AFT>/painel.html"` — e lembre que o `/aft-atualizar`
    instala/repara o servidor.
 
-4. **Confira as sessões por empresa** (não altera nada):
+4. **Sessões por empresa — parte esperada do fluxo de chegada.** Confira (não altera
+   nada):
    ```bash
    python ~/.claude/skills/_scripts/sessoes_os.py --status
    ```
    Leia a linha `JSON:` do final. Se `criar` > 0 (OS organizadas sem sessão própria no
-   menu lateral), informe no resumo e **ofereça rodar a `/sessoes-os` ao final** — ela
-   cria uma sessão por empresa no grupo "OS ATIVAS", mas precisa fechar e reabrir o app
-   (modo vigia), então nunca no meio da organização. Se o script falhar, apenas siga —
-   não é bloqueante.
+   menu lateral), **encadeie a `/sessoes-os` logo após o resumo final**: explique em uma
+   frase ("vou criar uma sessão de chat para cada empresa no grupo OS ATIVAS — o app
+   fecha e reabre uma vez") e siga o fluxo dela (dispara o vigia, o AFT fecha o app com
+   Cmd+Q, tudo reabre montado). O AFT pode recusar — aí apenas registre no resumo como
+   pendente. Se o script falhar, siga — não é bloqueante.
 
 5. Resumo final (uma mensagem só, com a tabela de tudo):
 

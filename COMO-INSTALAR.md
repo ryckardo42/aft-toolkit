@@ -56,6 +56,33 @@ Enquanto o Claude trabalha, ele vai pedir permissão para cada comando — basta
 
 A skill de configuração cria a pasta `Documentos\AFT`, pergunta seu nome, CIF e os dados da sua UORG, e instala as bibliotecas Python necessárias. Esses dados entram automaticamente nos arquivos do Sistema Auditor — você nunca mais digita.
 
+3. Confira a instalação: digite **`/aft-doctor`** — ele verifica tudo (Python, Git, skills, configuração) e diz, em linguagem simples, o que falta e como resolver.
+
+---
+
+## Passo 5 — Traga as suas fiscalizações (o primeiro passo que importa)
+
+Se você já tem auditorias em andamento, este é o **primeiro passo essencial** depois da
+instalação:
+
+1. **Copie as pastas das suas fiscalizações** (do jeito que estiverem, com os documentos
+   acumulados) para dentro de `Documentos\AFT\OS ATIVAS\` — uma pasta por empresa.
+2. Na conversa do `</> Code`, digite **`/organiza-os`**.
+
+Com uma única aprovação sua, ele faz três coisas:
+
+- **organiza tudo** no padrão do toolkit (nomes de pasta, ficha `memory.md` com
+  empregador/CNPJ/notificações DET extraídos dos próprios documentos, arquivos nos
+  lugares certos — sem apagar nada);
+- **busca os autos já lavrados**: roda o `/autos-lavrados`, que vai às pastas do Sistema
+  Auditor, encontra os autos transmitidos de cada empresa e os registra no `memory.md`;
+- **cria uma sessão de chat por empresa** no menu lateral do app, no grupo "OS ATIVAS"
+  (via `/sessoes-os` — o app fecha e reabre uma vez). Daí em diante, tudo daquela
+  auditoria é tratado na sessão dela.
+
+Quem está começando do zero (sem fiscalizações em andamento) pula este passo e usa o
+`/nova-os` a cada auditoria nova.
+
 ---
 
 ## Recomendado — Ative o NotebookLM
@@ -74,6 +101,7 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 
 | Situação | Digite |
 |---|---|
+| Importar suas fiscalizações em andamento (1º passo!) | copie as pastas para `OS ATIVAS` e digite `/organiza-os` |
 | Cadastrar uma auditoria nova | `/nova-os` |
 | Ver suas OS e prazos de DET | `/painel` |
 | Voltou de uma inspeção | `/inspecao-fisica` e narre o que viu |
