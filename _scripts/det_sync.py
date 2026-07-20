@@ -16,6 +16,11 @@ e aplica o resultado na seção `## Notificações DET` do memory.md:
     `- [ ] <CODIGO> — prazo <dd/mm/aaaa>`;
   - prazo de entrega que mudou no DET → atualiza a data na linha existente
     (preservando o formato da linha — dd/mm/aaaa ou aaaa-mm-dd);
+  - sob cada checkbox, mantém uma SUB-LINHA DE DETALHES gerada do DET
+    (`  - lavrada dd/mm/aaaa · ciência dd/mm/aaaa · última entrega
+    dd/mm/aaaa · Confirmada`) — essa linha pertence ao sync: é criada se
+    faltar e regravada quando o DET mudar. O gerar_painel a ignora (ele só
+    lê linhas checkbox);
   - `ri:` vazio no front-matter → preenche (ver ris_conhecidos/ri_mais_recente).
 
 Filtros, nesta ordem:
@@ -61,6 +66,8 @@ RE_CODIGO = re.compile(r"([A-Z0-9]{6,})")
 RE_PRAZO_LINHA = re.compile(
     r"((?:prazo|entrega\s+at[eé])[:\s]+)(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})",
     re.IGNORECASE)
+# Sub-linha de detalhes mantida pelo sync (sempre começa com "  - lavrada").
+RE_DETALHE = re.compile(r"^\s+-\s+lavrada\s", re.IGNORECASE)
 
 
 # ── Chamada à API do DET ─────────────────────────────────────────────────────
@@ -125,15 +132,42 @@ def elegiveis(notificacoes: list[dict]) -> list[dict]:
 # uma OS que acompanha mais de uma fiscalização do mesmo empregador (ex.: uma
 # ação fiscal normal + a investigação de um acidente, com RIs distintos).
 #
+# "Registrada na ficha" = código numa LINHA CHECKBOX da seção ## Notificações
+# DET — e só aí. Um código apenas CITADO no corpo (seção ### de detalhes,
+# Registro de atividades, análise) NÃO amarra o RI dele a esta OS: foi assim
+# que uma varredura por CNPJ escreveu detalhes de uma fiscalização antiga na
+# ficha e o RI antigo virou "conhecido", puxando notificações de 2025 para a
+# auditoria atual (caso MASTER AGROINDUSTRIAL, RI 318832054).
+#
 # Notificação de RI desconhecido nunca é importada — mas também nunca é
 # descartada em silêncio: volta no relatório para o AFT decidir.
 
+def _codigos_registrados(texto: str) -> set[str]:
+    """Códigos em linhas checkbox da seção ## Notificações DET (e só dela)."""
+    codigos: set[str] = set()
+    dentro = False
+    for linha in texto.splitlines():
+        s = linha.strip()
+        if s.startswith("## "):
+            dentro = s[3:].strip() in ("Notificações DET", "Notificacoes DET")
+            continue
+        if not dentro:
+            continue
+        cb = RE_CHECKBOX.match(linha)
+        if cb:
+            cod = RE_CODIGO.match(cb.group(1).strip())
+            if cod:
+                codigos.add(cod.group(1))
+    return codigos
+
+
 def ris_conhecidos(texto: str, notifs: list[dict], ri_fm: str) -> set[str]:
     conhecidos = {ri_fm} if ri_fm else set()
+    registrados = _codigos_registrados(texto)
     for n in notifs:
         codigo = (n.get("codigo") or "").strip()
         ri = re.sub(r"\D", "", n.get("ri") or "")
-        if codigo and ri and codigo in texto:
+        if codigo and ri and codigo in registrados:
             conhecidos.add(ri)  # já registrada nesta OS ⇒ o RI dela é desta OS
     return conhecidos
 
@@ -180,9 +214,25 @@ def _mesma_data(txt: str, iso: str | None) -> bool:
     return norm == iso[:10]
 
 
-def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int]:
+def _linha_detalhe(n: dict) -> str:
+    """Sub-linha de detalhes de uma notificação (dados vindos do DET).
+    Campos vazios são omitidos; status 1 = Confirmada (único elegível)."""
+    partes = []
+    if n.get("dataEnvio"):
+        partes.append(f"lavrada {_data_br(n['dataEnvio'])}")
+    if n.get("dataCiencia"):
+        partes.append(f"ciência {_data_br(n['dataCiencia'])}")
+    if n.get("itemDataUltimaEntrega"):
+        partes.append(f"última entrega {_data_br(n['itemDataUltimaEntrega'])}")
+    partes.append("Confirmada" if n.get("status") == 1
+                  else f"status {n.get('status')}")
+    return "  - " + " · ".join(partes) + "\n"
+
+
+def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int, int]:
     """Aplica as notificações elegíveis na seção ## Notificações DET.
-    Devolve (novo_texto, inseridas, prazos_atualizados). Função pura."""
+    Devolve (novo_texto, inseridas, prazos_atualizados, detalhes_atualizados).
+    Função pura."""
     linhas = texto.splitlines(keepends=True)
 
     ini = fim = -1
@@ -210,8 +260,9 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int]
         if cod:
             por_codigo[cod.group(1)] = i
 
-    inseridas = atualizadas = 0
+    inseridas = atualizadas = detalhes = 0
     novas: list[str] = []
+    inserir_detalhe: list[tuple[int, str]] = []  # (posição, linha) — aplicados no fim
     for n in notifs:
         codigo = (n.get("codigo") or "").strip()
         if not codigo:
@@ -221,9 +272,19 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int]
         if i is None:
             prazo = _data_br(prazo_iso)
             novas.append(f"- [ ] {codigo}" + (f" — prazo {prazo}\n" if prazo else "\n"))
+            novas.append(_linha_detalhe(n))
             inseridas += 1
             continue
-        # Já registrada: atualiza o prazo se mudou (preserva o formato da linha).
+        # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou).
+        det = _linha_detalhe(n)
+        if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
+            if linhas[i + 1] != det:
+                linhas[i + 1] = det
+                detalhes += 1
+        else:
+            inserir_detalhe.append((i + 1, det))
+            detalhes += 1
+        # Atualiza o prazo se mudou (preserva o formato da linha).
         if not prazo_iso:
             continue
         ms = list(RE_PRAZO_LINHA.finditer(linhas[i]))
@@ -244,9 +305,16 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int]
         # próximo prazo por notificação, não por item) — nunca escolhe sozinho
         # qual trocar. A linha fica intocada; o AFT decide manualmente.
 
+    # Sub-linhas de detalhe novas: inseridas de trás para frente, para não
+    # deslocar os índices ainda pendentes.
+    for pos, det in sorted(inserir_detalhe, reverse=True):
+        linhas.insert(pos, det)
+        fim += 1
+
     if novas:
-        # Insere após a última linha checkbox (ou no início da seção);
-        # remove um "_(vazio)_" que esteja sozinho na seção.
+        # Insere após a última linha checkbox — pulando a sub-linha de
+        # detalhes dela — ou no início da seção; remove um "_(vazio)_" que
+        # esteja sozinho na seção.
         ult = max((i for i in range(ini, fim) if RE_CHECKBOX.match(linhas[i])),
                   default=None)
         if ult is None:
@@ -260,9 +328,12 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int]
                 pos += 1
             linhas[pos:pos] = novas
         else:
-            linhas[ult + 1: ult + 1] = novas
+            pos = ult + 1
+            if pos < fim and RE_DETALHE.match(linhas[pos]):
+                pos += 1
+            linhas[pos:pos] = novas
 
-    return "".join(linhas), inseridas, atualizadas
+    return "".join(linhas), inseridas, atualizadas, detalhes
 
 
 def preencher_ri(texto: str, ri: str) -> tuple[str, bool]:
@@ -330,8 +401,8 @@ def sincronizar_os(pasta_os: Path, token: str,
                    consultar=consultar_det) -> dict:
     """Sincroniza uma OS. `consultar` é injetável para testes."""
     r = {"os": pasta_os.name, "recebidas": 0, "inseridas": 0,
-         "prazos_atualizados": 0, "ri_preenchido": False,
-         "ignoradas": [], "erro": None}
+         "prazos_atualizados": 0, "detalhes_atualizados": 0,
+         "ri_preenchido": False, "ignoradas": [], "erro": None}
     mem = pasta_os / "memory.md"
     try:
         texto = mem.read_text(encoding="utf-8")
@@ -377,7 +448,8 @@ def sincronizar_os(pasta_os: Path, token: str,
     if not minhas:
         return r
 
-    novo, r["inseridas"], r["prazos_atualizados"] = aplicar_notificacoes(texto, minhas)
+    (novo, r["inseridas"], r["prazos_atualizados"],
+     r["detalhes_atualizados"]) = aplicar_notificacoes(texto, minhas)
     novo, r["ri_preenchido"] = preencher_ri(novo, ri_novo)
     if novo == texto:
         return r
@@ -387,6 +459,8 @@ def sincronizar_os(pasta_os: Path, token: str,
         partes.append(f"{r['inseridas']} notificação(ões) importada(s)")
     if r["prazos_atualizados"]:
         partes.append(f"{r['prazos_atualizados']} prazo(s) atualizado(s)")
+    if r["detalhes_atualizados"]:
+        partes.append(f"{r['detalhes_atualizados']} detalhe(s) atualizado(s)")
     if r["ri_preenchido"]:
         partes.append(f"RI {ri_novo} preenchido (notificação mais recente)")
     novo = registrar_atividade(novo, " · ".join(partes) or "sem mudanças")
@@ -416,6 +490,7 @@ def sincronizar_todas(base: Path, token: str, consultar=consultar_det) -> dict:
         "notificacoes_recebidas": sum(r["recebidas"] for r in resultados),
         "inseridas": sum(r["inseridas"] for r in resultados),
         "prazos_atualizados": sum(r["prazos_atualizados"] for r in resultados),
+        "detalhes_atualizados": sum(r["detalhes_atualizados"] for r in resultados),
         "ris_preenchidos": sum(1 for r in resultados if r["ri_preenchido"]),
         # De outra fiscalização do mesmo empregador — não importadas, relatadas.
         "ignoradas": len(ignoradas),
