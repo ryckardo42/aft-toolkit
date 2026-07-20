@@ -11,17 +11,20 @@ rever tudo, basta abrir este arquivo.
 
 **Relatório final de fiscalização muito mais completo** — o `/sfitweb-rel` foi
 reescrito para acompanhar tudo o que o toolkit passou a registrar desde que ele
-nasceu. Agora ele lê a ficha da OS (memory.md, com as datas sincronizadas do
-DET), o espelho do Sistema Auditor (autos-lavrados.md, com os números oficiais
-dos AIs) e a pasta de interdição/embargo, e monta o relatório com seções
-obrigatórias: notificações lavradas (com lavratura, ciência, prazo e estado do
-atendimento), autos de infração agrupados por tema (SESMT/CIPA, obra,
-inflamáveis, jornada...), e interdições com o estado atual e as condicionantes
-— não só a lavratura. Sai em três formatos: texto limpo para colar no SFITWEB,
-`.md` e `.docx` na pasta da OS, pronto para encaminhar à chefia ou ao MPT.
-Regras novas de qualidade: toda sigla explicada na primeira menção (o leitor
-pode ser de fora da Inspeção), prazo vencido dito como vencido, distinção entre
-auto transmitido e pendente de transmissão, e nenhum fato citado sem desfecho.
+nasceu. Agora ele lê a ficha da OS (memory.md), o espelho do Sistema Auditor
+(autos-lavrados.md, com os números oficiais dos AIs) e a pasta de
+interdição/embargo, e monta o relatório com seções obrigatórias: notificações
+lavradas (resumo dos itens notificados + data de lavratura), autos de infração
+agrupados por tema (SESMT/CIPA, obra, inflamáveis, jornada...) e interdições
+com o estado atual e as condicionantes — não só a lavratura. Cada auto sai com
+os mesmos campos do painel: número, ementa, fundamento, descrição e a
+**constatação**, que resume a infração redigida. Só entra o que foi de fato
+lavrado: auto em redação ou pendente de transmissão não aparece, auto
+substituído não aparece, e detalhes de análise de documentos também não. Sai
+em três formatos: texto limpo para colar no SFITWEB, `.md` e `.docx` na pasta
+da OS — o `.docx` agora usa o **template oficial com o cabeçalho da auditoria**
+e formatação institucional (Times 12, títulos em azul, autos em tabela zebrada
+com um subtítulo por tema), pronto para encaminhar à chefia ou ao MPT.
 
 ## 19/07/2026 (3)
 <!-- commit: painel-det-datas-detalhe -->
