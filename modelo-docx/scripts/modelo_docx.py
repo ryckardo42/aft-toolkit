@@ -46,6 +46,10 @@ CINZA_CAPA2 = "555555"   # data da capa
 ZEBRA_AZUL = "EBF3FB"
 ZEBRA_CINZA = "F5F5F5"
 BORDA = "AAAAAA"
+# alerta (embaraço à fiscalização, fraude): vermelho institucional sóbrio
+ALERTA_TITULO = "A61C1C"   # texto do título da caixa de alerta
+ALERTA_FUNDO = "F8EAE6"    # fundo da caixa de alerta
+ALERTA_BORDA = "D99694"    # borda da caixa de alerta
 
 FONTE = "Times New Roman"
 TAM = Pt(12)
@@ -175,14 +179,15 @@ def sombrear(cell, hexa):
     cell._tc.get_or_add_tcPr().append(shd)
 
 
-def bordas_finas(tabela):
+def bordas_finas(tabela, cor=BORDA, sz="1"):
+    """Aplica bordas simples à tabela. `sz` em 1/8 pt (1 = 0,125 pt)."""
     tbl_pr = tabela._tbl.tblPr
     borders = OxmlElement("w:tblBorders")
     for lado in ("top", "left", "bottom", "right", "insideH", "insideV"):
         el = OxmlElement(f"w:{lado}")
         el.set(qn("w:val"), "single")
-        el.set(qn("w:sz"), "1")            # 1/8 pt = 0,125 pt
-        el.set(qn("w:color"), BORDA)
+        el.set(qn("w:sz"), str(sz))
+        el.set(qn("w:color"), cor)
         borders.append(el)
     tbl_pr.append(borders)
 
@@ -289,3 +294,31 @@ def linha_dados(tabela, celulas):
     if getattr(tabela, "_modelo_larguras", None):
         _larguras(tabela, tabela._modelo_larguras)
     return row
+
+
+# ---------------------------------------------------------------- destaque
+def caixa_destaque(doc, titulo, paragrafos, *, cor_titulo=ALERTA_TITULO,
+                   fundo=ALERTA_FUNDO, borda=ALERTA_BORDA, largura_cm=16.5):
+    """Caixa de destaque (callout): tabela de 1 célula sombreada e com borda
+    colorida, título em negrito colorido e um ou mais parágrafos de corpo.
+    Para chamar a atenção do leitor — ex.: embaraço à fiscalização, fraude.
+    `paragrafos` = lista de strings ou de listas de spans (texto, negrito)."""
+    espaco = fmt(doc.add_paragraph(), antes=4, depois=2)      # respiro antes
+    espaco.paragraph_format.space_after = Pt(2)
+    t = doc.add_table(rows=1, cols=1)
+    t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    bordas_finas(t, cor=borda, sz="8")                        # 1 pt
+    cell = t.rows[0].cells[0]
+    sombrear(cell, fundo)
+    cell.paragraphs[0].text = ""
+    p = fmt(cell.paragraphs[0], depois=6, alinh=ESQUERDA)
+    run(p, titulo, negrito=True, cor=cor_titulo)
+    for par in paragrafos:
+        pp = fmt(cell.add_paragraph(), depois=6, alinh=JUSTIFICADO)
+        if isinstance(par, str):
+            run(pp, par)
+        else:
+            for texto, neg in par:
+                run(pp, texto, negrito=neg)
+    _larguras(t, (largura_cm,))
+    return t

@@ -11,9 +11,13 @@ description: >
   por autos-lavrados.md, pela pasta interdicao-embargo/ e pelas análises da pasta da OS. Produz
   texto 100% limpo (para colar no SFITWEB) com seções obrigatórias — Notificações Lavradas
   (resumo dos itens + data de lavratura), Autos de Infração TRANSMITIDOS agrupados por tema
-  (nº, ementa, fundamento, descrição e constatação), Interdições/Embargos com estado atual — e
-  salva .md + .docx (template oficial com cabeçalho da auditoria, tabelas formatadas) na pasta
-  da OS, prontos para encaminhamento a chefia e órgãos externos (ex.: MPT).
+  (nº, ementa, fundamento, descrição e constatação), Interdições/Embargos com estado atual.
+  Antes de gerar, lê e entende o memory.md e PERGUNTA ao AFT se quer incluir outras ocorrências
+  (ex.: empregados sem registro após a NCRE, itens não regularizados); destaca em caixa própria
+  qualquer embaraço à fiscalização ou fraude (art. 630 da CLT), detalhando a conduta. Salva
+  .md + .docx (template oficial com cabeçalho da auditoria) na subpasta "Relatórios de
+  Fiscalização/" da OS e avisa o destino — prontos para encaminhar a chefia e órgãos externos
+  (ex.: MPT).
 ---
 
 # sfitweb-rel — Relatório Final Simplificado de Fiscalização
@@ -36,10 +40,12 @@ interditado/embargado e o que ainda está em aberto.
 
 ## Fluxo de execução
 
-### 1. Localizar a OS e coletar as fontes — nesta ordem
+### 1. Ler e ENTENDER a ficha da OS — nesta ordem
 
-A fonte primária é a ficha da OS. Leia na ordem abaixo; cada fonte seguinte só completa o que a
-anterior não tem:
+Antes de qualquer coisa, **leia e compreenda o `memory.md` da OS** (e as fontes abaixo): quem é
+a empresa, o que foi notificado, o que foi autuado, se houve interdição, o que ficou pendente.
+Você só pergunta e só redige depois de entender o caso. A fonte primária é a ficha da OS; leia
+na ordem abaixo, cada fonte seguinte só completa o que a anterior não tem:
 
 1. **`memory.md` da OS** (`OS ATIVAS/[EMPRESA]/memory.md`) — é o índice de tudo:
    - *Front-matter:* empregador, CNPJ, RI, município, `data_inicio`, `num_trabalhadores`,
@@ -90,24 +96,62 @@ habilitado — empresa admitiu inexistência em resposta à notificação.
 A **Constatação é o campo essencial** — é ela que resume a infração redigida. NÃO inclua a
 data de lavratura de cada auto.
 
-### 3. Redigir e salvar
+### 3. Destacar embaraço à fiscalização e fraude (art. 630 da CLT) — OBRIGATÓRIO quando houver
 
-Redija no formato de saída abaixo e entregue:
+Ao ler os autos, identifique qualquer situação de **embaraço à fiscalização, oposição, fraude
+ou tentativa de indução a erro** — tipicamente autos capitulados no **art. 630 da CLT** (§§ 3º,
+4º e 6º; ementa comum 001168-1 e correlatas), mas também qualquer conduta relatada na constatação
+em que o administrado **impediu, dificultou ou se negou** a fornecer informações, documentos ou
+acesso, ou apresentou documento falso/adulterado.
+
+Quando houver, esse ponto tem que **saltar aos olhos** do leitor. Abra o(s) auto(s)
+correspondente(s) (constatação no `autos-lavrados.md` e, se preciso, o TXT/PDF do próprio auto na
+pasta) e escreva, para o campo `embaraco_fraude`, um resumo que **detalhe exatamente COMO** o
+administrado impediu, dificultou ou se negou: o que foi exigido (documento/informação/acesso),
+por qual instrumento e prazo, e a conduta concreta de recusa/obstrução/fraude. No .docx isso vira
+uma **caixa de destaque** (vermelha, logo após a Síntese). O auto continua também na tabela de
+autos — a caixa é o realce, não substitui.
+
+Se não houver nenhuma situação assim, deixe `embaraco_fraude` vazio (a caixa não aparece).
+
+### 4. Perguntar ao AFT o que mais incluir — OBRIGATÓRIO
+
+Depois de entender o caso (Passo 1) e antes de gerar o documento, **pergunte ao AFT, em texto
+limpo no chat**, se ele quer incluir outras informações além da relação de notificações do DET,
+autos e interdições lavrados. Dê exemplos concretos para orientar a resposta:
+
+> Já vou consolidar as notificações do DET, os autos lavrados e as interdições. Quer que eu
+> inclua mais alguma coisa relevante da fiscalização? Por exemplo: empregados que continuaram
+> sem registro após a NCRE (Notificação para Comprovação do Registro de Empregados), itens que
+> não foram regularizados, ou outras ocorrências relevantes durante a ação fiscal.
+
+Aguarde a resposta. Se o AFT indicar informações, incorpore-as no campo `outras_ocorrencias`
+(vira a seção "Outras Ocorrências Relevantes da Fiscalização"), redigidas em linguagem técnica e
+fiéis ao que ele relatou. Se ele não quiser acrescentar nada, siga sem a seção.
+
+### 5. Redigir e salvar — na pasta "Relatórios de Fiscalização"
+
+Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:
+**`<pasta-OS>/Relatórios de Fiscalização/`** (crie-a se não existir). Entregue:
 
 1. **Texto limpo no chat** — em bloco de texto puro, sem nenhuma marcação markdown, pronto para
    colar no campo do SFITWEB (autos no formato de bloco acima).
-2. **`relatorio-final.md`** na pasta da OS (confirme antes de sobrescrever; se já existir,
-   faça backup com `_scripts/backup_arquivo.py`).
-3. **`relatorio-final.json`** na pasta da OS — os dados estruturados do relatório (esquema no
-   topo de `scripts/gera_relatorio_docx.py`), fonte do .docx.
+2. **`relatorio-final.md`** em `Relatórios de Fiscalização/` (confirme antes de sobrescrever;
+   se já existir, faça backup com `_scripts/backup_arquivo.py`).
+3. **`relatorio-final.json`** em `Relatórios de Fiscalização/` — os dados estruturados do
+   relatório (esquema no topo de `scripts/gera_relatorio_docx.py`), fonte do .docx. Inclui os
+   campos `embaraco_fraude` e `outras_ocorrencias` quando aplicável.
 4. **`relatorio-final.docx`** — gere rodando:
    ```
-   python3 ~/.claude/skills/sfitweb-rel/scripts/gera_relatorio_docx.py "<pasta-OS>/relatorio-final.json"
+   python3 ~/.claude/skills/sfitweb-rel/scripts/gera_relatorio_docx.py "<pasta-OS>/Relatórios de Fiscalização/relatorio-final.json"
    ```
    O script constrói o documento com a biblioteca do **padrão visual do toolkit** (skill
    `/modelo-docx` — template oficial com o cabeçalho da auditoria, Times New Roman 12,
-   paleta azul institucional, corpo justificado 1,15) e monta os autos em **tabela zebrada**
-   com uma linha de subcabeçalho azul por tema.
+   paleta azul institucional, corpo justificado 1,15), monta os autos em **tabela zebrada**
+   com uma linha de subcabeçalho azul por tema, e o embaraço/fraude na caixa de destaque.
+
+**Avise o AFT do destino** ao terminar: informe o caminho completo da subpasta
+`Relatórios de Fiscalização/` onde o `.docx` foi salvo.
 
 Ao final, registre a atividade no `## Registro de atividades` do memory.md
 (`| dd/mm/aaaa | Relatório final simplificado gerado (.md + .docx) | /sfitweb-rel |`).
@@ -165,6 +209,10 @@ Trabalhadores no estabelecimento: [nº, se constar]
 Y autos transmitidos em Z temas, interdição sim/não) e a situação atual. É o parágrafo que a
 chefia lê.]
 
+[CAIXA DE DESTAQUE — só quando houver embaraço/fraude (Passo 3). Aparece logo após a Síntese,
+em vermelho, com o detalhamento de COMO o administrado impediu/dificultou/negou. Não é uma
+seção numerada — é um realce.]
+
 3. Notificações Lavradas
 [OBRIGATÓRIO. Uma entrada por notificação DET lavrada: código, tipo (NAD/NPD/TN), resumo de
 alguns itens notificados e data de lavratura — nada de ciência, prazo ou atendimento.
@@ -181,6 +229,10 @@ data, autos derivados, e o estado atual — vigente / levantamento parcial (term
 condicionantes) / suspensão. Se não houver: "Não houve lavratura de termo de interdição ou
 embargo nesta ação fiscal."]
 
+[Outras Ocorrências Relevantes da Fiscalização — só quando o AFT indicar algo no Passo 4.
+Seção numerada; entra aqui, antes das Observações. Ex.: empregados sem registro após a NCRE,
+itens não regularizados, outras ocorrências relatadas pelo AFT.]
+
 6. Observações/Pendências
 [Pontos em aberto que exigem atenção: notificações com prazo em curso ou vencido sem
 atendimento, condicionantes de interdição. NUNCA autos pendentes/em redação, NUNCA detalhe de
@@ -195,6 +247,10 @@ Se nada: "Nenhuma pendência identificada."]
 > O texto entregue deve ser corrido e limpo — sem os colchetes acima, sem referência de fonte,
 > sem símbolo de marcação. Nome do auditor: use o que constar dos documentos da OS (RTs, termos)
 > ou do perfil do AFT; na dúvida, pergunte.
+>
+> **Numeração dinâmica:** os números acima são ilustrativos. A caixa de embaraço/fraude não é
+> numerada; "Outras Ocorrências" só existe quando o AFT a preenche. Quando ela aparece, as
+> seções seguintes deslizam (Observações e Auditores passam a 7 e 8). O script cuida disso.
 
 ---
 
@@ -213,3 +269,6 @@ Se nada: "Nenhuma pendência identificada."]
 | Nome de trabalhador nos registros | Não citar; usar "trabalhador identificado no AI nº X" ou o quantitativo |
 | Informações inconsistentes entre fontes | Prevalece autos-lavrados.md (Sistema Auditor); na dúvida, o PDF/TXT do próprio auto |
 | Apenas informações textuais (sem pasta de OS) | Processar com o que foi fornecido, declarando as lacunas |
+| Auto de embaraço/fraude (art. 630 CLT) | Detalhar na caixa de destaque COMO impediu/dificultou/negou; manter também na tabela de autos |
+| AFT indica info extra (Passo 4) | Vai para "Outras Ocorrências Relevantes"; se não indicar nada, seção omitida |
+| Destino do arquivo | Sempre `<pasta-OS>/Relatórios de Fiscalização/`; avisar o caminho ao AFT |
