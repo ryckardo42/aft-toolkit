@@ -72,6 +72,16 @@ RE_PRAZO = re.compile(
     re.IGNORECASE)
 RE_CODIGO_DET = re.compile(r"([A-Z0-9]{6,})")
 RE_CHECKBOX = re.compile(r"^-\s*\[([ xX]?)\]\s*(.*)$")
+# Sub-linha de detalhes mantida pelo det_sync (nunca editada à mão), logo abaixo
+# do checkbox: "  - lavrada dd/mm/aaaa · ciência dd/mm/aaaa · última entrega
+# dd/mm/aaaa · Confirmada". Os campos vazios são omitidos pelo sync.
+RE_DET_DETALHE = re.compile(r"^\s+-\s+lavrada\s", re.IGNORECASE)
+RE_DET_LAVRADA = re.compile(r"lavrada\s+(\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+RE_DET_CIENCIA = re.compile(r"ci[eê]ncia\s+(\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+RE_DET_ULTIMA = re.compile(r"[uú]ltima\s+entrega\s+(\d{2}/\d{2}/\d{4})", re.IGNORECASE)
+# Flag do triângulo amarelo do DET ("Existe atualização pendente"): o item mais
+# acionável da sub-linha — pedido de prazo, dispensa, item não aberto.
+RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
 RE_DATA_ISO = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 RE_DATA_BR = re.compile(r"(\d{2})/(\d{2})/(\d{4})")
 RE_NR = re.compile(r"NR[-\s]?0?(\d{1,2})\b", re.IGNORECASE)
@@ -200,7 +210,8 @@ def parse_memory(path: Path) -> dict:
     # DETs — uma entrada por linha checkbox da seção.
     dets = []
     secao = extrair_secao(corpo, "Notificações DET") or extrair_secao(corpo, "Notificacoes DET")
-    for linha in secao.splitlines():
+    linhas_sec = secao.splitlines()
+    for idx, linha in enumerate(linhas_sec):
         cb = RE_CHECKBOX.match(linha.strip())
         if not cb:
             continue
@@ -210,9 +221,23 @@ def parse_memory(path: Path) -> dict:
         prazo = parse_data(prazo_m.group(1)) if prazo_m else None
         cod_m = RE_CODIGO_DET.match(resto)
         codigo = cod_m.group(1) if cod_m else None
-        if prazo or codigo:
-            dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
-                         "linha": resto})
+        if not (prazo or codigo):
+            continue
+        # Sub-linha de detalhes do det_sync, se presente logo abaixo do checkbox:
+        # lavratura, ciência e última entrega vêm do próprio DET.
+        lavrada = ciencia = ultima = None
+        pendente = False
+        if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
+            det = linhas_sec[idx + 1]
+            ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
+                          RE_DET_ULTIMA.search(det))
+            lavrada = parse_data(ml.group(1)) if ml else None
+            ciencia = parse_data(mc.group(1)) if mc else None
+            ultima = parse_data(mu.group(1)) if mu else None
+            pendente = bool(RE_DET_PENDENTE.search(det))
+        dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
+                     "linha": resto, "lavrada": lavrada, "ciencia": ciencia,
+                     "ultima_entrega": ultima, "atualizacao_pendente": pendente})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -547,6 +572,8 @@ background:#E4EEEB;color:var(--teal);margin-top:8px}
 border-radius:6px;padding:1px 7px;margin:0 4px 4px 0}
 .rodape-card{display:flex;justify-content:space-between;gap:8px;margin-top:10px;
 font-size:12px;color:var(--t3)}
+.pend-card{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
+color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px}
 .aviso-vazio{background:var(--paper);border:1px dashed var(--bd);border-radius:10px;
 padding:26px;text-align:center;color:var(--t3)}
 /* Detalhe — modal central amplo */
@@ -629,6 +656,7 @@ font-size:13px;z-index:20;display:none}
 --bd:#3A372F;--bds:#2E2B25}
 .badge{background:#233530}.chip{background:#3A2C22}
 .badge.vencido,.badge.urgente{background:#3D2521}
+.det-item .cod .pend,.pend-card{background:#3D2521;color:#E9A891}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
 }
 /* ---- Dossiê da OS (tela de detalhe) ---- */
@@ -685,8 +713,13 @@ font-size:13px;z-index:20;display:none}
 .det-item.feito .cx{border:none;background:var(--teal);color:var(--paper);
   font:700 12px/18px var(--sans);text-align:center}
 .det-item .cod{font:600 13.5px var(--sans);color:var(--t1)}
+.det-item .cod .pend{font:700 11px var(--sans);background:#F5E4E0;color:var(--coral-deep);
+  border-radius:20px;padding:2px 9px;margin-right:7px;vertical-align:1px;white-space:nowrap}
 .det-item .info{font-size:12px;color:var(--t3);line-height:1.45}
-.det-item .selo{margin:1px 0 0}
+.det-item .det-campo{display:flex;gap:6px;line-height:1.6}
+.det-item .det-campo .rot{color:var(--t3);min-width:118px}
+.det-item .det-campo .val{color:var(--t1);font-weight:600}
+.det-item .selo{margin:3px 0 0}
 /* timeline */
 .tl{display:flex;gap:14px}
 .tl .eixo{display:flex;flex-direction:column;align-items:center;width:10px;flex:none}
@@ -856,11 +889,17 @@ function cartaoDets(o,i){
  let h='<div class="cartao"><h3>Notificações DET <span class="cont">'+(o.dets||[]).length+'</span></h3>';
  if(!(o.dets||[]).length)return h+'<p class="vazio">nenhuma registrada</p></div>';
  h+=o.dets.map((d,k)=>{
-  const info=esc((d.codigo?d.linha.replace(d.codigo,''):d.linha).replace(/^[ —–-]+/,''));
+  const campos=[['Lavratura',d.lavrada],['Ciência',d.ciencia],
+    ['Próxima entrega',d.prox_entrega],['Última entrega',d.ultima_entrega]]
+   .filter(c=>c[1]).map(c=>'<div class="det-campo"><span class="rot">'+c[0]+
+    '</span><span class="val">'+esc(c[1])+'</span></div>').join('');
+  // Fallback p/ notificações ainda sem a sub-linha do det_sync (texto cru).
+  const info=campos||esc((d.codigo?d.linha.replace(d.codigo,''):d.linha).replace(/^[ —–-]+/,''));
   return '<div class="det-item'+(d.feito?' feito':'')+'"'+
    (ATIVO&&o.pasta&&d.codigo?' onclick="agDet('+i+','+k+')" title="clique para '+
     (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
-   '<span class="cx">'+(d.feito?'✓':'')+'</span><div><div class="cod">'+esc(d.codigo||'?')+'</div>'+
+   '<span class="cx">'+(d.feito?'✓':'')+'</span><div><div class="cod">'+
+   (d.pendente?'<span class="pend">⚠️ atualização pendente</span> ':'')+esc(d.codigo||'?')+'</div>'+
    (info?'<div class="info">'+info+'</div>':'')+
    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+'</div></div>'}).join('');
  return h+'</div>'}
@@ -1107,6 +1146,11 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "docs": (o.get("docs") or []) if com_pasta else [],
             "dets": [{"codigo": d["codigo"], "feito": d["feito"],
                       "linha": datas_para_br(d["linha"]),
+                      "lavrada": d["lavrada"].strftime("%d/%m/%Y") if d.get("lavrada") else "",
+                      "ciencia": d["ciencia"].strftime("%d/%m/%Y") if d.get("ciencia") else "",
+                      "prox_entrega": d["prazo"].strftime("%d/%m/%Y") if d["prazo"] else "",
+                      "ultima_entrega": d["ultima_entrega"].strftime("%d/%m/%Y") if d.get("ultima_entrega") else "",
+                      "pendente": bool(d.get("atualizacao_pendente")),
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
             "novas": o.get("novas") or [],
@@ -1163,6 +1207,9 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
         if o["embargo"]:
             chips += f'<span class="chip emb">⛔ {html.escape(o["embargo"][:42])}</span>'
         dets_abertos = sum(1 for d in o["dets"] if not d["feito"])
+        pend = any(d.get("atualizacao_pendente") for d in o["dets"])
+        pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
+                     if pend else "")
         cards.append(f"""
 <div class="card {classe}" onclick="abre({i})">
   <h2>{html.escape(o["empregador"])}</h2>
@@ -1172,7 +1219,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
   <div class="rodape-card">
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
-  </div>
+  </div>{pend_selo}
 </div>""")
 
     grade = ("".join(cards) if cards else
