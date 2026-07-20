@@ -137,8 +137,8 @@ const ARCH = {
  "data": "2026-07-15",
  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 34,
-  "scripts": 25,
+  "skills": 35,
+  "scripts": 26,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 20/07/2026"
  },
@@ -436,6 +436,11 @@ const ARCH = {
     "nome": "/modelo-docx",
     "role": "Padrão visual de todo .docx do toolkit: template com cabeçalho AFT·SIT, Times 12, azul institucional, tabelas zebradas.",
     "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /sfitweb-rel e docs avulsos · model: sonnet"
+   },
+   {
+    "nome": "/sessoes-os",
+    "role": "Uma sessão do app por empresa fiscalizada, no grupo 'OS ATIVAS' do menu lateral; vínculo sessao_claude no memory.md.",
+    "tech": "_scripts/sessoes_os.py · escreve no armazenamento interno do app em modo vigia (app fechado), backup + --desfazer · model: sonnet"
    }
    ]
   }

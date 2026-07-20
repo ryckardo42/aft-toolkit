@@ -195,7 +195,7 @@ python ~/.claude/skills/_scripts/sync_perfil.py --status \
 
 Aja conforme a **única linha** de saída:
 
-- **`EM_DIA v<N>`** → nada a fazer; siga para o Passo 3.
+- **`EM_DIA v<N>`** → nada a fazer; siga para o Passo 2f.
 - **`DESATUALIZADO instalada=v<X> template=v<Y>`** → atualize **automaticamente, sem
   perguntar** (o script faz backup antes e troca só o bloco marcado; o que o AFT
   escreveu fora dos marcadores fica intacto):
@@ -226,6 +226,23 @@ Aja conforme a **única linha** de saída:
   - **(c)** → não faça nada; o script não grava. (Volta a perguntar na próxima vez.)
 - **`SEM_ARQUIVO`** → o AFT nunca instalou o perfil. Fora do escopo desta skill: sugira
   rodar `/aft-setup` (Passo 5b) numa próxima vez. Não crie o arquivo aqui.
+
+## Passo 2f — Sessões por auditoria (conferir, oferecer se faltar)
+
+Rode o diagnóstico (não altera nada):
+
+```bash
+python ~/.claude/skills/_scripts/sessoes_os.py --status
+```
+
+Leia a linha `JSON:` do final:
+
+- **`criar` = 0 e `agrupar` = 0** → nada a fazer; siga para o Passo 3.
+- **Há OS sem sessão** → informe em uma frase (*"Você tem N auditorias sem sessão própria
+  no menu lateral"*) e ofereça rodar a `/sessoes-os` **depois** que a atualização
+  terminar (ela precisa fechar e reabrir o app; não faça isso no meio da atualização).
+- **Script falhou / formato não reconhecido** → apenas registre no resumo do Passo 4; não
+  é bloqueante.
 
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 

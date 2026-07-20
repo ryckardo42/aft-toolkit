@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v3 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v4 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -126,6 +126,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Prazos de DET no meu Google Calendar → `/agenda-det`
 - Relatório final da ação fiscal → `/sfitweb-rel`
 - Gerar um documento .docx avulso no padrão do toolkit → `/modelo-docx`
+- Uma sessão por empresa no menu lateral (grupo OS ATIVAS) → `/sessoes-os`
 - Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/nova-skill`
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico de Interdição (ou um
@@ -217,6 +218,23 @@ o `/NAD` e o `/tn-nco` já entregam o texto pronto para eu colar no DET em bloco
 código, texto puro). Textos que eu vou copiar e colar em outro lugar (e-mail, campo do
 DET) continuam aparecendo no chat em texto puro, sem negrito/cabeçalho de markdown, para
 eu poder copiar direto sem sobra de `**`/`#`.
+
+## Sessões por auditoria (grupo "OS ATIVAS")
+
+Cada empresa fiscalizada tem (ou deveria ter) a própria sessão de chat no app, no grupo
+"OS ATIVAS" — criadas pela `/sessoes-os` e vinculadas pelo campo `sessao_claude:` no
+front-matter do memory.md da OS. Comportamento esperado:
+
+- **Roteamento:** se eu começar a tratar de uma auditoria NESTA sessão e a empresa tiver
+  sessão própria (vínculo no memory.md ou título na lista de sessões), avise e ofereça
+  encaminhar o pedido para a sessão dela (via mensagem entre sessões — eu confirmo o
+  envio). Se eu preferir seguir aqui, siga sem insistir.
+- **Auditoria nova:** depois do `/nova-os`, ofereça rodar `/sessoes-os` para criar a
+  sessão da empresa.
+- **OS encerrada/arquivada:** ofereça arquivar a sessão correspondente (a confirmação
+  final é sempre minha, no app).
+- Trabalho que NÃO é de uma auditoria específica (toolkit, dúvidas gerais, consultas)
+  continua em sessões comuns — não force roteamento.
 
 ## Autuação e dupla visita
 

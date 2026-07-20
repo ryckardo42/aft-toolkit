@@ -395,6 +395,18 @@ login único do Google, feito com segurança pela interface do Claude."*
      Code, se disponíveis) e grave `agenda_det: "diario"` ou `agenda_det: "manual"` no
      `aft-config.md`, conforme a escolha.
 
+## Passo 7e — Sessões por auditoria no menu lateral (oferecer)
+
+Se já existirem pastas em `OS ATIVAS/`, ofereça em uma frase: *"Quer uma sessão de chat
+por empresa fiscalizada no menu lateral do app, organizadas no grupo 'OS ATIVAS'? Tudo de
+cada auditoria passa a ser tratado na sessão dela."*
+
+- **Se sim** → siga a skill `/sessoes-os` (ela mostra o diagnóstico, pede a confirmação e
+  aplica no modo vigia — o app fecha e reabre uma vez). Como o setup está rodando dentro
+  do app, deixe este passo por último: dispare o vigia só depois do Passo 8.
+- **Se não** (ou se ainda não há OS) → siga adiante; a skill pode ser chamada a qualquer
+  momento e o `/nova-os` a oferece a cada auditoria nova.
+
 ## Passo 8 — Resumo final
 
 Apresente:

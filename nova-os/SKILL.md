@@ -126,7 +126,11 @@ Próximos passos:
   • /painel            → ver todas as OS e os prazos
   • /inspecao-fisica   → quando voltar da inspeção, registrar o relato
   • /det-630           → se o empregador não entregar os documentos do DET
+  • /sessoes-os        → criar a sessão desta empresa no menu lateral (grupo OS ATIVAS)
 ```
+
+Após o resumo, ofereça em uma frase: *"Quer que eu já crie a sessão desta empresa no menu
+lateral (grupo OS ATIVAS)? É a /sessoes-os — o app fecha e reabre uma vez."*
 
 ## Regras
 

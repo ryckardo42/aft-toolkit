@@ -6,6 +6,23 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 20/07/2026 (3)
+<!-- commit: sessoes-os -->
+
+**Uma sessão de chat por empresa fiscalizada, organizada no menu lateral** — nova
+skill `/sessoes-os`: ela espelha as suas pastas de OS ATIVAS na barra lateral do
+app do Claude Code, criando uma sessão por empresa (com o nome da empresa e já
+apontando para a pasta da OS) dentro do grupo "OS ATIVAS". Sessões que você já
+tinha criado à mão são reconhecidas pelo nome e reaproveitadas, nunca
+duplicadas. Como o app só relê essas informações ao abrir, a skill aplica num
+"modo vigia": você fecha o app, ela aplica e o app reabre sozinho — com backup
+automático e um "desfazer" completo. O perfil do auditor (v4) aprendeu as
+regras de convivência: se você tratar de uma empresa fora da sessão dela, o
+Claude avisa e oferece encaminhar para a sessão certa; quando uma OS é
+arquivada, ele oferece arquivar a sessão junto. O `/nova-os` passa a oferecer a
+criação da sessão de cada auditoria nova, e o `/aft-setup` e o `/aft-atualizar`
+conferem se está tudo sincronizado.
+
 ## 20/07/2026 (2)
 <!-- commit: sfitweb-rel-embaraco-extras-pasta -->
 
