@@ -87,6 +87,7 @@ casadas pelo título), vínculos gravados. Se algo falhou, o log diz onde parou 
 
 | Sintoma | O que fazer |
 |---|---|
+| "Sessão não encontrada no disco" ao abrir uma sessão nova | **Normal e esperado** para empresa que nunca teve conversa: a sessão nasce vazia e o histórico só é criado na primeira mensagem. Basta enviar a primeira mensagem — ela começa já na pasta da OS, mantendo título e grupo. NÃO clique em "Apagar" (a sessão seria recriada na próxima sincronização) |
 | Grupo não apareceu após reabrir | Ler o log; se o script ainda aguardava, o app foi reaberto antes de fechar de fato — feche de novo (o vigia continua ativo) |
 | "estrutura do config não reconhecida" | O app mudou o formato interno numa atualização — rode /aft-atualizar; nada foi alterado |
 | Sessão criada não abre direito | `--desfazer` restaura tudo; reporte o caso |
