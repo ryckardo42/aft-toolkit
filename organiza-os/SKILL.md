@@ -14,9 +14,10 @@ description: >
   DET, mostra UM plano consolidado e — com uma única aprovação do AFT —
   renomeia as pastas para o padrão, cria/atualiza o memory.md e move os
   arquivos para os lugares que as demais skills esperam. Ao final, encadeia
-  /autos-lavrados (para trazer os autos do Sistema Auditor) e abre o painel
-  interativo. Nunca apaga nada. NÃO cadastra OS do zero (isso é /nova-os) nem
-  baixa nada do DET (isso é det-baixar).
+  /autos-lavrados (para trazer os autos do Sistema Auditor), abre o painel
+  interativo e confere se cada empresa tem sessão própria no menu lateral
+  (oferecendo a /sessoes-os quando faltar). Nunca apaga nada. NÃO cadastra OS
+  do zero (isso é /nova-os) nem baixa nada do DET (isso é det-baixar).
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
@@ -31,7 +32,8 @@ extraídos dos próprios documentos (empregador, CNPJ/CPF, notificações DET co
 e os arquivos nos lugares onde as demais skills (`/painel`, `/analise-preliminar`,
 `/det-630`, `/autos-lavrados`) esperam encontrá-los. Ao final, encadeia o
 `/autos-lavrados` (que traz os autos já transmitidos no Sistema Auditor para o
-memory.md e o painel) e abre o painel interativo para o AFT ver o panorama.
+memory.md e o painel), abre o painel interativo para o AFT ver o panorama e confere se
+cada empresa tem a própria sessão no menu lateral (grupo "OS ATIVAS" — `/sessoes-os`).
 
 Regras de ouro:
 - **Inventário e plano primeiro; execução só depois de UMA aprovação** — um único plano
@@ -237,7 +239,17 @@ Depois de organizar tudo:
    como reserva: `start "" "<pasta AFT>/painel.html"` — e lembre que o `/aft-atualizar`
    instala/repara o servidor.
 
-4. Resumo final (uma mensagem só, com a tabela de tudo):
+4. **Confira as sessões por empresa** (não altera nada):
+   ```bash
+   python ~/.claude/skills/_scripts/sessoes_os.py --status
+   ```
+   Leia a linha `JSON:` do final. Se `criar` > 0 (OS organizadas sem sessão própria no
+   menu lateral), informe no resumo e **ofereça rodar a `/sessoes-os` ao final** — ela
+   cria uma sessão por empresa no grupo "OS ATIVAS", mas precisa fechar e reabrir o app
+   (modo vigia), então nunca no meio da organização. Se o script falhar, apenas siga —
+   não é bloqueante.
+
+5. Resumo final (uma mensagem só, com a tabela de tudo):
 
 ```
 ✅ OS ATIVAS organizada — <N> pastas novas · <M> atualizadas · <V> vazias
@@ -249,9 +261,10 @@ Depois de organizar tudo:
 🧾 Autos lavrados: <resultado do /autos-lavrados em uma linha>
 ❓ Não identificados (intocados): <lista ou "nenhum">
 📊 Painel interativo aberto: http://127.0.0.1:8347
+🗂️ Sessões por empresa: <"todas no grupo OS ATIVAS" ou "N sem sessão — quer que eu rode a /sessoes-os? (o app fecha e reabre uma vez)">
 
 Próximos passos sugeridos: /analise-preliminar (respostas de DET) · /det-630 (omissões) ·
-/analise-acidente (OS de acidente)
+/analise-acidente (OS de acidente) · /sessoes-os (sessões por empresa, se faltarem)
 ```
 
 ## Encadeamento
