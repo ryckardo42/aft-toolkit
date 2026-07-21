@@ -8,12 +8,12 @@ description: >
   para corrigir", "redige a TN de correção", "notifica a empresa para sanar as
   irregularidades", "monta a notificação dessas irregularidades". Acione
   também PROATIVAMENTE logo após identificar irregularidade + NR/item + ementa
-  (em /inspecao-inicial, /PGR-analise ou narrativa de campo), oferecendo gerar
+  (em /auditoria-geral, /PGR-analise ou narrativa de campo), oferecendo gerar
   a notificação. Produz: introdução fixa (art. 18 do Decreto 4552/2002) + um
   item por irregularidade no formato "*Título* - item X da NR-Y: <exigência>
   [ementa]" (ementa via NotebookLM, só quando existir) + observações fixas,
   apresentado BLOCO A BLOCO para o AFT copiar no DET e salvo como .md na pasta
-  da OS. NÃO é o auto de infração (isso é /inspecao-inicial → /gera-ai) — é só
+  da OS. NÃO é o auto de infração (isso é /auditoria-geral → /gera-ai) — é só
   o TEXTO da notificação, pronto para colar.
 ---
 
@@ -22,7 +22,7 @@ description: >
 
 Gera o **texto** de uma notificação para a empresa **corrigir** irregularidades de Segurança e Medicina do Trabalho constatadas em inspeção física ou auditoria documental. O AFT cola o resultado no DET (campo Introdução + um Item Solicitado por irregularidade + campo Observações) e o documento fica salvo como `.md` na pasta da OS.
 
-Esta skill **só redige o texto da notificação**. Ela não lavra auto de infração (isso é `/inspecao-inicial` → `/gera-ai`). O preenchimento do template no DET é manual (o AFT cola cada bloco) — o toolkit não automatiza o DET.
+Esta skill **só redige o texto da notificação**. Ela não lavra auto de infração (isso é `/auditoria-geral` → `/gera-ai`). O preenchimento do template no DET é manual (o AFT cola cada bloco) — o toolkit não automatiza o DET.
 
 ## Pasta base
 `~/Documents/AFT/OS ATIVAS/<EMPREGADOR> <CNPJ>/`
@@ -34,7 +34,7 @@ Esta skill **só redige o texto da notificação**. Ela não lavra auto de infra
 A notificação final é salva como `.md` na pasta da OS, então preciso saber qual é.
 
 1. Se um argumento posicional (CNPJ de 14 dígitos ou substring do nome) foi passado, faça match nas pastas de `~/Documents/AFT/OS ATIVAS/`.
-2. Se a skill foi encadeada na mesma sessão (ex.: depois de `/inspecao-inicial`, `/PGR-analise`), herde a OS do contexto.
+2. Se a skill foi encadeada na mesma sessão (ex.: depois de `/auditoria-geral`, `/PGR-analise`), herde a OS do contexto.
 3. Múltiplos matches → `AskUserQuestion`. Zero matches e nenhum contexto → pergunte ao AFT o empregador (e, se quiser salvar mesmo sem pasta de OS, ofereça a Área de Trabalho como fallback).
 
 Guarde: `PASTA_OS`, `EMPREGADOR`.
@@ -47,7 +47,7 @@ Guarde: `PASTA_OS`, `EMPREGADOR`.
 
 A fonte é **contexto da sessão + lista colada** (a skill detecta):
 
-1. **Encadeada / contexto da sessão:** se a sessão já contém irregularidades enquadradas (saída de `/inspecao-inicial`, `/PGR-analise`, ou o `inspecao-fisica.md` da OS), reaproveite-as direto. Confirme com o AFT quais entram na notificação (ofereça marcar/desmarcar).
+1. **Encadeada / contexto da sessão:** se a sessão já contém irregularidades enquadradas (saída de `/auditoria-geral`, `/PGR-analise`, ou o `inspecao-fisica.md` da OS), reaproveite-as direto. Confirme com o AFT quais entram na notificação (ofereça marcar/desmarcar).
 2. **Colada:** se o AFT colou uma lista de irregularidades no prompt, use-a.
 3. **Standalone sem lista:** leia `## Pendências` e `## Inspeção física` do `memory.md` da OS (se existir) e liste candidatas; senão, peça ao AFT a lista.
 
@@ -69,7 +69,7 @@ Para **cada** irregularidade, você precisa de três coisas (capture o que falta
 
 Para cada irregularidade, busque o **código da ementa** no formato `XXXXXX-X` (ex.: `312467-3`). A ementa é **opcional**: se não houver ementa correspondente (ex.: orientação ou exigência sem ementa específica), o item sai **sem** o `[...]` no final — não invente código.
 
-Estratégia em 3 camadas (mesma de `/inspecao-inicial`):
+Estratégia em 3 camadas (mesma de `/auditoria-geral`):
 
 **Camada 1 — NotebookLM (preferencial, requer o setup do /aft-setup):**
 1. Resolva o `notebook_id`: leia `~/.claude/skills/config/notebooks.json` e pegue a key da NR (`nr-12`, `nr-35`, `nr-06`...). Para legislação trabalhista, use `ementario-legis` / `jornada` / `informalidade`.
@@ -194,7 +194,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 
 ## Encadeamento
 
-- **Origem natural:** logo após `/inspecao-inicial` ou `/PGR-analise` identificarem irregularidades + ementas, ofereça rodar `/tn-nco` para a empresa corrigir (especialmente em dupla visita / ME-EPP, onde a correção precede a autuação).
+- **Origem natural:** logo após `/auditoria-geral` ou `/PGR-analise` identificarem irregularidades + ementas, ofereça rodar `/tn-nco` para a empresa corrigir (especialmente em dupla visita / ME-EPP, onde a correção precede a autuação).
 - Depois de gerar, o AFT cola os blocos manualmente no DET (o toolkit não automatiza o preenchimento do DET).
 
 ---

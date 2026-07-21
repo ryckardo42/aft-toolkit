@@ -191,7 +191,7 @@ const ARCH = {
    "act": "Transcreve a narrativa ditada num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento."
   },
   {
-   "who": "/inspecao-inicial",
+   "who": "/auditoria-geral",
    "act": "Lê o relato, identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise, /aet-auditoria ou /analise-acidente (quando há acidente/doença do trabalho). Gate de dupla visita (ME/EPP)."
   },
   {
@@ -315,7 +315,7 @@ const ARCH = {
      "tech": "notebooklm ask · herda o modelo da sessão"
     },
     {
-     "nome": "/inspecao-inicial",
+     "nome": "/auditoria-geral",
      "role": "Lê o relato, identifica NR/ementa (via /consulta) e redige os autos (NRs + CLT), com gate de dupla visita.",
      "tech": "orquestra consultoras · herda o modelo da sessão"
     },
@@ -361,7 +361,7 @@ const ARCH = {
     },
     {
      "nome": "/analise-acidente",
-     "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx; ao final, oferece encadear /inspecao-inicial + /gera-ai.",
+     "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx; ao final, oferece encadear /auditoria-geral + /gera-ai.",
      "tech": "gerar_relatorio_docx.py · model: opus 1M"
     }
    ]

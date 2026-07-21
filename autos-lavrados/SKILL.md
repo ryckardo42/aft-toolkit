@@ -256,7 +256,7 @@ Regras:
 - `[x]` = auto **válido** lavrado (Passo 2.5); `[ ]` = ementa só em rascunho (pendente); linha `(cancelado)` sem checkbox = auto substituído (não conta).
 - 1 linha por auto, no máximo 1 frase curta (do `resumo_irregularidade`, sem dados pessoais).
 - **Chave de dedup das linhas `[x]` e `(cancelado)`: número do AI** (único por auto — permite ementas legitimamente repetidas, ex.: `001960-7`). As linhas `[ ]` pendentes, que ainda não têm AI, seguem sendo chaveadas por ementa.
-- **Promoção de pendências:** as skills `/inspecao-inicial`, `/det-630` e `/jornada-auto-afd-aej` deixam linhas `- [ ]` (por ementa) aqui. Ao confirmar a transmissão, promova a `- [x]` acrescentando o AI. Se a ementa tem **um** auto válido, promova a própria linha; se tem **vários** (`manter_todos` ou "relacionar todos"), gere **uma linha `[x]` por AI**.
+- **Promoção de pendências:** as skills `/auditoria-geral`, `/det-630` e `/jornada-auto-afd-aej` deixam linhas `- [ ]` (por ementa) aqui. Ao confirmar a transmissão, promova a `- [x]` acrescentando o AI. Se a ementa tem **um** auto válido, promova a própria linha; se tem **vários** (`manter_todos` ou "relacionar todos"), gere **uma linha `[x]` por AI**.
 - Se a linha (por AI, ou por ementa nas pendentes) já existe, **substitua** mantendo a ordem; se nova, **append**.
 
 Depois, adicione 1 linha em `## Registro de atividades` (append na tabela; não toque nas existentes):

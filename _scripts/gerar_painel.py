@@ -204,7 +204,9 @@ def parse_memory(path: Path) -> dict:
     # Campos extras do schema v2 (ficam vazios no esquema padrão — sem erro).
     data_inicio = parse_data(parse_fm(fm, "data_inicio") or "")
     data_vencimento = parse_data(parse_fm(fm, "data_vencimento") or "")
-    num_trab = parse_fm(fm, "num_trabalhadores")
+    num_trab = parse_fm(fm, "trabalhadores") or parse_fm(fm, "num_trabalhadores")
+    cnae = parse_fm(fm, "cnae")
+    grau_risco = parse_fm(fm, "grau_risco")
     ri = parse_fm(fm, "ri") or parse_fm(fm, "os") or ""
 
     # DETs — uma entrada por linha checkbox da seção.
@@ -246,6 +248,15 @@ def parse_memory(path: Path) -> dict:
         if cb and cb.group(1).strip().lower() != "x":
             pendencias.append(cb.group(2).strip())
 
+    # Anotações da auditoria (checkbox) — só as em aberto vão ao painel.
+    anotacoes = []
+    for linha in extrair_secao(corpo, "Anotações da auditoria").splitlines():
+        cb = RE_CHECKBOX.match(linha.strip())
+        if cb and cb.group(1).strip().lower() != "x":
+            texto_an = re.sub(r"<!--.*?-->", "", cb.group(2)).strip()
+            if texto_an:
+                anotacoes.append(texto_an)
+
     # Registro de atividades (tabela markdown).
     atividades = []
     for linha in extrair_secao(corpo, "Registro de atividades").splitlines():
@@ -268,10 +279,13 @@ def parse_memory(path: Path) -> dict:
         "embargo": parse_fm(fm, "embargo_interdicao") or "",
         "ri": ri,
         "num_trabalhadores": num_trab,
+        "cnae": cnae,
+        "grau_risco": grau_risco,
         "data_inicio": data_inicio,
         "data_vencimento": data_vencimento,
         "dets": dets,
         "pendencias": pendencias,
+        "anotacoes": anotacoes,
         "atividades": atividades,
         "autos_mem": autos_mem,
         "memoria": texto,
@@ -812,7 +826,7 @@ function copiaVelho(t,fim){const ta=document.createElement('textarea');ta.value=
 // Legendas dos comandos: resumo de cada skill vindo da arquitetura do toolkit.
 const CMDS=[
  ['/inspecao-fisica','Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento.'],
- ['/inspecao-inicial','Lê o relato de campo, identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
+ ['/auditoria-geral','Lê os achados (campo e anotações da auditoria), identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
  ['/gera-ai','Empacota os autos redigidos no TXT importável pelo Sistema Auditor, com anexos em PDF e pseudonimização reversível.'],
  ['/autos-lavrados','Confere no Sistema Auditor o que já foi transmitido e marca [x]/[ ] no memory.md; cada auto identificado pelo número do AI.'],
  ['/det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
@@ -832,6 +846,9 @@ function agCal(j){const v=DATA.venc[j];
   encodeURIComponent('Notificação DET '+v.codigo+' — '+v.empregador+' (AFT Toolkit)'),'_blank')}
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
+function agAnot(i,k){const o=DATA.os[i];api({acao:'anotacao_ok',pasta:o.pasta,texto:o.anotacoes[k]})}
+function agAnotAdd(i){const el=document.getElementById('anot-txt');const v=(el.value||'').trim();
+ if(!v){aviso('Escreva a anotação antes');return}api({acao:'anotacao_add',pasta:DATA.os[i].pasta,texto:v})}
 function agStatus(i,v){api({acao:'status',pasta:DATA.os[i].pasta,valor:v})}
 function agEmbargo(i,k){api({acao:'embargo',pasta:DATA.os[i].pasta,estado:k?'suspenso':'vigente'})}
 function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.value||'').trim();
@@ -865,7 +882,7 @@ function proximoPasso(o){
   '</b> sem entrega — cabe auto por omissão (art. 630 §4º CLT).',cmds:['/det-630','/tn-nco']};
  if((o.pendencias||[]).length)return{html:'Pendência aberta: '+esc(o.pendencias[0]),cmds:[]};
  if(!(o.autos||[]).length&&o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)
-  return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/inspecao-inicial']};
+  return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/auditoria-geral']};
  return null}
 function copiaPasso(i,k){const pp=proximoPasso(DATA.os[i]);
  if(pp)copia(pp.cmds[k]+' — OS '+DATA.os[i].empregador)}
@@ -913,6 +930,18 @@ function cartaoPendencias(o,i){
   '</span></h3><ul class="lista">'+o.pendencias.map((s,k)=>'<li>◻ '+esc(s)+
   (ATIVO&&o.pasta?'<button class="mini" onclick="agPend('+i+','+k+')">resolver</button>':'')+
   '</li>').join('')+'</ul></div>'}
+function cartaoAnotacoes(o,i){
+ const an=o.anotacoes||[];
+ let h='<div class="cartao"><h3>Anotações da auditoria <span class="cont">'+an.length+'</span></h3>';
+ if(an.length)h+='<ul class="lista">'+an.map((s,k)=>'<li>◻ '+esc(s)+
+  (ATIVO&&o.pasta?'<button class="mini" onclick="agAnot('+i+','+k+')">tratada</button>':'')+
+  '</li>').join('')+'</ul>';
+ else h+='<p class="vazio">nenhuma anotação em aberto</p>';
+ if(ATIVO&&o.pasta)h+='<div class="acoes" style="margin:8px 0 0;border:none;background:none;padding:0">'+
+  '<span style="flex:1"><input id="anot-txt" style="width:100%" placeholder="anotar constatação (SESMT mal dimensionado, ASO faltando...)" '+
+  'onkeydown="if(event.key===&quot;Enter&quot;)agAnotAdd('+i+')">'+
+  '<button class="mini" onclick="agAnotAdd('+i+')">anotar</button></span></div>';
+ return h+'</div>'}
 function cartaoInspecao(o){
  return '<div class="cartao"><h3>Inspeção física'+
   (o.inspecao.data?' <span class="cont">'+esc(o.inspecao.data)+'</span>':'')+'</h3>'+
@@ -988,6 +1017,8 @@ function abre(i){
   o.inicio?'Início '+esc(o.inicio)+' ('+esc(o.ha_dias)+')':'',
   o.vencimento?'Vence '+esc(o.vencimento):'',
   o.num_trabalhadores?esc(o.num_trabalhadores)+' trabalhadores':'',
+  o.cnae?'CNAE '+esc(o.cnae):'',
+  o.grau_risco?'Grau de risco '+esc(o.grau_risco):'',
   o.embargo?'Embargo/interdição: '+esc(o.embargo):'',
   o.caminho?'<span class="pasta-btn" onclick="copiaCaminho('+i+')">copiar caminho da pasta</span>':''
  ].filter(Boolean);
@@ -1003,6 +1034,7 @@ function abre(i){
  h+=cartaoDets(o,i);
  if((o.novas||[]).length)h+=cartaoNovas(o);
  if((o.pendencias||[]).length)h+=cartaoPendencias(o,i);
+ if(ATIVO&&o.pasta||(o.anotacoes||[]).length)h+=cartaoAnotacoes(o,i);
  if(o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)h+=cartaoInspecao(o);
  h+=cartaoTimeline(o,i);
  h+='</div><div>';
@@ -1135,6 +1167,8 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "embargo": o["embargo"],
             "ri": o["ri"],
             "num_trabalhadores": o["num_trabalhadores"] or "",
+            "cnae": o.get("cnae") or "",
+            "grau_risco": o.get("grau_risco") or "",
             "inicio": o["data_inicio"].strftime("%d/%m/%Y") if o["data_inicio"] else "",
             "ha_dias": dias_humano(o["data_inicio"], hoje),
             "vencimento": o["data_vencimento"].strftime("%d/%m/%Y") if o["data_vencimento"] else "",
@@ -1159,6 +1193,10 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "substituidos": o["autos_lavrados_md"]["substituidos"],
             "autos_pendentes": o["autos_lavrados_md"]["pendentes"],
             "pendencias": [datas_para_br(p) for p in o["pendencias"]],
+            # Anotações podem conter nome/CPF de trabalhador (PII): só na versão
+            # local (com_pasta), nunca no Artifact publicado.
+            "anotacoes": ([datas_para_br(a) for a in o.get("anotacoes", [])]
+                          if com_pasta else []),
             "atividades": [{"data": datas_para_br(a["data"]), "acao": a["acao"],
                             "detalhe": datas_para_br(a["detalhe"])}
                            for a in o["atividades"][-12:][::-1]],
@@ -1284,8 +1322,9 @@ def main() -> int:
                     "pasta": mem.parent.name, "caminho": str(mem.parent),
                     "empregador": mem.parent.name, "cnpj": "", "municipio": "",
                     "status": "erro", "embargo": "", "ri": "", "num_trabalhadores": None,
+                    "cnae": "", "grau_risco": "",
                     "data_inicio": None, "data_vencimento": None,
-                    "dets": [], "pendencias": [], "atividades": [],
+                    "dets": [], "pendencias": [], "anotacoes": [], "atividades": [],
                     "autos_mem": "", "memoria": "", "erro": str(e),
                 })
 

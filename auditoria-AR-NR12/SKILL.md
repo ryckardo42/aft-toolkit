@@ -370,5 +370,5 @@ análise como seção de fundamentação (a análise dos laudos vira o núcleo d
 - Cada conclusão do checklist precisa de evidência citável (trecho/página) ou declaração
   explícita de ausência.
 - Dados reais da empresa ficam nos arquivos da OS — não os exponha fora dela.
-- Esta skill **julga o documento**; não redige autos de infração (isso é /inspecao-inicial
+- Esta skill **julga o documento**; não redige autos de infração (isso é /auditoria-geral
   ou /aft-rt-rgi → /gera-ai) nem lavra interdição.

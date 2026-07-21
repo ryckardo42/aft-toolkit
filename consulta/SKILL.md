@@ -11,7 +11,7 @@ description: >
   penalidade + notas técnicas/precedentes); (3) REDIGIR minuta do campo
   "Histórico" do Auto de Infração com metodologia anti-nulidade. Para
   perguntas gerais, responde usando as fontes do notebook, com citações. É
-  SOMENTE consulta: não lavra autos nem gera o TXT (delega a /inspecao-inicial
+  SOMENTE consulta: não lavra autos nem gera o TXT (delega a /auditoria-geral
   → /gera-ai) e NUNCA inventa código, capitulação ou gradação — tudo vem do
   NotebookLM, com fonte.
 ---
@@ -30,7 +30,7 @@ impessoal, em terceira pessoa.
 
 > **Não é a skill de lavratura.** Esta skill **não** produz o auto estruturado (`=== AUTO DE
 > INFRAÇÃO #N ===`) nem o TXT do Sistema Auditor. Ela entrega **consulta + minuta de Histórico**.
-> Para efetivamente lavrar, encaminhe ao `/inspecao-inicial` (que redige o auto) e ao `/gera-ai`
+> Para efetivamente lavrar, encaminhe ao `/auditoria-geral` (que redige o auto) e ao `/gera-ai`
 > (que empacota). Se o AFT pedir "lavre o auto", redirecione para essas skills.
 
 ## Pré-requisito
@@ -172,7 +172,7 @@ Notas/precedentes: [nota técnica ou precedente da SIT, se houver — senão, "n
 
 Feche com o aviso fixo:
 > Minuta para revisão do AFT — você decide. Para lavrar de fato, leve a irregularidade ao
-> `/inspecao-inicial` (redige o auto completo) e depois ao `/gera-ai` (empacota o TXT). O
+> `/auditoria-geral` (redige o auto completo) e depois ao `/gera-ai` (empacota o TXT). O
 > Subtítulo 3 (OBSERVAÇÕES) é fixo e injetado pelo `/gera-ai` — não o inclua aqui.
 
 ---
@@ -212,4 +212,4 @@ entra na minuta.
   CPF ou razão social. Após registrar trabalhador no de-para da OS, refira-se a ele só pelos
   tokens `[[TRAB_NN]]`/`[[CPF_NN]]`.
 - Se o pedido for de lavratura/medida (auto, RT de interdição, notificação), **redirecione** para
-  a skill correta (`/inspecao-inicial`, `/aft-rt-rgi`, `/tn-nco`) — esta skill só subsidia.
+  a skill correta (`/auditoria-geral`, `/aft-rt-rgi`, `/tn-nco`) — esta skill só subsidia.

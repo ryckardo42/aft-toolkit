@@ -1,7 +1,7 @@
 # Ementas frequentes — consulta direta (Camada 0 da FASE 2)
 
 Lista curada das ementas que aparecem na maioria das fiscalizações de SST. Consumida
-pela skill `/inspecao-inicial` **antes** do NotebookLM: quando a irregularidade casa
+pela skill `/auditoria-geral` **antes** do NotebookLM: quando a irregularidade casa
 com a coluna **Quando usar** de uma entrada abaixo, use o código direto (sem consultar
 o NotebookLM) e leve para a confirmação do Passo 3.
 

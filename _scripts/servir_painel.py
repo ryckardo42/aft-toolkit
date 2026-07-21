@@ -8,6 +8,8 @@ no navegador quando o painel é aberto por este endereço, não pelo file://):
 
   - marcar/desmarcar uma notificação DET como respondida ([ ] ↔ [x]);
   - resolver uma pendência ([ ] → [x], com carimbo de data);
+  - anotar uma constatação da auditoria (nova linha em Anotações da auditoria)
+    ou marcá-la como tratada ([ ] → [x]);
   - registrar uma atividade (nova linha na tabela Registro de atividades);
   - mudar o status da OS (front-matter `status:`);
   - alternar embargo/interdição entre vigente/suspenso (front-matter
@@ -158,6 +160,60 @@ def acao_pendencia(texto: str, alvo: str) -> tuple[str, str]:
     raise ValueError("pendência não encontrada (ou já resolvida)")
 
 
+def acao_anotacao_ok(texto: str, alvo: str) -> tuple[str, str]:
+    """Marca [x] a anotação em aberto cujo texto visível bate com `alvo`."""
+    linhas = texto.splitlines(keepends=True)
+    ini, fim = limites_secao(linhas, ("Anotações da auditoria", "Anotacoes da auditoria"))
+    if ini < 0:
+        raise ValueError("seção 'Anotações da auditoria' não encontrada")
+    hoje = datetime.date.today().strftime("%d/%m/%Y")
+    for i in range(ini, fim):
+        m = RE_CHECKBOX.match(linhas[i].rstrip("\n"))
+        if m and m.group(2).strip().lower() != "x" \
+                and sem_comentario(m.group(4)) == alvo.strip():
+            fim_l = "\n" if linhas[i].endswith("\n") else ""
+            linhas[i] = (m.group(1) + "x" + m.group(3) + m.group(4)
+                         + f" <!-- tratada em {hoje} (painel) -->" + fim_l)
+            return "".join(linhas), "anotação marcada como tratada"
+    raise ValueError("anotação não encontrada (ou já tratada)")
+
+
+def acao_anotacao_add(texto: str, descricao: str) -> tuple[str, str]:
+    """Acrescenta '- [ ] dd/mm/aaaa — texto' em '## Anotações da auditoria'.
+    Cria a seção (antes de 'Registro de atividades', ou no fim) se faltar."""
+    descricao = " ".join(descricao.split())
+    if not descricao:
+        raise ValueError("anotação vazia")
+    hoje = datetime.date.today().strftime("%d/%m/%Y")
+    nova = f"- [ ] {hoje} — {descricao}\n"
+    linhas = texto.splitlines(keepends=True)
+    ini, fim = limites_secao(linhas, ("Anotações da auditoria", "Anotacoes da auditoria"))
+    if ini < 0:
+        # Seção ausente: cria antes de 'Registro de atividades', senão no fim.
+        bloco = f"## Anotações da auditoria\n{nova}\n"
+        reg_ini = -1
+        for i, l in enumerate(linhas):
+            if l.strip().startswith("## ") and l.strip()[3:].strip().startswith("Registro de atividades"):
+                reg_ini = i
+                break
+        if reg_ini >= 0:
+            linhas.insert(reg_ini, bloco)
+        else:
+            if linhas and not linhas[-1].endswith("\n"):
+                linhas[-1] += "\n"
+            linhas.append("\n" + bloco)
+        return "".join(linhas), "anotação registrada"
+    # Seção existe: remove placeholder '_(vazio)_' e insere após o cabeçalho.
+    ins = ini
+    for i in range(ini, fim):
+        if linhas[i].strip() == "_(vazio)_":
+            linhas.pop(i)
+            fim -= 1
+            break
+    linhas.insert(ins, nova)
+    return "".join(linhas), "anotação registrada"
+
+
 def acao_atividade(texto: str, descricao: str) -> tuple[str, str]:
     """Acrescenta uma linha na tabela Registro de atividades (data de hoje)."""
     descricao = " ".join(descricao.split())
@@ -225,6 +281,8 @@ def acao_embargo(texto: str, estado: str) -> tuple[str, str]:
 ACOES = {
     "det": lambda t, p: acao_det(t, p.get("codigo", "")),
     "pendencia": lambda t, p: acao_pendencia(t, p.get("texto", "")),
+    "anotacao_ok": lambda t, p: acao_anotacao_ok(t, p.get("texto", "")),
+    "anotacao_add": lambda t, p: acao_anotacao_add(t, p.get("texto", "")),
     "atividade": lambda t, p: acao_atividade(t, p.get("texto", "")),
     "status": lambda t, p: acao_status(t, p.get("valor", "")),
     "embargo": lambda t, p: acao_embargo(t, p.get("estado", "")),

@@ -148,7 +148,7 @@ python ~/.claude/skills/_scripts/servir_painel.py "<PASTA_OS_ATIVAS>" --abrir
   `encerrada`) e alternar **embargo/interdição** entre vigente/suspenso (preserva a
   descrição já registrada no campo `embargo_interdicao`).
 - **Botões de comando**: copiam para a área de transferência um comando pronto
-  (`/inspecao-fisica`, `/inspecao-inicial`, `/gera-ai`, `/autos-lavrados`, `/det-630`,
+  (`/inspecao-fisica`, `/auditoria-geral`, `/gera-ai`, `/autos-lavrados`, `/det-630`,
   `/tn-nco`, `/aft-rt-rgi`, `/sfitweb-rel` — sempre com `— OS <EMPREGADOR>` anexado)
   para o AFT colar no Claude Code; ao passar o mouse, cada botão mostra uma legenda com
   o resumo da skill (texto vindo da arquitetura do toolkit). Ações que exigem julgamento

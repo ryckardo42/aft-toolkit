@@ -11,9 +11,9 @@ description: >
   Varre os documentos, redige o relatório em texto contínuo no roteiro fixo de
   6 seções, propõe os fatores causais com os códigos oficiais do SFIT
   (famílias 251 a 260) para o AFT confirmar, gera o .docx e, ao final,
-  PERGUNTA se deseja encadear /inspecao-inicial (autos) e /gera-ai. NÃO redige
+  PERGUNTA se deseja encadear /auditoria-geral (autos) e /gera-ai. NÃO redige
   os autos sozinha e NÃO inventa fatos, códigos ou ementas. Não confundir com
-  /inspecao-fisica (relato de campo) nem /inspecao-inicial (autos): esta skill
+  /inspecao-fisica (relato de campo) nem /auditoria-geral (autos): esta skill
   produz a ANÁLISE do acidente.
 ---
 
@@ -198,10 +198,10 @@ Concluído o relatório, **pergunte** (não faça automaticamente):
 
 > *"Deseja que eu redija os autos de infração decorrentes desta análise?"*
 
-- **Sim** → acione `/inspecao-inicial` passando as irregularidades já apuradas (NR, fato,
+- **Sim** → acione `/auditoria-geral` passando as irregularidades já apuradas (NR, fato,
   trabalhadores expostos); ela redige os autos consultando o ementário, e depois `/gera-ai`
   empacota o TXT do Sistema Auditor.
-- **Não** → encerre, lembrando que os autos podem ser redigidos depois com `/inspecao-inicial`.
+- **Não** → encerre, lembrando que os autos podem ser redigidos depois com `/auditoria-geral`.
 
 Sugira também, quando couber, a **notificação de correção** via `/tn-nco` e a requisição de
 documentos faltantes (ex.: PCMSO, laudo necroscópico do IML) via **DET**.
@@ -213,7 +213,7 @@ documentos faltantes (ex.: PCMSO, laudo necroscópico do IML) via **DET**.
 Notebook de metodologia: **guia-analise-acidentes** (`notebook_id`
 `aefa56af-5eb5-4558-8454-827173be228c`). Use-o para fundamentar a Árvore de Causas e a
 classificação dos fatores. Os notebooks de NR e de ementário entram **só** na etapa de
-autos (delegada à `/inspecao-inicial`). Consulta padrão:
+autos (delegada à `/auditoria-geral`). Consulta padrão:
 
 ```bash
 notebooklm ask "<pergunta genérica de metodologia, sem PII>" --notebook aefa56af-5eb5-4558-8454-827173be228c --json
@@ -233,5 +233,5 @@ já está nesta skill.
 - **Não atribua culpa exclusiva ao trabalhador.**
 - **Privacidade:** processamento local; ao NotebookLM, só descrição genérica.
 - **Saída em .docx**, com acentuação completa em português.
-- A skill **não** redige os autos (isso é `/inspecao-inicial`) nem empacota o TXT (isso é
+- A skill **não** redige os autos (isso é `/auditoria-geral`) nem empacota o TXT (isso é
   `/gera-ai`): ela produz a **análise** e encadeia, mediante confirmação do AFT.

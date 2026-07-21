@@ -1,7 +1,7 @@
 # Blocos fixos de auto de infração (AFT Toolkit)
 
 Fonte única dos textos FIXOS e LITERAIS dos autos de infração. As skills que redigem
-autos (`/inspecao-inicial`, `/aft-rt-rgi`, `/registro`, `/det-630`,
+autos (`/auditoria-geral`, `/aft-rt-rgi`, `/registro`, `/det-630`,
 `/jornada-auto-afd-aej`, `/PGR-analise`, ...) **não escrevem mais o bloco 3** — elas
 terminam o auto no bloco 2 (IRREGULARIDADE) seguido de ELEMENTOS DE CONVICÇÃO. O
 **`/gera-ai` injeta o bloco 3 abaixo automaticamente em todo e qualquer auto**, pelo

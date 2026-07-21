@@ -23,7 +23,7 @@ description: >
 Abrir uma nova fiscalização: criar a pasta da empresa em `~/Documents/AFT/OS ATIVAS/` e a
 ficha `memory.md` com os dados básicos e, se já houver, a notificação do DET com o prazo de
 entrega. É o "começo do fluxo" — equivale a abrir uma OS. Depois, o `/painel` mostra todas as
-OS e seus prazos, e as demais skills (`/inspecao-fisica`, `/inspecao-inicial`, `/gera-ai`...)
+OS e seus prazos, e as demais skills (`/inspecao-fisica`, `/auditoria-geral`, `/gera-ai`...)
 trabalham dentro dessa pasta.
 
 Tom: simples e direto, para quem está começando. Pergunte só o necessário, em uma mensagem.
@@ -43,9 +43,14 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 | Nome da auditoria | **Sim** | em CAIXA ALTA, padrão das pastas. Pode ser a razão social, um nome fantasia ou qualquer identificação que o AFT prefira usar (ex.: "TRANSPORTADORA XYZ", "DENUNCIA POSTO CENTRO") — com ou sem CNPJ/CPF embutido |
 | CNPJ (14 díg.) **ou** CPF/CAEPF (11 díg.) | Não | empregador pessoa jurídica usa CNPJ; pessoa física (ex.: produtor rural) usa CPF/CAEPF. Aceite com ou sem pontuação; guarde só dígitos. Se o AFT ainda não sabe ou não quer informar agora, siga sem — só se torna obrigatório na hora de gerar os autos (`/gera-ai`) |
 | Município | Não | onde fica o estabelecimento |
+| Nº de trabalhadores | Não | quantos no estabelecimento (alimenta CIPA/SESMT depois) |
+| CNAE principal | Não | ex.: `4120-4/00`. Se informado, derive o grau de risco pelo Quadro I da NR-04 (`/cnae-grau-risco-nr04`) — não pergunte o grau |
+| Grau de risco | Não | 1 a 4 — só pergunte se não houver CNAE para derivar |
 | Notificação DET — código | Não | ex.: `RMNHIHSH9525MU` (se já notificou pelo DET) |
 | DET — data de ciência | Não | dd/mm/aaaa |
 | DET — prazo de entrega | Não | dd/mm/aaaa (é o que o painel vigia) |
+
+> Trabalhadores/CNAE/grau de risco quase nunca são conhecidos ao abrir a OS — são **opcionais** aqui. Se o AFT não informar, deixe vazios: as skills `/auditoria-geral` e `/inspecao-fisica` os coletam depois (dos documentos ou perguntando uma vez).
 
 > Se o AFT ainda não notificou nada pelo DET, deixe a seção de DET vazia — dá para
 > acrescentar depois (basta editar o `memory.md` ou rodar `/det-630`/`/nova-os` de novo).
@@ -76,7 +81,7 @@ ls ~/Documents/AFT/"OS ATIVAS"/
 ## Passo 3 — Escrever o memory.md
 
 Crie `~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/memory.md` neste esquema (front-matter
-leve + seções fixas). É o mesmo esquema que `/gera-ai`, `/inspecao-inicial` e `/det-630`
+leve + seções fixas). É o mesmo esquema que `/gera-ai`, `/auditoria-geral` e `/det-630`
 mantêm, e que o `/painel` lê:
 
 ```markdown
@@ -84,6 +89,9 @@ mantêm, e que o `/painel` lê:
 empregador: <NOME_DA_AUDITORIA>
 cnpj: "<14 dígitos, ou vazio se ainda não informado>"
 municipio: <município ou vazio>
+trabalhadores: <N, ou vazio>
+cnae: "<XXXX-X/XX, ou vazio>"
+grau_risco: <1 a 4, ou vazio>
 status: em_andamento
 ---
 # <NOME_DA_AUDITORIA>
@@ -99,11 +107,18 @@ _(vazio)_
 ## Autos lavrados
 _(vazio)_
 
+## Anotações da auditoria
+_(vazio)_
+
 ## Registro de atividades
 | Data | Ação | Detalhes |
 |------|------|----------|
 | <dd/mm/aaaa> | OS cadastrada | via /nova-os |
 ```
+
+> **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor.
+>
+> **`## Anotações da auditoria`**: nasce vazia. É onde o AFT registra constatações da inspeção e da análise documental (SESMT/CIPA subdimensionado, ASO faltando, programa vencido…) no formato `- [ ] dd/mm/aaaa — texto`. A `/auditoria-geral` lê as anotações em aberto para redigir os autos; o painel mostra e permite adicionar/resolver.
 
 Regras:
 - **`prazo <dd/mm/aaaa>`** é a chave que o `/painel` vigia — escreva a palavra `prazo` seguida

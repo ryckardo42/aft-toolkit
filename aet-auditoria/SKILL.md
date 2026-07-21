@@ -13,7 +13,7 @@ description: >
   aponta irregularidades com citação de página/folha e oferece a redação dos
   autos (formato 3 subtítulos) no formato do /gera-ai, que empacota o TXT com
   a própria AET anexa a cada AI. NÃO confundir com /PGR-analise (PGR sob a
-  NR-01) nem com /inspecao-inicial (achados de campo): esta skill audita o
+  NR-01) nem com /auditoria-geral (achados de campo): esta skill audita o
   documento AET sob a NR-17.
 ---
 

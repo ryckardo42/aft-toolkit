@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v5 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v6 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -109,7 +109,8 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Pedir documentos que presumo existir, pelo DET (PGR, controles de jornada, ASOs...) → `/NAD`
 - Narrar a visita de inspeção → `/inspecao-fisica`
 - Consultar os ementários/notebooks (tirar dúvida ou enquadrar um fato: ementa + capitulação + minuta de Histórico) → `/consulta`
-- Redigir autos de infração → `/inspecao-inicial` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
+- Redigir autos de infração (dos achados de campo E/OU da auditoria documental) → `/auditoria-geral` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
+- Anotar uma constatação da auditoria (SESMT/CIPA mal dimensionado, ASO faltando, programa vencido…) → registrar em `## Anotações da auditoria` do memory.md (a `/auditoria-geral` depois transforma em auto)
 - Trabalhador sem registro → `/registro`
 - Analisar PGR → `/PGR-analise`
 - Auditar AET (Análise Ergonômica do Trabalho, NR-17) → `/aet-auditoria`

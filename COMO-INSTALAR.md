@@ -106,7 +106,7 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 | Cadastrar uma auditoria nova | `/nova-os` |
 | Ver suas OS e prazos de DET | `/painel` |
 | Voltou de uma inspeção | `/inspecao-fisica` e narre o que viu |
-| Quer redigir os autos | `/inspecao-inicial` |
+| Quer redigir os autos | `/auditoria-geral` |
 | Trabalhador sem registro | `/registro` |
 | Analisar um PGR | `/PGR-analise` |
 | Empresa não entregou documentos do DET | `/det-630` |

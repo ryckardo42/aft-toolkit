@@ -15,7 +15,7 @@ description: >
   monta um checklist de documentos a solicitar e, com aprovação do AFT,
   encadeia a /NAD. Salva tudo em preparacao.md na pasta da OS. NÃO redige
   auto nem faz o relato de campo (isso é /inspecao-fisica →
-  /inspecao-inicial, depois da visita).
+  /auditoria-geral, depois da visita).
 ---
 
 # preparacao-acao-fiscal — Planejamento pré-visita da ação fiscal
@@ -25,7 +25,7 @@ description: >
 
 Organizar o que o AFT já sabe **antes de ir a campo**: quem vai fiscalizar, por quê (denúncia, OS, rotina), o que precisa estudar antes (temas técnicos, via NotebookLM) e quais documentos vale a pena já solicitar pelo DET (via `/NAD`). O resultado é um `preparacao.md` na pasta da OS — um roteiro de estudo e ação, não um auto nem um relato de inspeção.
 
-Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o próximo passo é `/inspecao-fisica` (relato do que foi constatado) → `/inspecao-inicial` (autos). Esta skill **não** redige autos e **não** registra achados de campo — ela planeja.
+Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o próximo passo é `/inspecao-fisica` (relato do que foi constatado) → `/auditoria-geral` (autos). Esta skill **não** redige autos e **não** registra achados de campo — ela planeja.
 
 ## Pasta base
 `~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/nova-os`)

@@ -12,7 +12,7 @@ description: >
   estrutura de assinatura do PDF por código, confere item a item os requisitos do art. 89
   e entrega um parecer conciso já encaminhável para autuação (com ementa 002277-2 ou
   002278-0, capitulação e minuta de histórico). NÃO use para lavratura geral de autos
-  (use /inspecao-inicial).
+  (use /auditoria-geral).
 ---
 
 # jornada-atestado — Auditor de Atestado Técnico e Termo de Responsabilidade (REP/PTRP)

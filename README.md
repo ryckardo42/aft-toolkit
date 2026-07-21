@@ -54,8 +54,8 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | Skill | O que faz |
 |---|---|
 | `/inspecao-fisica` | Transforma a narrativa ditada da visita num relato de campo estruturado (`inspecao-fisica.md`) — fiel, sem enquadramento |
-| `/consulta` | Consulta os ementários/notebooks do NotebookLM: tira dúvidas técnico-jurídicas **ou** enquadra um fato — missão tripla (IDENTIFICAR a ementa, FUNDAMENTAR capitulação/gradação/notas, REDIGIR minuta de Histórico anti-nulidade). Só consulta; não lavra (delega a `/inspecao-inicial`/`/gera-ai`) |
-| `/inspecao-inicial` | Lê o relato de campo, identifica NR/ementa (NotebookLM) e redige os autos de infração (todas as NRs + CLT), com gate de dupla visita |
+| `/consulta` | Consulta os ementários/notebooks do NotebookLM: tira dúvidas técnico-jurídicas **ou** enquadra um fato — missão tripla (IDENTIFICAR a ementa, FUNDAMENTAR capitulação/gradação/notas, REDIGIR minuta de Histórico anti-nulidade). Só consulta; não lavra (delega a `/auditoria-geral`/`/gera-ai`) |
+| `/auditoria-geral` | Lê o relato de campo, identifica NR/ementa (NotebookLM) e redige os autos de infração (todas as NRs + CLT), com gate de dupla visita |
 | `/registro` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
 | `/PGR-analise` | Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas |
 | `/aet-auditoria` | Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e AET anexada a cada auto |
@@ -95,7 +95,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 
 ## Modo rápido: cada skill funciona isolada
 
-O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos de DET e manter o painel atualizado — mas **nenhuma skill de redação exige esse fluxo**. Você pode chamar `/inspecao-inicial`, `/registro`, `/aft-rt-rgi`, `/PGR-analise` ou `/det-630` direto, colar a narrativa da inspeção e receber o texto do auto pronto, sem nunca ter rodado `/nova-os` e sem precisar do CNPJ real (um nome fantasia basta — o texto do auto nunca embute o CNPJ no corpo, ele é só metadado administrativo). O CNPJ só passa a ser obrigatório no `/gera-ai`, porque é um campo exigido pelo próprio Sistema Auditor (não pelo toolkit) para a importação do TXT — ou seja, dá pra usar o toolkit só para gerar o texto dos autos, sem nunca empacotar nada.
+O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos de DET e manter o painel atualizado — mas **nenhuma skill de redação exige esse fluxo**. Você pode chamar `/auditoria-geral`, `/registro`, `/aft-rt-rgi`, `/PGR-analise` ou `/det-630` direto, colar a narrativa da inspeção e receber o texto do auto pronto, sem nunca ter rodado `/nova-os` e sem precisar do CNPJ real (um nome fantasia basta — o texto do auto nunca embute o CNPJ no corpo, ele é só metadado administrativo). O CNPJ só passa a ser obrigatório no `/gera-ai`, porque é um campo exigido pelo próprio Sistema Auditor (não pelo toolkit) para a importação do TXT — ou seja, dá pra usar o toolkit só para gerar o texto dos autos, sem nunca empacotar nada.
 
 ## Fluxo típico de uma fiscalização
 
@@ -106,7 +106,7 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
    /painel                  → a qualquer momento, vê todas as OS e os prazos vencendo
 1. Visita ao estabelecimento
 2. /inspecao-fisica      → narra o que viu; vira relato estruturado na pasta da OS
-3. /inspecao-inicial     → enquadra NR/ementa e redige os autos
+3. /auditoria-geral     → enquadra NR/ementa e redige os autos
    (desvios automáticos: /registro p/ trabalhador sem registro ·
     /aft-rt-rgi p/ risco grave e iminente · /PGR-analise p/ auditoria do PGR)
 4. /gera-ai              → TXT importável + anexos na pasta Autos DD-MM/
@@ -165,7 +165,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel, servir_painel, det_sync, instalar_rotina_painel, instalar_servidor_painel)
-├── aft-setup/ · aft-doctor/ · aft-atualizar/ · nova-skill/ · notebooklm-login/ · nova-os/ · organiza-os/ · painel/ · agenda-det/ · gera-ai/ · inspecao-fisica/ · inspecao-inicial/
+├── aft-setup/ · aft-doctor/ · aft-atualizar/ · nova-skill/ · notebooklm-login/ · nova-os/ · organiza-os/ · painel/ · agenda-det/ · gera-ai/ · inspecao-fisica/ · auditoria-geral/
 ├── preparacao-acao-fiscal/ · NAD/   (planejamento pré-visita e notificação de documentos)
 ├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · auditoria-AR-NR12/ · rt-manutencao/ · analise-acidente/ · autos-lavrados/ · revisa-auto/ · modelo-docx/ · sessoes-os/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)

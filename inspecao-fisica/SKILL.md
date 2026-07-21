@@ -10,9 +10,9 @@ description: >
   inspeção física". A skill pega a narrativa bruta e a converte numa lista de bullet points
   fiéis (descrição da visita + irregularidades constatadas), salvando em `inspecao-fisica.md`
   na pasta da OS para ser consumida depois por /PGR-analise (confronto campo × PGR) e
-  /inspecao-inicial (redação dos autos). É PURAMENTE DESCRITIVA: não classifica NR, não cita
+  /auditoria-geral (redação dos autos). É PURAMENTE DESCRITIVA: não classifica NR, não cita
   ementa, não enquadra infração nem opina — só organiza os fatos relatados. Não confundir com
-  /inspecao-inicial, que redige os autos de infração; esta skill apenas produz o relato de
+  /auditoria-geral, que redige os autos de infração; esta skill apenas produz o relato de
   campo que aquela consome.
 ---
 
@@ -29,7 +29,7 @@ durável.
 Esta skill faz **uma coisa só, muito bem**: transforma essa narrativa em uma lista de bullet
 points fiéis e salva em `inspecao-fisica.md` na pasta da OS. Esse arquivo é a memória de campo
 da fiscalização — depois a `/PGR-analise` o lê para confrontar a realidade in loco contra o
-PGR, e a `/inspecao-inicial` o usa como base factual para redigir os autos.
+PGR, e a `/auditoria-geral` o usa como base factual para redigir os autos.
 
 **Princípio central — fidelidade acima de tudo.** O valor deste relato é ser uma transcrição
 honesta do que o AFT constatou. Nomes, datas, valores, jornadas, funções e CNPJ têm peso
@@ -39,7 +39,7 @@ disse e sem remover nada que ele disse.
 
 **Esta skill NÃO classifica.** Ela não cita NR, não menciona ementa, não escreve "isso
 configura infração ao item X", não sugere enquadramento. Essa inteligência jurídica é trabalho
-da `/inspecao-inicial` e da `/PGR-analise`. Aqui, só os fatos.
+da `/auditoria-geral` e da `/PGR-analise`. Aqui, só os fatos.
 
 **Nota de privacidade (política do toolkit).** O relato salvo em disco é a fonte de prova local
 e mantém os nomes reais — ele nunca sai do computador do AFT. Os dados pessoais entram no chat
@@ -198,7 +198,7 @@ marque o que já está tokenizado (`[já no de-para]`) versus o que está solto 
 Depois de salvar, ofereça o próximo passo natural do toolkit:
 
 > "Salvei em `inspecao-fisica.md`. Quer que eu siga para `/PGR-analise` (confronta estes
-> achados de campo contra o PGR da empresa) ou `/inspecao-inicial` (redige os autos de
+> achados de campo contra o PGR da empresa) ou `/auditoria-geral` (redige os autos de
 > infração a partir do relato)?"
 
 ---

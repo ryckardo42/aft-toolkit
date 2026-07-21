@@ -14,7 +14,7 @@ description: >
   X.X.X da NR-YY: Apresentar [...]. [ementa]" (SST) ou com artigo de
   lei/CLT (não-SST), ementa via NotebookLM só quando existir, apresentado
   BLOCO A BLOCO para colar no DET e salvo como .md na pasta da OS. NÃO é
-  auto de infração nem TN de correção (isso é /inspecao-inicial → /gera-ai
+  auto de infração nem TN de correção (isso é /auditoria-geral → /gera-ai
   e /tn-nco) — é só o TEXTO da notificação de documentos, pronto para colar.
 ---
 
@@ -23,7 +23,7 @@ description: >
 
 Gera o **texto** de uma notificação para a empresa **apresentar** documentos que o AFT presume existirem (PGR, controles de jornada, ASOs, atas da CIPA, folha de pagamento, etc.), via DET. Verbo central: **Apresentar**. O AFT cola o resultado no DET (campo Introdução + um Item Solicitado por documento + campo Observações) e o documento fica salvo como `.md` na pasta da OS.
 
-Esta skill **só redige o texto da notificação**. Não lavra auto de infração (isso é `/inspecao-inicial` → `/gera-ai`) nem notifica correção de irregularidade já constatada (isso é `/tn-nco` — verbo "Corrigir"). O preenchimento do template no DET é manual — o toolkit não automatiza o DET.
+Esta skill **só redige o texto da notificação**. Não lavra auto de infração (isso é `/auditoria-geral` → `/gera-ai`) nem notifica correção de irregularidade já constatada (isso é `/tn-nco` — verbo "Corrigir"). O preenchimento do template no DET é manual — o toolkit não automatiza o DET.
 
 ## Pasta base
 `~/Documents/AFT/OS ATIVAS/<EMPREGADOR> <CNPJ>/`
@@ -66,7 +66,7 @@ Para **cada** documento, capture:
 
 Para cada documento, busque o **código da ementa** no formato `XXXXXX-X` (ex.: `312467-3`). A ementa é **opcional**: se não houver ementa correspondente à falta de apresentação daquele documento, o item sai **sem** o `[...]` no final — não invente código.
 
-Estratégia em 3 camadas (mesma de `/tn-nco` e `/inspecao-inicial`):
+Estratégia em 3 camadas (mesma de `/tn-nco` e `/auditoria-geral`):
 
 **Camada 1 — NotebookLM (preferencial):**
 1. Resolva o `notebook_id`: leia `~/.claude/skills/config/notebooks.json`.

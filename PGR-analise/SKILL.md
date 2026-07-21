@@ -156,7 +156,7 @@ como elemento de convicção ao lado do trecho (ou da ausência) no PGR.
 **Achados sem correspondência nas 7 ementas de PGR:** alguns achados de campo são infrações
 autônomas de outras NRs e não dizem respeito ao conteúdo do PGR. Esta skill é especialista
 em **PGR/NR-01 e permanece estritamente nesse escopo** — não enquadra, não comenta e não
-gera autos de outras NRs (para isso, use `/inspecao-inicial`). Use esses achados apenas,
+gera autos de outras NRs (para isso, use `/auditoria-geral`). Use esses achados apenas,
 quando couber, como contexto de que o ambiente tem riscos relevantes que o PGR deveria refletir.
 
 ### Etapa 5: Pós-análise

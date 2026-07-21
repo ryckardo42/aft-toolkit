@@ -1,21 +1,30 @@
 ---
-name: inspecao-inicial
+name: auditoria-geral
 description: >
-  Use este skill quando o AFT descrever irregularidades trabalhistas encontradas
-  na PRIMEIRA VISITA de inspeção a uma empresa e quiser redigir autos de infração.
-  Acione com: "inspeção inicial", "primeira visita", "visita inicial", "achados de campo",
-  "auto de infração", "autuação", "ementa", "gerar auto", "lavrar auto",
-  "irregularidade", "fiscalização SST", "inspeção", "constatei irregularidades",
-  "achados da inspeção". Cobre TODAS as NRs + legislação trabalhista (CLT).
-  Guia o auditor por 6 fases: contexto da OS → narrativa → NR/ementa via NotebookLM →
-  redação dos autos → atualização do memory.md → encadeamento com /gera-ai e /aft-rt-rgi.
-  A fonte dos achados é o arquivo `inspecao-fisica.md` da pasta da OS (relato de campo gerado
-  pela /inspecao-fisica); na ausência dele, aceita a narrativa colada pelo AFT.
-  NÃO empacota o TXT importável — delega ao /gera-ai após redigir.
+  Use este skill quando o AFT quiser ENQUADRAR irregularidades trabalhistas e redigir
+  autos de infração — seja a partir da inspeção física (campo) OU da auditoria documental
+  (análise dos documentos da empresa). Acione com: "/auditoria-geral", "faça a auditoria",
+  "faça a análise", "auditoria dos documentos", "emente as irregularidades", "inspeção
+  inicial", "primeira visita", "achados de campo", "auto de infração", "autuação",
+  "ementa", "gerar auto", "lavrar auto", "irregularidade", "fiscalização SST", "constatei
+  irregularidades", "enquadrar as constatações". Cobre TODAS as NRs + legislação
+  trabalhista (CLT). Guia o auditor por 6 fases: contexto da OS → coleta de achados →
+  NR/ementa via NotebookLM → redação dos autos → atualização do memory.md → encadeamento
+  com /gera-ai e /aft-rt-rgi. As DUAS fontes de achados são: o arquivo `inspecao-fisica.md`
+  da pasta da OS (relato de campo da /inspecao-fisica) E a seção `## Anotações da auditoria`
+  do memory.md (constatações lançadas durante a análise documental); na ausência de ambos,
+  aceita a narrativa colada pelo AFT. NÃO empacota o TXT importável — delega ao /gera-ai
+  após redigir. NÃO confundir com /auditoria-AR-NR12 (julga laudo de apreciação de riscos
+  de máquina) nem com /aet-auditoria.
 ---
 
-# inspecao-inicial — Inspeção Inicial com Redação de Autos de Infração
+# auditoria-geral — Auditoria (campo + documental) com Redação de Autos de Infração
 **AFT Toolkit** — versão para Windows (Claude Code desktop)
+
+> Antes chamada `/auditoria-geral`. O nome mudou porque a skill nunca foi só da "inicial":
+> ela enquadra e redige autos tanto dos achados de campo quanto da auditoria documental
+> (análise do PGR, do PPRA, dos ASOs, das respostas ao DET, etc.). Os gatilhos antigos
+> ("inspeção inicial", "lavrar auto", "ementa"…) continuam funcionando.
 
 ## Persona
 
@@ -48,7 +57,7 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
    ```
    Extraia o que houver: razão social (título), `**CNPJ:**`, município, número de trabalhadores, datas. É um arquivo markdown simples — não exige schema.
 
-3. **Se `memory.md` não existir:** pergunte ao AFT os dados básicos (empregador, CNPJ, município) e crie um `memory.md` mínimo no esquema padrão do toolkit (front-matter `empregador`/`cnpj`/`municipio`/`status: em_andamento`; título `# RAZAO_SOCIAL`; `**CNPJ:**` formatado; e as seções `## Notificações DET`, `## Autos lavrados`, `## Registro de atividades` — o mesmo formato que o `/nova-os` cria e o `/painel` lê). Se o AFT recusar, prossiga sem ele (a Fase 4 será pulada). Idealmente sugira rodar `/nova-os` para abrir a OS antes.
+3. **Se `memory.md` não existir:** pergunte ao AFT os dados básicos (empregador, CNPJ, município) e crie um `memory.md` mínimo no esquema padrão do toolkit (front-matter `empregador`/`cnpj`/`municipio`/`status: em_andamento`; título `# RAZAO_SOCIAL`; `**CNPJ:**` formatado; e as seções `## Notificações DET`, `## Autos lavrados`, `## Anotações da auditoria`, `## Registro de atividades` — o mesmo formato que o `/nova-os` cria e o `/painel` lê). Se o AFT recusar, prossiga sem ele (a Fase 4 será pulada). Idealmente sugira rodar `/nova-os` para abrir a OS antes.
 
 4. **Se a empresa não existir em OS ATIVAS:** pergunte se deseja criar a pasta. Padrão de nome: `<EMPREGADOR CAIXA ALTA> <CNPJ_SÓ_DÍGITOS>`.
 
@@ -64,14 +73,20 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
 
 ### Protocolo
 
-1. **Carregue o relato de campo.** A fonte primária dos achados é o arquivo `inspecao-fisica.md` na pasta da OS (identificada na Fase 0), produzido pela skill `/inspecao-fisica` — um relato em bullets, fiel e já conferido pelo AFT, porém puramente descritivo (sem NR). Procure-o:
+1. **Carregue os achados — DUAS fontes.** Esta skill enquadra tanto o que veio do campo quanto o que veio da auditoria documental. Colete das duas fontes (podem coexistir):
+
+   **Fonte A — relato de campo (`inspecao-fisica.md`):** produzido pela `/inspecao-fisica` — bullets fiéis, conferidos, porém descritivos (sem NR). Procure-o:
    ```bash
    ls ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/inspecao-fisica.md
    ```
    - **Encontrado:** leia-o; cada bullet é matéria-prima factual. O cabeçalho traz empresa e data da inspeção (use a data como default de `[data_inspecao]`).
-   - **Não encontrado:** caia para entrada manual — receba o texto que o auditor colar descrevendo os achados, ou ofereça rodar `/inspecao-fisica` antes: *"Não encontrei `inspecao-fisica.md` nesta OS. Cole a narrativa dos achados, ou rode `/inspecao-fisica` primeiro para gerar o relato de campo estruturado."*
+   - **Não encontrado:** siga só com as outras fontes (não é obrigatório).
 
-   > A divisão de trabalho: a `/inspecao-fisica` **descreve** (transforma o ditado cru em fatos limpos e conferidos); a `/inspecao-inicial` **enquadra e redige** (NR, ementa, auto).
+   **Fonte B — anotações da auditoria (`## Anotações da auditoria` no memory.md):** constatações que o AFT lançou durante a análise documental (SESMT/CIPA subdimensionado, ASO faltando, programa vencido, etc.). Leia a seção do memory.md já aberto na Fase 0 e extraia **cada anotação em aberto** (`- [ ]`). Cada uma é candidata a auto. As já tratadas (`- [x]`) são histórico — ignore.
+
+   **Fallback (nenhuma das duas):** receba o texto que o auditor colar descrevendo os achados, ou ofereça rodar `/inspecao-fisica` (para campo) — *"Não encontrei `inspecao-fisica.md` nem anotações em aberto nesta OS. Cole os achados, ou rode `/inspecao-fisica` primeiro."*
+
+   > A divisão de trabalho: a `/inspecao-fisica` e a análise documental **descrevem** (produzem fatos limpos — relato de campo ou anotações); a `/auditoria-geral` **enquadra e redige** (NR, ementa, auto). Ao final, marque `[x]` a anotação que virou auto (Fase 4).
 
    **>>> GATILHOS PRIORITÁRIOS — varredura imediata do relato (ANTES de extrair irregularidades) <<<**
 
@@ -108,9 +123,10 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
    - **Atividade econômica do estabelecimento** → `[atividade_economica]` — **opcional**: só pergunte se for relevante e o relato não trouxer; sua ausência não bloqueia a redação.
    - **Contexto do estabelecimento** (para o Subtítulo 1) → extraia do relato, quando houver: preposto/acompanhante, endereço do local fiscalizado (se difere do autuado), tipo de obra e nº de pavimentos, outro CNPJ/empresa no mesmo estabelecimento, turnos de trabalho. Guarde esses fatos para enriquecer o Subtítulo 1 na Fase 3.
 
-5. **Coletar `[NUM_TRABALHADORES]`** se ainda desconhecido:
-   > *"Quantos trabalhadores estavam presentes ou registrados no estabelecimento durante a inspeção?"*
-   Após resposta, anote no memory.md (`**Nº de trabalhadores:** N`). Essencial para CIPA/SESMT.
+5. **Coletar dados do estabelecimento** — `[NUM_TRABALHADORES]`, `[CNAE]` e `[GRAU_RISCO]`, na ordem de preferência: (1) o que já estiver no memory.md (front-matter `trabalhadores:`/`cnae:`/`grau_risco:` ou corpo), (2) o que os documentos da OS trouxerem (PGR, PPRA, resposta ao DET), (3) só o que faltar, pergunte — **em uma única mensagem**:
+   > *"Para dimensionar CIPA/SESMT e contextualizar os autos: quantos trabalhadores (presentes/registrados)? Qual o CNAE principal? (o grau de risco eu derivo do CNAE pela NR-04)."*
+   - **Grau de risco:** se houver CNAE e não o grau, derive pelo Quadro I da NR-04 (skill `/cnae-grau-risco-nr04`) — não pergunte.
+   - Após obter, grave no memory.md: front-matter (`trabalhadores: N`, `cnae: "XXXX-X/XX"`, `grau_risco: N`) e, se ainda não houver, as linhas espelho no corpo (`**Nº de trabalhadores:** N`, `**CNAE:** ...`, `**Grau de risco:** N`). Use Edit cirúrgico. Número de trabalhadores é essencial para CIPA/SESMT.
 
 6. **Se `[DUPLA_VISITA] = true`, detectar sinais de quebra na narrativa:**
 
@@ -429,10 +445,16 @@ Esta fase só executa se existe um `memory.md` na pasta da OS (criado na Fase 0 
    - [ ] Gerar RT para interdição [objeto] via /aft-rt-rgi
    ```
 
-5. **Append em `## Registro de atividades`** (tabela | Data | Ação | Detalhes |):
-   - **Com autuação:** `| [DD/MM/AAAA] | Inspeção inicial | N autos redigidos (NR-XX, NR-YY) |`
-   - **Dupla visita sem quebra:** `| [DD/MM/AAAA] | Inspeção inicial | N irregularidades (dupla visita, sem autuação) |`
-   - **Mix:** `| [DD/MM/AAAA] | Inspeção inicial | M autos + K irregularidades para TN (dupla visita) |`
+5. **Fechar as anotações que viraram auto** — em `## Anotações da auditoria`, para cada anotação em aberto (`- [ ]`) que originou um auto (ou TN), marque `[x]` e anexe o desfecho, sem apagar o texto:
+   ```
+   - [x] DD/MM/AAAA — SESMT subdimensionado <!-- auto ementa 004600-1 em DD/MM/AAAA -->
+   ```
+   Anotações que o AFT decidiu não autuar ficam como estão (em aberto) — não as feche por conta própria. Use Edit cirúrgico linha a linha.
+
+6. **Append em `## Registro de atividades`** (tabela | Data | Ação | Detalhes |):
+   - **Com autuação:** `| [DD/MM/AAAA] | Auditoria (autos) | N autos redigidos (NR-XX, NR-YY) |`
+   - **Dupla visita sem quebra:** `| [DD/MM/AAAA] | Auditoria | N irregularidades (dupla visita, sem autuação) |`
+   - **Mix:** `| [DD/MM/AAAA] | Auditoria (autos) | M autos + K irregularidades para TN (dupla visita) |`
 
 Use Edit cirúrgico — nunca sobrescreva o arquivo inteiro nem toque em linhas existentes.
 
@@ -445,7 +467,7 @@ Use Edit cirúrgico — nunca sobrescreva o arquivo inteiro nem toque em linhas 
 **Quando há autos redigidos (sem dupla visita ou com quebra):**
 
 ```
-✅ Inspeção inicial concluída — [[AUTUADA]]
+✅ Auditoria concluída — [[AUTUADA]]
 
 📝 N autos de infração redigidos (NRs: XX, YY, ZZ) — salvos em autos.md
 
@@ -459,7 +481,7 @@ vai reaproveitar os textos sem re-perguntar.
 **Quando dupla visita ativa (sem quebra, sem registro irregular):**
 
 ```
-✅ Inspeção inicial concluída — [[AUTUADA]]
+✅ Auditoria concluída — [[AUTUADA]]
 
 ⚖️ Dupla visita ativa — N irregularidades encaminhadas para notificação:
   [lista numerada das irregularidades]
@@ -471,7 +493,7 @@ Lista salva em irregularidades-para-TN.md para subsidiar o Termo de Notificaçã
 **Quando mix (algumas autuadas, outras em dupla visita):**
 
 ```
-✅ Inspeção inicial concluída — [[AUTUADA]]
+✅ Auditoria concluída — [[AUTUADA]]
 
 📝 M autos de infração redigidos (NRs: XX, YY)
 ⚖️ K irregularidades em dupla visita → encaminhadas para TN de correção

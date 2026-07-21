@@ -199,6 +199,9 @@ _(vazio)_
 ## Autos lavrados
 _(vazio — preenchido a seguir pelo /autos-lavrados)_
 
+## Anotações da auditoria
+_(vazio)_
+
 ## Registro de atividades
 | Data | Ação | Detalhes |
 |------|------|----------|
