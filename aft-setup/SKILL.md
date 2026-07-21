@@ -395,17 +395,22 @@ login único do Google, feito com segurança pela interface do Claude."*
      Code, se disponíveis) e grave `agenda_det: "diario"` ou `agenda_det: "manual"` no
      `aft-config.md`, conforme a escolha.
 
-## Passo 7e — Sessões por auditoria no menu lateral (oferecer)
+## Passo 7e — Vigia de sessões (parte padrão da instalação)
 
-Se já existirem pastas em `OS ATIVAS/`, ofereça em uma frase: *"Quer uma sessão de chat
-por empresa fiscalizada no menu lateral do app, organizadas no grupo 'OS ATIVAS'? Tudo de
-cada auditoria passa a ser tratado na sessão dela."*
+As sessões por empresa no menu lateral (grupo "OS ATIVAS") são **automáticas**: um
+serviço em segundo plano — o **vigia de sessões** — observa as pastas de `OS ATIVAS/` e,
+toda vez que o app do Claude é fechado, cria as sessões que faltam (título = empresa,
+pasta = pasta da OS, vínculo no memory.md). **Instale sem perguntar**:
 
-- **Se sim** → siga a skill `/sessoes-os` (ela mostra o diagnóstico, pede a confirmação e
-  aplica no modo vigia — o app fecha e reabre uma vez). Como o setup está rodando dentro
-  do app, deixe este passo por último: dispare o vigia só depois do Passo 8.
-- **Se não** (ou se ainda não há OS) → siga adiante; a skill pode ser chamada a qualquer
-  momento e o `/nova-os` a oferece a cada auditoria nova.
+```bash
+python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py instalar <python_path>
+```
+
+Confira o JSON de saída (`"ok": true`). Informe em uma linha: *"Sessões por empresa são
+automáticas: cada auditoria em OS ATIVAS ganha a própria sessão no grupo 'OS ATIVAS' na
+próxima vez que você fechar e reabrir o app."* Se falhar, não é bloqueante — registre no
+resumo e siga (o `/aft-atualizar` tenta de novo). Quem não quiser o automático pede
+"remover o vigia de sessões" a qualquer momento.
 
 ## Passo 8 — Resumo final
 
@@ -429,9 +434,10 @@ Apresente:
 
 ➡️ JÁ FISCALIZAVA ANTES DO TOOLKIT? Primeiro passo essencial:
    copie as pastas das suas auditorias (do jeito que estiverem) para
-   ~/Documents/AFT/OS ATIVAS/ e me peça /organiza-os — eu organizo tudo,
-   trago os autos do Sistema Auditor (/autos-lavrados) e crio uma sessão
-   por empresa no grupo "OS ATIVAS" do menu lateral.
+   ~/Documents/AFT/OS ATIVAS/ e me peça /organiza-os — eu organizo tudo e
+   trago os autos do Sistema Auditor (/autos-lavrados). As sessões por
+   empresa (grupo "OS ATIVAS" do menu lateral) são automáticas: aparecem
+   na próxima vez que você fechar e reabrir o app.
 
 Fluxo típico de uma fiscalização:
   1. /nova-os           → cadastra a empresa e o prazo do DET
@@ -445,8 +451,9 @@ Outras: /registro · /PGR-analise · /aft-rt-rgi · /det-630 · /jornada-analise
 
 Se a pasta `OS ATIVAS/` estiver vazia, pergunte ativamente: *"Você já tem fiscalizações
 em andamento? Copie as pastas delas para ~/Documents/AFT/OS ATIVAS/ (do jeito que
-estiverem) e me avise — eu rodo o /organiza-os, que organiza tudo, busca os autos já
-transmitidos no Sistema Auditor e cria uma sessão por empresa no menu lateral."*
+estiverem) e me avise — eu rodo o /organiza-os, que organiza tudo e busca os autos já
+transmitidos no Sistema Auditor. As sessões por empresa aparecem sozinhas no grupo
+'OS ATIVAS' quando você fechar e reabrir o app."*
 
 Feche sugerindo o diagnóstico: *"Sempre que quiser confirmar que está tudo no lugar
 (ou se algo parar de funcionar), rode `/aft-doctor` — ele confere a instalação e diz o

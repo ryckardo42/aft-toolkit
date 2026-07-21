@@ -138,7 +138,7 @@ const ARCH = {
  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
   "skills": 38,
-  "scripts": 26,
+  "scripts": 27,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 21/07/2026"
  },
@@ -454,8 +454,8 @@ const ARCH = {
    },
    {
     "nome": "/sessoes-os",
-    "role": "Uma sessão do app por empresa fiscalizada, no grupo 'OS ATIVAS' do menu lateral; vínculo sessao_claude no memory.md.",
-    "tech": "_scripts/sessoes_os.py · escreve no armazenamento interno do app em modo vigia (app fechado), backup + --desfazer · model: sonnet"
+    "role": "Uma sessão do app por empresa fiscalizada, no grupo 'OS ATIVAS' — automática: o vigia de sessões aplica sozinho quando o app fecha; vínculo sessao_claude no memory.md.",
+    "tech": "sessoes_os.py --vigia (serviço: LaunchAgent/Tarefa Agendada via instalar_vigia_sessoes.py) · escreve no armazenamento interno do app só com ele fechado · backup + --desfazer · model: sonnet"
    }
    ]
   }

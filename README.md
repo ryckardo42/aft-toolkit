@@ -25,7 +25,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 
 **Conferir:** a qualquer momento, rode **`/aft-doctor`** para checar se está tudo no lugar (Python, Git, skills, configuração) — ele diz, em linguagem simples, o que falta e como resolver.
 
-**Primeiro passo essencial (quem já fiscaliza):** copie as pastas das suas auditorias em andamento — do jeito que estiverem — para `~/Documents/AFT/OS ATIVAS/` e rode **`/organiza-os`**. Com uma única aprovação, ele organiza tudo no padrão do toolkit, roda o `/autos-lavrados` (busca no Sistema Auditor os autos já transmitidos de cada empresa e os registra no `memory.md`) e cria uma **sessão de chat por empresa** no grupo "OS ATIVAS" do menu lateral (via `/sessoes-os`). Quem começa do zero pula direto para o `/nova-os`.
+**Primeiro passo essencial (quem já fiscaliza):** copie as pastas das suas auditorias em andamento — do jeito que estiverem — para `~/Documents/AFT/OS ATIVAS/` e rode **`/organiza-os`**. Com uma única aprovação, ele organiza tudo no padrão do toolkit, roda o `/autos-lavrados` (busca no Sistema Auditor os autos já transmitidos de cada empresa e os registra no `memory.md`) e as **sessões de chat por empresa** aparecem sozinhas no grupo "OS ATIVAS" do menu lateral na próxima vez que você fechar e reabrir o app (vigia de sessões, automático). Quem começa do zero pula direto para o `/nova-os`.
 
 **Atualização:** peça ao Claude *"Atualize o AFT Toolkit"* (ou `/aft-atualizar`) — ele atualiza as skills (`git pull`) **e** o comando `notebooklm` (`notebooklm-py`), se houver versão nova, e confirma com o `/aft-doctor` que nada quebrou.
 
@@ -91,7 +91,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/autos-lavrados` | Lê os PDFs já transmitidos no Sistema Auditor (`C:\SistemasAFT\...\PRO`), cruza com os rascunhos e marca no `memory.md` o que está lavrado `[x]` / pendente `[ ]` — read-only sobre o Sistema Auditor |
 | `/sfitweb-rel` | Relatório Final Simplificado a partir do `memory.md`: notificações lavradas, autos por tema e interdições com estado atual — texto para o SFITWEB + `.docx` para chefia/MPT |
 | `/modelo-docx` | O **padrão visual** de todo `.docx` do toolkit: template oficial com o cabeçalho da auditoria (AFT/SIT), Times 12, títulos em azul institucional e tabelas zebradas — biblioteca `modelo_docx.py` usada pelas demais skills e pelos documentos avulsos |
-| `/sessoes-os` | Uma **sessão do Claude Code por empresa fiscalizada**, no grupo "OS ATIVAS" do menu lateral do app — cria/reaproveita sessões, grava o vínculo `sessao_claude` no `memory.md` e aplica em modo vigia (fecha e reabre o app), com backup e `--desfazer` |
+| `/sessoes-os` | Uma **sessão do Claude Code por empresa fiscalizada**, no grupo "OS ATIVAS" do menu lateral — **automático**: o vigia de sessões (serviço padrão da instalação) cria as sessões sozinho toda vez que o app fecha, com vínculo `sessao_claude` no `memory.md`, backup e `--desfazer`. A skill fica para conferir, aplicar "agora" ou desfazer |
 
 ## Modo rápido: cada skill funciona isolada
 

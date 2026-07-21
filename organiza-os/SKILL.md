@@ -15,9 +15,10 @@ description: >
   renomeia as pastas para o padrão, cria/atualiza o memory.md e move os
   arquivos para os lugares que as demais skills esperam. Ao final, encadeia
   /autos-lavrados (para trazer os autos do Sistema Auditor), abre o painel
-  interativo e confere se cada empresa tem sessão própria no menu lateral
-  (oferecendo a /sessoes-os quando faltar). Nunca apaga nada. NÃO cadastra OS
-  do zero (isso é /nova-os) nem baixa nada do DET (isso é det-baixar).
+  interativo e garante o vigia de sessões (as sessões por empresa no grupo
+  "OS ATIVAS" são criadas automaticamente no próximo reinício do app). Nunca
+  apaga nada. NÃO cadastra OS do zero (isso é /nova-os) nem baixa nada do DET
+  (isso é det-baixar).
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
@@ -32,8 +33,9 @@ extraídos dos próprios documentos (empregador, CNPJ/CPF, notificações DET co
 e os arquivos nos lugares onde as demais skills (`/painel`, `/analise-preliminar`,
 `/det-630`, `/autos-lavrados`) esperam encontrá-los. Ao final, encadeia o
 `/autos-lavrados` (que traz os autos já transmitidos no Sistema Auditor para o
-memory.md e o painel), abre o painel interativo para o AFT ver o panorama e confere se
-cada empresa tem a própria sessão no menu lateral (grupo "OS ATIVAS" — `/sessoes-os`).
+memory.md e o painel), abre o painel interativo para o AFT ver o panorama e garante o
+vigia de sessões — cada empresa ganha a própria sessão no grupo "OS ATIVAS"
+automaticamente, no próximo reinício do app.
 
 Regras de ouro:
 - **Inventário e plano primeiro; execução só depois de UMA aprovação** — um único plano
@@ -239,17 +241,18 @@ Depois de organizar tudo:
    como reserva: `start "" "<pasta AFT>/painel.html"` — e lembre que o `/aft-atualizar`
    instala/repara o servidor.
 
-4. **Sessões por empresa — parte esperada do fluxo de chegada.** Confira (não altera
-   nada):
+4. **Sessões por empresa — automáticas, só garanta o vigia.** Confira o serviço e o
+   estado (nenhum dos dois altera nada):
    ```bash
+   python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py status
    python ~/.claude/skills/_scripts/sessoes_os.py --status
    ```
-   Leia a linha `JSON:` do final. Se `criar` > 0 (OS organizadas sem sessão própria no
-   menu lateral), **encadeie a `/sessoes-os` logo após o resumo final**: explique em uma
-   frase ("vou criar uma sessão de chat para cada empresa no grupo OS ATIVAS — o app
-   fecha e reabre uma vez") e siga o fluxo dela (dispara o vigia, o AFT fecha o app com
-   Cmd+Q, tudo reabre montado). O AFT pode recusar — aí apenas registre no resumo como
-   pendente. Se o script falhar, siga — não é bloqueante.
+   - Vigia **não instalado** → instale **sem perguntar** (é parte padrão da instalação):
+     `python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py instalar <python_path>`.
+   - Na linha `JSON:` do `--status`, se `criar` > 0, apenas **informe** no resumo: as
+     sessões dessas empresas serão criadas sozinhas na próxima vez que o AFT fechar e
+     reabrir o app — **não pergunte nada**. Só se ele pedir "agora" siga o fluxo pontual
+     da `/sessoes-os`. Se os scripts falharem, siga — não é bloqueante.
 
 5. Resumo final (uma mensagem só, com a tabela de tudo):
 
@@ -263,10 +266,10 @@ Depois de organizar tudo:
 🧾 Autos lavrados: <resultado do /autos-lavrados em uma linha>
 ❓ Não identificados (intocados): <lista ou "nenhum">
 📊 Painel interativo aberto: http://127.0.0.1:8347
-🗂️ Sessões por empresa: <"todas no grupo OS ATIVAS" ou "N sem sessão — quer que eu rode a /sessoes-os? (o app fecha e reabre uma vez)">
+🗂️ Sessões por empresa: <"todas no grupo OS ATIVAS" ou "N novas — aparecem no grupo OS ATIVAS na próxima vez que você fechar e reabrir o app">
 
 Próximos passos sugeridos: /analise-preliminar (respostas de DET) · /det-630 (omissões) ·
-/analise-acidente (OS de acidente) · /sessoes-os (sessões por empresa, se faltarem)
+/analise-acidente (OS de acidente)
 ```
 
 ## Encadeamento

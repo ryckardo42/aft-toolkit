@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v4 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v5 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -224,16 +224,19 @@ eu poder copiar direto sem sobra de `**`/`#`.
 
 ## Sessões por auditoria (grupo "OS ATIVAS")
 
-Cada empresa fiscalizada tem (ou deveria ter) a própria sessão de chat no app, no grupo
-"OS ATIVAS" — criadas pela `/sessoes-os` e vinculadas pelo campo `sessao_claude:` no
-front-matter do memory.md da OS. Comportamento esperado:
+Cada empresa fiscalizada tem a própria sessão de chat no app, no grupo "OS ATIVAS",
+vinculada pelo campo `sessao_claude:` no front-matter do memory.md. A criação é
+**AUTOMÁTICA**: o vigia de sessões (serviço padrão da instalação) aplica sozinho toda vez
+que o app fecha — sessão nova aparece na próxima abertura. Comportamento esperado:
 
+- **NÃO pergunte sobre criar sessões.** OS nova (`/nova-os`, `/organiza-os`, pasta
+  copiada à mão) → apenas informe, quando fizer sentido, que a sessão aparecerá no
+  próximo reinício do app. Só siga o fluxo pontual da `/sessoes-os` se EU pedir a sessão
+  "agora".
 - **Roteamento:** se eu começar a tratar de uma auditoria NESTA sessão e a empresa tiver
   sessão própria (vínculo no memory.md ou título na lista de sessões), avise e ofereça
   encaminhar o pedido para a sessão dela (via mensagem entre sessões — eu confirmo o
   envio). Se eu preferir seguir aqui, siga sem insistir.
-- **Auditoria nova:** depois do `/nova-os`, ofereça rodar `/sessoes-os` para criar a
-  sessão da empresa.
 - **OS encerrada/arquivada:** ofereça arquivar a sessão correspondente (a confirmação
   final é sempre minha, no app).
 - Trabalho que NÃO é de uma auditoria específica (toolkit, dúvidas gerais, consultas)

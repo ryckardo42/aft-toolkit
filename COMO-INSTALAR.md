@@ -76,9 +76,10 @@ Com uma única aprovação sua, ele faz três coisas:
   lugares certos — sem apagar nada);
 - **busca os autos já lavrados**: roda o `/autos-lavrados`, que vai às pastas do Sistema
   Auditor, encontra os autos transmitidos de cada empresa e os registra no `memory.md`;
-- **cria uma sessão de chat por empresa** no menu lateral do app, no grupo "OS ATIVAS"
-  (via `/sessoes-os` — o app fecha e reabre uma vez). Daí em diante, tudo daquela
-  auditoria é tratado na sessão dela.
+- **cria uma sessão de chat por empresa** no menu lateral do app, no grupo "OS ATIVAS" —
+  automático: o vigia de sessões (instalado pelo `/aft-setup`) aplica sozinho, e as
+  sessões aparecem na próxima vez que você fechar e reabrir o app. Daí em diante, tudo
+  daquela auditoria é tratado na sessão dela.
 
 Quem está começando do zero (sem fiscalizações em andamento) pula este passo e usa o
 `/nova-os` a cada auditoria nova.

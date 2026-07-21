@@ -15,7 +15,10 @@ reconhecida (app mudou), o script ABORTA sem tocar em nada.
 
 Uso:
     python3 sessoes_os.py --status              # o que existe e o que falta (não altera nada)
-    python3 sessoes_os.py --aplicar             # vigia: espera o app fechar, aplica e reabre
+    python3 sessoes_os.py --vigia               # daemon PERMANENTE: aplica sozinho sempre que
+                                                #   o app fechar (instalado como serviço pelo
+                                                #   instalar_vigia_sessoes.py — modo padrão)
+    python3 sessoes_os.py --aplicar             # pontual: espera o app fechar, aplica e reabre
     python3 sessoes_os.py --aplicar --agora     # aplica já (use só com o app fechado)
     python3 sessoes_os.py --aplicar --sem-reabrir
     python3 sessoes_os.py --desfazer            # restaura o último backup e remove o que criou
@@ -49,6 +52,7 @@ PASTA_AFT = Path(os.environ.get("PASTA_AFT", Path.home() / "Documents" / "AFT"))
 BACKUPS = PASTA_AFT / ".backups-sessoes"
 MANIFESTO = PASTA_AFT / ".sessoes-os-manifesto.json"
 LOG = PASTA_AFT / ".sessoes-os.log"
+PIDFILE = PASTA_AFT / ".sessoes-os-vigia.pid"
 
 
 def log(msg):
@@ -341,14 +345,84 @@ def aplicar(pasta_cli=None, agora=False, reabrir=True):
     tmp.replace(CONFIG)
     log("Config do app atualizado.")
 
+    # manifesto acumulativo: o vigia aplica muitas vezes; o --desfazer precisa
+    # lembrar de todas as sessões já criadas (o backup restaurado é o 1º).
     manif = {"quando": time.strftime("%Y-%m-%d %H:%M:%S"), "grupo": gid,
              "backup": str(bkp), "sessoes_criadas": criadas}
+    if MANIFESTO.is_file():
+        try:
+            antigo = json.loads(MANIFESTO.read_text(encoding="utf-8"))
+            manif["sessoes_criadas"] = sorted(
+                set(antigo.get("sessoes_criadas", [])) | set(criadas))
+            manif["backup"] = antigo.get("backup", str(bkp))
+        except (json.JSONDecodeError, OSError):
+            pass
     MANIFESTO.write_text(json.dumps(manif, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if reabrir:
         reabrir_app()
     log(f"PRONTO: {len(criadas)} sessão(ões) criada(s); grupo '{GRUPO_NOME}' sincronizado.")
     return 0
+
+
+def _processo_existe(pid: int) -> bool:
+    if IS_WIN:
+        try:
+            saida = subprocess.run(["tasklist", "/FI", f"PID eq {pid}"],
+                                   capture_output=True, text=True).stdout
+            return str(pid) in saida
+        except OSError:
+            return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except (ProcessLookupError, PermissionError):
+        return False
+
+
+def vigia():
+    """Daemon permanente (instalado como serviço): aplica a sincronização
+    sozinho SEMPRE que o app do Claude estiver fechado e houver pendências.
+    Nunca reabre o app (quem fechou foi o AFT); as sessões novas aparecem na
+    próxima vez que ele abrir o app."""
+    if PIDFILE.is_file():
+        try:
+            outro = int(PIDFILE.read_text().strip())
+            if outro != os.getpid() and _processo_existe(outro):
+                log(f"Vigia já ativo (PID {outro}) — este processo sai.")
+                return 0
+        except ValueError:
+            pass
+    PIDFILE.parent.mkdir(parents=True, exist_ok=True)
+    PIDFILE.write_text(str(os.getpid()))
+    log(f"Vigia automático de sessões iniciado (PID {os.getpid()}).")
+
+    atraso = 20
+    while True:
+        time.sleep(atraso)
+        try:
+            if app_aberto():
+                atraso = 20
+                continue
+            p = plano()
+            pend = [i for i in p["itens"] if i["criar"] or i["agrupar"] or i["vincular"]]
+            if not pend and p["grupo_existe"]:
+                atraso = 60
+                continue
+            time.sleep(3)              # o app grava as preferências ao fechar
+            if app_aberto():           # reabriu nesse meio-tempo? próximo ciclo
+                atraso = 20
+                continue
+            aplicar(agora=True, reabrir=False)
+            if app_aberto():
+                log("AVISO: o app reabriu durante a aplicação — reconfiro no próximo ciclo.")
+            atraso = 20
+        except SystemExit as e:        # config ausente/estrutura mudou etc.
+            log(f"Vigia: {e} — nova tentativa em 5 min.")
+            atraso = 300
+        except Exception as e:         # nunca morre por erro pontual
+            log(f"Vigia: erro inesperado ({type(e).__name__}: {e}) — nova tentativa em 5 min.")
+            atraso = 300
 
 
 def desfazer():
@@ -384,6 +458,8 @@ def main():
         if "--status" in args:
             status(pasta)
             return 0
+        if "--vigia" in args:
+            return vigia()
         if "--aplicar" in args:
             return aplicar(pasta, agora="--agora" in args,
                            reabrir="--sem-reabrir" not in args)

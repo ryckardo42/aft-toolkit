@@ -2,93 +2,95 @@
 name: sessoes-os
 model: sonnet
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser uma sessão do Claude
-  Code por empresa fiscalizada na barra lateral do app, organizadas no grupo "OS ATIVAS".
-  Acione com "/sessoes-os", "cria as sessões das minhas auditorias", "uma sessão por
-  empresa", "organiza as sessões no menu lateral", "sincroniza as sessões com OS ATIVAS",
-  "monta o grupo de auditorias". A skill roda o _scripts/sessoes_os.py, que espelha as
-  pastas de OS ATIVAS na barra lateral: cria (ou reaproveita) uma sessão por empresa com o
-  título da empresa e a pasta da OS como diretório de trabalho, coloca todas no grupo
-  "OS ATIVAS" e grava o vínculo sessao_claude no memory.md de cada OS. Como o app regrava
-  as preferências enquanto está aberto, a aplicação acontece num modo vigia: o AFT fecha o
-  app (Cmd+Q), o script aplica e reabre o app sozinho. Também verifica ("--status") e
-  desfaz ("--desfazer"). Acionada pelo /aft-setup, pelo /aft-atualizar e após o /nova-os.
+  Use este skill quando o Auditor-Fiscal do Trabalho (AFT) quiser conferir, forçar ou
+  desfazer a sincronização das sessões por empresa na barra lateral do app (grupo
+  "OS ATIVAS"). Acione com "/sessoes-os", "verifica as sessões", "cria as sessões das
+  minhas auditorias", "quero as sessões agora", "desfaz as sessões", "instala/remove o
+  vigia de sessões". IMPORTANTE: a criação de sessões é AUTOMÁTICA — o vigia de sessões
+  (sessoes_os.py --vigia, serviço instalado por padrão pelo /aft-setup e /aft-atualizar)
+  aplica sozinho as pendências toda vez que o app do Claude fecha: cada pasta de OS ATIVAS
+  ganha sessão com o nome da empresa no grupo "OS ATIVAS", com vínculo sessao_claude no
+  memory.md. As sessões novas simplesmente aparecem na próxima abertura do app — nenhuma
+  pergunta, nenhum passo manual. Esta skill serve para os casos à margem do automático:
+  conferir o estado (--status), aplicar AGORA sem esperar o próximo fechamento do app
+  (modo pontual), desfazer tudo (--desfazer) e instalar/remover o serviço do vigia.
 ---
 
-# sessoes-os — uma sessão por auditoria, no grupo "OS ATIVAS"
+# sessoes-os — sessões por auditoria, automáticas, no grupo "OS ATIVAS"
 **AFT Toolkit**
 
-## O que faz
+## Como funciona (o normal é automático)
 
-Espelha as suas auditorias na barra lateral do app do Claude Code: **cada empresa
-fiscalizada ganha a própria sessão de chat**, com o nome da empresa e já apontando para a
-pasta da OS, todas dentro do grupo **"OS ATIVAS"**. Tudo que for daquela auditoria passa a
-ser tratado na sessão dela — contexto acumulado, histórico num lugar só.
+Cada empresa fiscalizada tem a própria sessão de chat na barra lateral, no grupo
+**"OS ATIVAS"** — e isso acontece **sozinho**. O **vigia de sessões** é um serviço do
+sistema (instalado por padrão) que observa as pastas de `OS ATIVAS/` e, toda vez que o
+app do Claude é fechado, aplica o que estiver pendente: cria a sessão de quem não tem
+(título = empresa, pasta de trabalho = pasta da OS), coloca no grupo e grava o vínculo
+`sessao_claude:` no memory.md. **Na próxima abertura do app, as sessões estão lá.**
 
-> **Aviso honesto (o AFT deve saber):** o app não oferece uma API oficial para criar
-> sessões e grupos; a skill escreve no armazenamento interno do app (o mesmo arquivo em
-> que ele guarda essas informações). Por isso: (1) há sempre backup antes e um
-> `--desfazer`; (2) a aplicação exige **fechar e reabrir o app** (o script cuida da
-> reabertura); (3) se uma atualização do app mudar o formato interno, o script **aborta
-> sem tocar em nada** e avisa. Os dados ficam na sua máquina e sobrevivem a atualizações
-> do app.
+O AFT não precisa fazer nada: criou OS nova (`/nova-os`), organizou um lote
+(`/organiza-os`), copiou uma pasta à mão — o vigia cuida, no próximo ciclo natural de
+fechar/abrir o app.
 
-## Fluxo de execução
+> **Aviso honesto:** o app não tem API oficial para sessões/grupos; o vigia escreve no
+> armazenamento interno do app, sempre com o app FECHADO (por isso o "próximo
+> fechamento"), com backup automático antes e `--desfazer` completo. Se uma atualização
+> do app mudar o formato interno, ele aborta sem tocar em nada e registra no log.
 
-### 1. Diagnóstico (sempre primeiro, não altera nada)
+## Quando esta skill entra (exceções ao automático)
+
+### "Verifica as sessões" — conferência
 
 ```
 python3 ~/.claude/skills/_scripts/sessoes_os.py --status
 ```
 
-Mostre ao AFT o resultado em linguagem simples: quantas OS têm sessão, quantas serão
-criadas, se o grupo existe. A última linha `JSON:` traz o resumo estruturado. Se tudo já
-estiver sincronizado, diga isso e encerre.
+Mostre o resultado em linguagem simples (a linha `JSON:` tem o resumo). Se houver
+pendências, explique: *"serão aplicadas sozinhas na próxima vez que você fechar o app"*.
+Confira também o serviço: `python3 ~/.claude/skills/_scripts/instalar_vigia_sessoes.py
+status` — se não estiver instalado, instale sem perguntar (`instalar <python_path>`).
+O histórico do vigia fica em `~/Documents/AFT/.sessoes-os.log`.
 
-### 2. Confirmar e disparar o modo vigia
+### "Quero as sessões AGORA" — sem esperar o próximo fechamento
 
-Explique o que vai acontecer e peça confirmação:
-
-> Vou criar N sessões (uma por empresa) no grupo "OS ATIVAS". Para aplicar, o app precisa
-> ser fechado por alguns segundos — eu deixo um assistente aguardando: você fecha o app
-> (Cmd+Q), ele aplica e REABRE o app sozinho. Quando o app voltar, o grupo estará montado.
-> Posso preparar?
-
-Com o sim, dispare o vigia **desacoplado do app** (sobrevive ao fechamento) e instrua:
+Dispare o aplicador pontual desacoplado e avise que é só fechar o app:
 
 ```
-nohup python3 ~/.claude/skills/_scripts/sessoes_os.py --aplicar >/dev/null 2>&1 & disown
+python3 -c "import subprocess,os; subprocess.Popen(['python3', os.path.expanduser('~/.claude/skills/_scripts/sessoes_os.py'), '--aplicar'], start_new_session=True, stdout=open(os.devnull,'wb'), stderr=subprocess.STDOUT)"
 ```
 
-> Pronto — agora é só fechar o app do Claude (Cmd+Q). Ele reabre sozinho em alguns
-> segundos com o grupo montado. Quando voltar, me chame em qualquer sessão e diga
-> "verifica as sessões" que eu confiro se deu tudo certo.
+> Feche o app do Claude (Cmd+Q no Mac) — ele aplica e REABRE o app sozinho com tudo
+> montado.
 
-### 3. Conferência (na volta do app)
+(É o mesmo motor do vigia; a diferença é que o modo pontual reabre o app para o AFT.)
 
-Quando o AFT voltar, leia `~/Documents/AFT/.sessoes-os.log` (o script registra tudo lá) e
-rode `--status` de novo. Relate: sessões criadas, reaproveitadas (as que ele já tinha,
-casadas pelo título), vínculos gravados. Se algo falhou, o log diz onde parou — e o
-`--desfazer` restaura o backup e remove o que foi criado (também em modo vigia).
+### "Desfaz tudo"
+
+```
+python3 ~/.claude/skills/_scripts/sessoes_os.py --desfazer
+```
+
+Restaura o backup do config e remove TODAS as sessões que o toolkit criou (o manifesto é
+acumulativo). Também espera o app fechar. Para desligar o automático de vez:
+`instalar_vigia_sessoes.py remover`.
 
 ## Regras
 
-- **Nunca rode `--aplicar --agora` com o app aberto** — o app sobrescreveria a mudança ao
-  fechar. O modo vigia existe exatamente para isso.
-- **Reaproveite, não duplique**: sessão existente cujo título case com a empresa é
-  vinculada e agrupada, nunca recriada.
-- O vínculo fica no front-matter do memory.md (`sessao_claude: "local_..."`) — é ele que
-  permite ao Claude rotear conversas para a sessão certa (regra do perfil do auditor).
-- OS nova depois disso? Rode a skill de novo — só o delta é aplicado (idempotente).
-- OS arquivada: a sessão correspondente NÃO é apagada pela skill; o Claude oferece
-  arquivá-la (regra do perfil), e o app pede a confirmação final.
+- **Reaproveitar, nunca duplicar**: sessão existente cujo título case com a empresa é
+  vinculada e agrupada.
+- O vínculo `sessao_claude:` no memory.md é o que permite ao Claude rotear conversas para
+  a sessão certa (regra do perfil do auditor).
+- OS arquivada: o vigia NÃO apaga a sessão; o Claude oferece arquivá-la (regra do
+  perfil), e o app pede a confirmação final.
+- Windows: o vigia roda como Tarefa Agendada ("AFT Sessoes - Vigia"); macOS: LaunchAgent
+  (`br.aft.sessoes-vigia`).
 
 ## Solução de problemas
 
 | Sintoma | O que fazer |
 |---|---|
-| "Sessão não encontrada no disco" ao abrir uma sessão nova | **Normal e esperado** para empresa que nunca teve conversa: a sessão nasce vazia e o histórico só é criado na primeira mensagem. Basta enviar a primeira mensagem — ela começa já na pasta da OS, mantendo título e grupo. NÃO clique em "Apagar" (a sessão seria recriada na próxima sincronização) |
-| Grupo não apareceu após reabrir | Ler o log; se o script ainda aguardava, o app foi reaberto antes de fechar de fato — feche de novo (o vigia continua ativo) |
-| "estrutura do config não reconhecida" | O app mudou o formato interno numa atualização — rode /aft-atualizar; nada foi alterado |
-| Sessão criada não abre direito | `--desfazer` restaura tudo; reporte o caso |
-| Quero voltar atrás | `python3 ~/.claude/skills/_scripts/sessoes_os.py --desfazer` (modo vigia também) |
+| "Sessão não encontrada no disco" ao abrir uma sessão nova | **Normal e esperado** para empresa que nunca teve conversa: a sessão nasce vazia e o histórico só é criado na primeira mensagem. Basta enviar a primeira mensagem. NÃO clique em "Apagar" (o vigia a recriaria) |
+| Criei uma OS e a sessão "não apareceu" | Ela aparece na próxima vez que o app for fechado e reaberto (o vigia só escreve com o app fechado). Sem paciência? Fluxo "quero AGORA" acima |
+| Grupo/sessões nunca aparecem | `instalar_vigia_sessoes.py status` — se não instalado, instale; leia `~/Documents/AFT/.sessoes-os.log` |
+| "estrutura do config não reconhecida" no log | O app mudou o formato interno numa atualização — rode /aft-atualizar; nada foi alterado |
+| Quero voltar atrás | `--desfazer` (restaura backup e remove o que foi criado) + `instalar_vigia_sessoes.py remover` se quiser desligar o automático |

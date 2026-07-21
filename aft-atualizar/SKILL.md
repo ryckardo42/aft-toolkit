@@ -227,22 +227,26 @@ Aja conforme a **única linha** de saída:
 - **`SEM_ARQUIVO`** → o AFT nunca instalou o perfil. Fora do escopo desta skill: sugira
   rodar `/aft-setup` (Passo 5b) numa próxima vez. Não crie o arquivo aqui.
 
-## Passo 2f — Sessões por auditoria (conferir, oferecer se faltar)
+## Passo 2f — Vigia de sessões (garantir instalado, sem perguntar)
 
-Rode o diagnóstico (não altera nada):
+As sessões por empresa (grupo "OS ATIVAS" do menu lateral) são automáticas via **vigia de
+sessões** — parte padrão da instalação. Confira e garanta:
 
 ```bash
-python ~/.claude/skills/_scripts/sessoes_os.py --status
+python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py status
 ```
 
-Leia a linha `JSON:` do final:
-
-- **`criar` = 0 e `agrupar` = 0** → nada a fazer; siga para o Passo 3.
-- **Há OS sem sessão** → informe em uma frase (*"Você tem N auditorias sem sessão própria
-  no menu lateral"*) e ofereça rodar a `/sessoes-os` **depois** que a atualização
-  terminar (ela precisa fechar e reabrir o app; não faça isso no meio da atualização).
-- **Script falhou / formato não reconhecido** → apenas registre no resumo do Passo 4; não
-  é bloqueante.
+- **"não instalado"** → instale **sem perguntar** (mesmo espírito do Passo 2c):
+  ```bash
+  python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py instalar <python_path>
+  ```
+  e mencione no resumo do Passo 4: *"Sessões por empresa agora são automáticas — cada
+  auditoria em OS ATIVAS ganha a própria sessão no grupo 'OS ATIVAS' na próxima vez que
+  você fechar e reabrir o app."*
+- **Instalado** → nada a fazer. Opcional: rode `sessoes_os.py --status` e, se houver
+  pendências (`criar` > 0), informe que serão aplicadas sozinhas no próximo reinício do
+  app — sem perguntar nada.
+- **Falhou** → registre no resumo do Passo 4; não é bloqueante.
 
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 

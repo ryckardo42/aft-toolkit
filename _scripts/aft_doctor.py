@@ -500,6 +500,33 @@ else:
         add("Perfil do auditor - versao", "ok",
             f"perfil em dia (v{_m.group(1)})")
 
+# 14. Vigia de sessoes (sessoes por empresa automaticas) ----------------------
+# Servico padrao da instalacao: cria as sessoes do grupo "OS ATIVAS" sozinho
+# sempre que o app fecha. Aqui so conferimos se o servico existe.
+if sys.platform == "darwin":
+    _vigia_ok = (HOME / "Library" / "LaunchAgents" / "br.aft.sessoes-vigia.plist").is_file()
+elif sys.platform.startswith("win"):
+    try:
+        _vigia_ok = subprocess.run(
+            ["schtasks", "/Query", "/TN", "AFT Sessoes - Vigia"],
+            capture_output=True).returncode == 0
+    except OSError:
+        _vigia_ok = False
+else:
+    _vigia_ok = None
+
+if _vigia_ok is True:
+    add("Vigia de sessoes", "ok",
+        "instalado - as sessoes por empresa (grupo OS ATIVAS) sao criadas "
+        "sozinhas quando o app fecha")
+elif _vigia_ok is False:
+    add("Vigia de sessoes", "aviso",
+        "servico do vigia de sessoes nao instalado",
+        "Ele faz parte da instalacao padrao. Rode 'Atualize o AFT Toolkit' "
+        "(/aft-atualizar) para instalar - ou peca 'instala o vigia de "
+        "sessoes'. Sem ele, as sessoes por empresa so sao criadas pedindo "
+        "a /sessoes-os.")
+
 # ----------------------------------------------------------------------------
 resumo = {
     "ok": sum(1 for c in checks if c["status"] == "ok"),
