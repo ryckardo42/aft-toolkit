@@ -91,6 +91,42 @@ acumulativo). Também espera o app fechar. Para desligar o automático de vez:
   perfil), e o app pede a confirmação final.
 - Windows: o vigia roda como Tarefa Agendada ("AFT Sessoes - Vigia"); macOS: LaunchAgent
   (`br.aft.sessoes-vigia`).
+- **O grupo é sincronizado pela CONTA claude.ai (servidor), não é local.** Um grupo
+  criado num Mac aparece no Windows e vice-versa. **Descoberta de campo (2026-07-21):** ao
+  iniciar, o app baixa a lista de grupos do servidor e SOBRESCREVE qualquer gravação
+  local — testado e confirmado que ele reescreve até o **Local Storage (leveldb)** poucos
+  segundos após abrir, apagando o grupo que o script tinha gravado com o app fechado.
+  Conclusão: **criar o grupo por arquivo NÃO persiste nesta versão** (nem via
+  `claude_desktop_config.json`, nem via leveldb). O grupo só gruda se for criado pela
+  **interface do app** (que envia ao servidor). As SESSÕES, por serem arquivos locais,
+  persistem sem problema — o que falha é só a caixa visual do grupo.
+- **Interruptor do agrupamento:** se existir o arquivo `~/Documents/AFT/.sessoes-sem-grupo`,
+  o vigia CRIA sessões + contexto + vínculo mas NÃO tenta montar/gravar o grupo (evita
+  backups e ruído inúteis, dado o parágrafo acima). Para religar, apague o arquivo. O
+  `--status` mostra "agrupamento DESLIGADO" e o JSON traz `agrupamento_ligado: false`.
+  Nesse modo, o AFT monta o grupo "OS ATIVAS" uma vez pela interface (arrastando as
+  sessões) e aí sincroniza para sempre, inclusive para as outras máquinas.
+
+## Windows — particularidades (aprendidas em campo)
+
+- **App da Microsoft Store (MSIX)**: o `%APPDATA%\Claude` que o app (e processos filhos
+  dele) enxerga é **virtualizado**; no disco real os dados ficam em
+  `%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude`. O script detecta e
+  prefere o caminho real — obrigatório para o vigia/Tarefa Agendada, que roda fora do
+  contêiner e nem vê o caminho virtual.
+- **Nome de processo**: tanto o app desktop quanto o CLI se chamam `claude.exe`
+  (minúsculo). O script distingue o app pelo caminho do executável
+  (`WindowsApps\Claude_...` na Store; `AnthropicClaude` no instalador clássico).
+- **Reabertura**: app da Store não tem `.exe` fixo para `os.startfile`; lança-se pelo
+  AUMID derivado do próprio caminho do pacote (`Packages\<família>\...` →
+  `shell:AppsFolder\<família>!Claude`), sem depender de `Get-StartApps` (que falha em
+  contexto não interativo, como a Tarefa Agendada do vigia).
+- **Janela piscando**: todo `subprocess` de console (`powershell`, `tasklist`, `pip`) usa
+  `creationflags=CREATE_NO_WINDOW`. Sem isso, cada ciclo do vigia (a cada 20-60s) fazia
+  piscar uma janela de terminal — muito visível rodando em loop permanente.
+- **Console cp1252**: o script reconfigura o stdout para UTF-8 com `errors=replace`
+  (senão acentos/setas derrubam o script com `UnicodeEncodeError`); sob `pythonw.exe`
+  (como o vigia roda) `sys.stdout` é `None`, então todo `print`/log está em `try/except`.
 
 ## Solução de problemas
 
@@ -102,3 +138,5 @@ acumulativo). Também espera o app fechar. Para desligar o automático de vez:
 | Grupo/sessões nunca aparecem | `instalar_vigia_sessoes.py status` — se não instalado, instale; leia `~/Documents/AFT/.sessoes-os.log` |
 | "estrutura do config não reconhecida" no log | O app mudou o formato interno numa atualização — rode /aft-atualizar; nada foi alterado |
 | Quero voltar atrás | `--desfazer` (restaura backup e remove o que foi criado) + `instalar_vigia_sessoes.py remover` se quiser desligar o automático |
+| Grupo "OS ATIVAS" some toda vez que o app reabre | Comportamento ESPERADO desta versão: os grupos vêm do servidor da conta e o app sobrescreve o estado local (JSON e leveldb) ao abrir. Não há como criar o grupo por arquivo. Solução: criar o grupo uma vez pela interface do app (arrastar as sessões), OU desligar o agrupamento (arquivo `.sessoes-sem-grupo`) e conviver com as sessões soltas |
+| (Windows) `UnicodeEncodeError ... cp1252` no log | Script desatualizado sem o reconfigure de stdout — rode `/aft-atualizar` |

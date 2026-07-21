@@ -442,7 +442,9 @@ if n_proprias:
 import urllib.request as _url
 
 try:
-    with _url.urlopen("http://127.0.0.1:8347/", timeout=3) as _r:
+    # A 1a resposta apos o servidor subir pode levar alguns segundos (varre
+    # todas as OS ATIVAS antes de responder) - 3s gerava falso "nao responde".
+    with _url.urlopen("http://127.0.0.1:8347/", timeout=10) as _r:
         _no_ar = 200 <= _r.status < 500
 except Exception:
     _no_ar = False
