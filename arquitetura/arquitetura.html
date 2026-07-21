@@ -137,7 +137,7 @@ const ARCH = {
  "data": "2026-07-15",
  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 37,
+  "skills": 38,
   "scripts": 26,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 21/07/2026"
@@ -389,6 +389,11 @@ const ARCH = {
      "nome": "/dimensionamento-sesmt-nr04",
      "role": "Calcula a composição mínima do SESMT (Anexo II da NR-04) a partir do grau de risco e do nº de trabalhadores — quantidade e regime por profissional, regra de N > 5.000 e Observações A/B (saúde), com memória de cálculo. Também confere subdimensionamento em fiscalização.",
      "tech": "scripts/dimensionar_sesmt.py (Anexo II) · herda o modelo da sessão"
+    },
+    {
+     "nome": "/cipa-nr05-dimensionamento",
+     "role": "Dimensiona a CIPA (Quadro I da NR-05) a partir do grau de risco e do nº de empregados. Devolve os dois níveis — quantitativo por bancada (efetivos/suplentes de cada representação) e total paritário (dobro: eleitos + designados) —, com a regra de grupos de 2.500 acima de 10.000, e orienta qual número comparar com cada documento na verificação fiscal.",
+     "tech": "scripts/dimensionar_cipa.py (Quadro I) · herda o modelo da sessão"
     }
    ]
   },

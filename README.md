@@ -73,6 +73,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/NR18` | Especialista na indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco II - IRREGULARIDADE e a linha do RT |
 | `/cnae-grau-risco-nr04` | Enquadra a atividade econômica no **grau de risco (1 a 4)** do Anexo I da NR-04 — por código CNAE (qualquer formato, com redução de subclasse a classe) ou por descrição da atividade — de forma determinística (script sobre os 673 códigos validados). Lembra a regra do maior GR (item 4.5.1) e encadeia para o dimensionamento do SESMT |
 | `/dimensionamento-sesmt-nr04` | Calcula a composição mínima do **SESMT** (Anexo II da NR-04) a partir do grau de risco e do nº de trabalhadores — quantidade e regime de cada profissional, regra de N > 5.000 e Observações A/B (saúde), com memória de cálculo — por script determinístico. Serve também à verificação de subdimensionamento em fiscalização |
+| `/cipa-nr05-dimensionamento` | Dimensiona a **CIPA** (Quadro I da NR-05) a partir do grau de risco e do nº de empregados — por script determinístico. Devolve os dois níveis: o quantitativo **por bancada** (efetivos e suplentes de cada representação) e o **total paritário** (dobro: eleitos pelos empregados + designados pelo empregador), com a regra de grupos de 2.500 acima de 10.000. Orienta qual número comparar com cada documento na verificação fiscal (ata de eleição × total paritário) |
 
 ### Jornada / ponto eletrônico (Portaria 671/2021)
 | Skill | O que faz |
@@ -168,7 +169,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── preparacao-acao-fiscal/ · NAD/   (planejamento pré-visita e notificação de documentos)
 ├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · auditoria-AR-NR12/ · rt-manutencao/ · analise-acidente/ · autos-lavrados/ · revisa-auto/ · modelo-docx/ · sessoes-os/
 ├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
-├── cnae-grau-risco-nr04/ · dimensionamento-sesmt-nr04/   (enquadramento CNAE→GR e SESMT da NR-04, por script determinístico)
+├── cnae-grau-risco-nr04/ · dimensionamento-sesmt-nr04/ · cipa-nr05-dimensionamento/   (enquadramento CNAE→GR, SESMT da NR-04 e CIPA da NR-05, por script determinístico)
 ├── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 └── minha-*/   (SUAS skills próprias — criadas pelo /nova-skill; git-ignoradas, sobrevivem a toda atualização)
 ```

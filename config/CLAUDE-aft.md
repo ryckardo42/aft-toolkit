@@ -115,6 +115,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Auditar AET (Análise Ergonômica do Trabalho, NR-17) → `/aet-auditoria`
 - Grau de risco de uma atividade / enquadramento CNAE (Anexo I da NR-04) → `/cnae-grau-risco-nr04`
 - Dimensionar ou conferir o SESMT (Anexo II da NR-04, grau de risco + nº de trabalhadores) → `/dimensionamento-sesmt-nr04`
+- Dimensionar ou conferir a CIPA (Quadro I da NR-05, grau de risco + nº de empregados; por bancada e total paritário) → `/cipa-nr05-dimensionamento`
 - Analisar acidente ou doença do trabalho (relatório da IN 2/2022) → `/analise-acidente`
 - Notificar a empresa para corrigir irregularidades → `/tn-nco`
 - Interdição/embargo (risco grave e iminente) → `/aft-rt-rgi`

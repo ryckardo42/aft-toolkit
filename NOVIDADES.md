@@ -6,6 +6,25 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 21/07/2026 (2)
+<!-- commit: skill-nr05-cipa -->
+
+**Dimensionamento da CIPA (NR-05)** — nova skill `/cipa-nr05-dimensionamento`,
+irmã das duas consultoras da NR-04. Você informa o **grau de risco** (o mesmo do
+Anexo I da NR-04, que o `/cnae-grau-risco-nr04` descobre pelo CNAE) e o **número
+de empregados** do estabelecimento, e ela calcula a composição mínima da CIPA
+pelo Quadro I — sempre com a memória de cálculo.
+
+O cuidado principal desta skill é não cair na **pegadinha da paridade**: os
+números do Quadro I são **por bancada** (cada representação separada), e a CIPA
+é paritária, então o total real é o **dobro** — metade eleita pelos empregados,
+metade designada pelo empregador. A skill mostra os dois níveis (por bancada e
+total) e ainda te diz **qual número comparar com qual documento** na
+fiscalização: uma ata de eleição traz só a bancada dos empregados (compare com o
+Quadro I por bancada); uma ata de instalação/posse traz as duas (compare com o
+total paritário). Também trata a regra dos grupos de 2.500 acima de 10.000
+empregados.
+
 ## 21/07/2026
 <!-- commit: skills-nr04-cnae-sesmt -->
 
