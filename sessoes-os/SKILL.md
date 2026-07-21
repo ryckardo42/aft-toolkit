@@ -32,6 +32,13 @@ O AFT não precisa fazer nada: criou OS nova (`/nova-os`), organizou um lote
 (`/organiza-os`), copiou uma pasta à mão — o vigia cuida, no próximo ciclo natural de
 fechar/abrir o app.
 
+**Briefing automático da sessão:** o vigia também mantém um `CLAUDE.md` de contexto em
+cada pasta de OS (esse independe do app estar aberto — é criado em minutos). É ele que
+faz a sessão da empresa "saber quem é" já na primeira mensagem: ler o `memory.md` antes
+de tudo, usar as skills do toolkit, entender que "atualizar o card/painel/datas" =
+registrar na ficha, classificar documentos jogados na conversa e respeitar as regras de
+privacidade. Nunca sobrescreve um `CLAUDE.md` que o AFT tenha personalizado.
+
 > **Aviso honesto:** o app não tem API oficial para sessões/grupos; o vigia escreve no
 > armazenamento interno do app, sempre com o app FECHADO (por isso o "próximo
 > fechamento"), com backup automático antes e `--desfazer` completo. Se uma atualização
@@ -91,6 +98,7 @@ acumulativo). Também espera o app fechar. Para desligar o automático de vez:
 |---|---|
 | "Sessão não encontrada no disco" ao abrir uma sessão nova | **Normal e esperado** para empresa que nunca teve conversa: a sessão nasce vazia e o histórico só é criado na primeira mensagem. Basta enviar a primeira mensagem. NÃO clique em "Apagar" (o vigia a recriaria) |
 | Criei uma OS e a sessão "não apareceu" | Ela aparece na próxima vez que o app for fechado e reaberto (o vigia só escreve com o app fechado). Sem paciência? Fluxo "quero AGORA" acima |
+| A sessão da empresa "não sabia de nada" na 1ª mensagem | Falta o `CLAUDE.md` de contexto na pasta da OS (o vigia cria em minutos; force com `sessoes_os.py --contexto`). Conversas JÁ iniciadas não recarregam o contexto — peça "leia o memory.md desta pasta" ou comece conversa nova na mesma sessão |
 | Grupo/sessões nunca aparecem | `instalar_vigia_sessoes.py status` — se não instalado, instale; leia `~/Documents/AFT/.sessoes-os.log` |
 | "estrutura do config não reconhecida" no log | O app mudou o formato interno numa atualização — rode /aft-atualizar; nada foi alterado |
 | Quero voltar atrás | `--desfazer` (restaura backup e remove o que foi criado) + `instalar_vigia_sessoes.py remover` se quiser desligar o automático |

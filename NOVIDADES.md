@@ -22,6 +22,13 @@ abrir o app**. O `/aft-doctor` ganhou a checagem do vigia, e a `/sessoes-os`
 vira a skill das exceções: conferir ("verifica as sessões"), aplicar AGORA sem
 esperar o próximo reinício, desfazer tudo ou desligar o automático.
 
+E cada sessão de empresa agora **nasce sabendo quem é**: o vigia mantém um
+arquivo de contexto (`CLAUDE.md`) na pasta de cada OS, que o app carrega ao
+abrir a sessão. Na primeira mensagem — "fiz essa notificação hoje, atualiza o
+card e as datas" — o Claude já sabe que deve ler a ficha `memory.md`, que
+"card/painel" é o painel do toolkit, quais skills usar e as regras de
+privacidade. Sem esse briefing, a sessão nova respondia como um chat genérico.
+
 ## 21/07/2026 (2)
 <!-- commit: skill-nr05-cipa -->
 
