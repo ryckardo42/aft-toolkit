@@ -8,7 +8,8 @@ description: >
   auditoria", "abrir auditoria", "nova empresa", "começar fiscalização", "registrar
   empresa", "abrir OS", "criar pasta da empresa". A skill pergunta o nome da auditoria
   (razão social, fantasia ou qualquer nome — CNPJ/CPF é opcional aqui, só vira obrigatório
-  no /gera-ai), município e (opcional) os dados do primeiro DET (código, ciência, prazo),
+  no /gera-ai), município, RI (avisa que sem ele o sync do DET não importa notificações) e
+  (opcional) os dados do primeiro DET (código, ciência, prazo),
   cria a pasta `~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/` e o `memory.md` da OS no
   esquema padrão do toolkit. É o ponto de entrada do fluxo de fiscalização; depois o AFT
   usa /inspecao-fisica, /gera-ai, etc. O painel (/painel) lê os memory.md criados aqui
@@ -43,6 +44,7 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 | Nome da auditoria | **Sim** | em CAIXA ALTA, padrão das pastas. Pode ser a razão social, um nome fantasia ou qualquer identificação que o AFT prefira usar (ex.: "TRANSPORTADORA XYZ", "DENUNCIA POSTO CENTRO") — com ou sem CNPJ/CPF embutido |
 | CNPJ (14 díg.) **ou** CPF/CAEPF (11 díg.) | Não | empregador pessoa jurídica usa CNPJ; pessoa física (ex.: produtor rural) usa CPF/CAEPF. Aceite com ou sem pontuação; guarde só dígitos. Se o AFT ainda não sabe ou não quer informar agora, siga sem — só se torna obrigatório na hora de gerar os autos (`/gera-ai`) |
 | Município | Não | onde fica o estabelecimento |
+| RI (Relatório de Inspeção) | Não | 9 dígitos. É o identificador da auditoria no DET — **sem ele, o sync automático do painel (extensão Chrome) não importa notificações desta OS** |
 | Nº de trabalhadores | Não | quantos no estabelecimento (alimenta CIPA/SESMT depois) |
 | CNAE principal | Não | ex.: `4120-4/00`. Se informado, derive o grau de risco pelo Quadro I da NR-04 (`/cnae-grau-risco-nr04`) — não pergunte o grau |
 | Grau de risco | Não | 1 a 4 — só pergunte se não houver CNAE para derivar |
@@ -51,6 +53,8 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 | DET — prazo de entrega | Não | dd/mm/aaaa (é o que o painel vigia) |
 
 > Trabalhadores/CNAE/grau de risco quase nunca são conhecidos ao abrir a OS — são **opcionais** aqui. Se o AFT não informar, deixe vazios: as skills `/auditoria-geral` e `/inspecao-fisica` os coletam depois (dos documentos ou perguntando uma vez).
+>
+> **Sem RI, avise o AFT** (uma frase, sem bloquear o cadastro): *"Sem o RI, o sync automático do DET (extensão Chrome) não vai importar as notificações desta auditoria — você pode informar agora ou completar depois no memory.md."* Se o AFT não souber o RI ainda (comum ao abrir a OS antes da 1ª notificação), siga sem — o `det_sync.py` adota sozinho o RI da primeira notificação confirmada e grava no front-matter, então o aviso é só para quem já tem o RI em mãos e esqueceria de informar.
 
 > Se o AFT ainda não notificou nada pelo DET, deixe a seção de DET vazia — dá para
 > acrescentar depois (basta editar o `memory.md` ou rodar `/det-630`/`/nova-os` de novo).
@@ -89,6 +93,7 @@ mantêm, e que o `/painel` lê:
 empregador: <NOME_DA_AUDITORIA>
 cnpj: "<14 dígitos, ou vazio se ainda não informado>"
 municipio: <município ou vazio>
+ri: "<9 dígitos, ou vazio se ainda não informado>"
 trabalhadores: <N, ou vazio>
 cnae: "<XXXX-X/XX, ou vazio>"
 grau_risco: <1 a 4, ou vazio>
@@ -135,6 +140,7 @@ Mostre um resumo curto e ofereça o próximo passo:
 ✅ OS cadastrada — <NOME_DA_AUDITORIA>
 📁 ~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/
 🪪 CNPJ/CPF: <formatado>   (ou "ainda não informado — obrigatório no /gera-ai")
+🔢 RI: <RI>   (se vazio: "não informado — o sync do DET só importa notificações com RI conhecido; ele mesmo se preenche na 1ª sincronização, ou informe agora")
 🗓️  DET: <CÓDIGO> · prazo <dd/mm/aaaa>   (ou "sem DET cadastrado")
 
 🗂️ Sessão no menu lateral: automática — aparece no grupo "OS ATIVAS" na

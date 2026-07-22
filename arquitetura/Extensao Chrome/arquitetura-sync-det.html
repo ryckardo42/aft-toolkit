@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitetura — Sync DET (SisOS / AFT Toolkit)</title>
+<style>
+  :root {
+    --bg: #f8fafc;         --card: #ffffff;      --ink: #1e293b;
+    --muted: #64748b;      --line: #e2e8f0;      --teal: #14b8a6;
+    --teal-dark: #0f766e;  --amber: #f59e0b;     --violet: #6366f1;
+    --rose: #ef4444;       --code-bg: #f1f5f9;   --chip: #ccfbf1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;       --card: #1e293b;      --ink: #e2e8f0;
+      --muted: #94a3b8;    --line: #334155;      --code-bg: #0b1220;
+      --chip: #134e4a;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.65; padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.7rem; margin-bottom: .3rem; }
+  h2 {
+    font-size: 1.25rem; margin: 2.6rem 0 .9rem; padding-bottom: .4rem;
+    border-bottom: 2px solid var(--teal); color: var(--teal-dark);
+  }
+  @media (prefers-color-scheme: dark) { h2 { color: var(--teal); } }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 .5rem; }
+  p  { margin-bottom: .9rem; }
+  .sub { color: var(--muted); margin-bottom: 1.6rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+  }
+  code, .mono {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: .86em;
+    background: var(--code-bg); padding: .12em .4em; border-radius: 5px;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: .9rem 1.1rem; overflow-x: auto;
+    font-size: .82rem; line-height: 1.5; margin: .8rem 0 1.1rem;
+  }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0 1.2rem; font-size: .9rem; }
+  th, td { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  .chip {
+    display: inline-block; background: var(--chip); color: var(--teal-dark);
+    border-radius: 999px; padding: .1em .7em; font-size: .78rem; font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) { .chip { color: #5eead4; } }
+  .tag { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .tag.bg  { color: var(--violet); }
+  .tag.cs  { color: var(--teal-dark); }
+  .tag.pp  { color: var(--amber); }
+  .tag.srv { color: var(--rose); }
+  ol.steps { counter-reset: passo; list-style: none; margin: .5rem 0 1rem; }
+  ol.steps li {
+    position: relative; padding: .55rem 0 .55rem 3rem;
+    border-left: 2px solid var(--line); margin-left: 1rem;
+  }
+  ol.steps li::before {
+    counter-increment: passo; content: counter(passo);
+    position: absolute; left: -1rem; top: .55rem;
+    width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--teal); color: #fff; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; font-size: .9rem;
+  }
+  .diagram-wrap { overflow-x: auto; margin: 1rem 0 1.4rem; }
+  .diagram-wrap svg { min-width: 720px; width: 100%; height: auto; }
+  .note {
+    border-left: 4px solid var(--amber); background: var(--code-bg);
+    padding: .7rem 1rem; border-radius: 0 10px 10px 0; margin: .9rem 0;
+    font-size: .92rem;
+  }
+  .ok { border-left-color: var(--teal); }
+  ul { margin: 0 0 .9rem 1.3rem; }
+  li { margin-bottom: .35rem; }
+  a { color: var(--teal-dark); }
+  @media (prefers-color-scheme: dark) { a { color: #5eead4; } }
+  footer { color: var(--muted); font-size: .8rem; margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>🔄 Sync DET — arquitetura completa</h1>
+<p class="sub">
+  Extensão <strong>v2.0.0</strong> para Chrome e Edge (Manifest V3) ·
+  <a href="https://chromewebstore.google.com/detail/sync-det-%E2%80%94-sisos-aft-tool/khmecjbidgcndmgmkbpfncjgmmfehiem">página na Chrome Web Store</a><br>
+  Como a extensão captura o token do DET, quem fala com a API oficial e como as
+  notificações chegam ao <code>memory.md</code> de cada OS.
+</p>
+
+<div class="card">
+  <strong>A ideia em uma frase:</strong> a extensão <em>empresta o crachá</em>
+  (o token de sessão que o próprio site do DET usa) e entrega a um destino de
+  confiança — o <strong>painel local do AFT Toolkit</strong> (na sua máquina) ou o
+  <strong>SisOS</strong> (na nuvem) — que usa esse crachá para consultar a
+  <strong>API oficial do DET</strong> e gravar as notificações na ficha certa.
+  A extensão nunca lê a tela, nunca vê os dados das notificações.
+</div>
+
+<h2>1. Mapa geral</h2>
+<div class="diagram-wrap">
+<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,sans-serif">
+  <defs>
+    <marker id="seta" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/>
+    </marker>
+    <marker id="setaT" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#14b8a6"/>
+    </marker>
+  </defs>
+
+  <!-- Navegador -->
+  <rect x="20" y="20" width="420" height="330" rx="14" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="36" y="46" font-size="14" font-weight="700" fill="#6366f1">SEU NAVEGADOR (Chrome / Edge)</text>
+
+  <rect x="40" y="62" width="180" height="76" rx="10" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="52" y="86" font-size="12.5" font-weight="700" fill="#312e81">Site do DET</text>
+  <text x="52" y="103" font-size="10.5" fill="#3730a3">auditor-det.sit.trabalho.gov.br</text>
+  <text x="52" y="120" font-size="10.5" fill="#3730a3">login gov.br · Angular SPA</text>
+
+  <rect x="250" y="62" width="170" height="76" rx="10" fill="#f5f3ff" stroke="#8b5cf6"/>
+  <text x="262" y="86" font-size="12.5" font-weight="700" fill="#4c1d95">background.js</text>
+  <text x="262" y="103" font-size="10.5" fill="#5b21b6">service worker (MV3)</text>
+  <text x="262" y="120" font-size="10.5" fill="#5b21b6">webRequest → captura o token</text>
+
+  <rect x="40" y="170" width="180" height="76" rx="10" fill="#f0fdfa" stroke="#14b8a6"/>
+  <text x="52" y="194" font-size="12.5" font-weight="700" fill="#134e4a">content.js</text>
+  <text x="52" y="211" font-size="10.5" fill="#0f766e">botão "Sincronizar" + toast</text>
+  <text x="52" y="228" font-size="10.5" fill="#0f766e">injetado só na página do DET</text>
+
+  <rect x="250" y="170" width="170" height="76" rx="10" fill="#fffbeb" stroke="#f59e0b"/>
+  <text x="262" y="194" font-size="12.5" font-weight="700" fill="#78350f">popup.html/js/css</text>
+  <text x="262" y="211" font-size="10.5" fill="#92400e">tela de configuração</text>
+  <text x="262" y="228" font-size="10.5" fill="#92400e">status do token</text>
+
+  <rect x="40" y="272" width="380" height="58" rx="10" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="52" y="294" font-size="12" font-weight="700" fill="#334155">chrome.storage</text>
+  <text x="52" y="311" font-size="10.5" fill="#475569">local: token DET (+timestamp, ~25 min) · sync: configuração</text>
+
+  <!-- setas internas -->
+  <line x1="220" y1="100" x2="248" y2="100" stroke="#64748b" stroke-width="1.6" marker-end="url(#seta)"/>
+  <text x="205" y="58" font-size="9.5" fill="#64748b">header Authorization</text>
+  <line x1="335" y1="138" x2="335" y2="168" stroke="#64748b" stroke-width="1.6" marker-end="url(#seta)"/>
+  <line x1="300" y1="138" x2="150" y2="168" stroke="#64748b" stroke-width="1.6" marker-end="url(#seta)"/>
+  <text x="196" y="158" font-size="9.5" fill="#64748b">token via mensagem/storage</text>
+
+  <!-- Destino local -->
+  <rect x="500" y="20" width="380" height="330" rx="14" fill="none" stroke="#14b8a6" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="516" y="46" font-size="14" font-weight="700" fill="#0f766e">SUA MÁQUINA — painel local (AFT Toolkit)</text>
+
+  <rect x="520" y="62" width="340" height="70" rx="10" fill="#f0fdfa" stroke="#14b8a6"/>
+  <text x="532" y="86" font-size="12.5" font-weight="700" fill="#134e4a">servir_painel.py — http://127.0.0.1:8347</text>
+  <text x="532" y="103" font-size="10.5" fill="#0f766e">servidor HTTP local · POST /api/det-sync</text>
+  <text x="532" y="120" font-size="10.5" fill="#0f766e">também: /api/ping · /api/acao (checkboxes do painel)</text>
+
+  <rect x="520" y="156" width="340" height="70" rx="10" fill="#f0fdfa" stroke="#14b8a6"/>
+  <text x="532" y="180" font-size="12.5" font-weight="700" fill="#134e4a">det_sync.py</text>
+  <text x="532" y="197" font-size="10.5" fill="#0f766e">consulta a API do DET por OS · filtra por status e RI</text>
+  <text x="532" y="214" font-size="10.5" fill="#0f766e">backup antes de escrever · nunca marca respondida</text>
+
+  <rect x="520" y="250" width="340" height="80" rx="10" fill="#fefce8" stroke="#eab308"/>
+  <text x="532" y="274" font-size="12.5" font-weight="700" fill="#713f12">OS ATIVAS/&lt;EMPREGADOR CNPJ&gt;/memory.md</text>
+  <text x="532" y="291" font-size="10.5" fill="#854d0e">## Notificações DET</text>
+  <text x="532" y="308" font-size="10.5" fill="#854d0e">- [ ] CÓDIGO — prazo dd/mm/aaaa</text>
+  <text x="532" y="325" font-size="10.5" fill="#854d0e">(o painel.html lê daqui os vencimentos)</text>
+
+  <line x1="690" y1="132" x2="690" y2="154" stroke="#14b8a6" stroke-width="1.8" marker-end="url(#setaT)"/>
+  <line x1="690" y1="226" x2="690" y2="248" stroke="#14b8a6" stroke-width="1.8" marker-end="url(#setaT)"/>
+
+  <!-- Seta content -> painel -->
+  <path d="M 420 208 C 470 208, 470 97, 518 97" fill="none" stroke="#14b8a6" stroke-width="2.2" marker-end="url(#setaT)"/>
+  <text x="432" y="185" font-size="10" font-weight="700" fill="#0f766e">POST {token}</text>
+  <text x="432" y="198" font-size="9.5" fill="#0f766e">(via background, sem CORS)</text>
+
+  <!-- API DET -->
+  <rect x="500" y="392" width="380" height="74" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="516" y="416" font-size="13" font-weight="700" fill="#312e81">API OFICIAL DO DET (governo)</text>
+  <text x="516" y="434" font-size="10.5" fill="#3730a3">POST /services/auditor/v1/notificacoes/pesquisa</text>
+  <text x="516" y="451" font-size="10.5" fill="#3730a3">Authorization: Bearer &lt;token&gt; · pesquisa por CNPJ/CPF ou RI</text>
+
+  <path d="M 620 330 C 600 360, 600 370, 620 390" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#seta)"/>
+  <text x="455" y="374" font-size="9.5" fill="#64748b">det_sync.py consulta com o token</text>
+
+  <!-- SisOS -->
+  <rect x="20" y="392" width="420" height="74" rx="12" fill="#fdf2f8" stroke="#db2777" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <text x="36" y="416" font-size="13" font-weight="700" fill="#9d174d">DESTINO ALTERNATIVO — SisOS (nuvem, opcional)</text>
+  <text x="36" y="434" font-size="10.5" fill="#be185d">https://sisos.vercel.app · POST /api/extension/sync (X-Extension-Token)</text>
+  <text x="36" y="451" font-size="10.5" fill="#be185d">Next.js + Supabase — mesma lógica, gravando no banco em vez do memory.md</text>
+
+  <path d="M 130 246 C 130 300, 130 340, 130 390" fill="none" stroke="#db2777" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <text x="140" y="368" font-size="9.5" fill="#be185d">se configurado</text>
+
+  <text x="30" y="540" font-size="10.5" fill="#64748b">— linha cheia: modo painel local (o seu) · linha tracejada rosa: modo SisOS (desligado no seu uso)</text>
+</svg>
+</div>
+
+<h2>2. Onde cada coisa mora</h2>
+<table>
+  <tr><th>Peça</th><th>Onde mora</th><th>Quando executa</th></tr>
+  <tr>
+    <td><strong>Código-fonte da extensão</strong></td>
+    <td><code>~/Documents/Claude/SisOS/chrome-extension/</code> (repositório SisOS, GitHub <code>ryckardo42/SisOS</code>)</td>
+    <td>— (é só o fonte; editar aqui não muda o que está instalado)</td>
+  </tr>
+  <tr>
+    <td><strong>Extensão publicada</strong></td>
+    <td>Chrome Web Store (e Edge Add-ons) — instalada, vive dentro do perfil do navegador</td>
+    <td>O navegador a carrega ao abrir; atualiza sozinha quando sai versão nova na loja</td>
+  </tr>
+  <tr>
+    <td><strong>Painel local (servidor)</strong></td>
+    <td><code>~/Documents/aft-toolkit/_scripts/servir_painel.py</code> (instalado pelo <code>/aft-setup</code> como serviço que sobe com o sistema)</td>
+    <td>Sempre ligado, escutando em <code>http://127.0.0.1:8347</code></td>
+  </tr>
+  <tr>
+    <td><strong>Motor do sync</strong></td>
+    <td><code>~/Documents/aft-toolkit/_scripts/det_sync.py</code></td>
+    <td>Chamado pelo servidor a cada <code>POST /api/det-sync</code></td>
+  </tr>
+  <tr>
+    <td><strong>Fichas das OS</strong></td>
+    <td><code>OS ATIVAS/&lt;EMPREGADOR CNPJ&gt;/memory.md</code></td>
+    <td>Alteradas pelo <code>det_sync.py</code> (com backup prévio em <code>.backups/</code>)</td>
+  </tr>
+  <tr>
+    <td><strong>API do DET</strong></td>
+    <td>Servidores do governo — <code>auditor-det.sit.trabalho.gov.br</code></td>
+    <td>Respondendo às consultas feitas com o token do próprio AFT</td>
+  </tr>
+  <tr>
+    <td><strong>SisOS (opcional)</strong></td>
+    <td>Nuvem — <code>sisos.vercel.app</code> (Next.js + Supabase)</td>
+    <td>Só se configurado no popup (no seu uso, fica desligado)</td>
+  </tr>
+</table>
+
+<h2>3. Os 4 moradores da extensão</h2>
+
+<div class="card">
+  <span class="tag pp">manifest.json — a certidão de nascimento</span>
+  <p>Declara o que a extensão é e o que pode fazer. Pontos-chave:</p>
+  <ul>
+    <li><strong>Permissões:</strong> <code>storage</code> (guardar token e configuração),
+        <code>tabs</code> (abrir/focar a aba do DET), <code>webRequest</code> (observar os
+        cabeçalhos das requisições — é assim que o token é capturado).</li>
+    <li><strong>Hosts autorizados:</strong> só o DET, o SisOS e <code>127.0.0.1</code>/<code>localhost</code>.
+        Nenhum outro site é visível para a extensão.</li>
+    <li>Registra o <code>background.js</code> como service worker, injeta o
+        <code>content.js</code> apenas no domínio do DET e define o <code>popup.html</code>
+        como a janelinha do ícone.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <span class="tag bg">background.js — o vigia (service worker)</span>
+  <p>Roda em segundo plano, sem interface. Duas funções:</p>
+  <ul>
+    <li><strong>Capturar o token:</strong> via <code>chrome.webRequest.onBeforeSendHeaders</code>,
+        observa as requisições que <em>o próprio site do DET</em> faz e extrai o cabeçalho
+        <code>Authorization: Bearer &lt;JWT&gt;</code>. Valida o formato (3 partes; payload com
+        <code>exp</code>/<code>sub</code>/<code>cif</code>/<code>unique_name</code>), ignora duplicatas,
+        grava em <code>chrome.storage.local</code> com timestamp e avisa a aba do DET.</li>
+    <li><strong>Proxy do sync local:</strong> quando o content.js pede, é ele quem faz o
+        <code>POST http://127.0.0.1:8347/api/det-sync</code> — no service worker, com
+        <code>host_permission</code>, não existe bloqueio de CORS.</li>
+  </ul>
+  <div class="note">Por ser MV3, o service worker "dorme" quando ocioso e acorda nos
+  eventos. Por isso o token também fica no <code>storage.local</code> — sobrevive ao
+  cochilo e a recarregamentos da aba (mas expira em ~25 min).</div>
+</div>
+
+<div class="card">
+  <span class="tag cs">content.js — o rosto na página do DET</span>
+  <ul>
+    <li>Injetado <em>somente</em> em <code>auditor-det.sit.trabalho.gov.br</code>.</li>
+    <li>Desenha o <strong>botão flutuante "Sincronizar"</strong> (canto inferior direito) e os
+        <strong>toasts</strong> de resultado.</li>
+    <li>No clique: lê a configuração (<code>storage.sync</code>), pega o token (memória, com
+        fallback no <code>storage.local</code> se tiver menos de 25 min) e dispara para os destinos
+        configurados — SisOS via <code>fetch</code> direto, painel local via mensagem ao background.</li>
+    <li>Mostra o resultado: <code>✅ Local: 2 importada(s) · 1 prazo(s) atualizado(s)</code> —
+        incluindo, quando houver, <code>↳ N de outra fiscalização (ignoradas)</code>.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <span class="tag pp">popup.html + popup.js + popup.css — o painel de controle</span>
+  <ul>
+    <li>Abre ao clicar no ícone da extensão. Campos: URL/token do SisOS (opcionais) e a
+        caixa <strong>PAINEL LOCAL (AFT TOOLKIT)</strong> com a URL (padrão
+        <code>http://127.0.0.1:8347</code>).</li>
+    <li>Salva em <code>chrome.storage.sync</code> — a configuração acompanha o perfil do
+        Chrome/Edge entre máquinas.</li>
+    <li>Tem um indicador de status do token e um botão "Abrir DET".</li>
+  </ul>
+  <div class="note">Bug conhecido (cosmético): o indicador lê
+  <code>storage.session['det_access_token']</code>, mas o token é gravado em
+  <code>storage.local['sisos_det_token']</code> — o status mostra "Token não encontrado"
+  mesmo com o sync funcionando. Correção pendente.</div>
+</div>
+
+<div class="note">O arquivo <code>injected.js</code> na pasta do fonte é um resto da v1 —
+não é referenciado pelo <code>manifest.json</code> e não é executado nem empacotado.</div>
+
+<h2>4. O fluxo completo, passo a passo</h2>
+<ol class="steps">
+  <li><strong>Você navega logado no DET.</strong> O site Angular faz suas próprias chamadas à
+      API, cada uma levando o token de sessão no cabeçalho.</li>
+  <li><strong>background.js captura o token</strong> desses cabeçalhos (nunca da tela, nunca da
+      sua senha), valida e guarda com timestamp.</li>
+  <li><strong>Você clica em "Sincronizar"</strong> (botão do content.js na página do DET).</li>
+  <li><strong>O token viaja para o painel local</strong>: content.js → background.js →
+      <code>POST http://127.0.0.1:8347/api/det-sync</code> com corpo
+      <code>{"det_access_token": "..."}</code>. Tudo dentro da sua máquina.</li>
+  <li><strong>servir_painel.py recebe e chama det_sync.py</strong>, que percorre cada pasta de
+      <code>OS ATIVAS/</code> que tenha <code>memory.md</code>.</li>
+  <li><strong>Para cada OS, det_sync.py consulta a API do DET</strong> (por CNPJ/CPF; RI como
+      fallback), usando o token emprestado — a mesma consulta que a tela "Notificações" faz.</li>
+  <li><strong>Filtros:</strong> só notificações <em>Confirmadas</em> (<code>status=1</code>) com
+      data de lavratura, e <em>só do(s) RI(s) declarado(s) no campo <code>ri:</code> do
+      front-matter</em> — o identificador canônico da auditoria (ver seção 6).
+      As de outras fiscalizações voltam como "ignoradas" no relatório — nunca em silêncio.</li>
+  <li><strong>Escrita no memory.md</strong> (com backup antes): notificação nova vira
+      <code>- [ ] CÓDIGO — prazo dd/mm/aaaa</code> + uma sub-linha de detalhes
+      (<code>lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente]</code>);
+      prazo que mudou é atualizado na linha existente; o checkbox <code>[ ]/[x]</code> nunca é
+      alterado — respondida é decisão do AFT. O alerta "atualização pendente" é
+      <em>dispensável</em> no painel (um clique grava <code>&lt;!-- visto: --&gt;</code>) e só
+      volta se a empresa fizer entrega nova.</li>
+  <li><strong>O resultado volta pelo mesmo caminho</strong> e aparece como toast na página do
+      DET. O painel (<code>painel.html</code>) passa a mostrar os novos vencimentos.</li>
+</ol>
+
+<h2>5. A API do DET em detalhe</h2>
+<div class="card">
+  <p><strong>Endpoint</strong> (o mesmo que alimenta a tela "Notificações" do site):</p>
+  <pre><code>POST https://auditor-det.sit.trabalho.gov.br/services/auditor/v1/notificacoes/pesquisa
+Authorization: Bearer &lt;token de sessão do AFT&gt;
+Content-Type: application/json</code></pre>
+  <p><strong>Corpo da pesquisa</strong> enviado pelo <code>det_sync.py</code>:</p>
+  <pre><code>{
+  "isPesquisaPadrao": false,
+  "niEmpregador": "&lt;CNPJ/CPF ou null&gt;",   ← campo principal
+  "ri": "&lt;RI, só se não houver CNPJ&gt;",
+  "isSomenteMinhas": true,                 ← só notificações do próprio AFT
+  "sequencia": 0, "ordenacaoCampo": "id", "ordenacaoDesc": false, ...
+}</code></pre>
+  <p><strong>Campos da resposta que o painel usa hoje:</strong></p>
+  <table>
+    <tr><th>Campo</th><th>O que é</th><th>Uso</th></tr>
+    <tr><td><code>codigo</code></td><td>código da notificação (ex.: S8MHKG82QO1T9I)</td><td>identidade da linha no memory.md</td></tr>
+    <tr><td><code>status</code></td><td>situação (1 = Confirmada)</td><td>filtro de elegibilidade</td></tr>
+    <tr><td><code>dataEnvio</code></td><td>data da lavratura</td><td>filtro + desempate de RI</td></tr>
+    <tr><td><code>itemDataProximaEntrega</code></td><td>próximo prazo de entrega</td><td>o "— prazo dd/mm/aaaa" da linha</td></tr>
+    <tr><td><code>ri</code></td><td>nº do Relatório de Inspeção</td><td>vínculo notificação × fiscalização</td></tr>
+    <tr><td><code>situacaoRi</code></td><td>situação da fiscalização</td><td>informativo (relatório de ignoradas)</td></tr>
+    <tr><td><code>dataCiencia</code></td><td>data da ciência do empregador</td><td>sub-linha de detalhes</td></tr>
+    <tr><td><code>itemDataUltimaEntrega</code></td><td>última entrega do empregador</td><td>sub-linha + fingerprint do alerta dispensável</td></tr>
+    <tr><td><code>itemAtualizado</code></td><td>triângulo "Existe atualização pendente"</td><td>alerta "⚠️" da sub-linha (dispensável)</td></tr>
+  </table>
+  <p class="sub" style="margin:0"><strong>Constatado em produção (19–22/07/2026):</strong> a API
+  pode continuar devolvendo <code>itemAtualizado=true</code> mesmo depois de o triângulo sumir da
+  tela do DET (a tela apaga quando o AFT abre a notificação; o campo, não necessariamente). Por
+  isso o alerta local é <em>dispensável</em>: um clique no painel grava
+  <code>&lt;!-- visto: última entrega --&gt;</code> na sub-linha, e o alerta só reaparece se
+  <code>itemDataUltimaEntrega</code> mudar (entrega nova = novidade real).</p>
+</div>
+
+<h2>6. O filtro de RI — por que existe e como funciona</h2>
+<div class="card">
+  <p>A pesquisa é por <strong>empregador</strong>, então o DET devolve notificações de
+  <em>todas</em> as fiscalizações já feitas naquele CNPJ — inclusive antigas, de anos
+  anteriores. O que amarra uma notificação à auditoria <em>atual</em> é o <strong>RI</strong>.</p>
+  <p><strong>RIs "desta OS"</strong> = <em>somente</em> o(s) declarado(s) no campo
+  <code>ri:</code> do front-matter do memory.md — o RI é o identificador canônico da
+  auditoria. Para uma OS que acompanha <em>duas</em> fiscalizações do mesmo empregador
+  (ex.: ação fiscal + investigação de acidente), declare os dois no próprio campo,
+  separados por vírgula: <code>ri: "320038432, 320199999"</code>. Nada é inferido de
+  códigos já registrados na ficha. Se a ficha ainda não tem <code>ri:</code>, o sync adota
+  o da notificação <em>mais recente</em>, grava no front-matter, e daí em diante vale a
+  regra estrita.</p>
+  <div class="note ok"><strong>Regra de ouro:</strong> notificação de RI alheio nunca é
+  importada — e nunca é descartada em silêncio: volta no toast e no relatório como
+  "ignorada", para o AFT saber que existe e decidir.</div>
+  <p class="sub" style="margin:0">Histórico: em 19/07/2026 (caso MASTER AGROINDUSTRIAL) a
+  regra foi restrita a códigos em linha de checkbox; em <strong>22/07/2026 (caso CONSORCIO
+  SQ, RI alheio 319969819)</strong> ela foi endurecida de vez — a união com RIs "da ficha"
+  caiu, porque uma notificação antiga registrada um dia tornava o RI dela "conhecido" e
+  puxava as irmãs para sempre. Agora o front-matter manda, sozinho.</p>
+</div>
+
+<h2>7. O painel ativo (http://127.0.0.1:8347)</h2>
+<div class="card">
+  <p>O destino local do sync é também um <strong>dashboard interativo</strong> das auditorias —
+  100% na sua máquina. O <code>gerar_painel.py</code> lê os <code>memory.md</code> de
+  <code>OS ATIVAS/</code> e monta <em>um card por OS</em>, colorido pela urgência dos prazos de
+  DET; o <code>servir_painel.py</code> serve esse HTML e executa as ações mecânicas, sempre com
+  <strong>backup prévio + edição cirúrgica</strong> da ficha. Aberto por duplo-clique no arquivo
+  (<code>file://</code>), o painel fica somente leitura.</p>
+  <p><strong>Endpoints do servidor:</strong></p>
+  <table>
+    <tr><th>Rota</th><th>Papel</th></tr>
+    <tr><td><code>GET /</code></td><td>painel.html regenerado a cada carregamento (modo interativo)</td></tr>
+    <tr><td><code>GET /api/ping</code></td><td>health-check (usado pelo /aft-doctor e pela extensão)</td></tr>
+    <tr><td><code>POST /api/acao</code></td><td>ações mecânicas nos cards (tabela abaixo)</td></tr>
+    <tr><td><code>POST /api/det-sync</code></td><td>recebe o token da extensão e roda o det_sync.py</td></tr>
+    <tr><td><code>GET /doc/&lt;os&gt;/&lt;arquivo.md&gt;</code></td><td>visualiza relatórios .md da OS (só .md dentro de OS ATIVAS)</td></tr>
+  </table>
+  <p><strong>Ações do <code>POST /api/acao</code></strong> (cada uma = backup + edição de linha
+  no memory.md):</p>
+  <table>
+    <tr><th>Ação</th><th>O que faz</th></tr>
+    <tr><td><code>det</code></td><td>alterna [ ]/[x] da notificação DET (respondida/reaberta)</td></tr>
+    <tr><td><code>det_visto</code></td><td>dispensa o alerta "⚠️ atualização pendente" (volta se houver entrega nova)</td></tr>
+    <tr><td><code>pendencia</code></td><td>marca pendência como resolvida ([x] + carimbo de data)</td></tr>
+    <tr><td><code>anotacao_add</code></td><td>registra anotação da auditoria (<code>- [ ] dd/mm/aaaa — texto</code>)</td></tr>
+    <tr><td><code>anotacao_ok</code></td><td>marca anotação como tratada ([x] + carimbo)</td></tr>
+    <tr><td><code>atividade</code></td><td>nova linha no Registro de atividades (data de hoje)</td></tr>
+    <tr><td><code>status</code></td><td>muda o status da OS (front-matter)</td></tr>
+    <tr><td><code>embargo</code></td><td>alterna embargo/interdição vigente/suspenso (front-matter)</td></tr>
+  </table>
+  <p><strong>O que cada card mostra:</strong> cabeçalho (empregador, CNPJ, município, RI, nº de
+  trabalhadores, CNAE, grau de risco, início/vencimento, embargo) · Notificações DET com a
+  sub-linha de detalhes do sync · Pendências e <em>Anotações da auditoria</em> (em aberto, com
+  adicionar/resolver) · Inspeção física · Registro de atividades · Autos de infração lavrados ·
+  Relatórios .md · botões que copiam comandos prontos para o Claude Code.</p>
+  <p class="sub" style="margin:0">Privacidade: a versão publicada como Artifact (só com
+  consentimento) NÃO leva inspeção física, anotações nem relatórios — podem conter PII.</p>
+</div>
+
+<h2>8. Segurança — o que a extensão nunca faz</h2>
+<div class="card">
+  <ul>
+    <li><strong>Nunca vê sua senha</strong> — o login é no gov.br; a extensão só observa o
+        token que o site já usa.</li>
+    <li><strong>Nunca lê a tela</strong> do DET nem faz scraping — os dados vêm da API oficial,
+        consultada pelo painel.</li>
+    <li><strong>Nunca grava o token em arquivo</strong> — vive em memória e no storage do
+        navegador, expira em ~25 min.</li>
+    <li><strong>Nunca marca notificação como respondida</strong> nem apaga o que você escreveu
+        — cada memory.md alterado recebe backup antes.</li>
+    <li><strong>No modo painel local, nada sai para a internet</strong> além da consulta do
+        próprio painel à API do governo — extensão ↔ painel é 100% <code>127.0.0.1</code>.</li>
+    <li>Modo de inspeção: <code>AFT_DET_DRYRUN=1</code> faz a consulta e devolve o relatório
+        completo <em>sem gravar nada</em>.</li>
+  </ul>
+</div>
+
+<h2>9. Inventário de arquivos</h2>
+<table>
+  <tr><th>Arquivo</th><th>Papel</th><th>Linhas ±</th></tr>
+  <tr><td><code>chrome-extension/manifest.json</code></td><td>identidade, permissões, wiring dos componentes</td><td>45</td></tr>
+  <tr><td><code>chrome-extension/background.js</code></td><td>captura do token · proxy do sync local</td><td>80</td></tr>
+  <tr><td><code>chrome-extension/content.js</code></td><td>botão Sincronizar · orquestra os destinos · toasts</td><td>290</td></tr>
+  <tr><td><code>chrome-extension/popup.html/.js/.css</code></td><td>tela de configuração e status</td><td>160 + html/css</td></tr>
+  <tr><td><code>chrome-extension/icons/</code></td><td>ícones 16/48/128 px</td><td>—</td></tr>
+  <tr><td><code>chrome-extension/injected.js</code></td><td>legado da v1 — não usado, fora do manifest</td><td>—</td></tr>
+  <tr><td><code>aft-toolkit/_scripts/servir_painel.py</code></td><td>servidor local :8347 (ping, ações do painel, det-sync, /doc)</td><td>~600</td></tr>
+  <tr><td><code>aft-toolkit/_scripts/det_sync.py</code></td><td>consulta à API, filtros, escrita nos memory.md</td><td>~520</td></tr>
+  <tr><td><code>aft-toolkit/_scripts/gerar_painel.py</code></td><td>parser dos memory.md + gerador do painel.html (cards, autos, anotações)</td><td>~1300</td></tr>
+  <tr><td><code>SisOS/src/app/api/extension/sync/route.ts</code></td><td>endpoint do destino nuvem (opcional)</td><td>—</td></tr>
+  <tr><td><code>SisOS/src/lib/det/{api-client,sync}.ts</code></td><td>mesma lógica, versão nuvem (Supabase)</td><td>—</td></tr>
+</table>
+
+<footer>
+  Gerado em 19/07/2026 · atualizado em 22/07/2026 (RI estrito por front-matter · alerta
+  dispensável · arquitetura do painel ativo) · Sync DET v2.0.0 · acompanha
+  <code>arquitetura-sync-det.json</code>
+  (a mesma arquitetura em formato estruturado, para consumo por máquina).
+</footer>
+
+</main>
+</body>
+</html>

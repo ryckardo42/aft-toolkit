@@ -1,0 +1,197 @@
+{
+ "projeto": "Sync DET — SisOS / AFT Toolkit",
+ "versao_extensao": "2.0.0",
+ "manifest_version": 3,
+ "navegadores": [
+  "Google Chrome",
+  "Microsoft Edge"
+ ],
+ "loja": "https://chromewebstore.google.com/detail/sync-det-%E2%80%94-sisos-aft-tool/khmecjbidgcndmgmkbpfncjgmmfehiem",
+ "politica_privacidade": "https://sisos.vercel.app/privacidade",
+ "resumo": "A extensão captura o token de sessão do DET no navegador do AFT e o entrega a um destino de confiança (painel local do AFT Toolkit ou SisOS na nuvem), que consulta a API oficial do DET e grava as notificações na ficha da OS correta. A extensão nunca lê a tela nem vê os dados das notificações.",
+ "onde_mora": {
+  "codigo_fonte": "~/Documents/Claude/SisOS/chrome-extension/ (repo GitHub ryckardo42/SisOS)",
+  "instalada": "Perfil do navegador (Chrome Web Store / Edge Add-ons); atualiza sozinha pela loja",
+  "painel_local_servidor": "~/Documents/aft-toolkit/_scripts/servir_painel.py — serviço sempre ligado em http://127.0.0.1:8347 (instalado pelo /aft-setup)",
+  "motor_sync": "~/Documents/aft-toolkit/_scripts/det_sync.py — chamado pelo servidor a cada POST /api/det-sync",
+  "fichas": "~/Documents/Cowork OS/AFT COWORK/OS ATIVAS/<EMPREGADOR CNPJ>/memory.md",
+  "sisos_nuvem": "https://sisos.vercel.app (Next.js + Supabase) — destino opcional, desligado no uso local"
+ },
+ "componentes": [
+  {
+   "arquivo": "manifest.json",
+   "papel": "Certidão de nascimento: identidade, permissões e wiring dos componentes.",
+   "permissoes": [
+    "storage",
+    "tabs",
+    "webRequest"
+   ],
+   "host_permissions": [
+    "https://auditor-det.sit.trabalho.gov.br/*",
+    "https://sisos.vercel.app/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+   ]
+  },
+  {
+   "arquivo": "background.js",
+   "tipo": "service worker (MV3)",
+   "papel": "O vigia. (1) Captura o token: chrome.webRequest.onBeforeSendHeaders observa as requisições que o próprio site do DET faz e extrai o header 'Authorization: Bearer <JWT>'; valida o formato (3 partes; payload com exp/sub/cif/unique_name), ignora duplicatas, grava em chrome.storage.local com timestamp e avisa a aba do DET. (2) Proxy do sync local: faz o POST ao painel em 127.0.0.1 (no service worker, com host_permission, não há CORS).",
+   "eventos": [
+    "chrome.webRequest.onBeforeSendHeaders",
+    "chrome.runtime.onMessage (type=sisos_sync_local)"
+   ]
+  },
+  {
+   "arquivo": "content.js",
+   "tipo": "content script",
+   "injetado_em": "https://auditor-det.sit.trabalho.gov.br/* (somente)",
+   "papel": "O rosto na página. Desenha o botão flutuante 'Sincronizar' e os toasts. No clique: lê a configuração (storage.sync), pega o token (memória, fallback storage.local se < 25 min) e dispara para os destinos configurados — SisOS via fetch direto, painel local via mensagem ao background. Exibe o resultado, incluindo notificações ignoradas de outra fiscalização."
+  },
+  {
+   "arquivo": "popup.html + popup.js + popup.css",
+   "tipo": "action popup",
+   "papel": "Painel de controle. Campos: URL/token do SisOS (opcionais) e caixa PAINEL LOCAL (AFT TOOLKIT) com URL padrão http://127.0.0.1:8347. Salva em chrome.storage.sync. Indicador de status do token e botão 'Abrir DET'.",
+   "bug_conhecido": "Cosmético: o indicador lê storage.session['det_access_token'], mas o token é gravado em storage.local['sisos_det_token'] — status mostra 'Token não encontrado' mesmo com o sync funcionando. Correção pendente."
+  },
+  {
+   "arquivo": "icons/",
+   "papel": "Ícones 16/48/128 px."
+  },
+  {
+   "arquivo": "injected.js",
+   "papel": "Legado da v1 — fora do manifest; não é executado nem empacotado."
+  }
+ ],
+ "armazenamento": {
+  "chrome.storage.local": {
+   "sisos_det_token": "JWT de sessão do DET (expira ~30 min; a extensão descarta com > 25 min)",
+   "sisos_det_token_ts": "timestamp da captura (ms)"
+  },
+  "chrome.storage.sync": {
+   "sisosUrl": "URL da instância SisOS (vazio no modo local)",
+   "extensionToken": "token de acesso do SisOS (vazio no modo local)",
+   "localSyncEnabled": "boolean — caixa PAINEL LOCAL",
+   "localPainelUrl": "URL do painel (vazio = http://127.0.0.1:8347)"
+  },
+  "memoria_do_content_script": "cópia do token para resposta imediata ao clique",
+  "nunca": "token em arquivo, senha do AFT, dados das notificações dentro da extensão"
+ },
+ "fluxo": [
+  "1. AFT navega logado no DET; o site (SPA Angular) chama a própria API levando o token no header.",
+  "2. background.js captura o token do header Authorization (nunca da tela, nunca da senha), valida e guarda com timestamp.",
+  "3. AFT clica no botão flutuante 'Sincronizar' (content.js).",
+  "4. content.js → background.js → POST http://127.0.0.1:8347/api/det-sync com corpo {\"det_access_token\": \"...\"} — tudo dentro da máquina.",
+  "5. servir_painel.py recebe e chama det_sync.py, que percorre cada OS de OS ATIVAS/ com memory.md.",
+  "6. Para cada OS, det_sync.py consulta a API oficial do DET (por CNPJ/CPF; RI como fallback) com o token emprestado.",
+  "7. Filtros: só Confirmadas (status=1) com data de lavratura, e só do(s) RI(s) declarado(s) no campo `ri:` do front-matter — o identificador canônico da auditoria (aceita mais de um, separados por vírgula; endurecido em 22/07/2026, caso CONSORCIO SQ). RI alheio volta como 'ignorada', nunca em silêncio.",
+  "8. Escrita no memory.md (backup antes): nova → '- [ ] CÓDIGO — prazo dd/mm/aaaa' + sub-linha de detalhes (lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente]); prazo mudou → atualiza a linha; checkbox [ ]/[x] nunca é alterado. O alerta 'atualização pendente' é dispensável no painel (marcador <!-- visto: --> na sub-linha) e só volta se houver entrega nova.",
+  "9. O resultado volta pelo mesmo caminho e vira toast na página do DET; o painel.html mostra os novos vencimentos."
+ ],
+ "api_det": {
+  "endpoint": "POST https://auditor-det.sit.trabalho.gov.br/services/auditor/v1/notificacoes/pesquisa",
+  "autenticacao": "Authorization: Bearer <token de sessão do AFT>",
+  "quem_chama": "det_sync.py (painel local) ou src/lib/det/api-client.ts (SisOS). A extensão NUNCA chama esta API.",
+  "corpo_pesquisa": {
+   "isPesquisaPadrao": false,
+   "niEmpregador": "<CNPJ/CPF ou null>",
+   "ri": "<RI, usado só sem CNPJ>",
+   "codigoNotificacao": null,
+   "cifAuditor": null,
+   "isSomenteMinhas": true,
+   "sequencia": 0,
+   "ordenacaoCampo": "id",
+   "ordenacaoDesc": false,
+   "isPendenciaComunicacaoAuditor": false,
+   "isPendenciaComunicacaoEmpregador": false,
+   "situacaoFisc": null
+  },
+  "campos_usados_da_resposta": {
+   "codigo": "código da notificação — identidade da linha no memory.md",
+   "status": "1 = Confirmada — filtro de elegibilidade",
+   "dataEnvio": "data da lavratura — filtro + desempate de RI",
+   "itemDataProximaEntrega": "próximo prazo — o '— prazo dd/mm/aaaa' da linha",
+   "ri": "nº do Relatório de Inspeção — vínculo notificação × fiscalização",
+   "situacaoRi": "situação da fiscalização — informativo no relatório de ignoradas",
+   "dataCiencia": "data da ciência do empregador — sub-linha de detalhes",
+   "itemDataUltimaEntrega": "última entrega do empregador — sub-linha + fingerprint do alerta dispensável",
+   "itemAtualizado": "triângulo amarelo 'Existe atualização pendente'. ATENÇÃO (constatado 19-22/07/2026): a API pode continuar devolvendo true depois de o triângulo sumir na tela; por isso o alerta local é dispensável (visto:) e só reaparece se itemDataUltimaEntrega mudar"
+  }
+ },
+ "painel_local": {
+  "servidor": {
+   "arquivo": "servir_painel.py",
+   "endereco": "http://127.0.0.1:8347",
+   "endpoints": {
+    "GET /": "painel.html regenerado a cada carregamento (gerar_painel.py) — modo interativo (ATIVO)",
+    "GET /api/ping": "health-check usado pelo /aft-doctor e pela extensão",
+    "POST /api/acao": "ações mecânicas do painel — ver painel_ativo.acoes",
+    "POST /api/det-sync": "recebe {det_access_token} da extensão e chama det_sync.py",
+    "GET /doc/<os>/<arquivo.md>": "visualiza relatórios .md da OS (validação de caminho: só .md dentro de OS ATIVAS)"
+   }
+  },
+  "motor": {
+   "arquivo": "det_sync.py",
+   "regras": [
+    "Elegível = status 1 (Confirmada) + dataEnvio (lavratura) presente.",
+    "RIs 'desta OS' = SOMENTE o(s) do campo `ri:` do front-matter — identificador canônico da auditoria; aceita mais de um, separados por vírgula (`ri: \"320038432, 320199999\"`). Nada é inferido de códigos registrados na ficha (regra endurecida em 22/07/2026, caso CONSORCIO SQ, RI alheio 319969819 — a união antiga deixava um RI antigo 'contaminar' a OS).",
+    "Sem RI no front-matter: adota o da notificação mais recente (dataEnvio) e preenche ri: — daí em diante vale a regra estrita.",
+    "RI alheio: nunca importado, sempre reportado em ignoradas_detalhe.",
+    "Sub-linha de detalhes por notificação: lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente] [<!-- visto: X -->]. O alerta espelha itemAtualizado, mas é dispensável: clique no alerta no painel grava visto:=última entrega e ele só volta se a empresa fizer entrega nova.",
+    "Backup do memory.md antes de escrever (backup_arquivo.py → .backups/).",
+    "Checkbox [ ]/[x] nunca alterado — 'respondida' é decisão do AFT.",
+    "Linha com 2+ prazos escritos: ambígua — fica intocada.",
+    "AFT_DET_DRYRUN=1: consulta e relata sem gravar nada."
+   ]
+  }
+ },
+ "destino_sisos_nuvem": {
+  "status": "opcional — desligado no uso local do AFT Toolkit",
+  "endpoint": "POST https://sisos.vercel.app/api/extension/sync",
+  "autenticacao": "header X-Extension-Token (gerado no próprio SisOS)",
+  "stack": "Next.js (Vercel) + Supabase",
+  "pendencia": "Não filtra por RI da auditoria (mesma classe do bug corrigido no painel local) e o backfill de RI pode adotar a fiscalização mais antiga — tarefa aberta em 19/07/2026."
+ },
+ "seguranca": [
+  "Nunca vê a senha do AFT — login é no gov.br; só observa o token que o site já usa.",
+  "Nunca lê a tela do DET nem faz scraping — dados vêm da API oficial, consultada pelo painel.",
+  "Token nunca vai para arquivo; expira em ~25-30 min.",
+  "O JWT carrega internamente identificadores do AFT (matrícula/CIF) — a extensão valida a existência desses campos, mas nunca os extrai/exibe/registra.",
+  "Modo painel local: extensão ↔ painel é 100% 127.0.0.1; nada sai para a internet além da consulta do painel à API do governo.",
+  "Nunca marca notificação como respondida; cada memory.md alterado tem backup prévio."
+ ],
+ "gerado_em": "2026-07-22",
+ "acompanha": "arquitetura-sync-det.html (versão didática, para leitura)",
+ "painel_ativo": {
+  "resumo": "Dashboard interativo das auditorias em http://127.0.0.1:8347 (100% local). gerar_painel.py lê os memory.md de OS ATIVAS/ e monta um card por OS (urgência por prazo de DET); servir_painel.py serve o HTML e executa as ações mecânicas com edição cirúrgica do memory.md + backup. Aberto por duplo-clique no arquivo (file://), fica somente leitura.",
+  "arquivos": {
+   "gerar_painel.py": "parser dos memory.md (front-matter + seções) e gerador do painel.html autocontido",
+   "servir_painel.py": "servidor HTTP local: serve o painel, executa ações e recebe o sync da extensão",
+   "instalar_servidor_painel.py": "instala o serviço (LaunchAgent br.aft.painel-servidor no macOS / Tarefa Agendada no Windows)"
+  },
+  "dados_do_card": [
+   "cabeçalho: empregador, CNPJ, município, RI, nº de trabalhadores, CNAE, grau de risco, início/vencimento, embargo",
+   "Notificações DET (com sub-linha de detalhes do sync: lavratura, ciência, entregas, alerta dispensável)",
+   "Pendências ([ ] em aberto) · Anotações da auditoria ([ ] em aberto, com adicionar/resolver)",
+   "Inspeção física (bullets do inspecao-fisica.md) · Registro de atividades (timeline)",
+   "Autos de infração lavrados (autos-lavrados.md, seção do memory.md ou --scan do Sistema Auditor)",
+   "Relatórios .md da OS (links via /doc/) · Comandos prontos para copiar no Claude Code"
+  ],
+  "acoes": {
+   "det": "alterna [ ]/[x] da notificação DET (respondida/reaberta)",
+   "det_visto": "dispensa o alerta '⚠️ atualização pendente' (grava <!-- visto: última entrega -->; volta se houver entrega nova)",
+   "pendencia": "marca pendência como resolvida ([x] + carimbo de data)",
+   "anotacao_add": "registra anotação da auditoria ('- [ ] dd/mm/aaaa — texto'; cria a seção se faltar)",
+   "anotacao_ok": "marca anotação como tratada ([x] + carimbo)",
+   "atividade": "acrescenta linha no Registro de atividades (data de hoje)",
+   "status": "muda o status da OS (front-matter status:)",
+   "embargo": "alterna embargo/interdição vigente/suspenso (front-matter embargo_interdicao:)"
+  },
+  "seguranca": [
+   "Escuta só em 127.0.0.1 — nada sai da máquina.",
+   "Toda escrita: backup prévio (backup_arquivo.py → .backups/) + edição cirúrgica de linha.",
+   "Validação de caminho nas ações e no /doc/: só memory.md/.md dentro de OS ATIVAS.",
+   "Versão Artifact (publicada só com consentimento) NÃO leva inspeção física, anotações nem relatórios (PII)."
+  ]
+ }
+}
