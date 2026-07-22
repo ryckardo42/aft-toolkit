@@ -98,7 +98,12 @@ def base_os() -> Path:
     pos = args_posicionais()
     if pos and pos[0].strip():
         return Path(pos[0])
-    return Path.home() / "Documents" / "AFT" / "OS ATIVAS"
+    try:  # resolve a "Documentos" real (Windows: OneDrive/idioma)
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pasta_aft import pasta_os_ativas
+        return pasta_os_ativas()
+    except Exception:
+        return Path.home() / "Documents" / "AFT" / "OS ATIVAS"
 
 
 # ── Edições cirúrgicas no memory.md ─────────────────────────────────────────

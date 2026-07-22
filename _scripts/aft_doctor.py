@@ -7,8 +7,11 @@ esta no lugar: Python, Git, as skills descobertas pelo Claude Code, os arquivos
 de configuracao do repo, o perfil do auditor, a pasta de trabalho, as bibliotecas
 Python e o NotebookLM (opcional).
 
-Nao altera nada - so le e relata. Imprime um relatorio legivel e, no fim, uma
-linha JSON (prefixada com JSON:) para a skill consumir.
+So le e relata, com UMA excecao: a pasta de trabalho (AFT/OS ATIVAS e
+OS ARQUIVADAS) e criada se faltar - criar diretorio vazio e seguro, idempotente,
+e sem ela nada do toolkit funciona. Nenhum arquivo e alterado ou apagado.
+Imprime um relatorio legivel e, no fim, uma linha JSON (prefixada com JSON:)
+para a skill consumir.
 
 Severidades:
   ok    - esta certo
@@ -27,6 +30,8 @@ from pathlib import Path
 # A raiz das skills e o avo deste arquivo: .../skills/_scripts/aft_doctor.py
 SKILLS_DIR = Path(__file__).resolve().parent.parent
 HOME = Path.home()
+# Resolvido de verdade na checagem 6 (pasta_aft.py). Este e so o fallback se
+# o import falhar - no Windows com OneDrive ele costuma estar errado.
 AFT_DIR = HOME / "Documents" / "AFT"
 
 checks = []
@@ -137,19 +142,49 @@ else:
         "senhas e os dados reais dos trabalhadores).")
 
 # 6. Pasta de trabalho -------------------------------------------------------
-if AFT_DIR.is_dir():
-    sub = [d for d in ("OS ATIVAS", "OS ARQUIVADAS") if not (AFT_DIR / d).is_dir()]
-    if not sub:
+# Unica checagem que CONSERTA em vez de so relatar: criar diretorio vazio e
+# seguro e idempotente, e sem a pasta nada do toolkit funciona. O caminho vem
+# do pasta_aft.py, que resolve a "Documentos" de verdade (no Windows ela quase
+# nunca e ~/Documents: o OneDrive redireciona e o idioma muda o nome).
+try:
+    sys.path.insert(0, str(SKILLS_DIR / "_scripts"))
+    from pasta_aft import diagnostico, garantir_estrutura
+
+    diag = diagnostico()
+    AFT_DIR = Path(diag["pasta_aft"])
+    _, criadas = garantir_estrutura()
+
+    onde = f"{AFT_DIR}"
+    if diag["onedrive"]:
+        onde += " (dentro do OneDrive - e a sua pasta Documentos de verdade)"
+    elif diag["redirecionada"]:
+        onde += " (sua pasta Documentos fica fora do caminho padrao)"
+
+    if criadas:
+        add("Pasta de trabalho", "ok",
+            f"criada agora: {onde}",
+            "Suas fiscalizacoes vao para a subpasta 'OS ATIVAS'. "
+            "Se ainda nao rodou o /aft-setup, rode - ele grava o aft-config.md "
+            "com os seus dados (CIF/UORG).")
+    else:
         n_empresas = len(list((AFT_DIR / "OS ATIVAS").glob("*/memory.md")))
         add("Pasta de trabalho", "ok",
-            f"{AFT_DIR} — {n_empresas} empresa(s) em OS ATIVAS")
-    else:
-        add("Pasta de trabalho", "aviso",
-            f"{AFT_DIR} existe, mas falta: {', '.join(sub)}",
-            "Rode /aft-setup para criar a estrutura de pastas.")
-else:
-    add("Pasta de trabalho", "aviso", f"{AFT_DIR} nao existe",
-        "Rode /aft-setup para criar a pasta de trabalho.")
+            f"{onde} - {n_empresas} empresa(s) em OS ATIVAS")
+
+    # Instalacao anterior pode ter criado uma pasta ORFA no caminho errado
+    # (o mkdir ~/Documents/AFT cru, antes desta correcao).
+    if diag["duplicadas"]:
+        add("Pasta de trabalho duplicada", "aviso",
+            "existe outra pasta AFT fora da usada: "
+            + ", ".join(diag["duplicadas"]),
+            "Provavelmente sobrou de uma instalacao anterior. Se ela tiver "
+            "fiscalizacoes dentro, mova as subpastas para "
+            f"'{AFT_DIR / 'OS ATIVAS'}' e apague a antiga; se estiver vazia, "
+            "pode apagar direto.")
+except Exception as e:
+    add("Pasta de trabalho", "erro",
+        f"nao consegui resolver/criar a pasta de trabalho ({type(e).__name__}: {e})",
+        "Rode /aft-setup - ele cria a estrutura e mostra o caminho exato.")
 
 # 7. aft-config.md -----------------------------------------------------------
 if (AFT_DIR / "aft-config.md").is_file():

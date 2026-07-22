@@ -67,12 +67,29 @@ winget (o AFT só precisa aprovar os comandos):
 
 ## Passo 2 — Criar a estrutura de pastas
 
+**Não use `mkdir ~/Documents/AFT` direto.** No Windows, "Documentos" quase nunca fica
+em `C:\Users\<usuário>\Documents`: o **OneDrive** redireciona a pasta para
+`C:\Users\<usuário>\OneDrive\Documentos` e o Windows em português a chama de
+**Documentos**, não *Documents*. Um `mkdir` cru cria uma pasta **órfã** que o AFT nunca
+encontra no Explorer (aconteceu numa instalação real). Use o resolvedor, que lê a pasta
+Documentos verdadeira no registro do Windows:
+
 ```bash
-mkdir -p ~/Documents/AFT/"OS ATIVAS" ~/Documents/AFT/"OS ARQUIVADAS"
+python "<python_path>" ~/.claude/skills/_scripts/pasta_aft.py --criar
 ```
 
+Ele devolve um JSON com o caminho real (`pasta_aft`), o que criou (`criadas`) e se a
+pasta está redirecionada (`onedrive`/`redirecionada`). **Use esse caminho** — e não o
+`~/Documents/AFT` presumido — em todos os passos seguintes (aft-config.md, painel,
+vigia de sessões). É idempotente: rodar de novo não recria nada.
+
+> Se o JSON trouxer `duplicadas`, existe outra pasta AFT de uma instalação anterior no
+> lugar errado. Avise o AFT: se tiver fiscalizações dentro, mover as subpastas para a
+> `OS ATIVAS` correta; se estiver vazia, pode apagar.
+
 Explique ao AFT, com destaque (essa é a informação mais importante do setup — o AFT
-vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização):
+vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização), usando o
+**caminho real que o script devolveu**:
 
 > 📁 **`Documentos\AFT\OS ATIVAS` é onde moram todas as suas empresas fiscalizadas.**
 > Cada empresa ganha uma subpasta ali dentro (padrão: `NOME DA EMPRESA <CNPJ 14
@@ -125,14 +142,16 @@ sempre 9 dígitos).
 ## Passo 4 — Descobrir o caminho Windows da pasta de trabalho
 
 O Sistema Auditor exige caminhos absolutos no formato Windows (`C:\...`) nas linhas
-de anexo do TXT. Descubra o caminho real:
+de anexo do TXT. Converta **a pasta que o Passo 2 devolveu** (nunca um caminho
+presumido) para o formato Windows:
 
 ```bash
-cygpath -w "$HOME" 2>/dev/null || echo "$HOME"
+cygpath -w "<pasta_aft do Passo 2>" 2>/dev/null || echo "<pasta_aft do Passo 2>"
 ```
 
-- No Windows (Git Bash), isso retorna algo como `C:\Users\joao`. O prefixo da pasta
-  de trabalho fica `C:\Users\joao\Documents\AFT`.
+- No Windows (Git Bash) isso retorna o caminho real — que pode ser
+  `C:\Users\joao\Documents\AFT` **ou** `C:\Users\joao\OneDrive\Documentos\AFT` se o
+  OneDrive fizer backup das pastas. Use o que vier; é ele que vai no `path_windows`.
 - Pergunte: **"O Sistema Auditor roda neste mesmo computador?"**
   - **Sim** (caso normal no Windows) → use o prefixo calculado acima.
   - **Não** (ex.: roda numa máquina virtual que enxerga este disco por outra letra,
@@ -141,8 +160,9 @@ cygpath -w "$HOME" 2>/dev/null || echo "$HOME"
 
 ## Passo 5 — Gravar o aft-config.md
 
-Crie `~/Documents/AFT/aft-config.md` no formato abaixo: um título, uma linha de
-comentário e um **front-matter YAML entre `---`** com os valores coletados:
+Crie o `aft-config.md` **dentro da pasta que o Passo 2 devolveu** (não presuma
+`~/Documents/AFT`), no formato abaixo: um título, uma linha de comentário e um
+**front-matter YAML entre `---`** com os valores coletados:
 
 ````markdown
 # Configuração do AFT Toolkit

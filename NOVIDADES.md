@@ -6,6 +6,32 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 22/07/2026 (2)
+<!-- commit: pasta-aft-onedrive -->
+
+**Correção importante para quem usa Windows com OneDrive** — a pasta de
+trabalho (`AFT` com `OS ATIVAS` e `OS ARQUIVADAS`) podia ser criada num lugar
+que você nunca encontrava. Motivo: o toolkit presumia
+`C:\Users\<você>\Documents`, mas quando o **OneDrive faz backup das suas
+pastas**, "Documentos" passa a ser `C:\Users\<você>\OneDrive\Documentos` — e no
+Windows em português ela se chama **Documentos**, não *Documents*. Resultado: o
+`/aft-setup` criava uma pasta invisível no caminho errado e o AFT ficava sem
+saber onde ficaram as fiscalizações.
+
+Agora o toolkit descobre a sua pasta Documentos **de verdade** (lendo o registro
+do Windows, que já sabe do OneDrive e do idioma) — e o **`/aft-doctor` passa a
+criar a pasta se ela faltar**, dizendo o caminho exato onde criou. Basta rodar:
+
+```
+/aft-doctor
+```
+
+Se você já tinha uma pasta AFT criada no lugar errado, o toolkit **não abandona
+os seus dados**: ele continua usando a pasta que já tem fiscalizações dentro, e
+o `/aft-doctor` avisa que existe uma pasta duplicada para você decidir o que
+fazer. O painel, o servidor e o vigia de sessões passam a usar o mesmo caminho
+resolvido.
+
 ## 22/07/2026
 <!-- commit: det-sync-ri-estrito-alerta-visto -->
 

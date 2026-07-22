@@ -12,7 +12,10 @@ description: >
   perfil do auditor, pasta de trabalho, bibliotecas Python, NotebookLM e a saude das
   skills - frontmatter e modelos pinados, com teste ao vivo) e relata, em
   linguagem simples, o que esta OK e o que precisa ser resolvido - com a solucao de
-  cada item. E SOMENTE LEITURA: nao instala nem altera nada (so diagnostica).
+  cada item. Nao instala nem altera arquivos - a UNICA coisa que ele conserta sozinho
+  e a pasta de trabalho (AFT/OS ATIVAS e OS ARQUIVADAS), criada se faltar, no caminho
+  real da pasta Documentos (no Windows ela costuma estar no OneDrive e/ou chamar-se
+  "Documentos").
 ---
 
 # aft-doctor — Verificacao pos-instalacao do AFT Toolkit

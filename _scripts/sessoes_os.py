@@ -83,7 +83,17 @@ LS_LEVELDB = APP_SUPPORT / "Local Storage" / "leveldb"
 LS_KEY_TAIL = b"LSS-persisted.dframe-group-scopes"
 LS_KEY_DEFAULT = b"_https://claude.ai\x00\x01LSS-persisted.dframe-group-scopes"
 
-PASTA_AFT = Path(os.environ.get("PASTA_AFT", Path.home() / "Documents" / "AFT"))
+def _pasta_aft_padrao() -> Path:
+    """Resolve a "Documentos" real (Windows: OneDrive/idioma). Ver pasta_aft.py."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pasta_aft import pasta_aft as _resolver
+        return _resolver()
+    except Exception:
+        return Path.home() / "Documents" / "AFT"
+
+
+PASTA_AFT = _pasta_aft_padrao()
 BACKUPS = PASTA_AFT / ".backups-sessoes"
 MANIFESTO = PASTA_AFT / ".sessoes-os-manifesto.json"
 LOG = PASTA_AFT / ".sessoes-os.log"

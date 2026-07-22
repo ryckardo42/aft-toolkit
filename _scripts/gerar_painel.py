@@ -118,7 +118,12 @@ def home_os() -> Path:
     pos = argv_posicionais()
     if len(pos) >= 1 and pos[0].strip():
         return Path(pos[0])
-    return Path.home() / "Documents" / "AFT" / "OS ATIVAS"
+    try:  # resolve a "Documentos" real (Windows: OneDrive/idioma)
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pasta_aft import pasta_os_ativas
+        return pasta_os_ativas()
+    except Exception:
+        return Path.home() / "Documents" / "AFT" / "OS ATIVAS"
 
 
 def saida_html(base: Path) -> Path:
