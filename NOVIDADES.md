@@ -6,6 +6,53 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 22/07/2026 (4)
+<!-- commit: painel-det-rotulo-notas -->
+
+**O card de Notificações DET agora mostra o que você escreveu na ficha.** Antes,
+quando a notificação tinha as datas do sync, o painel mostrava só isso — código
+e datas — e jogava fora o que você tinha anotado à mão na linha do memory.md.
+Agora cada notificação exibe:
+
+- o **rótulo** ao lado do código — o tipo que você deu à notificação
+  ("NAD jornada/ponto", "Termo de Notificação (Dupla Visita)");
+- as **datas em uma linha só** (Lavratura · Ciência · entregas), em vez de
+  empilhadas uma por linha — sobra espaço para o que interessa;
+- as **suas notas** logo abaixo — "itens 3 (banco de horas), 4 (intervalo >2h)
+  e 9 (ponto manual) não entregues — condicionais, verificar antes de cobrar".
+
+Os fragmentos de data que já aparecem como campos (ex.: "lavrada 01/06/2026")
+saem das notas para não duplicar; todo o resto é preservado exatamente como você
+escreveu. Notificações registradas só pelo sync (sem texto seu) ficam como eram.
+
+---
+
+## 22/07/2026 (3)
+<!-- commit: extensao-popup-ri-nuvem -->
+
+**Duas correções na extensão Sync DET** (a do botão "Sincronizar" na tela do DET).
+
+**O indicador de token voltou a dizer a verdade.** Ao clicar no ícone da
+extensão, o status dizia "Token DET não encontrado" mesmo quando a sincronização
+estava funcionando perfeitamente — ele procurava o crachá do DET numa gaveta
+errada. Agora ele olha no lugar certo e usa o mesmo critério do botão (crachá com
+menos de 25 minutos), então o que o indicador mostra é exatamente o que vai
+acontecer se você clicar em Sincronizar.
+
+**O destino na nuvem (SisOS) passou a respeitar o RI da auditoria.** Ele
+importava *todas* as notificações do CNPJ — inclusive as de fiscalizações
+antigas ou de outros auditores — e, ao preencher sozinho o RI, adotava a
+notificação mais antiga da lista, podendo até trocar um RI que você já tinha
+declarado. Agora vale a mesma regra que já corrigimos no painel local: **o RI que
+você declarou manda**; auditoria ainda sem RI adota o da notificação **mais
+recente**; e notificação de outra fiscalização não entra nem some em silêncio —
+volta na resposta da sincronização para você decidir.
+
+Isso só afeta quem usa o SisOS na nuvem. No uso local (painel em
+`127.0.0.1:8347`), nada muda — a regra já era essa.
+
+---
+
 ## 22/07/2026 (2)
 <!-- commit: pasta-aft-onedrive -->
 

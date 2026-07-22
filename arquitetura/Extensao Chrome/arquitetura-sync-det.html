@@ -245,6 +245,14 @@
   </tr>
 </table>
 
+<div class="note ok">Corrigido em 22/07/2026 no destino nuvem: ele importava toda
+notificação do CNPJ, sem olhar o RI, e o preenchimento automático do RI adotava a
+primeira notificação da lista (em geral a fiscalização mais antiga), podendo ainda
+sobrescrever um RI já declarado. Agora vale a mesma regra do painel local: o campo
+<code>ri</code> da auditoria é o identificador canônico, auditoria sem RI adota o da
+notificação mais recente, e notificação de outra fiscalização volta na resposta
+(<code>ignoradas</code>) em vez de entrar ou sumir em silêncio.</div>
+
 <h2>3. Os 4 moradores da extensão</h2>
 
 <div class="card">
@@ -304,10 +312,11 @@
         Chrome/Edge entre máquinas.</li>
     <li>Tem um indicador de status do token e um botão "Abrir DET".</li>
   </ul>
-  <div class="note">Bug conhecido (cosmético): o indicador lê
+  <div class="note ok">Corrigido em 22/07/2026: o indicador lia
   <code>storage.session['det_access_token']</code>, mas o token é gravado em
-  <code>storage.local['sisos_det_token']</code> — o status mostra "Token não encontrado"
-  mesmo com o sync funcionando. Correção pendente.</div>
+  <code>storage.local['sisos_det_token']</code> — mostrava "Token não encontrado" mesmo
+  com o sync funcionando. Agora lê o lugar certo e aplica a mesma validade de 25 minutos
+  que o clique do botão usa, então o indicador diz exatamente o que o sync fará.</div>
 </div>
 
 <div class="note">O arquivo <code>injected.js</code> na pasta do fonte é um resto da v1 —
@@ -475,7 +484,8 @@ Content-Type: application/json</code></pre>
 
 <footer>
   Gerado em 19/07/2026 · atualizado em 22/07/2026 (RI estrito por front-matter · alerta
-  dispensável · arquitetura do painel ativo) · Sync DET v2.0.0 · acompanha
+  dispensável · arquitetura do painel ativo · indicador do popup e RI do destino nuvem
+  corrigidos) · Sync DET v2.0.0 · acompanha
   <code>arquitetura-sync-det.json</code>
   (a mesma arquitetura em formato estruturado, para consumo por máquina).
 </footer>

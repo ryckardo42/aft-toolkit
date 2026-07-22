@@ -14,7 +14,7 @@
   "instalada": "Perfil do navegador (Chrome Web Store / Edge Add-ons); atualiza sozinha pela loja",
   "painel_local_servidor": "~/Documents/aft-toolkit/_scripts/servir_painel.py — serviço sempre ligado em http://127.0.0.1:8347 (instalado pelo /aft-setup)",
   "motor_sync": "~/Documents/aft-toolkit/_scripts/det_sync.py — chamado pelo servidor a cada POST /api/det-sync",
-  "fichas": "~/Documents/Cowork OS/AFT COWORK/OS ATIVAS/<EMPREGADOR CNPJ>/memory.md",
+  "fichas": "~/Documents/AFT/OS ATIVAS/<NOME DA AUDITORIA>/memory.md",
   "sisos_nuvem": "https://sisos.vercel.app (Next.js + Supabase) — destino opcional, desligado no uso local"
  },
  "componentes": [
@@ -52,7 +52,7 @@
    "arquivo": "popup.html + popup.js + popup.css",
    "tipo": "action popup",
    "papel": "Painel de controle. Campos: URL/token do SisOS (opcionais) e caixa PAINEL LOCAL (AFT TOOLKIT) com URL padrão http://127.0.0.1:8347. Salva em chrome.storage.sync. Indicador de status do token e botão 'Abrir DET'.",
-   "bug_conhecido": "Cosmético: o indicador lê storage.session['det_access_token'], mas o token é gravado em storage.local['sisos_det_token'] — status mostra 'Token não encontrado' mesmo com o sync funcionando. Correção pendente."
+   "corrigido_22-07-2026": "O indicador lia storage.session['det_access_token'], mas o token é gravado em storage.local['sisos_det_token'] — mostrava 'Token não encontrado' mesmo com o sync funcionando. Agora lê storage.local e aplica a mesma validade de 25 min do content.js: o indicador reflete o que o botão Sincronizar fará."
   },
   {
    "arquivo": "icons/",
@@ -150,7 +150,7 @@
   "endpoint": "POST https://sisos.vercel.app/api/extension/sync",
   "autenticacao": "header X-Extension-Token (gerado no próprio SisOS)",
   "stack": "Next.js (Vercel) + Supabase",
-  "pendencia": "Não filtra por RI da auditoria (mesma classe do bug corrigido no painel local) e o backfill de RI pode adotar a fiscalização mais antiga — tarefa aberta em 19/07/2026."
+  "corrigido_22-07-2026": "Passou a aplicar a mesma regra de RI do painel local (src/lib/det/sync.ts): o campo `ri` da auditoria é o identificador canônico (aceita vários RIs separados por vírgula); só entra notificação cujo RI esteja nele; auditoria sem RI adota o da notificação MAIS RECENTE (antes era a primeira da lista, tipicamente a mais antiga) e nunca sobrescreve um RI já declarado; notificação de RI alheio volta no campo `ignoradas` da resposta, nunca é descartada em silêncio."
  },
  "seguranca": [
   "Nunca vê a senha do AFT — login é no gov.br; só observa o token que o site já usa.",
@@ -171,7 +171,7 @@
   },
   "dados_do_card": [
    "cabeçalho: empregador, CNPJ, município, RI, nº de trabalhadores, CNAE, grau de risco, início/vencimento, embargo",
-   "Notificações DET (com sub-linha de detalhes do sync: lavratura, ciência, entregas, alerta dispensável)",
+   "Notificações DET — código + rótulo (o tipo que o AFT escreveu na linha, ex.: 'NAD jornada/ponto'), datas do sync em linha única (lavratura · ciência · entregas), notas do AFT (observações da linha do memory.md, sem os fragmentos de data já estruturados) e alerta dispensável",
    "Pendências ([ ] em aberto) · Anotações da auditoria ([ ] em aberto, com adicionar/resolver)",
    "Inspeção física (bullets do inspecao-fisica.md) · Registro de atividades (timeline)",
    "Autos de infração lavrados (autos-lavrados.md, seção do memory.md ou --scan do Sistema Auditor)",

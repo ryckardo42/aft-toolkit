@@ -82,6 +82,16 @@ RE_DET_ULTIMA = re.compile(r"[uú]ltima\s+entrega\s+(\d{2}/\d{2}/\d{4})", re.IGN
 # Flag do triângulo amarelo do DET ("Existe atualização pendente"): o item mais
 # acionável da sub-linha — pedido de prazo, dispensa, item não aberto.
 RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
+# Rótulo e notas da linha do checkbox: além das datas (que viram campos
+# estruturados do card), a linha carrega texto do próprio AFT — o tipo da
+# notificação ("NAD jornada/ponto") e observações ("itens 3, 4 e 9 não
+# entregues — condicionais, verificar antes de cobrar"). Fragmento de data já
+# estruturado sai das notas; o resto é preservado ipsis litteris.
+RE_DET_FRAG_DATA = re.compile(
+    r"(?:lavrada|ci[eê]ncia|entrega\s+at[eé]|prazo)\s*[:\s]\s*"
+    r"(?:\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})", re.IGNORECASE)
+RE_DET_SEM_ROTULO = re.compile(
+    r"^(?:prazo|lavrada|entrega|ci[eê]ncia|baixad|respondid|venc)", re.IGNORECASE)
 RE_DATA_ISO = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 RE_DATA_BR = re.compile(r"(\d{2})/(\d{2})/(\d{4})")
 RE_NR = re.compile(r"NR[-\s]?0?(\d{1,2})\b", re.IGNORECASE)
@@ -172,6 +182,28 @@ def fmt_cnpj(digs: str) -> str:
     return digs
 
 
+def rotulo_e_notas(resto: str, codigo: str | None) -> tuple[str, str]:
+    """(rótulo, notas) da linha do checkbox de uma notificação DET — o que o
+    AFT escreveu além do código e das datas. Rótulo = 1º segmento curto sem
+    cara de data ("NAD jornada/ponto"); notas = o resto da linha, menos os
+    fragmentos de data que o card já mostra como campos estruturados."""
+    descr = resto[len(codigo):] if codigo and resto.startswith(codigo) else resto
+    descr = descr.strip().lstrip("—–-: ").strip()
+    rotulo = ""
+    # 1º segmento até , ; ou —, sem quebrar dentro de parênteses:
+    # "Termo de Notificação (Dupla Visita, NR-01/07/10/12)" é um rótulo só.
+    m = re.match(r"(?:\([^)]*\)|[^,;—(])+", descr)
+    if m:
+        cand = m.group(0).strip()
+        if cand and len(cand) <= 60 and not RE_DET_SEM_ROTULO.match(cand):
+            rotulo = cand
+            descr = descr[m.end():]
+    notas = RE_DET_FRAG_DATA.sub("", descr)
+    notas = re.sub(r"\s*[,;]\s*(?=[,;])", "", notas)   # separadores órfãos em série
+    notas = re.sub(r"\s{2,}", " ", notas).strip(" ,;—–-")
+    return rotulo, notas
+
+
 def extrair_secao(corpo: str, titulo: str) -> str:
     """Devolve o texto da seção '## titulo' até o próximo '## ' (ou o fim)."""
     m = re.search(rf"^##\s+{re.escape(titulo)}\s*$", corpo, re.MULTILINE)
@@ -242,8 +274,10 @@ def parse_memory(path: Path) -> dict:
             ciencia = parse_data(mc.group(1)) if mc else None
             ultima = parse_data(mu.group(1)) if mu else None
             pendente = bool(RE_DET_PENDENTE.search(det))
+        rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
-                     "linha": resto, "lavrada": lavrada, "ciencia": ciencia,
+                     "linha": resto, "rotulo": rotulo, "notas": notas,
+                     "lavrada": lavrada, "ciencia": ciencia,
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
@@ -735,9 +769,13 @@ font-size:13px;z-index:20;display:none}
 .det-item .cod .pend{font:700 11px var(--sans);background:#F5E4E0;color:var(--coral-deep);
   border-radius:20px;padding:2px 9px;margin-right:7px;vertical-align:1px;white-space:nowrap}
 .det-item .info{font-size:12px;color:var(--t3);line-height:1.45}
-.det-item .det-campo{display:flex;gap:6px;line-height:1.6}
-.det-item .det-campo .rot{color:var(--t3);min-width:118px}
+.det-item .cod .rotulo{font:500 12.5px var(--sans);color:var(--t2);margin-left:8px}
+.det-item .campos{display:flex;flex-wrap:wrap;column-gap:8px;line-height:1.6}
+.det-item .det-campo{white-space:nowrap}
+.det-item .det-campo .rot{color:var(--t3)}
 .det-item .det-campo .val{color:var(--t1);font-weight:600}
+.det-item .campos .sep{color:var(--t3);opacity:.55}
+.det-item .notas{color:var(--t2);margin-top:2px}
 .det-item .selo{margin:3px 0 0}
 /* timeline */
 .tl{display:flex;gap:14px}
@@ -912,12 +950,12 @@ function cartaoDets(o,i){
  let h='<div class="cartao"><h3>Notificações DET <span class="cont">'+(o.dets||[]).length+'</span></h3>';
  if(!(o.dets||[]).length)return h+'<p class="vazio">nenhuma registrada</p></div>';
  h+=o.dets.map((d,k)=>{
+  // Datas em linha única (Lavratura · Ciência · entregas) — o texto do AFT
+  // (rótulo + notas) é o que merece a largura do card.
   const campos=[['Lavratura',d.lavrada],['Ciência',d.ciencia],
     ['Próxima entrega',d.prox_entrega],['Última entrega',d.ultima_entrega]]
-   .filter(c=>c[1]).map(c=>'<div class="det-campo"><span class="rot">'+c[0]+
-    '</span><span class="val">'+esc(c[1])+'</span></div>').join('');
-  // Fallback p/ notificações ainda sem a sub-linha do det_sync (texto cru).
-  const info=campos||esc((d.codigo?d.linha.replace(d.codigo,''):d.linha).replace(/^[ —–-]+/,''));
+   .filter(c=>c[1]).map(c=>'<span class="det-campo"><span class="rot">'+c[0]+
+    '</span> <span class="val">'+esc(c[1])+'</span></span>').join('<span class="sep">·</span>');
   return '<div class="det-item'+(d.feito?' feito':'')+'"'+
    (ATIVO&&o.pasta&&d.codigo?' onclick="agDet('+i+','+k+')" title="clique para '+
     (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
@@ -925,8 +963,10 @@ function cartaoDets(o,i){
    (d.pendente?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
     ' style="cursor:pointer" title="clique se já viu esta atualização no DET — o alerta some e só volta se houver entrega nova"'+
     ' onclick="event.stopPropagation();agDetVisto('+i+','+k+')"':'')+
-    '>⚠️ atualização pendente</span> ':'')+esc(d.codigo||'?')+'</div>'+
-   (info?'<div class="info">'+info+'</div>':'')+
+    '>⚠️ atualização pendente</span> ':'')+esc(d.codigo||'?')+
+   (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
+   (campos?'<div class="info campos">'+campos+'</div>':'')+
+   (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+'</div></div>'}).join('');
  return h+'</div>'}
 function cartaoNovas(o){
@@ -1189,6 +1229,8 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "docs": (o.get("docs") or []) if com_pasta else [],
             "dets": [{"codigo": d["codigo"], "feito": d["feito"],
                       "linha": datas_para_br(d["linha"]),
+                      "rotulo": d.get("rotulo") or "",
+                      "notas": datas_para_br(d.get("notas") or ""),
                       "lavrada": d["lavrada"].strftime("%d/%m/%Y") if d.get("lavrada") else "",
                       "ciencia": d["ciencia"].strftime("%d/%m/%Y") if d.get("ciencia") else "",
                       "prox_entrega": d["prazo"].strftime("%d/%m/%Y") if d["prazo"] else "",
