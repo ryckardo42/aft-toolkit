@@ -154,11 +154,14 @@ try:
     AFT_DIR = Path(diag["pasta_aft"])
     _, criadas = garantir_estrutura()
 
+    # O rotulo so vale quando a pasta em uso E a da Documentos real; se estiver
+    # fora do lugar, quem explica e a checagem seguinte (nao rotule errado).
     onde = f"{AFT_DIR}"
-    if diag["onedrive"]:
-        onde += " (dentro do OneDrive - e a sua pasta Documentos de verdade)"
-    elif diag["redirecionada"]:
-        onde += " (sua pasta Documentos fica fora do caminho padrao)"
+    if not diag["fora_do_lugar"]:
+        if diag["onedrive"]:
+            onde += " (dentro do OneDrive - e a sua pasta Documentos de verdade)"
+        elif diag["redirecionada"]:
+            onde += " (sua pasta Documentos fica fora do caminho padrao)"
 
     if criadas:
         add("Pasta de trabalho", "ok",
@@ -170,6 +173,20 @@ try:
         n_empresas = len(list((AFT_DIR / "OS ATIVAS").glob("*/memory.md")))
         add("Pasta de trabalho", "ok",
             f"{onde} - {n_empresas} empresa(s) em OS ATIVAS")
+
+    # Instalado antes da correcao de 22/07/2026: os dados foram parar em
+    # ~/Documents/AFT (criada pelo mkdir cru), que NAO e a "Documentos" que o
+    # AFT abre no Explorer. Funciona, mas ele nao acha os arquivos.
+    if diag["fora_do_lugar"]:
+        add("Pasta de trabalho fora da Documentos", "aviso",
+            f"suas fiscalizacoes estao em {diag['pasta_aft']}, mas a sua pasta "
+            f"Documentos de verdade e {diag['documentos']} - por isso a pasta AFT "
+            "nao aparece quando voce abre 'Documentos' no Explorer",
+            "Para mudar tudo de lugar (com os dados), rode: python "
+            f"~/.claude/skills/_scripts/pasta_aft.py --mover  -> vai para "
+            f"'{diag['destino_sugerido']}'. Antes, feche o app do Claude para "
+            "soltar os arquivos dos servicos. Nada e apagado; se preferir "
+            "deixar como esta, tudo continua funcionando.")
 
     # Instalacao anterior pode ter criado uma pasta ORFA no caminho errado
     # (o mkdir ~/Documents/AFT cru, antes desta correcao).

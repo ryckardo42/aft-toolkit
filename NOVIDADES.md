@@ -26,10 +26,17 @@ criar a pasta se ela faltar**, dizendo o caminho exato onde criou. Basta rodar:
 /aft-doctor
 ```
 
-Se você já tinha uma pasta AFT criada no lugar errado, o toolkit **não abandona
-os seus dados**: ele continua usando a pasta que já tem fiscalizações dentro, e
-o `/aft-doctor` avisa que existe uma pasta duplicada para você decidir o que
-fazer. O painel, o servidor e o vigia de sessões passam a usar o mesmo caminho
+**Se você já instalou antes e a pasta ficou no lugar errado**, o toolkit **não
+abandona os seus dados**: continua usando a pasta onde as suas fiscalizações
+estão (elas funcionam normalmente ali). O `/aft-doctor` agora **avisa** que essa
+pasta não é a sua "Documentos" de verdade — que é por isso que você não a acha
+pelo Explorer — e **oferece mudar tudo de lugar**, com os dados. Se aceitar, ele
+fecha o app (para soltar os arquivos), move a pasta inteira para a Documentos
+correta e ainda atualiza o `path_windows` do seu `aft-config.md`. Nada é apagado,
+e nada é sobrescrito: se já houver uma pasta com conteúdo no destino, ele recusa
+e explica. Se preferir deixar como está, também tudo bem — continua funcionando.
+
+O painel, o servidor e o vigia de sessões passam a usar o mesmo caminho
 resolvido.
 
 ## 22/07/2026

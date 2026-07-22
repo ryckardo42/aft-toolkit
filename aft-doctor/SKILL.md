@@ -89,6 +89,16 @@ Esta skill **so diagnostica**. Para resolver, encaminhe para o lugar certo:
   explique que o repositorio precisa SER a pasta `~/.claude/skills` e ofereca reinstalar
   com o prompt do COMO-INSTALAR (Passo 3).
 - Config do toolkit incompleta → ofereca "Atualize o AFT Toolkit" (`/aft-atualizar`) ou reclone.
+- **"Pasta de trabalho fora da Documentos"** (instalacao anterior a 22/07/2026 no Windows:
+  os dados foram para `~/Documents/AFT`, mas a Documentos real e a do OneDrive) →
+  explique em uma frase que as fiscalizacoes existem e funcionam, so nao aparecem quando
+  ele abre "Documentos" no Explorer, e **pergunte** se quer mudar de lugar. Se sim:
+  1. peca para **fechar o app do Claude** (o vigia de sessoes e o servidor do painel
+     seguram arquivos dentro da pasta e impedem a mudanca no Windows);
+  2. rode `python "<python_path>" ~/.claude/skills/_scripts/pasta_aft.py --mover`;
+  3. mostre o `pasta_aft` do JSON como o novo lugar. Nada e apagado, e o `path_windows`
+     do aft-config.md e atualizado sozinho.
+  Se ele preferir deixar como esta, tudo continua funcionando — nao insista.
 - Frontmatter de skill quebrado ou modelo pinado indisponivel → ofereca `/aft-atualizar`;
   se ja estiver atualizado e o problema persistir, oriente a avisar o mantenedor
   citando a mensagem do check (pode ser modelo descontinuado ou limitacao do plano).
@@ -97,9 +107,13 @@ So execute uma correcao se o AFT pedir. Nunca instale nada silenciosamente neste
 
 ## Regras
 
-- **Somente leitura.** A skill nao instala, nao baixa, nao cria pastas. Diagnostica e
-  encaminha. Isso e garantido tecnicamente pelo `allowed-tools` do frontmatter: as
-  ferramentas de escrita (Write/Edit) ficam indisponiveis enquanto a skill roda. (Unica ressalva: o check "teste dos modelos pinados" faz UMA chamada
+- **Nao altera arquivos.** A skill nao instala, nao baixa, nao edita nem apaga nada.
+  Isso e garantido tecnicamente pelo `allowed-tools` do frontmatter: as ferramentas de
+  escrita (Write/Edit) ficam indisponiveis enquanto a skill roda. **Unica excecao:** o
+  proprio `aft_doctor.py` cria a pasta de trabalho (`AFT/OS ATIVAS` e `OS ARQUIVADAS`)
+  quando ela falta — criar diretorio vazio e seguro, idempotente, e sem ela nada do
+  toolkit funciona. Mover uma pasta que ja tem dados (`--mover`) NUNCA e automatico:
+  so com o AFT pedindo. (Unica ressalva: o check "teste dos modelos pinados" faz UMA chamada
   minima ao Claude por modelo datado, para confirmar que a conta do AFT tem acesso —
   gasta uma resposta curta de cota e nao altera nada.)
 - O codigo `[ERRO]` (saida != 0) significa que ha pelo menos um item essencial faltando;

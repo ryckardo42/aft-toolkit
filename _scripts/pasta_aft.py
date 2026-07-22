@@ -132,6 +132,10 @@ def diagnostico() -> dict:
     # Outras pastas AFT existentes (instalacao anterior no lugar errado).
     outras = [str(d / "AFT") for d in candidatos_documentos()
               if (d / "AFT").is_dir() and (d / "AFT") != aft]
+    # "Fora do lugar": a pasta em uso NAO e a da Documentos real. Acontece com
+    # quem instalou antes desta correcao - o mkdir cru criou ~/Documents/AFT,
+    # os dados foram para la, e o AFT nao acha a pasta pelo Explorer.
+    fora = aft.is_dir() and aft != canonico and not os.environ.get("PASTA_AFT")
     return {
         "pasta_aft": str(aft),
         "documentos": str(docs),
@@ -142,7 +146,73 @@ def diagnostico() -> dict:
         "onedrive": "onedrive" in str(docs).lower(),
         "duplicadas": outras,
         "por_env": bool(os.environ.get("PASTA_AFT")),
+        "fora_do_lugar": fora,
+        "destino_sugerido": str(canonico) if fora else "",
     }
+
+
+def _atualizar_path_windows(config: Path, destino: Path) -> bool:
+    """Reescreve `path_windows:` no aft-config.md apos a mudanca de pasta.
+    Melhor esforco: se nao der, o /aft-setup conserta depois."""
+    try:
+        import re
+        texto = config.read_text(encoding="utf-8")
+        if "path_windows:" not in texto:
+            return False
+        # Caminho no formato Windows, com as barras escapadas do YAML.
+        win = str(destino)
+        if sys.platform.startswith("win"):
+            win = win.replace("/", "\\")
+        novo = re.sub(r'^path_windows\s*:.*$',
+                      'path_windows: "%s"' % win.replace("\\", "\\\\"),
+                      texto, count=1, flags=re.MULTILINE)
+        if novo != texto:
+            config.write_text(novo, encoding="utf-8")
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def mover_para_canonico() -> dict:
+    """Move a pasta AFT em uso para a Documentos real. NUNCA sobrescreve:
+    se o destino ja tiver dados, recusa e explica. Devolve um relatorio."""
+    import shutil
+
+    origem = pasta_aft()
+    destino = documentos() / "AFT"
+    if origem == destino:
+        return {"ok": True, "movido": False, "motivo": "ja esta no lugar certo",
+                "pasta_aft": str(destino)}
+    if not origem.is_dir():
+        return {"ok": False, "movido": False,
+                "erro": f"a pasta de origem nao existe: {origem}"}
+    if destino.is_dir():
+        if any(destino.iterdir()):
+            return {"ok": False, "movido": False,
+                    "erro": (f"o destino ja existe e tem conteudo: {destino}. "
+                             "Junte as duas a mao (mova as subpastas de "
+                             f"'{origem / 'OS ATIVAS'}' para "
+                             f"'{destino / 'OS ATIVAS'}') e apague a antiga.")}
+        try:
+            destino.rmdir()  # destino vazio: sai da frente
+        except OSError as e:
+            return {"ok": False, "movido": False,
+                    "erro": f"nao consegui remover o destino vazio: {e}"}
+    try:
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(origem), str(destino))
+    except Exception as e:
+        return {"ok": False, "movido": False,
+                "erro": (f"falha ao mover ({type(e).__name__}: {e}). No Windows "
+                         "isso costuma ser um servico do toolkit segurando um "
+                         "arquivo: pare o vigia de sessoes e o servidor do "
+                         "painel e tente de novo.")}
+    cfg = destino / "aft-config.md"
+    return {"ok": True, "movido": True, "de": str(origem),
+            "pasta_aft": str(destino),
+            "config_atualizado": _atualizar_path_windows(cfg, destino)
+            if cfg.is_file() else False}
 
 
 def garantir_estrutura() -> tuple[Path, list[str]]:
@@ -163,7 +233,11 @@ def garantir_estrutura() -> tuple[Path, list[str]]:
 
 if __name__ == "__main__":
     import json
-    if "--criar" in sys.argv:
+    if "--mover" in sys.argv:
+        r = mover_para_canonico()
+        print(json.dumps({**r, **diagnostico()}, ensure_ascii=False, indent=2))
+        sys.exit(0 if r.get("ok") else 1)
+    elif "--criar" in sys.argv:
         alvo, criadas = garantir_estrutura()
         print(json.dumps({"ok": True, "pasta_aft": str(alvo),
                           "criadas": criadas, **diagnostico()},
