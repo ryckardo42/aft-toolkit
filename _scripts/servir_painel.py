@@ -160,6 +160,36 @@ def acao_pendencia(texto: str, alvo: str) -> tuple[str, str]:
     raise ValueError("pendência não encontrada (ou já resolvida)")
 
 
+RE_DETALHE_DET = re.compile(r"^\s+-\s+lavrada\s", re.IGNORECASE)
+RE_ULT_ENTREGA = re.compile(r"última entrega\s+(\d{2})/(\d{2})/(\d{4})",
+                            re.IGNORECASE)
+
+
+def acao_det_visto(texto: str, codigo: str) -> tuple[str, str]:
+    """Dispensa o alerta '⚠️ atualização pendente' de uma notificação DET:
+    remove o alerta da sub-linha de detalhes e grava `<!-- visto: X -->`
+    (X = última entrega, ou 'sem-entrega'). O det_sync respeita o marcador
+    e só reexibe o alerta se a empresa fizer entrega NOVA."""
+    linhas = texto.splitlines(keepends=True)
+    ini, fim = limites_secao(linhas, ("Notificações DET", "Notificacoes DET"))
+    if ini < 0:
+        raise ValueError("seção 'Notificações DET' não encontrada")
+    for i in range(ini, fim):
+        m = RE_CHECKBOX.match(linhas[i].rstrip("\n"))
+        if not (m and codigo in m.group(4)):
+            continue
+        if i + 1 >= fim or not RE_DETALHE_DET.match(linhas[i + 1]):
+            raise ValueError(f"notificação {codigo} sem sub-linha de detalhes")
+        det = linhas[i + 1].rstrip("\n")
+        me = RE_ULT_ENTREGA.search(det)
+        visto = f"{me.group(3)}-{me.group(2)}-{me.group(1)}" if me else "sem-entrega"
+        det = det.replace(" · ⚠️ atualização pendente", "")
+        det = re.sub(r"\s*<!--\s*visto:[^>]*-->", "", det)
+        linhas[i + 1] = f"{det} <!-- visto: {visto} -->\n"
+        return "".join(linhas), f"alerta da {codigo} dispensado (volta se houver entrega nova)"
+    raise ValueError(f"notificação {codigo} não encontrada no memory.md")
+
+
 def acao_anotacao_ok(texto: str, alvo: str) -> tuple[str, str]:
     """Marca [x] a anotação em aberto cujo texto visível bate com `alvo`."""
     linhas = texto.splitlines(keepends=True)
@@ -280,6 +310,7 @@ def acao_embargo(texto: str, estado: str) -> tuple[str, str]:
 
 ACOES = {
     "det": lambda t, p: acao_det(t, p.get("codigo", "")),
+    "det_visto": lambda t, p: acao_det_visto(t, p.get("codigo", "")),
     "pendencia": lambda t, p: acao_pendencia(t, p.get("texto", "")),
     "anotacao_ok": lambda t, p: acao_anotacao_ok(t, p.get("texto", "")),
     "anotacao_add": lambda t, p: acao_anotacao_add(t, p.get("texto", "")),

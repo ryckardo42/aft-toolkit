@@ -845,6 +845,7 @@ function agCal(j){const v=DATA.venc[j];
   encodeURIComponent(v.titulo)+'&dates='+ini+'/'+fim+'&details='+
   encodeURIComponent('Notificação DET '+v.codigo+' — '+v.empregador+' (AFT Toolkit)'),'_blank')}
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
+function agDetVisto(i,k){const o=DATA.os[i];api({acao:'det_visto',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
 function agAnot(i,k){const o=DATA.os[i];api({acao:'anotacao_ok',pasta:o.pasta,texto:o.anotacoes[k]})}
 function agAnotAdd(i){const el=document.getElementById('anot-txt');const v=(el.value||'').trim();
@@ -916,7 +917,10 @@ function cartaoDets(o,i){
    (ATIVO&&o.pasta&&d.codigo?' onclick="agDet('+i+','+k+')" title="clique para '+
     (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
    '<span class="cx">'+(d.feito?'✓':'')+'</span><div><div class="cod">'+
-   (d.pendente?'<span class="pend">⚠️ atualização pendente</span> ':'')+esc(d.codigo||'?')+'</div>'+
+   (d.pendente?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
+    ' style="cursor:pointer" title="clique se já viu esta atualização no DET — o alerta some e só volta se houver entrega nova"'+
+    ' onclick="event.stopPropagation();agDetVisto('+i+','+k+')"':'')+
+    '>⚠️ atualização pendente</span> ':'')+esc(d.codigo||'?')+'</div>'+
    (info?'<div class="info">'+info+'</div>':'')+
    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+'</div></div>'}).join('');
  return h+'</div>'}

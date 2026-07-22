@@ -26,11 +26,17 @@ e aplica o resultado na seção `## Notificações DET` do memory.md:
 
 Filtros, nesta ordem:
   1. CONFIRMADAS (status=1) e com data de lavratura — igual ao SisOS;
-  2. da(s) fiscalização(ões) DESTA OS, pelo RI — ver o bloco de comentários em
-     "Vínculo notificação × OS". A pesquisa é por empregador, então o DET
-     devolve também notificações de fiscalizações antigas do mesmo CNPJ; sem
-     este filtro elas entram na OS errada. Notificação de RI alheio nunca é
-     importada nem descartada em silêncio: volta em `ignoradas_detalhe`.
+  2. da(s) fiscalização(ões) DESTA OS, pelo RI: o `ri:` do FRONT-MATTER é o
+     identificador canônico da auditoria — só entra notificação daquele(s)
+     RI(s) (aceita mais de um no campo, separados por vírgula). A pesquisa é
+     por empregador, então o DET devolve também notificações de fiscalizações
+     antigas do mesmo CNPJ; sem este filtro elas entram na OS errada.
+     Notificação de RI alheio nunca é importada nem descartada em silêncio:
+     volta em `ignoradas_detalhe`. Ver "Vínculo notificação × OS".
+
+Alerta "⚠️ atualização pendente" (campo itemAtualizado da API): é dispensável —
+o AFT clica no alerta no painel ("já vi"), o servir_painel grava
+`<!-- visto: ... -->` na sub-linha e o alerta só volta se houver entrega nova.
 
 O estado do checkbox ([ ]/[x]) NUNCA é alterado — respondida é decisão do AFT.
 Cada memory.md alterado recebe backup prévio (backup_arquivo.py) e uma linha
@@ -124,53 +130,28 @@ def elegiveis(notificacoes: list[dict]) -> list[dict]:
 # anteriores, já concluídas. O que amarra uma notificação a ESTA OS é o RI
 # (Relatório de Inspeção), presente em cada notificação.
 #
-# Por que não filtrar por `situacaoRi` ("FISC_CONCLUIDA_E_AFERIDA"): OS
-# legítimas em OS ATIVAS têm todas as notificações nesse estado (a fiscalização
-# encerrou, a pasta ainda não foi arquivada) — descartá-las perderia dado real.
+# REGRA (decidida em 22/07/2026, caso CONSORCIO SQ, RI alheio 319969819): o
+# `ri:` do FRONT-MATTER é O identificador canônico da auditoria — só entra
+# notificação cujo RI esteja nele. Nada de inferir RI por notificações já
+# registradas na ficha: a união antiga fazia um RI de fiscalização antiga
+# (registrado na ficha um dia, por engano ou importação) virar "conhecido"
+# e puxar as irmãs dele para sempre.
 #
-# RIs conhecidos da OS = o `ri:` do front-matter  ∪  os RIs das notificações já
-# registradas na ficha. A união (e não só o front-matter) cobre o caso real de
-# uma OS que acompanha mais de uma fiscalização do mesmo empregador (ex.: uma
-# ação fiscal normal + a investigação de um acidente, com RIs distintos).
+# OS que acompanha DUAS fiscalizações do mesmo empregador (ex.: ação fiscal
+# normal + investigação de acidente): declare os dois RIs no próprio campo,
+# separados por vírgula — `ri: "320038432, 320199999"`. Explícito, decidido
+# pelo AFT, nunca inferido.
 #
-# "Registrada na ficha" = código numa LINHA CHECKBOX da seção ## Notificações
-# DET — e só aí. Um código apenas CITADO no corpo (seção ### de detalhes,
-# Registro de atividades, análise) NÃO amarra o RI dele a esta OS: foi assim
-# que uma varredura por CNPJ escreveu detalhes de uma fiscalização antiga na
-# ficha e o RI antigo virou "conhecido", puxando notificações de 2025 para a
-# auditoria atual (caso MASTER AGROINDUSTRIAL, RI 318832054).
+# `ri:` vazio: adota o RI da notificação mais recente (ri_mais_recente) e o
+# grava no front-matter — a partir daí a regra estrita vale.
 #
-# Notificação de RI desconhecido nunca é importada — mas também nunca é
-# descartada em silêncio: volta no relatório para o AFT decidir.
+# Notificação de RI alheio nunca é importada — mas também nunca é descartada
+# em silêncio: volta no relatório (`ignoradas_detalhe`) para o AFT decidir.
 
-def _codigos_registrados(texto: str) -> set[str]:
-    """Códigos em linhas checkbox da seção ## Notificações DET (e só dela)."""
-    codigos: set[str] = set()
-    dentro = False
-    for linha in texto.splitlines():
-        s = linha.strip()
-        if s.startswith("## "):
-            dentro = s[3:].strip() in ("Notificações DET", "Notificacoes DET")
-            continue
-        if not dentro:
-            continue
-        cb = RE_CHECKBOX.match(linha)
-        if cb:
-            cod = RE_CODIGO.match(cb.group(1).strip())
-            if cod:
-                codigos.add(cod.group(1))
-    return codigos
-
-
-def ris_conhecidos(texto: str, notifs: list[dict], ri_fm: str) -> set[str]:
-    conhecidos = {ri_fm} if ri_fm else set()
-    registrados = _codigos_registrados(texto)
-    for n in notifs:
-        codigo = (n.get("codigo") or "").strip()
-        ri = re.sub(r"\D", "", n.get("ri") or "")
-        if codigo and ri and codigo in registrados:
-            conhecidos.add(ri)  # já registrada nesta OS ⇒ o RI dela é desta OS
-    return conhecidos
+def ris_da_os(ri_fm: str) -> set[str]:
+    """RIs desta OS = somente o(s) do campo `ri:` do front-matter (9 dígitos
+    cada; aceita mais de um, separados por vírgula/espaço)."""
+    return set(re.findall(r"\d{9}", ri_fm or ""))
 
 
 def ri_mais_recente(notifs: list[dict]) -> str:
@@ -215,12 +196,29 @@ def _mesma_data(txt: str, iso: str | None) -> bool:
     return norm == iso[:10]
 
 
-def _linha_detalhe(n: dict) -> str:
+RE_VISTO = re.compile(r"<!--\s*visto:\s*([^\s>]+)\s*-->")
+
+
+def _fingerprint(n: dict) -> str:
+    """Estado da notificação que interessa ao alerta: a última entrega da
+    empresa. Se mudar (entrega nova), é novidade de verdade."""
+    return (n.get("itemDataUltimaEntrega") or "")[:10] or "sem-entrega"
+
+
+def _linha_detalhe(n: dict, visto: str = "") -> str:
     """Sub-linha de detalhes de uma notificação (dados vindos do DET).
     Campos vazios são omitidos; status 1 = Confirmada (único elegível).
-    `itemAtualizado` é o triângulo amarelo da tela Notificações do DET
-    ("Existe atualização pendente": pedido de prazo, dispensa, item não
-    aberto...) — some daqui quando o AFT resolve lá, no sync seguinte."""
+
+    `itemAtualizado` é o campo da API por trás do triângulo amarelo do DET
+    ("Existe atualização pendente"). Constatado em produção (19-22/07/2026,
+    casos SPE CAMETA e CONSORCIO SQ): a API pode CONTINUAR devolvendo true
+    mesmo depois de o triângulo sumir na tela (o triângulo apaga quando o
+    AFT abre a notificação na interface; o campo, não necessariamente).
+    Por isso o alerta é DISPENSÁVEL: quando o AFT clica "já vi" no painel,
+    o servir_painel grava `<!-- visto: <última entrega> -->` na sub-linha,
+    e o sync só volta a exibir o alerta se a última entrega MUDAR (entrega
+    nova da empresa = novidade real). O marcador é preservado a cada
+    regravação."""
     partes = []
     if n.get("dataEnvio"):
         partes.append(f"lavrada {_data_br(n['dataEnvio'])}")
@@ -230,9 +228,15 @@ def _linha_detalhe(n: dict) -> str:
         partes.append(f"última entrega {_data_br(n['itemDataUltimaEntrega'])}")
     partes.append("Confirmada" if n.get("status") == 1
                   else f"status {n.get('status')}")
-    if n.get("itemAtualizado"):
+    atualizado = n.get("itemAtualizado")
+    if isinstance(atualizado, str):  # blindagem: "false"/"N" são falsos
+        atualizado = atualizado.strip().lower() in ("true", "s", "sim", "1")
+    if atualizado and _fingerprint(n) != visto:
         partes.append("⚠️ atualização pendente")
-    return "  - " + " · ".join(partes) + "\n"
+    linha = "  - " + " · ".join(partes)
+    if visto:
+        linha += f" <!-- visto: {visto} -->"
+    return linha + "\n"
 
 
 def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int, int]:
@@ -281,8 +285,13 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int,
             novas.append(_linha_detalhe(n))
             inseridas += 1
             continue
-        # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou).
-        det = _linha_detalhe(n)
+        # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou),
+        # preservando o marcador `visto:` que o AFT tenha gravado pelo painel.
+        visto = ""
+        if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
+            mv = RE_VISTO.search(linhas[i + 1])
+            visto = mv.group(1) if mv else ""
+        det = _linha_detalhe(n, visto)
         if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
             if linhas[i + 1] != det:
                 linhas[i + 1] = det
@@ -399,8 +408,9 @@ def identificadores(texto: str, pasta: str) -> tuple[str, str]:
     if not cnpj:
         m2 = re.search(r"(\d{11,14})\s*$", pasta)
         cnpj = m2.group(1) if m2 else ""
-    ri = re.sub(r"\D", "", campo("ri"))
-    return cnpj, ri
+    # `ri:` cru (pode ter mais de um RI, separados por vírgula) — quem extrai
+    # os RIs individuais é ris_da_os().
+    return cnpj, campo("ri")
 
 
 def sincronizar_os(pasta_os: Path, token: str,
@@ -415,12 +425,14 @@ def sincronizar_os(pasta_os: Path, token: str,
     except OSError as e:
         r["erro"] = f"memory.md ilegível: {e}"
         return r
-    cnpj, ri = identificadores(texto, pasta_os.name)
-    if not cnpj and not ri:
+    cnpj, ri_fm = identificadores(texto, pasta_os.name)
+    conhecidos = ris_da_os(ri_fm)
+    if not cnpj and not conhecidos:
         r["erro"] = "sem CNPJ/CPF nem RI — pulada"
         return r
     try:
-        notifs = elegiveis(consultar(token, cnpj, ri))
+        notifs = elegiveis(consultar(token, cnpj,
+                                     sorted(conhecidos)[0] if conhecidos else ""))
     except RuntimeError as e:
         r["erro"] = str(e)
         return r
@@ -428,11 +440,11 @@ def sincronizar_os(pasta_os: Path, token: str,
     if not notifs:
         return r
 
-    # Só entram notificações da(s) fiscalização(ões) DESTA OS — ver ris_conhecidos.
-    conhecidos = ris_conhecidos(texto, notifs, ri)
+    # Só entram notificações da(s) fiscalização(ões) DESTA OS — o `ri:` do
+    # front-matter é o identificador canônico (ver bloco "Vínculo notificação × OS").
     ri_novo = ""
     if not conhecidos:
-        # OS que ainda não conhece RI nenhum: adota o da notificação mais recente.
+        # OS ainda sem `ri:`: adota o da notificação mais recente e grava.
         ri_novo = ri_mais_recente(notifs)
         if ri_novo:
             conhecidos = {ri_novo}
