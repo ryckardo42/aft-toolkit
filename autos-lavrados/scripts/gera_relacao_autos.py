@@ -212,8 +212,15 @@ def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     md_path = Path(sys.argv[1]).expanduser()
-    pasta_saida = (Path(sys.argv[2]).expanduser() if len(sys.argv) > 2
-                   else md_path.parent / "Relacao de autos")
+    # Layout novo (22/07/2026): a relacao mora em AUTOS/Relacao de autos/. Em OS
+    # ainda nao migradas (sem a pasta AUTOS/), mantem o lugar antigo, na raiz.
+    if len(sys.argv) > 2:
+        pasta_saida = Path(sys.argv[2]).expanduser()
+    else:
+        base = md_path.parent
+        pasta_saida = ((base / "AUTOS" / "Relacao de autos")
+                       if (base / "AUTOS").is_dir()
+                       else base / "Relacao de autos")
 
     out_docx = pasta_saida / "relacao-autos.docx"
     out_pdf = pasta_saida / "relacao-autos.pdf"

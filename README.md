@@ -130,7 +130,14 @@ Documentos\AFT\
 │       ├── memory.md                (ficha da fiscalização — criada pelo /nova-os)
 │       ├── inspecao-fisica.md       (relato de campo)
 │       ├── autos.md                 (autos redigidos)
-│       └── Autos 19-05\             (TXT importável + anexos PDF)
+│       ├── autos-lavrados.md        (o que já foi transmitido — fica na raiz)
+│       ├── NOTIFICACOES\            (PDFs do DET + respostas do empregador)
+│       │   ├── notificacao-ABC123.pdf
+│       │   └── notificacao-ABC123\  (itens entregues pela empresa)
+│       ├── AUTOS\
+│       │   ├── Autos 19-05\         (TXT importável + anexos PDF)
+│       │   └── Relacao de autos\    (relação .docx/.pdf)
+│       └── interdicao-embargo\      (termo, RT, laudos)
 └── OS ARQUIVADAS\
 ```
 

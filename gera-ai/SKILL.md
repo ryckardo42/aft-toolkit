@@ -175,14 +175,18 @@ Atualize `[PASTA_EMPRESA]` para o novo nome e use-o em todos os passos seguintes
 
 1. Data padrão = **hoje** (formato `DD-MM` com zero-padding, ex: `19-05`).
 2. Pergunte: **"Pasta de lavratura: `Autos [DD-MM]`. Confirmar ou alterar data? (formato DD-MM)"**
-3. Verifique se a pasta já existe em `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/`:
+3. **Onde a pasta é criada** (layout de 22/07/2026): dentro da caixa `AUTOS/` da OS —
+   `[PASTA_EMPRESA]/AUTOS/Autos [DD-MM]/`. Crie `AUTOS/` se ainda não existir (OS antiga
+   ainda não migrada; o `/organiza-os` migra o resto depois).
+4. Verifique se a pasta já existe em `[PASTA_EMPRESA]/AUTOS/`:
    - Se **não existir** → use `Autos [DD-MM]`.
    - Se **existir** → tente `Autos [DD-MM] 2`, depois `Autos [DD-MM] 3`, e assim por diante até achar um nome livre.
-4. Crie a pasta:
+5. Crie a pasta:
    ```bash
-   mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"/
+   mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/AUTOS/"[PASTA_LAVRATURA]"/
    ```
-5. Guarde `[PASTA_LAVRATURA]` (ex: `Autos 19-05`) — usado no resto da skill.
+6. Guarde `[PASTA_LAVRATURA]` (ex: `Autos 19-05`) e o caminho completo
+   (`AUTOS/Autos 19-05`) — usados no resto da skill.
 
 ---
 

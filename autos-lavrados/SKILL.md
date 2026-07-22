@@ -18,7 +18,7 @@ description: >
   `## Autos lavrados` do memory.md marcando [x] os lavrados e [ ] os pendentes.
   Também gera a "Relação de autos lavrados" em .docx (template oficial,
   cabeçalho SIT/AFT preservado) e tenta exportar o mesmo documento em .pdf,
-  salvando ambos em `Relacao de autos/` dentro da pasta da OS.
+  salvando ambos em `AUTOS/Relacao de autos/` dentro da pasta da OS.
   Read-only sobre o Sistema Auditor (nunca toca nos PDFs nem na pasta PRO).
 ---
 
@@ -154,8 +154,10 @@ Para cada auto **válido** (Passo 2.5 — `unico`, `mantido_ultimo`, `manter_tod
 
 ### Passo 4 — Cruzar com rascunhos da pasta `Autos DD-MM/`
 
-1. Liste subpastas `Autos *` na pasta da OS:
+1. Liste as subpastas de lote. No layout de 22/07/2026 elas ficam em `AUTOS/`; OS ainda
+   não migradas as têm na raiz — procure **nos dois lugares**:
    ```bash
+   ls -d ~/Documents/AFT/"OS ATIVAS"/"<PASTA_EMPRESA>"/AUTOS/Autos*/ 2>/dev/null
    ls -d ~/Documents/AFT/"OS ATIVAS"/"<PASTA_EMPRESA>"/Autos*/ 2>/dev/null
    ```
 2. Em cada subpasta, leia os `.txt` (saídas do `/gera-ai`) e os `autos*.md` (rascunhos). Extraia números de ementa via regex `(\d{6}-\d)` ou `Ementa:\s*(\d{6,7})`. Normalize removendo hífen (7 dígitos) para comparar.
@@ -229,16 +231,16 @@ python3 ~/.claude/skills/autos-lavrados/scripts/gera_relacao_autos.py "<pasta-OS
 ```
 
 O script:
-- cria (se não existir) a pasta `<pasta-OS>/Relacao de autos/`;
+- cria (se não existir) a pasta `<pasta-OS>/AUTOS/Relacao de autos/` (em OS ainda não migradas, sem a caixa `AUTOS/`, usa o lugar antigo `<pasta-OS>/Relacao de autos/`);
 - gera `relacao-autos.docx` a partir do template oficial (`scripts/template-relacao-autos.docx`) — cabeçalho com os logos SIT/AFT **nunca é alterado**; corpo com EMPREGADOR + INSCRIÇÃO, autos agrupados por data (mais antigo → mais recente, ordem do MD preservada), fonte Times New Roman 12pt, texto sempre justificado;
 - tenta converter o mesmo `.docx` para `relacao-autos.pdf` (LibreOffice `soffice` se disponível, senão Word via `docx2pdf`), sem alterar o visual.
 
 Leia o stdout do script:
 - `OK docx: ...` e `OK pdf: ... (via <motor>)` → os dois arquivos foram gerados; informe os caminhos ao AFT.
-- `OK docx: ...` seguido de `AVISO: PDF não gerado automaticamente...` → o `.docx` foi gerado normalmente, mas a conversão para PDF não está disponível nesta máquina (falta LibreOffice/Word, ou a automação do Word não tem permissão do sistema). **Não trate como erro da skill**: informe ao AFT que o `.docx` está pronto em `Relacao de autos/relacao-autos.docx` e que, para o PDF, é só abrir esse arquivo no Word e usar **Arquivo > Salvar como... > PDF**.
+- `OK docx: ...` seguido de `AVISO: PDF não gerado automaticamente...` → o `.docx` foi gerado normalmente, mas a conversão para PDF não está disponível nesta máquina (falta LibreOffice/Word, ou a automação do Word não tem permissão do sistema). **Não trate como erro da skill**: informe ao AFT que o `.docx` está pronto em `AUTOS/Relacao de autos/relacao-autos.docx` e que, para o PDF, é só abrir esse arquivo no Word e usar **Arquivo > Salvar como... > PDF**.
 - Se o `autos-lavrados.md` não tiver nenhum auto válido no Detalhamento (OS sem autos lavrados), pule este passo — não há o que relacionar.
 
-> Read-only sobre o template: o script sempre lê `template-relacao-autos.docx` e grava um `.docx` novo em `Relacao de autos/`; o template da skill nunca é sobrescrito.
+> Read-only sobre o template: o script sempre lê `template-relacao-autos.docx` e grava um `.docx` novo em `AUTOS/Relacao de autos/`; o template da skill nunca é sobrescrito.
 
 ### Passo 6 — Atualizar `memory.md`
 

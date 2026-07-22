@@ -66,6 +66,13 @@ for d in ~/Documents/AFT/"OS ATIVAS"/*/; do [ -f "$d/memory.md" ] || echo "$d"; 
    "atualização" (antes de editar o memory.md, rode
    `python ~/.claude/skills/_scripts/backup_arquivo.py "<memory.md>"`). Se estiver em
    dia, não toque.
+
+   **Layout antigo (anterior a 22/07/2026) → migração.** Antes, notificações e pastas
+   de autos ficavam soltas na raiz. Detecte e inclua a migração no plano quando houver,
+   na raiz: `notificacao-*.pdf`, `relatorio-atendimento-*.pdf`, `notificacao-*/`,
+   `Autos *</`, `Relacao de autos/` ou `relacao-autos*.docx`. A migração é só
+   `mkdir` + `mv` para `NOTIFICACOES/` e `AUTOS/` — **nada é renomeado nem apagado**, e
+   os `.md` da raiz não se movem.
 3. **Vazia** → apenas relate no resumo final ("pastas vazias: X, Y — nada a organizar")
    e siga. Não pergunte nada sobre elas.
 
@@ -148,18 +155,54 @@ Pastas vazias (nada a fazer): PASTA-A, PASTA-B
 Nada será apagado. Confirma a organização completa?
 ```
 
+### Layout padrão da pasta de uma OS
+
+Duas caixas (`NOTIFICACOES/` e `AUTOS/`) concentram o material volumoso; a **raiz fica
+só com as fichas e os relatórios `.md`**:
+
+```
+<EMPREGADOR> <CNPJ>/
+├── memory.md                     ← ficha da OS
+├── CLAUDE.md                     ← briefing da sessão (não mover)
+├── autos-lavrados.md             ← RAIZ OBRIGATÓRIA (ver regra abaixo)
+├── analise-preliminar-*.md       ← RAIZ OBRIGATÓRIA
+├── jornada-analise-*.md          ← RAIZ OBRIGATÓRIA
+├── inspecao-fisica.md            ← RAIZ OBRIGATÓRIA
+├── NOTIFICACOES/
+│   ├── notificacao-<CODIGO>.pdf
+│   ├── relatorio-atendimento-<CODIGO>.pdf
+│   └── notificacao-<CODIGO>/     ← resposta do empregador (item1/, item2/...)
+├── AUTOS/
+│   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /gera-ai
+│   └── Relacao de autos/         ← relação .docx/.pdf do /autos-lavrados
+├── interdicao-embargo/           ← termo, RT, laudos, juntados
+└── fotos/
+```
+
+> **Regra dura — `.md` fica na RAIZ.** O painel lê `autos-lavrados.md` num caminho fixo
+> na raiz e lista os demais relatórios com um glob de **primeiro nível**
+> (`gerar_painel.py`). Um `.md` movido para dentro de `NOTIFICACOES/` ou `AUTOS/`
+> **desaparece do painel**. Por isso: PDFs e pastas de material vão para as caixas; os
+> `.md` de trabalho do AFT, nunca.
+
 Regras do plano:
 - **Nome da pasta**: `<EMPREGADOR EM CAIXA ALTA> <identificador só dígitos>` (padrão do
   toolkit). Sem identificador encontrado → só o nome, e avise que o CNPJ/CPF será exigido
   no `/gera-ai`.
-- **Notificações**: PDF na **raiz** como `notificacao-<CODIGO>.pdf`; resposta do
-  empregador na subpasta `notificacao-<CODIGO>/` (mantendo `item1/`, `item2/`... ou
-  `01 - .../`). É onde `/analise-preliminar`, `/det-630` e `/painel` procuram.
+- **Notificações** → tudo em `NOTIFICACOES/`: o PDF como
+  `NOTIFICACOES/notificacao-<CODIGO>.pdf`, o relatório de atendimento como
+  `NOTIFICACOES/relatorio-atendimento-<CODIGO>.pdf` e a resposta do empregador na
+  subpasta `NOTIFICACOES/notificacao-<CODIGO>/` (mantendo `item1/`, `item2/`... ou
+  `01 - .../`). Sufixo descritivo que o AFT tenha dado à pasta é **preservado**
+  (`notificacao-<CODIGO> jornada/`) — o que identifica é o código.
 - **Nomes de download duplicado**: normalize sufixos do navegador —
   `notificacao-XYZ (1).pdf` → `notificacao-XYZ.pdf` (idem `relatorio-atendimento`). Se o
   nome-alvo já existir com outro conteúdo, mantenha os dois e relate.
-- **Relação de autos**: subpasta `Relacao de autos/` (mesma que o `/autos-lavrados` usa
-  para a relação .docx).
+- **Autos** → tudo em `AUTOS/`: as pastas de lote `AUTOS/Autos <DD-MM>/` (mantendo o
+  prefixo `Autos`, só movidas — nunca renomeadas, porque o nome antigo é citado no
+  `memory.md`) e a relação em `AUTOS/Relacao de autos/`, onde também vão os `.docx`
+  soltos de relação (`relacao-autos*.docx`, incluindo versões `-v2`/`-v3`).
+- **`autos-lavrados.md` NÃO entra em `AUTOS/`** — fica na raiz (regra dura acima).
 - **Interdição/embargo**: subpasta `interdicao-embargo/` — pasta **única por OS** (sem sufixo
   de data) onde vai TODO o material da medida: termo assinado, RT que a fundamenta, RT de
   manutenção, requerimento de suspensão e juntados do empregador, e os autos derivados
