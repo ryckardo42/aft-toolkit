@@ -508,6 +508,14 @@ SIT/n.2/2022).
 - Finalize com a conclusão jurídica: *"Sendo assim, incorreu o empregador na infração
   ementada supracitada."*
 - Tom: sóbrio, formal, impessoal, terceira pessoa. Sem travessões.
+- **Acentuação completa e obrigatória.** Escreva o subtítulo 2 em português com TODOS os
+  acentos (ç ã õ á é í ó ú â ê ô à). O TXT final do Sistema Auditor é gravado em
+  ISO-8859-1 (latin-1), que **suporta todos os acentos do português** — acento não é
+  problema de encoding e **jamais** deve ser removido ("organização", não "organizacao";
+  "análise", não "analise"; "não", não "nao"; "máquina", não "maquina"). O que o latin-1
+  não aceita é apenas travessão (—), aspas curvas e emojis. Não confunda "latin-1-safe"
+  com "sem acento": texto sem acento é auto malfeito e será reprovado pelo gate de
+  acentuação do `/revisa-auto` (`checar_acentos.py`).
 - **Caso especial — Ementa 1010603 com interdição confirmada**: use o texto literal da
   Regra Especial D.A como conteúdo do subtítulo 2 e acrescente aos elementos de
   convicção: `; termo de interdição lavrado, em anexo`.
@@ -561,6 +569,9 @@ Salve o relatório como `recomendacao-geral-PGR.md` na pasta da OS.
 ## Regras gerais
 
 - Texto técnico, oficial, em terceira pessoa. Sem informalidades.
+- **Acentuação completa** (ç ã õ á é í ó ú â ê ô à). Nunca remova acentos: o latin-1 do
+  TXT final os suporta integralmente. Só travessão (—), aspas curvas e emojis ficam fora
+  do latin-1.
 - **Não usar travessões** (em-dashes). Substituir por dois pontos, vírgulas, parênteses
   ou hífen simples.
 - Não invente dados. Se uma informação não estiver no PGR, declare a ausência.

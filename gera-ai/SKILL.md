@@ -366,6 +366,7 @@ Linhas separadas por `\n`.
   - **Separador de parágrafo** (dentro de um subtítulo): `#13#10`
   - Exemplo: `I - DA FISCALIZACAO:#13#10 . #13#10Trata-se de acao fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalizacao...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVACOES:#13#10 . #13#10a) ...#13#10b) ...`
   - **Normalização do legado (obrigatória)**: rascunho antigo redigido com `1) DA FISCALIZAÇÃO:` / `2) IRREGULARIDADE:` / `3) OBSERVAÇÕES:` é convertido para o formato romano ao montar o `[texto_autuacao]` (troca determinística de subtítulo, sem tocar no resto do texto) — todo TXT sai no formato novo, mesmo de rascunho antigo.
+  - **Recuo de primeira linha (aplicado por script na geração, ver "Geração e salvamento"):** monte o `[texto_autuacao]` com os `#13#10` puros, como acima. O recuo NÃO é digitado à mão — o passo `indenta_quebras.py` insere, de forma determinística, 8 espaços após cada `#13#10` que precede texto real (parágrafo, subtítulo, alínea), deixando os parágrafos com recuo no Sistema Auditor. Os marcadores de linha em branco `#13#10 . #13#10` são preservados (o ponto continua com 1 espaço de cada lado, sem recuo). Não escreva os 8 espaços você mesmo — apenas rode o script.
 - `[cod_3]` = código da ementa com o hífen removido, mantendo TODOS os dígitos. Ex: `312358-8` → `3123588`; `000361-0` → `0003610`. Nunca usar zero-padding de 7 dígitos — o dígito verificador faz parte do código.
 - Todos os autos da mesma empresa concatenados no mesmo arquivo, um bloco após o outro, sem linhas em branco.
 
@@ -396,7 +397,12 @@ linha 6 (CIF)
    ```
    ~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt
    ```
-4. **Re-hidrate** rodando o script do toolkit (gera o TXT real, já em latin-1, a partir do tokenizado + de-para):
+4. **Recuo de primeira linha (obrigatório).** Rode o script do toolkit sobre o tokenizado — ele insere 8 espaços após cada `#13#10` que precede texto real (recuo de parágrafo no Sistema Auditor), preservando os marcadores de linha em branco `#13#10 . #13#10`. É idempotente (rodar de novo não duplica o recuo):
+   ```bash
+   DIR=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
+   python ~/.claude/skills/_scripts/indenta_quebras.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt"
+   ```
+5. **Re-hidrate** rodando o script do toolkit (gera o TXT real, já em latin-1, a partir do tokenizado + de-para):
    ```bash
    DIR=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
    python ~/.claude/skills/_scripts/rehydrate.py \
@@ -405,7 +411,7 @@ linha 6 (CIF)
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
    O script aborta (sem gerar o TXT) se faltar valor no de-para, se algum CPF não tiver 11 dígitos, se sobrar token órfão `[[...]]`, ou se houver caractere fora do latin-1. Se abortar, corrija a causa e rode de novo — **não** preencha o TXT à mão.
-5. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, caractere fora do latin-1):
+6. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, caractere fora do latin-1):
    ```bash
    python ~/.claude/skills/_scripts/validar_txt.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
