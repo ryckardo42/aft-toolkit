@@ -152,7 +152,8 @@
       <h3>Abra a auditoria</h3>
       <div class="txt">Uma pasta por empresa fiscalizada, com a ficha <b>memory.md</b> — a
       "capa da OS" onde ficam status, notificações DET, pendências e autos. O CNPJ é opcional
-      aqui (só vira obrigatório na hora de gerar os autos).</div>
+      aqui (só vira obrigatório na hora de gerar os autos). O RI também é opcional, mas vale
+      informar: é ele que identifica a auditoria para o sync automático do DET.</div>
       <div class="fala">"abre uma auditoria nova para a CONSTRUTORA EXEMPLO"</div>
       <div class="chips"><span class="chip c-verde">/nova-os</span></div>
     </div>
@@ -289,8 +290,11 @@
 ├─ aft-config.md      ← seus dados (CIF, UORG…)
 ├─ OS ATIVAS/
 │   └─ EMPRESA X/
-│       ├─ memory.md  ← a ficha da auditoria
-│       ├─ Autos 18-07/
+│       ├─ memory.md          ← a ficha da auditoria
+│       ├─ autos-lavrados.md  ← relatórios ficam na raiz
+│       ├─ NOTIFICACOES/      ← PDFs de notificação + resposta da empresa
+│       ├─ AUTOS/
+│       │   └─ Autos 18-07/
 │       └─ interdicao-embargo/
 └─ OS ARQUIVADAS/</div>
     </div>

@@ -138,9 +138,9 @@ const ARCH = {
  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 28 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
   "skills": 38,
-  "scripts": 27,
+  "scripts": 28,
   "dados": 6,
-  "commit": "ver `git log -1` — atualizado em 21/07/2026"
+  "commit": "ver `git log -1` — atualizado em 22/07/2026"
  },
  "atores": [
   {
@@ -192,7 +192,7 @@ const ARCH = {
   },
   {
    "who": "/auditoria-geral",
-   "act": "Lê o relato, identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise, /aet-auditoria ou /analise-acidente (quando há acidente/doença do trabalho). Gate de dupla visita (ME/EPP)."
+   "act": "Enquadra os achados (relato de campo + Anotações da auditoria em aberto), identifica NR/ementa (via /consulta ao NotebookLM) e redige os autos. Aciona consultoras /NR12 e /NR18; desvia para /registro, /aft-rt-rgi (risco grave), /PGR-analise, /aet-auditoria ou /analise-acidente. Gate de dupla visita (ME/EPP)."
   },
   {
    "who": "/revisa-auto",
@@ -212,7 +212,7 @@ const ARCH = {
   },
   {
    "who": "/sfitweb-rel",
-   "act": "Relatório Final Simplificado: notificações, autos por tema e interdições, do memory.md — texto p/ SFITWEB + .docx p/ chefia\u00b7MPT."
+   "act": "Relatório Final Simplificado: notificações, autos por tema e interdições, do memory.md — texto p/ SFITWEB + .docx p/ chefia·MPT."
   }
  ],
  "instalacao": [
@@ -245,7 +245,7 @@ const ARCH = {
     },
     {
      "nome": "/aft-doctor",
-     "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta (só leitura; allowed-tools sem Write/Edit).",
+     "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta. Não altera arquivos, com UMA exceção: cria a pasta de trabalho (via pasta_aft.py) se faltar — e, se detectar que ela está fora da Documentos real (instalação anterior à correção de 22/07/2026), oferece migrar com consentimento (--mover), sem sobrescrever nada.",
      "tech": "aft_doctor.py · model: sonnet"
     },
     {
@@ -260,12 +260,12 @@ const ARCH = {
     },
     {
      "nome": "/nova-os",
-     "role": "Cadastra uma auditoria (nome livre — razão social, fantasia ou o que o AFT preferir; CNPJ/CPF opcional, município, DET com prazo) — o começo do fluxo. Idempotente.",
+     "role": "Cadastra uma auditoria (nome livre — razão social, fantasia ou o que o AFT preferir; CNPJ/CPF opcional, município, RI opcional com aviso de que sem ele o sync do DET não importa notificações desta OS, DET com prazo) — o começo do fluxo. Idempotente.",
      "tech": "cria memory.md · model: sonnet"
     },
     {
      "nome": "/organiza-os",
-     "role": "Importa uma pasta bagunçada de fiscalização pré-toolkit jogada em OS ATIVAS: classifica os documentos pela 1ª página (notificação DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos lavrados, apresenta plano antes-e-depois e — só com aprovação — renomeia a pasta para o padrão, cria o memory.md completo e move os arquivos para onde as demais skills esperam. Nunca apaga nada; não identificado fica onde está.",
+     "role": "Importa uma pasta bagunçada de fiscalização pré-toolkit jogada em OS ATIVAS: classifica os documentos pela 1ª página (notificação DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos lavrados, apresenta plano antes-e-depois e — só com aprovação — renomeia a pasta para o padrão, cria o memory.md completo e move os arquivos para as duas caixas do layout padrão: NOTIFICACOES/ (PDFs de notificação + resposta do empregador) e AUTOS/ (lotes de autos + Relacao de autos/) — os .md de trabalho (memory.md, autos-lavrados.md, análises) ficam sempre na raiz, nunca nas caixas. Detecta e migra layout antigo sozinho. Nunca apaga nada; não identificado fica onde está.",
      "tech": "pdftotext/pdfplumber (1ª página) · checar_pii.py · gerar_painel.py p/ conferir · model: opus"
     },
     {
@@ -316,7 +316,7 @@ const ARCH = {
     },
     {
      "nome": "/auditoria-geral",
-     "role": "Lê o relato, identifica NR/ementa (via /consulta) e redige os autos (NRs + CLT), com gate de dupla visita.",
+     "role": "Enquadra e redige os autos (NRs + CLT) a partir de DUAS fontes — o relato de campo (inspecao-fisica.md) e as Anotações da auditoria do memory.md (constatações da análise documental). Identifica NR/ementa via /consulta, com gate de dupla visita.",
      "tech": "orquestra consultoras · herda o modelo da sessão"
     },
     {
@@ -434,29 +434,29 @@ const ARCH = {
     },
     {
      "nome": "/gera-ai",
-     "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível. Ponto único de empacotamento — é aqui que o CNPJ/CPF da fiscalizada se torna obrigatório: se a OS ainda não tinha, o gera-ai pergunta, grava no memory.md e renomeia a pasta prefixando o CNPJ na frente do nome original.",
+     "role": "Empacota os autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível, dentro de AUTOS/Autos DD-MM/ (layout padrão) ou na raiz em OS ainda não migradas. Ponto único de empacotamento — é aqui que o CNPJ/CPF da fiscalizada se torna obrigatório: se a OS ainda não tinha, o gera-ai pergunta, grava no memory.md e renomeia a pasta prefixando o CNPJ na frente do nome original.",
      "tech": "rehydrate.py · bloco3_inject.py · validar_txt.py · model: sonnet"
     },
     {
      "nome": "/autos-lavrados",
-     "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos, marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto.",
+     "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos em AUTOS/Autos DD-MM/ (ou na raiz, em OS não migradas), marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto. A \"Relação de autos lavrados\" (.docx/.pdf) é gravada em AUTOS/Relacao de autos/ quando a caixa AUTOS/ existe, senão no lugar antigo (raiz).",
      "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
     },
     {
      "nome": "/sfitweb-rel",
-     "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia\u00b7MPT.",
+     "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia·MPT.",
      "tech": "lê memory.md, autos-lavrados.md e interdicao-embargo/ · gera .docx · model: sonnet"
     },
-   {
-    "nome": "/modelo-docx",
-    "role": "Padrão visual de todo .docx do toolkit: template com cabeçalho AFT·SIT, Times 12, azul institucional, tabelas zebradas.",
-    "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /sfitweb-rel e docs avulsos · model: sonnet"
-   },
-   {
-    "nome": "/sessoes-os",
-    "role": "Uma sessão do app por empresa fiscalizada, no grupo 'OS ATIVAS' — automática: o vigia de sessões aplica sozinho quando o app fecha; vínculo sessao_claude no memory.md.",
-    "tech": "sessoes_os.py --vigia (serviço: LaunchAgent/Tarefa Agendada via instalar_vigia_sessoes.py) · escreve no armazenamento interno do app só com ele fechado · backup + --desfazer · model: sonnet"
-   }
+    {
+     "nome": "/modelo-docx",
+     "role": "Padrão visual de todo .docx do toolkit: template com cabeçalho AFT·SIT, Times 12, azul institucional, tabelas zebradas.",
+     "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /sfitweb-rel e docs avulsos · model: sonnet"
+    },
+    {
+     "nome": "/sessoes-os",
+     "role": "Uma sessão do app por empresa fiscalizada, no grupo 'OS ATIVAS' — automática: o vigia de sessões aplica sozinho quando o app fecha; vínculo sessao_claude no memory.md.",
+     "tech": "sessoes_os.py --vigia (serviço: LaunchAgent/Tarefa Agendada via instalar_vigia_sessoes.py) · escreve no armazenamento interno do app só com ele fechado · backup + --desfazer · model: sonnet"
+    }
    ]
   }
  ],
@@ -518,13 +518,13 @@ const ARCH = {
   {
    "nome": "servir_painel.py",
    "caminho": "_scripts/servir_painel.py",
-   "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 5 ações mecânicas por clique (marcar/reabrir DET respondida, resolver pendência, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
+   "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 8 ações mecânicas por clique (marcar/reabrir DET respondida, dispensar alerta de atualização pendente do DET, resolver pendência, adicionar/resolver anotação da auditoria, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
    "runtime": "Python stdlib"
   },
   {
    "nome": "det_sync.py",
    "caminho": "_scripts/det_sync.py",
-   "papel": "Sync local do DET (espelho do sync do SisOS): recebe o token de sessão do DET capturado pela extensão Chrome 'Sync DET' (v2.0; antes 'SisOS — Sync DET') via POST /api/det-sync do servir_painel.py, consulta a API oficial de pesquisa de notificações por CNPJ/CPF e filtra o resultado pelo RI da OS — a pesquisa por CNPJ devolve notificações de TODAS as fiscalizações já feitas naquele empregador, inclusive antigas já concluídas (bug real corrigido, ver decisão 'notificações de fiscalizações antigas'). RIs conhecidos da OS = ri: do front-matter ∪ RIs das notificações já registradas (cobre OS com duas fiscalizações simultâneas do mesmo empregador); sem RI conhecido, adota o da notificação mais recente (ri_mais_recente). Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe. Atualiza ## Notificações DET: notificação nova vira linha '- [ ] <COD> — prazo <data>'; um prazo alterado só atualiza a linha quando ela tem exatamente UM 'prazo'/'entrega até' escrito — linha com 2+ (ex.: um item vencido e outro não) fica intocada, pois a API informa um prazo por NOTIFICAÇÃO, não por item, e trocar sozinho corrompe dado (bug real corrigido, ver decisão 'sync de prazo'). Checkbox [ ]/[x] nunca muda; backup antes de cada escrita; token só em memória. Funções de edição puras e testáveis sem rede (consultar injetável); AFT_DET_DEBUG/AFT_DET_DRYRUN para inspecionar sem gravar.",
+   "papel": "Sync local do DET (espelho do sync do SisOS): recebe o token de sessão do DET capturado pela extensão Chrome 'Sync DET' (v2.0; antes 'SisOS — Sync DET') via POST /api/det-sync do servir_painel.py, consulta a API oficial de pesquisa de notificações por CNPJ/CPF e filtra o resultado pelo RI da OS — a pesquisa por CNPJ devolve notificações de TODAS as fiscalizações já feitas naquele empregador, inclusive antigas já concluídas (bug real corrigido, ver decisão 'notificações de fiscalizações antigas'). RIs desta OS = SOMENTE o(s) declarado(s) no campo ri: do front-matter (aceita mais de um, separados por vírgula, para OS com duas fiscalizações simultâneas do mesmo empregador) — endurecido em 22/07/2026 removendo a união com RIs 'já registrados no memory.md', que deixava um RI contaminar a OS permanentemente (caso real CONSORCIO SQ). Sem ri: preenchido, adota o da notificação mais recente (ri_mais_recente) e grava. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe. Atualiza ## Notificações DET: notificação nova vira linha '- [ ] <COD> — prazo <data>'; um prazo alterado só atualiza a linha quando ela tem exatamente UM 'prazo'/'entrega até' escrito — linha com 2+ fica intocada. O alerta '⚠️ atualização pendente' (itemAtualizado da API, que pode continuar true mesmo após o triângulo sumir da tela do DET) é dispensável: a ação det_visto do painel grava <!-- visto: <última entrega> --> na sub-linha, e o alerta só reaparece se a empresa fizer entrega nova. Checkbox [ ]/[x] nunca muda; backup antes de cada escrita; token só em memória. Funções de edição puras e testáveis sem rede (consultar injetável); AFT_DET_DEBUG/AFT_DET_DRYRUN para inspecionar sem gravar.",
    "runtime": "Python stdlib"
   },
   {
@@ -592,6 +592,12 @@ const ARCH = {
    "caminho": "analise-acidente/scripts/gerar_relatorio_docx.py",
    "papel": "Gera o Relatório de Análise de Acidente em .docx, no roteiro fixo de 6 seções da IN GMTP/MTP nº 2/2022.",
    "runtime": "Python stdlib · zipfile"
+  },
+  {
+   "runtime": "Python stdlib",
+   "papel": "Resolve a pasta de trabalho do AFT de verdade: no Windows le a pasta Documentos no registro (cobre OneDrive e idioma), preserva instalacao existente e cria AFT/OS ATIVAS e OS ARQUIVADAS. Usado por aft_doctor, painel, servidor e vigia de sessoes.",
+   "nome": "pasta_aft.py",
+   "caminho": "_scripts/pasta_aft.py"
   }
  ],
  "dados": [
@@ -662,8 +668,8 @@ const ARCH = {
    "txt": "O toolkit é offline: os memory.md são o banco local e o /painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /nova-os."
   },
   {
-   "topico": "Pasta de trabalho fixa",
-   "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /nova-os, conferida pelo /aft-doctor (mostra quantas empresas há dentro) e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Mantido como subpasta de AFT/ (não achatada para a raiz de Documentos) porque agrupa também aft-config.md e o painel.html — 22 arquivos do toolkit fixam esse caminho."
+   "topico": "Pasta de trabalho fixa — resolvida de verdade (OneDrive/idioma)",
+   "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /nova-os, conferida e CRIADA se faltar pelo /aft-doctor, e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Até 21/07/2026 o caminho era um mkdir cru (~/Documents/AFT) hardcoded em 4 scripts — no Windows isso falha silenciosamente sempre que o OneDrive redireciona 'Documentos' (comum em backup de pastas) ou o Windows está em português ('Documentos', não 'Documents'): a pasta nascia órfã, o AFT nunca a achava pelo Explorer (caso real 22/07/2026). Corrigido com _scripts/pasta_aft.py: le a chave User Shell Folders\\\\Personal do registro do Windows (cobre OneDrive e idioma de uma vez), com fallback por variável OneDrive e por candidatos diretos; prioriza SEMPRE uma pasta AFT que já tenha dados (nunca orfanando instalação anterior); expõe diagnostico() e mover_para_canonico() (--mover) para quem já instalou no lugar errado migrar com consentimento, sem sobrescrever nada. gerar_painel.py, servir_painel.py e sessoes_os.py foram religados ao mesmo resolvedor."
   },
   {
    "topico": "Empacotamento único",
@@ -734,8 +740,8 @@ const ARCH = {
    "txt": "O toolkit passou a suportar skills criadas pelo próprio AFT/colega. Como o Claude Code só descobre skills no 1o nível de ~/.claude/skills (o repo É essa pasta), uma pasta 'Minhas Skills' aninhada não funcionaria — as skills ficariam invisíveis. Solução: namespace reservado 'minha-' (nenhuma skill oficial começa assim) + '.gitignore' com 'minha-*/'. Isso mantém a skill própria no 1o nível (visível), fora do versionamento e intocada pelo git pull do /aft-atualizar. O aft_doctor valida essas skills à parte, com tolerância (aviso, não erro) e confirma a proteção. A skill oficial /nova-skill faz o scaffold guiado para leigos. CLAUDE-aft.md instrui o Claude a tratar minha-* como primeira classe e a nunca editar skill oficial a título de personalização."
   },
   {
-   "topico": "Onboarding de pastas pré-toolkit (/organiza-os)",
-   "txt": "O colega chega ao toolkit com fiscalizações em andamento e documentos acumulados numa pasta do jeito dele. A /organiza-os faz o onboarding: joga-se a pasta em OS ATIVAS, ela lê a 1ª página de cada PDF, classifica (notificação DET, relação de autos do Sistema Auditor — que já alimenta a seção Autos lavrados do memory.md —, resposta do empregador item1..N, fotos), extrai empregador/identificador/prazos e propõe um plano antes-e-depois que só executa com aprovação. Convenção mantida: notificacao-<COD>.pdf na raiz + subpasta notificacao-<COD>/ para a resposta (onde analise-preliminar/det-630/painel já procuram), em vez de uma pasta 'Notificações' nova. Nada é apagado; arquivo não identificado fica intocado e listado."
+   "topico": "Onboarding de pastas pré-toolkit (/organiza-os) + layout NOTIFICACOES/AUTOS",
+   "txt": "O colega chega ao toolkit com fiscalizações em andamento e documentos acumulados numa pasta do jeito dele. A /organiza-os faz o onboarding: joga-se a pasta em OS ATIVAS, ela lê a 1ª página de cada PDF, classifica (notificação DET, relação de autos do Sistema Auditor — que já alimenta a seção Autos lavrados do memory.md —, resposta do empregador item1..N, fotos), extrai empregador/identificador/prazos e propõe um plano antes-e-depois que só executa com aprovação. Nada é apagado; arquivo não identificado fica intocado e listado. Convenção de pastas revista em 22/07/2026 (caso real: uma OS com 38 itens soltos na raiz): antes cada notificação e cada lote de autos vivia solto na raiz da OS; agora existem duas caixas — NOTIFICACOES/ (PDF de notificação, relatório de atendimento e a subpasta de resposta do empregador, sufixo descritivo preservado) e AUTOS/ (os lotes 'Autos DD-MM/', movidos e NUNCA renomeados porque o nome é citado no memory.md, e a 'Relacao de autos/'). Regra dura descoberta na prática: os .md (autos-lavrados.md, analise-preliminar-*.md, jornada-analise-*.md) NUNCA entram nas caixas — gerar_painel.py lê autos-lavrados.md num caminho fixo na raiz e lista os demais .md com glob de 1º nível; um .md movido para dentro de uma caixa some do painel (confirmado empiricamente antes de fechar a migração real da OS CONSORCIO SQ). Migração é só mkdir+mv sobre OS já organizadas; nada é renomeado; OS antigas não migradas continuam funcionando (gera_relacao_autos.py e /autos-lavrados checam os dois layouts)."
   },
   {
    "topico": "Painel ativo (modo interativo local)",
@@ -751,7 +757,7 @@ const ARCH = {
   },
   {
    "topico": "Bug crítico corrigido: notificações de fiscalizações antigas vazavam para a OS errada",
-   "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro."
+   "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro. ENDURECIDO em 22/07/2026 (caso real CONSORCIO SQ, RI alheio 319969819 importado mesmo com o filtro acima): a união com 'RIs já registrados no memory.md' foi removida — um RI registrado um dia (por engano, ou de uma varredura antiga) virava 'conhecido' para sempre e continuava puxando notificações irmãs. Regra atual: o campo ri: do front-matter é o ÚNICO identificador da auditoria (aceita mais de um RI, separados por vírgula, para o caso real de duas fiscalizações do mesmo CNPJ); nada é inferido de notificações já na ficha. Sem ri: preenchido, adota o da notificação mais recente e grava — daí em diante vale a regra estrita. Para reduzir esse atrito de origem, o /nova-os passou a coletar o RI (opcional) já no cadastro, avisando que sem ele o sync automático não importa nada da OS."
   },
   {
    "topico": "Bug corrigido: sync de prazo corrompia linha com dois prazos na mesma notificação",
@@ -784,6 +790,10 @@ const ARCH = {
   {
    "topico": "CLAUDE.md do AFT: bloco gerenciado com marcadores, atualizado sozinho",
    "txt": "O perfil ~/.claude/CLAUDE.md é cópia do template config/CLAUDE-aft.md e nunca foi tocado pelo git pull — então quem instalava cedo ficava sem as regras acrescentadas depois (a defesa anti-prompt-injection de 28/06, a robustez de Windows, o namespace minha-*, skills novas no roteador). O template dobrou (84->214 linhas) desde a 1ª versão. Solução: o conteúdo do toolkit passa a ser cercado por marcadores invisíveis (comentários HTML AFT-TOOLKIT-PERFIL:INICIO vN / :FIM) com número de versão, e o script _scripts/sync_perfil.py compara a versão instalada com a do template. O /aft-atualizar (Passo 2e) roda --status e: EM_DIA não faz nada; DESATUALIZADO roda --aplicar automaticamente (backup + troca só o miolo entre os marcadores, preservando o que o AFT escreveu fora deles — sem perguntar, é obrigatório e seguro); SEM_MARCADOR (instalação antiga, sem como isolar o texto velho do que é do AFT) dispara UMA oferta de adoção (--adotar-substituir troca o arquivo todo, ou --adotar-acrescentar anexa o bloco, mesma escolha a/b/c do /aft-setup Passo 5b), e dali em diante vira automática. Por que marcadores em vez de sobrescrever o arquivo todo: a propriedade 'quem personalizou não perde nada' só existe porque o toolkit sabe exatamente onde começa e termina o pedaço dele; sem os marcadores, atualização silenciosa = sobrescrever = perder as edições do colega. O /aft-setup instala o perfil já marcado (o cp e a opção append carregam os marcadores do próprio template)."
+  },
+  {
+   "topico": "Alerta 'atualização pendente' do DET é dispensável, não permanente",
+   "txt": "Constatado em produção (19–22/07/2026, casos SPE CAMETA e CONSORCIO SQ): o campo itemAtualizado da API do DET (o triângulo amarelo 'Existe atualização pendente') pode continuar true mesmo depois de o triângulo sumir da tela — a tela apaga quando o AFT abre a notificação lá; o campo da API, não necessariamente. Sem tratamento, o alerta ficava aceso para sempre na sub-linha de detalhes do memory.md e no painel. Solução: o alerta virou dispensável — clique no painel (ação det_visto) grava <!-- visto: <última entrega> --> na sub-linha, e det_sync.py só volta a mostrar o alerta se itemDataUltimaEntrega mudar (entrega nova da empresa = novidade real). O marcador visto: é preservado a cada regravação da sub-linha pelo sync."
   }
  ],
  "diferencas": [
