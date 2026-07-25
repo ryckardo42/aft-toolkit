@@ -4,11 +4,13 @@ model: sonnet
 description: >
   Revisor de qualidade de autos de infração ANTES do empacotamento pelo
   /gera-ai. Roda o checklist 5W1H (O Quê, Quando, Onde, Como, Por Quê) sobre
-  cada minuta e, em autos de SST, garante o parágrafo de dano coletivo
-  (Portaria MTP 667/2021 + OT SIT 2/2022). Acione com: "/revisa-auto",
-  "revisa auto", "revisar auto", "checklist 5w1h", "revisão pré-empacotamento".
-  É chamada automaticamente como gate dentro do /gera-ai, mas pode ser usada
-  isolada sobre um arquivo de autos ou sobre minutas no contexto da conversa.
+  cada minuta, em autos de SST garante o parágrafo de dano coletivo (Portaria
+  MTP 667/2021 + OT SIT 2/2022) e divide o bloco II monolítico em parágrafos
+  legíveis (a quebra que o /gera-ai converte em #13#10 no TXT do Sistema
+  Auditor). Acione com: "/revisa-auto", "revisa auto", "revisar auto",
+  "checklist 5w1h", "revisão pré-empacotamento". É chamada automaticamente
+  como gate dentro do /gera-ai, mas pode ser usada isolada sobre um arquivo de
+  autos ou sobre minutas no contexto da conversa.
 ---
 
 # revisa-auto — Revisão 5W1H + dano coletivo (gate pré-empacotamento)
@@ -103,13 +105,54 @@ python ~/.claude/skills/_scripts/checar_acentos.py "[caminho do autos.md]"
 
 ---
 
+## FASE 2.7 — Paragrafação do bloco II (evitar parágrafo monolítico)
+
+Skills redatoras às vezes entregam o bloco II inteiro (às vezes o auto todo) como **um
+único parágrafo corrido**, sem nenhuma linha em branco interna. No `autos.md` isso passa
+despercebido, mas o `/gera-ai` converte cada quebra de parágrafo em `#13#10` — sem quebra
+nenhuma no texto de origem, o Sistema Auditor recebe o bloco II como uma linha só, gigante
+e ilegível.
+
+**Correção: insira apenas linhas em branco** (quebra de parágrafo) no `autos.md`, nos
+pontos onde o texto já muda de assunto. **Nunca** altere, resuma, acrescente ou remova uma
+palavra — é reformatação pura, a tese fiscal fica intocada.
+
+**Quando dividir:** bloco II sem nenhuma linha em branco interna e com mais de
+~500-600 caracteres corridos.
+
+**Onde dividir (costuras naturais — use as que existirem no texto, não force um número
+fixo de parágrafos):**
+- Fim do enquadramento normativo/descrição da conduta violada (abertura) → parágrafo 1.
+- Um parágrafo por **grupo temático de constatações** (ex.: um por seção/documento
+  analisado, um por item de norma, um por setor inspecionado) — não junte achados de
+  assuntos diferentes num só parágrafo.
+- Confirmação por inspeção física, quando o texto trouxer essa frase — parágrafo próprio.
+- **Parágrafo de dano coletivo** (FASE 2) — sempre no seu próprio parágrafo, nunca
+  fundido com o anterior ou o seguinte.
+- **Conclusão** ("Sendo assim, incorreu o empregador...") — parágrafo próprio, ao final.
+
+**Regras:**
+- Nunca quebre no meio de uma frase — só entre pontos finais.
+- Nunca quebre no meio de uma citação literal entre aspas (ex.: trecho copiado do PGR/AET).
+- Não invente conteúdo para "preencher" um parágrafo — só separe onde a mudança de
+  assunto já existe no texto.
+- Alvo prático (não obrigatório): 3 a 6 parágrafos por bloco II — a maioria dos autos de
+  PGR/AET/auditoria-geral tem constatações suficientes para isso.
+
+Aplica-se a qualquer bloco II vindo de qualquer skill redatora (`/PGR-analise`,
+`/auditoria-geral`, `/aet-auditoria`, `/registro`, `/aft-rt-rgi` etc.) — se já chegar
+paragrafado, não mexa.
+
+---
+
 ## FASE 3 — Aplicar e seguir
 
 Política: **corrige o que puder e segue direto** (sem reapresentar para aprovação).
 
 1. **Correções determinísticas → aplique direto:** parágrafo de dano coletivo ausente em
    auto de SST; travessões/aspas curvas → pontuação latin-1-safe; acentuação pt-br
-   reposta nas palavras apontadas pelo `checar_acentos.py` (FASE 2.5).
+   reposta nas palavras apontadas pelo `checar_acentos.py` (FASE 2.5); bloco II monolítico
+   dividido em parágrafos (FASE 2.7).
 2. **Pendência factual (não inventável) → NÃO preencha; sinalize com `⚠️` e prossiga.**
    Você não pode inventar local, data ou fato. Ex.: "Onde" vago ("no estabelecimento"
    sem setor/posto/máquina), "Quando" sem período irregular, "Por Quê" sem a conduta
@@ -118,9 +161,9 @@ Política: **corrige o que puder e segue direto** (sem reapresentar para aprova�
 
 ```
 Revisão 5W1H — N autos:
-  Auto #1 (NR-05): ✔ 5W1H completo · + parágrafo de dano coletivo inserido · acentuação ok
-  Auto #2 (NR-01): ✔ 5W1H completo · parágrafo de dano coletivo já presente · acentuação corrigida (12 palavras)
-  Auto #3 (registro): ✔ contratual (sem parágrafo SST) · ⚠️ empregado prejudicado não nominado
+  Auto #1 (NR-05): ✔ 5W1H completo · + parágrafo de dano coletivo inserido · acentuação ok · bloco II paragrafado (1 → 4 parágrafos)
+  Auto #2 (NR-01): ✔ 5W1H completo · parágrafo de dano coletivo já presente · acentuação corrigida (12 palavras) · bloco II paragrafado (1 → 5 parágrafos)
+  Auto #3 (registro): ✔ contratual (sem parágrafo SST) · já paragrafado, sem alteração · ⚠️ empregado prejudicado não nominado
 ```
 
 Não altere a tese fiscal, a ementa, a capitulação nem os fatos. Em caso de dúvida sobre

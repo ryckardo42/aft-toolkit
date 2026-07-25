@@ -487,6 +487,14 @@ estabelecimento. CNPJ: capa do PGR ou memory.md.
 
 **Regras de redação do subtítulo 2**:
 
+- **Estruture em parágrafos temáticos — nunca em um bloco único.** Separe com linha em
+  branco: um parágrafo para o enquadramento normativo (conduta + item da NR-01 violado),
+  um parágrafo por **grupo temático de constatações relacionadas** (ex.: um por
+  trecho/seção do PGR sobre o mesmo tema, um por GHE/setor), e o parágrafo de dano
+  coletivo e a conclusão jurídica sempre isolados, cada um no seu próprio parágrafo. A
+  linha em branco no `autos.md` é o que o `/gera-ai` converte em quebra de linha real
+  (`#13#10`) no Sistema Auditor — um bloco II sem nenhuma quebra interna sai como um
+  único parágrafo gigante e ilegível. Alvo prático: 3 a 6 parágrafos.
 - Descreva os **fatos concretos** com precisão técnica e tom oficial.
 - Cite o **dispositivo da NR-01** violado (item exato, ex: 1.5.4.3.1).
 - **Incorpore as citações de página** geradas na análise (`pág. X` ou `págs. X a Y`).

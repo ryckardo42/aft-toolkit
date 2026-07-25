@@ -325,11 +325,18 @@ O texto deve conectar o **fato empírico** (o que foi constatado no local) com o
 | **Como** | Como a irregularidade se manifesta? | ✅ Necessário — fato empírico observado + descrição técnica da falha e do risco gerado. |
 | **Por Quê** | O que a norma exigia? | ✅ Necessário — conduta devida conforme a lei + conexão com o item normativo violado (fato típico). |
 
-**Lógica de redação (3 movimentos)** — conecta o empírico ao típico nesta ordem:
+**Lógica de redação (3 movimentos)** — conecta o empírico ao típico nesta ordem, **cada
+movimento em seu próprio parágrafo** (separado por linha em branco no `autos.md` — é o
+que o `/gera-ai` converte em quebra de linha real no Sistema Auditor; um bloco II sem
+nenhuma quebra interna sai como um único parágrafo gigante e ilegível):
 
 1. **Abertura contextual** (Quando + Onde + O quê): situar a constatação no tempo, espaço e objeto.
 2. **Descrição técnica da falha** (Como + Quem): detalhar tecnicamente a irregularidade e quem está exposto ao risco.
 3. **Enquadramento normativo** (Por quê): vincular o fato constatado à exigência normativa descumprida, fechando o nexo entre o empírico e o típico.
+
+Se houver mais de uma irregularidade/constatação dentro da mesma ementa, use um parágrafo
+por grupo temático em vez de espremer tudo no movimento 2. O parágrafo de dano coletivo e
+a conclusão jurídica (abaixo) ficam sempre isolados, cada um no seu próprio parágrafo.
 
 **Modelo de referência** (adaptar à NR/dispositivo do caso):
 

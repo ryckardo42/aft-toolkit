@@ -40,10 +40,11 @@ Se ambíguo, pergunte: **"Os autos para empacotar estão (a) colados/fornecidos 
 ### 1.2 Parser dos autos
 
 **Passo 0a — Revisão pré-empacotamento (`/revisa-auto`).** Antes de injetar o bloco 3,
-invoque a skill `/revisa-auto` sobre o `autos.md`. Ela roda o checklist 5W1H e, em autos
-de SST, garante o parágrafo de dano coletivo, corrigindo in loco o que for determinístico
-(e sinalizando com `⚠️` as pendências factuais, sem bloquear). Prossiga com o arquivo já
-revisado. Critério completo em `~/.claude/skills/revisa-auto/SKILL.md`.
+invoque a skill `/revisa-auto` sobre o `autos.md`. Ela roda o checklist 5W1H, garante o
+parágrafo de dano coletivo em autos de SST, divide o bloco II monolítico em parágrafos
+legíveis e corrige a acentuação, tudo in loco quando for determinístico (e sinalizando com
+`⚠️` as pendências factuais, sem bloquear). Prossiga com o arquivo já revisado. Critério
+completo em `~/.claude/skills/revisa-auto/SKILL.md`.
 
 **Passo 0b — Injetar o bloco 3 (OBSERVAÇÕES).** As skills do toolkit redigem os autos
 **sem** o Subtítulo 3 (terminam no bloco 2 + ELEMENTOS DE CONVICÇÃO). O bloco 3 é único,
@@ -364,6 +365,11 @@ Linhas separadas por `\n`.
   - **Após CADA subtítulo**: `#13#10 . #13#10` (o subtítulo fica sozinho na linha; a linha com `.` é o "espaço em branco" — o Sistema Auditor não entende linha vazia).
   - **Separador de seção** (entre o fim de uma seção e o subtítulo seguinte): `#13#10 . #13#10`
   - **Separador de parágrafo** (dentro de um subtítulo): `#13#10`
+  - **Preserve TODAS as quebras de parágrafo do `autos.md`** ao montar o `[texto_autuacao]`
+    — cada linha em branco do texto de origem vira um `#13#10`. Nunca recole em uma linha
+    só os parágrafos que a `/revisa-auto` (FASE 2.7) separou; um bloco II com vários
+    parágrafos no `autos.md` deve sair com vários `#13#10` no meio, não um único parágrafo
+    corrido.
   - Exemplo: `I - DA FISCALIZACAO:#13#10 . #13#10Trata-se de acao fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalizacao...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVACOES:#13#10 . #13#10a) ...#13#10b) ...`
   - **Normalização do legado (obrigatória)**: rascunho antigo redigido com `1) DA FISCALIZAÇÃO:` / `2) IRREGULARIDADE:` / `3) OBSERVAÇÕES:` é convertido para o formato romano ao montar o `[texto_autuacao]` (troca determinística de subtítulo, sem tocar no resto do texto) — todo TXT sai no formato novo, mesmo de rascunho antigo.
   - **Recuo de primeira linha (aplicado por script na geração, ver "Geração e salvamento"):** monte o `[texto_autuacao]` com os `#13#10` puros, como acima. O recuo NÃO é digitado à mão — o passo `indenta_quebras.py` insere, de forma determinística, 8 espaços após cada `#13#10` que precede texto real (parágrafo, subtítulo, alínea), deixando os parágrafos com recuo no Sistema Auditor. Os marcadores de linha em branco `#13#10 . #13#10` são preservados (o ponto continua com 1 espaço de cada lado, sem recuo). Não escreva os 8 espaços você mesmo — apenas rode o script.

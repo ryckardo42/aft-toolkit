@@ -366,6 +366,10 @@ econômica** do estabelecimento, **CNPJ** (apenas dígitos).
 
 - Estruture as evidências em **lista numérica** (`1)`, `1.1)`, `2)`...), cada item ligando o
   fato à exigência da NR-17. Esta é a forma de tornar a análise rastreável no auto.
+  **Separe cada item por linha em branco** no `autos.md` — é o que o `/gera-ai` converte
+  em quebra de linha real no Sistema Auditor; uma lista numérica sem quebra entre os itens
+  sai como um único parágrafo corrido. O parágrafo de dano coletivo e a conclusão jurídica
+  (abaixo) também ficam isolados, cada um no seu próprio parágrafo.
 - Descreva os **fatos concretos** com precisão técnica e tom oficial.
 - Cite o **dispositivo da NR-17** violado (item exato, ex: 17.3.3, 17.3.8, 17.4.1(d),
   17.4.2, 17.4.3).
