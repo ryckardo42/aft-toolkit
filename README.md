@@ -69,6 +69,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ### Consultoras especializadas por NR
 | Skill | O que faz |
 |---|---|
+| `/NR01` | Especialista em disposições gerais e GRO: identifica a ementa (catálogo de 9 + ementário completo local + NotebookLM) e entrega o bloco II - IRREGULARIDADE. Sem linha de RT nem fragmento de interdição (NR-01 não fundamenta a medida cautelar); delega conteúdo de PGR à `/PGR-analise` |
 | `/NR12` | Especialista em máquinas e equipamentos: identifica a ementa (catálogo de 16 + NotebookLM) e entrega o bloco II - IRREGULARIDADE, a linha do RT e o fragmento de interdição |
 | `/NR18` | Especialista na indústria da construção: separa as ementas de obra (catálogo de 29 + NotebookLM) e entrega o bloco II - IRREGULARIDADE e a linha do RT |
 | `/cnae-grau-risco-nr04` | Enquadra a atividade econômica no **grau de risco (1 a 4)** do Anexo I da NR-04 — por código CNAE (qualquer formato, com redução de subclasse a classe) ou por descrição da atividade — de forma determinística (script sobre os 673 códigos validados). Lembra a regra do maior GR (item 4.5.1) e encadeia para o dimensionamento do SESMT |
@@ -175,7 +176,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── aft-setup/ · aft-doctor/ · aft-atualizar/ · nova-skill/ · notebooklm-login/ · nova-os/ · organiza-os/ · painel/ · agenda-det/ · gera-ai/ · inspecao-fisica/ · auditoria-geral/
 ├── preparacao-acao-fiscal/ · NAD/   (planejamento pré-visita e notificação de documentos)
 ├── consulta/ · registro/ · det-630/ · tn-nco/ · sfitweb-rel/ · PGR-analise/ · aet-auditoria/ · aft-rt-rgi/ · auditoria-AR-NR12/ · rt-manutencao/ · analise-acidente/ · autos-lavrados/ · revisa-auto/ · modelo-docx/ · sessoes-os/
-├── NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
+├── NR01/ · NR12/ · NR18/   (consultoras por NR, com references/ementas-comuns.md)
 ├── cnae-grau-risco-nr04/ · dimensionamento-sesmt-nr04/ · cipa-nr05-dimensionamento/   (enquadramento CNAE→GR, SESMT da NR-04 e CIPA da NR-05, por script determinístico)
 ├── jornada-analise/ · jornada-valida-afd-aej/ · jornada-atestado/ · jornada-auto-afd-aej/
 └── minha-*/   (SUAS skills próprias — criadas pelo /nova-skill; git-ignoradas, sobrevivem a toda atualização)

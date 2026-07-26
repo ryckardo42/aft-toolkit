@@ -6,6 +6,30 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 26/07/2026
+<!-- commit: nr01-consultora -->
+
+**Nova consultora: `/NR01`, para as infrações de disposições gerais e gerenciamento de
+riscos.** Funciona como a `/NR12` e a `/NR18`, mas para a NR-01: você descreve a
+irregularidade (empresa sem PGR, sem ordens de serviço, documentos negados à
+fiscalização, acidente que a empresa não analisou, treinamento sem certificado...) e
+ela devolve a ementa certa — código, capitulação, gradação — e o bloco
+II - IRREGULARIDADE pronto para o auto.
+
+O que ela tem por dentro: um catálogo curado com as 9 ementas mais lavradas de NR-01
+(conferidas uma a uma contra o ementário oficial e o NotebookLM da NR-01), o ementário
+COMPLETO da norma (~79 ementas) e o texto integral da NR-01 — tudo dentro da própria
+skill, no seu computador. Na prática isso significa resposta imediata e sem depender
+de internet ou de login no NotebookLM para o dia a dia; o NotebookLM continua lá, mas
+só como último recurso, para dúvida interpretativa que os arquivos locais não
+resolvem.
+
+Duas regras que ela respeita sozinha: NR-01 nunca vira interdição ou embargo (por isso
+ela não gera linha de RT nem fragmento de interdição — se o caso tiver risco grave, ela
+te encaminha para a consultora da NR certa e o `/aft-rt-rgi`); e PGR que EXISTE mas
+está ruim continua sendo assunto da `/PGR-analise` — a `/NR01` cuida do PGR que não
+existe, não foi apresentado ou está sem data e assinatura.
+
 ## 25/07/2026
 <!-- commit: revisa-auto-paragrafacao-bloco-2 -->
 
