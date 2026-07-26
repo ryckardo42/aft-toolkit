@@ -54,7 +54,7 @@ O script imprime um relatorio legivel e, na ultima linha, um JSON prefixado com
 A partir do JSON, responda de forma clara e acolhedora. Regra de ouro:
 
 - **Se `erros` = 0 e `avisos` = 0** → diga que esta tudo pronto e relembre o comeco do
-  fluxo (`/nova-os` para cadastrar uma OS, `/painel` para ver os prazos).
+  fluxo (`/aft-nova-os` para cadastrar uma OS, `/aft-painel` para ver os prazos).
 - **Se houver `erros` (vermelho)** → liste-os PRIMEIRO, com a solucao de cada um (campo
   `dica`). Sao itens que impedem o toolkit de funcionar (ex.: Python ausente, skills
   nao descobertas, config incompleta).
@@ -74,7 +74,7 @@ Use simbolos para leitura rapida: 🟢 (ok), 🟡 (aviso), 🔴 (erro). Exemplo:
 🟡 Pendencias (resolvem com 1 comando):
   • Perfil do auditor e pasta de trabalho ainda nao existem.
     -> Rode /aft-setup que eu configuro tudo isso.
-  • Biblioteca pypdf faltando (so afeta /autos-lavrados).
+  • Biblioteca pypdf faltando (so afeta /aft-autos-lavrados).
     -> O /aft-setup tambem instala.
 
 Quer que eu rode o /aft-setup agora?

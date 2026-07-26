@@ -10,7 +10,7 @@ description: >
   documentos solicitados e conclusão, mantendo todo o conteúdo fixo
   (cabeçalho, seções legais, imagens, tabelas NR-3). Logo após o RT,
   OBRIGATORIAMENTE redige os autos de infração derivados das ementas da seção
-  4 (um por ementa, no formato do /gera-ai) e salva na pasta
+  4 (um por ementa, no formato do /aft-gera-ai) e salva na pasta
   `interdicao-embargo/` da OS. Acione TAMBÉM quando o AFT ANEXAR um RT ou Termo de Interdição
   já pronto e pedir os autos de infração dele: é esta skill que redige esses
   autos, nunca improvisar por fora.
@@ -93,7 +93,7 @@ anexados, descrição do AFT). Liste cada irregularidade de forma objetiva e sep
    notebooklm ask "Qual é o código da ementa no formato XXXXXX-X, a descrição completa da ementa e a capitulação legal para a seguinte infração: [descrição objetiva da irregularidade]?" --notebook [notebook_id] --json
    ```
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
-   > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/notebooklm-login`).
+   > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).
    > Só passe à camada seguinte se ele ainda assim não responder.
 2. **Ementário no Google Drive** (manual): oriente o AFT a abrir
    https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
@@ -268,7 +268,7 @@ da inspeção, objetos interditados (seção 3) e ementas com código + descriç
 - **N ementas para 1 objeto.** Gere N autos, cada um referenciando aquele objeto.
 - A ordem dos autos segue a ordem em que as ementas aparecem na seção 4 do RT.
 
-#### 7.2. Template de cada auto (formato consumido por /gera-ai)
+#### 7.2. Template de cada auto (formato consumido por /aft-gera-ai)
 
 Para cada ementa, monte um bloco EXATAMENTE neste formato:
 
@@ -291,7 +291,7 @@ Inspeção realizada no estabelecimento e relatório técnico do embargo/interdi
 ```
 
 > **NÃO escreva o Subtítulo 3 (OBSERVAÇÕES).** Ele é único e fixo para todo auto e é
-> injetado pelo `/gera-ai` (de `config/blocos_auto.md`) entre o Subtítulo 2 e os
+> injetado pelo `/aft-gera-ai` (de `config/blocos_auto.md`) entre o Subtítulo 2 e os
 > ELEMENTOS DE CONVICÇÃO. O template acima termina, de propósito, no Subtítulo 2 +
 > ELEMENTOS DE CONVICÇÃO.
 
@@ -324,7 +324,7 @@ Na mesma pasta `interdicao-embargo/` criada no passo 6, salve:
 
 1. **`autos.md`** — todos os N blocos `=== AUTO DE INFRAÇÃO #N ===` concatenados em ordem,
    separados por uma linha em branco. Encoding UTF-8. Esse arquivo é o input direto do
-   `/gera-ai` (modo "texto colado").
+   `/aft-gera-ai` (modo "texto colado").
 2. A cópia do `.docx` do RT já está lá (passo 6) — serve como elemento de convicção /
    anexo de todos os autos.
 
@@ -352,13 +352,13 @@ python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[ca
   > (`autos.md` + RT em .docx).
 
 - **Encerramento conforme o modo de entrada:**
-  - **Modo A (criou o RT do zero):** **NÃO pergunte** se quer chamar `/gera-ai` nem o chame
-    automaticamente — o AFT dispara `/gera-ai` por conta própria quando estiver pronto para
+  - **Modo A (criou o RT do zero):** **NÃO pergunte** se quer chamar `/aft-gera-ai` nem o chame
+    automaticamente — o AFT dispara `/aft-gera-ai` por conta própria quando estiver pronto para
     transmitir.
   - **Modo B (RT/Termo anexado + pedido de autos):** depois de mostrar os autos, **pergunte
     ao AFT se estão OK** (ex.: *"Os autos acima estão OK para empacotar?"*). **Se ele
-    confirmar, chame a skill `/gera-ai`** apontando para o `autos.md` desta pasta (anexando o
-    RT/Termo aos autos). Se ele pedir ajustes, corrija e mostre de novo antes do `/gera-ai`.
+    confirmar, chame a skill `/aft-gera-ai`** apontando para o `autos.md` desta pasta (anexando o
+    RT/Termo aos autos). Se ele pedir ajustes, corrija e mostre de novo antes do `/aft-gera-ai`.
 
 ---
 

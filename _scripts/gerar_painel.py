@@ -31,7 +31,7 @@ Uso:
                   caminhos locais). Use "" para pular um argumento posicional.
   --scan          (opcional): tenta um scan ao vivo dos autos no Sistema
                   Auditor (pasta PRO — Windows ou Mac+Parallels) chamando o
-                  scan_autos.py da skill /autos-lavrados. Se a pasta PRO não
+                  scan_autos.py da skill /aft-autos-lavrados. Se a pasta PRO não
                   estiver acessível (ex.: VM do Parallels desligada), degrada
                   em silêncio para o último autos-lavrados.md de cada OS.
   --todas         (opcional): também mostra OS com status: encerrada (por
@@ -41,11 +41,11 @@ Uso:
                   OS ARQUIVADAS/ é organização de disco, feita à parte.
 
 Compatível com os dois esquemas de memory.md em uso:
-  - o padrão do toolkit (/nova-os), e
+  - o padrão do toolkit (/aft-nova-os), e
   - o schema v2 do ecossistema Cowork (front-matter com data_inicio,
     data_vencimento, num_trabalhadores, datas ISO nas linhas de DET).
 
-Imprime no stdout um resumo em JSON (para a skill /painel ecoar).
+Imprime no stdout um resumo em JSON (para a skill /aft-painel ecoar).
 Usa a biblioteca padrão; se o pdfplumber estiver instalado (o /aft-setup
 instala), lê a 1ª página dos PDFs para melhorar a detecção de notificações.
 """
@@ -96,7 +96,7 @@ RE_DATA_ISO = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 RE_DATA_BR = re.compile(r"(\d{2})/(\d{2})/(\d{4})")
 RE_NR = re.compile(r"NR[-\s]?0?(\d{1,2})\b", re.IGNORECASE)
 
-# Blocos do autos-lavrados.md (formato da skill /autos-lavrados).
+# Blocos do autos-lavrados.md (formato da skill /aft-autos-lavrados).
 RE_BLOCO_AI = re.compile(r"^###\s+N[ºo°]?\s*([\d.\-]+)\s*$", re.MULTILINE)
 
 # Detecção de notificações DET não cadastradas -------------------------------
@@ -332,7 +332,7 @@ def parse_memory(path: Path) -> dict:
 
 
 def parse_autos_lavrados_md(pasta: Path) -> dict:
-    """Lê o autos-lavrados.md da OS (formato da skill /autos-lavrados).
+    """Lê o autos-lavrados.md da OS (formato da skill /aft-autos-lavrados).
     Devolve {autos, substituidos, pendentes, gerado_em}."""
     arq = pasta / "autos-lavrados.md"
     out = {"autos": [], "substituidos": [], "pendentes": [], "gerado_em": None}
@@ -388,7 +388,7 @@ def listar_docs(pasta: Path) -> list[str]:
 
 
 def parse_inspecao_fisica(pasta: Path) -> dict:
-    """Lê o inspecao-fisica.md da OS (relato de campo da /inspecao-fisica) e
+    """Lê o inspecao-fisica.md da OS (relato de campo da /aft-inspecao-fisica) e
     devolve {data, bullets}. ATENÇÃO: pode conter nome/CPF de trabalhador — só
     entra na versão LOCAL do painel, nunca na versão publicada como Artifact."""
     arq = pasta / "inspecao-fisica.md"
@@ -408,7 +408,7 @@ def parse_inspecao_fisica(pasta: Path) -> dict:
 
 
 def scan_ao_vivo(os_: dict) -> list[dict] | None:
-    """Roda o scan_autos.py da skill /autos-lavrados para a OS (se houver
+    """Roda o scan_autos.py da skill /aft-autos-lavrados para a OS (se houver
     identificador com >= 8 dígitos). Devolve a lista de autos VÁLIDOS do
     Sistema Auditor, ou None se o scan não foi possível (sem identificador,
     pasta PRO inacessível, PDFs ausentes...) — o chamador degrada para o .md."""
@@ -451,7 +451,7 @@ RE_AUTO_MEM = re.compile(
 
 def autos_do_memory(autos_mem: str) -> list[dict]:
     """Fallback fraco: linhas '- [x] Ementa X — resumo — AI Y' da seção
-    ## Autos lavrados do memory.md (escritas por /autos-lavrados e /organiza-os),
+    ## Autos lavrados do memory.md (escritas por /aft-autos-lavrados e /aft-organiza-os),
     para quando não há autos-lavrados.md nem scan ao vivo."""
     autos = []
     for m in RE_AUTO_MEM.finditer(autos_mem):
@@ -475,7 +475,7 @@ def mesclar_autos(md: dict, vivo: list[dict] | None,
             return md["autos"], fonte
         do_mem = autos_do_memory(autos_mem)
         if do_mem:
-            return do_mem, "memory.md (rode /autos-lavrados para detalhar)"
+            return do_mem, "memory.md (rode /aft-autos-lavrados para detalhar)"
         return [], ""
     por_ai = {a["numero_ai"]: a for a in md["autos"]}
     mesclados = []
@@ -868,14 +868,14 @@ function copiaVelho(t,fim){const ta=document.createElement('textarea');ta.value=
 // Ações mecânicas — referenciam DATA por índice (nada de string embutida no HTML).
 // Legendas dos comandos: resumo de cada skill vindo da arquitetura do toolkit.
 const CMDS=[
- ['/inspecao-fisica','Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento.'],
- ['/auditoria-geral','Lê os achados (campo e anotações da auditoria), identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
- ['/gera-ai','Empacota os autos redigidos no TXT importável pelo Sistema Auditor, com anexos em PDF e pseudonimização reversível.'],
- ['/autos-lavrados','Confere no Sistema Auditor o que já foi transmitido e marca [x]/[ ] no memory.md; cada auto identificado pelo número do AI.'],
- ['/det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
- ['/tn-nco','Redige a Notificação para Correção de Irregularidades, texto pronto para colar no DET, item por item.'],
+ ['/aft-inspecao-fisica','Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento.'],
+ ['/aft-auditoria-geral','Lê os achados (campo e anotações da auditoria), identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
+ ['/aft-gera-ai','Empacota os autos redigidos no TXT importável pelo Sistema Auditor, com anexos em PDF e pseudonimização reversível.'],
+ ['/aft-autos-lavrados','Confere no Sistema Auditor o que já foi transmitido e marca [x]/[ ] no memory.md; cada auto identificado pelo número do AI.'],
+ ['/aft-det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
+ ['/aft-tn-nco','Redige a Notificação para Correção de Irregularidades, texto pronto para colar no DET, item por item.'],
  ['/aft-rt-rgi','Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).'],
- ['/sfitweb-rel','Relatório Final Simplificado consolidando autos, termos e notificações.']];
+ ['/aft-sfitweb-rel','Relatório Final Simplificado consolidando autos, termos e notificações.']];
 function copiaCmd(i,k){copia(CMDS[k][0]+' — OS '+DATA.os[i].empregador)}
 function copiaCaminho(i){copia(DATA.os[i].caminho)}
 // "Agendar no Google Calendar": URL de template pré-preenchida (evento de dia
@@ -923,10 +923,10 @@ function grupoAuto(a){
 function proximoPasso(o){
  const venc=(o.dets||[]).find(d=>!d.feito&&d.urg==='vencido');
  if(venc)return{html:'O DET <b>'+esc(venc.codigo||'?')+'</b> está <b>'+esc(venc.selo||'vencido')+
-  '</b> sem entrega — cabe auto por omissão (art. 630 §4º CLT).',cmds:['/det-630','/tn-nco']};
+  '</b> sem entrega — cabe auto por omissão (art. 630 §4º CLT).',cmds:['/aft-det-630','/aft-tn-nco']};
  if((o.pendencias||[]).length)return{html:'Pendência aberta: '+esc(o.pendencias[0]),cmds:[]};
  if(!(o.autos||[]).length&&o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)
-  return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/auditoria-geral']};
+  return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/aft-auditoria-geral']};
  return null}
 function copiaPasso(i,k){const pp=proximoPasso(DATA.os[i]);
  if(pp)copia(pp.cmds[k]+' — OS '+DATA.os[i].empregador)}
@@ -1163,7 +1163,7 @@ def selo_det(d: dict, hoje: datetime.date) -> tuple[str, str]:
 
 def coletar_vencimentos(oss: list[dict], hoje: datetime.date) -> list[dict]:
     """Agenda única de prazos de TODAS as OS, ordenada por data: notificações
-    DET com prazo (abertas e checadas — as checadas servem ao /agenda-det, que
+    DET com prazo (abertas e checadas — as checadas servem ao /aft-agenda-det, que
     marca ✓ no Google Calendar) e pendências datadas (só as com "prazo <data>"
     no texto; datas soltas — ex. "apólice vencida em 31/05/2025" — não são
     vencimento da pendência). O título dos eventos DET segue a convenção
@@ -1313,16 +1313,16 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
 
     grade = ("".join(cards) if cards else
              '<div class="aviso-vazio">Nenhuma OS encontrada em OS ATIVAS. '
-             'Use /nova-os para cadastrar a primeira.</div>')
+             'Use /aft-nova-os para cadastrar a primeira.</div>')
     dados = {"os": montar_json_os(oss, hoje, com_pasta), "venc": venc}
     json_js = json.dumps(dados, ensure_ascii=False).replace("</", "<\\/")
     titulo_art = "<title>Painel AFT</title>\n" if artifact else ""
     rodape = ("AFT Toolkit · painel publicado como artefato · snapshot de "
-              f"{hoje.strftime('%d/%m/%Y')} · regenere com a skill /painel."
+              f"{hoje.strftime('%d/%m/%Y')} · regenere com a skill /aft-painel."
               if artifact else
               "AFT Toolkit · painel local · aberto pelo arquivo é somente "
               "leitura; pelo modo interativo (http://127.0.0.1:8347, via "
-              "servir_painel.py) os cards ganham ações — ver skill /painel.")
+              "servir_painel.py) os cards ganham ações — ver skill /aft-painel.")
     return f"""{titulo_art}<style>{CSS}</style>
 <h1>Painel <em>AFT</em></h1>
 <p class="sub">Gerado em {hoje.strftime("%d/%m/%Y")} a partir das fichas locais (memory.md) · clique num card para o detalhe da auditoria</p>
@@ -1449,7 +1449,7 @@ def main() -> int:
                          com_pasta=False, artifact=True),
             encoding="utf-8")
 
-    # Resumo no stdout (a skill /painel usa isto para responder em texto).
+    # Resumo no stdout (a skill /aft-painel usa isto para responder em texto).
     resumo = {
         "painel": str(destino),
         "artifact_html": str(destino_art) if destino_art else None,
@@ -1461,7 +1461,7 @@ def main() -> int:
         "autos_lavrados": n_autos,
         "scan_ao_vivo": {"pedido": scan, "os_com_scan_ok": n_scan_ok},
         # Agenda consolidada de prazos (DETs — inclusive checados, para o
-        # /agenda-det marcar ✓ no calendário — e pendências datadas).
+        # /aft-agenda-det marcar ✓ no calendário — e pendências datadas).
         "vencimentos": venc,
         "novas": [
             {"empregador": o["empregador"], **n}

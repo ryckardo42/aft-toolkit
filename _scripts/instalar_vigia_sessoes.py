@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-instalar_vigia_sessoes.py — instala/remove/consulta o VIGIA AUTOMÁTICO de
+instalar_vigia_sessoes.py — instala/remove/aft-consulta o VIGIA AUTOMÁTICO de
 sessões (sessoes_os.py --vigia) como serviço em segundo plano do sistema:
 sobe sozinho no login e se reinicia se cair. É ele que torna as sessões por
 empresa 100% automáticas: sempre que o app do Claude fechar, o vigia aplica

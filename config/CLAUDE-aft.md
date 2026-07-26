@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v6 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v7 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -96,48 +96,48 @@ até que eu revise e aprove — e quem transmite sou sempre eu.
 Minhas skills de fiscalização estão em `~/.claude/skills/` e minha pasta de
 trabalho é `~/Documents/AFT/` (`OS ATIVAS/`, `OS ARQUIVADAS/`, `aft-config.md` com meus
 dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`,
-nomeada como eu quiser na `/nova-os` (razão social, fantasia, com ou sem CNPJ/CPF), com a
+nomeada como eu quiser na `/aft-nova-os` (razão social, fantasia, com ou sem CNPJ/CPF), com a
 ficha `memory.md`. O CNPJ (14 dígitos) ou CPF/CAEPF (11 dígitos, ex.: produtor rural) é
-opcional ao abrir a OS e só se torna obrigatório na hora de gerar os autos (`/gera-ai`).
+opcional ao abrir a OS e só se torna obrigatório na hora de gerar os autos (`/aft-gera-ai`).
 
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
 - Conferir se o toolkit está instalado/funcionando → `/aft-doctor`
-- Cadastrar uma auditoria / ver prazos de DET → `/nova-os` · `/painel`
-- Joguei uma pasta bagunçada de fiscalização em OS ATIVAS (docs de antes do toolkit) → `/organiza-os`
-- Planejar uma ação fiscal ANTES da visita (já sei a empresa, tenho denúncia/dados prévios) → `/preparacao-acao-fiscal`
-- Pedir documentos que presumo existir, pelo DET (PGR, controles de jornada, ASOs...) → `/NAD`
-- Narrar a visita de inspeção → `/inspecao-fisica`
-- Consultar os ementários/notebooks (tirar dúvida ou enquadrar um fato: ementa + capitulação + minuta de Histórico) → `/consulta`
-- Redigir autos de infração (dos achados de campo E/OU da auditoria documental) → `/auditoria-geral` (consultoras: `/NR12` p/ máquinas, `/NR18` p/ obras)
-- Anotar uma constatação da auditoria (SESMT/CIPA mal dimensionado, ASO faltando, programa vencido…) → registrar em `## Anotações da auditoria` do memory.md (a `/auditoria-geral` depois transforma em auto)
-- Trabalhador sem registro → `/registro`
-- Analisar PGR → `/PGR-analise`
-- Auditar AET (Análise Ergonômica do Trabalho, NR-17) → `/aet-auditoria`
-- Grau de risco de uma atividade / enquadramento CNAE (Anexo I da NR-04) → `/cnae-grau-risco-nr04`
-- Dimensionar ou conferir o SESMT (Anexo II da NR-04, grau de risco + nº de trabalhadores) → `/dimensionamento-sesmt-nr04`
-- Dimensionar ou conferir a CIPA (Quadro I da NR-05, grau de risco + nº de empregados; por bancada e total paritário) → `/cipa-nr05-dimensionamento`
-- Analisar acidente ou doença do trabalho (relatório da IN 2/2022) → `/analise-acidente`
-- Notificar a empresa para corrigir irregularidades → `/tn-nco`
+- Cadastrar uma auditoria / ver prazos de DET → `/aft-nova-os` · `/aft-painel`
+- Joguei uma pasta bagunçada de fiscalização em OS ATIVAS (docs de antes do toolkit) → `/aft-organiza-os`
+- Planejar uma ação fiscal ANTES da visita (já sei a empresa, tenho denúncia/dados prévios) → `/aft-preparacao-acao-fiscal`
+- Pedir documentos que presumo existir, pelo DET (PGR, controles de jornada, ASOs...) → `/aft-NAD`
+- Narrar a visita de inspeção → `/aft-inspecao-fisica`
+- Consultar os ementários/notebooks (tirar dúvida ou enquadrar um fato: ementa + capitulação + minuta de Histórico) → `/aft-consulta`
+- Redigir autos de infração (dos achados de campo E/OU da auditoria documental) → `/aft-auditoria-geral` (consultoras: `/aft-NR01` p/ disposições gerais e GRO, `/aft-NR12` p/ máquinas, `/aft-NR18` p/ obras)
+- Anotar uma constatação da auditoria (SESMT/CIPA mal dimensionado, ASO faltando, programa vencido…) → registrar em `## Anotações da auditoria` do memory.md (a `/aft-auditoria-geral` depois transforma em auto)
+- Trabalhador sem registro → `/aft-registro`
+- Analisar PGR → `/aft-PGR-analise`
+- Auditar AET (Análise Ergonômica do Trabalho, NR-17) → `/aft-aet-auditoria`
+- Grau de risco de uma atividade / enquadramento CNAE (Anexo I da NR-04) → `/aft-cnae-grau-risco-nr04`
+- Dimensionar ou conferir o SESMT (Anexo II da NR-04, grau de risco + nº de trabalhadores) → `/aft-dimensionamento-sesmt-nr04`
+- Dimensionar ou conferir a CIPA (Quadro I da NR-05, grau de risco + nº de empregados; por bancada e total paritário) → `/aft-cipa-nr05-dimensionamento`
+- Analisar acidente ou doença do trabalho (relatório da IN 2/2022) → `/aft-analise-acidente`
+- Notificar a empresa para corrigir irregularidades → `/aft-tn-nco`
 - Interdição/embargo (risco grave e iminente) → `/aft-rt-rgi`
-- Empresa pediu suspensão da interdição e mandou laudo de máquina → `/auditoria-AR-NR12` (julga o laudo)
-- Manter a interdição/embargo (negar a suspensão) → `/rt-manutencao`
-- Empregador não entregou documentos do DET → `/det-630`
-- Pacote de ponto eletrônico (AFD/AEJ/atestado) → `/jornada-analise`
-- Revisar as minutas dos autos antes de empacotar (5W1H) → `/revisa-auto`
-- Gerar o TXT do Sistema Auditor → `/gera-ai`
-- Conferir o que foi transmitido → `/autos-lavrados`
-- Prazos de DET no meu Google Calendar → `/agenda-det`
-- Relatório final da ação fiscal → `/sfitweb-rel`
-- Gerar um documento .docx avulso no padrão do toolkit → `/modelo-docx`
-- Uma sessão por empresa no menu lateral (grupo OS ATIVAS) → `/sessoes-os`
-- Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/nova-skill`
+- Empresa pediu suspensão da interdição e mandou laudo de máquina → `/aft-auditoria-AR-NR12` (julga o laudo)
+- Manter a interdição/embargo (negar a suspensão) → `/aft-rt-manutencao`
+- Empregador não entregou documentos do DET → `/aft-det-630`
+- Pacote de ponto eletrônico (AFD/AEJ/atestado) → `/aft-jornada-analise`
+- Revisar as minutas dos autos antes de empacotar (5W1H) → `/aft-revisa-auto`
+- Gerar o TXT do Sistema Auditor → `/aft-gera-ai`
+- Conferir o que foi transmitido → `/aft-autos-lavrados`
+- Prazos de DET no meu Google Calendar → `/aft-agenda-det`
+- Relatório final da ação fiscal → `/aft-sfitweb-rel`
+- Gerar um documento .docx avulso no padrão do toolkit → `/aft-modelo-docx`
+- Uma sessão por empresa no menu lateral (grupo OS ATIVAS) → `/aft-sessoes-os`
+- Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/aft-nova-skill`
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico de Interdição (ou um
 Termo de Interdição) e pedir para gerar os autos de infração, use **sempre** a skill
 `/aft-rt-rgi` para redigir os autos a partir desse documento (nunca improvise os autos por
 fora). Mostre os autos na tela e **pergunte se estão OK**; quando eu confirmar, chame a skill
-`/gera-ai` para empacotar o TXT.
+`/aft-gera-ai` para empacotar o TXT.
 
 Se a configuração (`~/Documents/AFT/aft-config.md`) não existir, oriente-me a rodar
 `/aft-setup` primeiro.
@@ -153,7 +153,7 @@ realidade, com o nome começando por **`minha-`** (ex.: `minha-oficio-mp`). Elas
 - Elas **nunca** são versionadas no repositório oficial nem afetadas por atualizações
   (`git pull` do `/aft-atualizar`): o namespace `minha-` é reservado e o `.gitignore` do
   toolkit as protege. Nunca proponha commitá-las ou enviá-las para o GitHub.
-- Para **criar** uma skill nova para mim, use a skill `/nova-skill` (ela cuida do formato).
+- Para **criar** uma skill nova para mim, use a skill `/aft-nova-skill` (ela cuida do formato).
   Se for criar/editar uma skill própria à mão, **sempre** use o prefixo `minha-` e o
   **primeiro nível** de `~/.claude/skills/` — skill em subpasta aninhada fica invisível
   para o Claude Code.
@@ -211,14 +211,14 @@ resultado em **.docx** — não me entregue só um bloco de markdown no chat nem
 `.md` como se fosse o documento final. Salve na pasta da OS (se houver uma envolvida),
 com nome descritivo.
 
-Todo `.docx` gerado segue o **padrão visual do toolkit** — skill `/modelo-docx`: o
+Todo `.docx` gerado segue o **padrão visual do toolkit** — skill `/aft-modelo-docx`: o
 documento é construído com a biblioteca `modelo_docx.py` sobre o template oficial com o
 cabeçalho da auditoria (AFT/SIT), Times New Roman 12, títulos em azul institucional e
 tabelas zebradas. Exceção: documentos com template oficial próprio (RT de
 interdição/embargo, Relação de autos) continuam nos seus modelos.
 
 Isso não muda o que as skills oficiais já fazem: elas continuam nos formatos delas (ex.:
-o `/NAD` e o `/tn-nco` já entregam o texto pronto para eu colar no DET em bloco de
+o `/aft-NAD` e o `/aft-tn-nco` já entregam o texto pronto para eu colar no DET em bloco de
 código, texto puro). Textos que eu vou copiar e colar em outro lugar (e-mail, campo do
 DET) continuam aparecendo no chat em texto puro, sem negrito/cabeçalho de markdown, para
 eu poder copiar direto sem sobra de `**`/`#`.
@@ -230,9 +230,9 @@ vinculada pelo campo `sessao_claude:` no front-matter do memory.md. A criação 
 **AUTOMÁTICA**: o vigia de sessões (serviço padrão da instalação) aplica sozinho toda vez
 que o app fecha — sessão nova aparece na próxima abertura. Comportamento esperado:
 
-- **NÃO pergunte sobre criar sessões.** OS nova (`/nova-os`, `/organiza-os`, pasta
+- **NÃO pergunte sobre criar sessões.** OS nova (`/aft-nova-os`, `/aft-organiza-os`, pasta
   copiada à mão) → apenas informe, quando fizer sentido, que a sessão aparecerá no
-  próximo reinício do app. Só siga o fluxo pontual da `/sessoes-os` se EU pedir a sessão
+  próximo reinício do app. Só siga o fluxo pontual da `/aft-sessoes-os` se EU pedir a sessão
   "agora".
 - **Roteamento:** se eu começar a tratar de uma auditoria NESTA sessão e a empresa tiver
   sessão própria (vínculo no memory.md ou título na lista de sessões), avise e ofereça

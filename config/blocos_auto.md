@@ -1,10 +1,10 @@
 # Blocos fixos de auto de infração (AFT Toolkit)
 
 Fonte única dos textos FIXOS e LITERAIS dos autos de infração. As skills que redigem
-autos (`/auditoria-geral`, `/aft-rt-rgi`, `/registro`, `/det-630`,
-`/jornada-auto-afd-aej`, `/PGR-analise`, ...) **não escrevem mais o bloco 3** — elas
+autos (`/aft-auditoria-geral`, `/aft-rt-rgi`, `/aft-registro`, `/aft-det-630`,
+`/aft-jornada-auto-afd-aej`, `/aft-PGR-analise`, ...) **não escrevem mais o bloco 3** — elas
 terminam o auto no bloco 2 (IRREGULARIDADE) seguido de ELEMENTOS DE CONVICÇÃO. O
-**`/gera-ai` injeta o bloco 3 abaixo automaticamente em todo e qualquer auto**, pelo
+**`/aft-gera-ai` injeta o bloco 3 abaixo automaticamente em todo e qualquer auto**, pelo
 script `_scripts/bloco3_inject.py`.
 
 Vantagens: economia de tokens (o bloco não é regerado em cada auto), fidelidade
@@ -14,7 +14,7 @@ divergência entre skills).
 > NÃO edite o texto entre as marcas `<BLOCO3>` e `</BLOCO3>` sem orientação. É o
 > Subtítulo 3 canônico, igual para todo auto. Usa `#13#10` como quebra de linha (lida
 > pelo Sistema Auditor) e acentuação completa (convertida para ISO-8859-1 pelo
-> `/gera-ai`). O script lê exatamente o conteúdo entre as marcas.
+> `/aft-gera-ai`). O script lê exatamente o conteúdo entre as marcas.
 
 ## bloco3 — Subtítulo 3 (OBSERVAÇÕES), canônico e único
 

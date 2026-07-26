@@ -494,7 +494,7 @@ class Handler(BaseHTTPRequestHandler):
                 pass  # serve o painel anterior, se existir
             painel = self.base.parent / "painel.html"
             if not painel.exists():
-                return self._responde(404, "painel.html não encontrado — rode a skill /painel"
+                return self._responde(404, "painel.html não encontrado — rode a skill /aft-painel"
                                       .encode("utf-8"), "text/plain; charset=utf-8")
             self._responde(200, painel.read_bytes(), "text/html; charset=utf-8")
         elif self.path == "/api/ping":
