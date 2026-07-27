@@ -70,9 +70,9 @@ for d in ~/Documents/AFT/"OS ATIVAS"/*/; do [ -f "$d/memory.md" ] || echo "$d"; 
    **Layout antigo (anterior a 22/07/2026) → migração.** Antes, notificações e pastas
    de autos ficavam soltas na raiz. Detecte e inclua a migração no plano quando houver,
    na raiz: `notificacao-*.pdf`, `relatorio-atendimento-*.pdf`, `notificacao-*/`,
-   `Autos *</`, `Relacao de autos/` ou `relacao-autos*.docx`. A migração é só
-   `mkdir` + `mv` para `NOTIFICACOES/` e `AUTOS/` — **nada é renomeado nem apagado**, e
-   os `.md` da raiz não se movem.
+   `tn-nco-*.docx`, `nad-*.docx`, `Autos *</`, `Relacao de autos/` ou
+   `relacao-autos*.docx`. A migração é só `mkdir` + `mv` para `NOTIFICACOES/` e
+   `AUTOS/` — **nada é renomeado nem apagado**, e os `.md` da raiz não se movem.
 3. **Vazia** → apenas relate no resumo final ("pastas vazias: X, Y — nada a organizar")
    e siga. Não pergunte nada sobre elas.
 
@@ -92,6 +92,7 @@ Classifique cada item pelas assinaturas (nome do arquivo + texto da 1ª página)
 |---|---|
 | **Notificação DET** | "NOTIFICAÇÃO Nº" + código alfanumérico 12–16 chars (ex.: `S8JHJEYM2OC4VE`); "NOTIFICAÇÃO PARA A APRESENTAÇÃO DE DOCUMENTOS"/"CORREÇÃO"; cabeçalho MTE/SIT |
 | **Relatório de atendimento do DET** | nome `relatorio-atendimento*<CODIGO>*.pdf` ou 1ª página "Relatório de Atendimento" + código — é **evidência de que o DET foi respondido** |
+| **Notificação emitida pelo AFT (TN/NCO ou NAD)** | nome `tn-nco-*` ou `nad-*` (saídas das skills `/aft-tn-nco` e `/aft-NAD`) — o `.docx` vai para `NOTIFICACOES/`, o `.md` **fica na raiz** |
 | **Relação de autos lavrados** | "Relação de Autos de Infração Lavrados" (relatório do Sistema Auditor); nome tipo `RR_*.PDF` |
 | **Resposta do empregador ao DET** | pasta com subpastas `item1`, `item2`... ou `01 - <descrição>`, `02 - ...` (padrões do download do DET) ou ZIP/pasta com nome `<EMPREGADOR>_<data>` |
 | **Fotos de inspeção** | `.jpeg/.jpg/.png/.heic` (soltas ou em subpasta `FOTO`/`fotos`) |
@@ -168,9 +169,11 @@ só com as fichas e os relatórios `.md`**:
 ├── analise-preliminar-*.md       ← RAIZ OBRIGATÓRIA
 ├── jornada-analise-*.md          ← RAIZ OBRIGATÓRIA
 ├── inspecao-fisica.md            ← RAIZ OBRIGATÓRIA
+├── tn-nco-*.md · nad-*.md        ← RAIZ OBRIGATÓRIA (texto que o AFT recola no DET)
 ├── NOTIFICACOES/
 │   ├── notificacao-<CODIGO>.pdf
 │   ├── relatorio-atendimento-<CODIGO>.pdf
+│   ├── tn-nco-*.docx · nad-*.docx  ← versão fechada da notificação emitida
 │   └── notificacao-<CODIGO>/     ← resposta do empregador (item1/, item2/...)
 ├── AUTOS/
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
@@ -179,11 +182,19 @@ só com as fichas e os relatórios `.md`**:
 └── fotos/
 ```
 
-> **Regra dura — `.md` fica na RAIZ.** O painel lê `autos-lavrados.md` num caminho fixo
-> na raiz e lista os demais relatórios com um glob de **primeiro nível**
-> (`gerar_painel.py`). Um `.md` movido para dentro de `NOTIFICACOES/` ou `AUTOS/`
-> **desaparece do painel**. Por isso: PDFs e pastas de material vão para as caixas; os
-> `.md` de trabalho do AFT, nunca.
+> **Regra dura — `.md` fica na RAIZ.** Duas travas no painel, não é preferência de
+> arrumação:
+> 1. `gerar_painel.py` lê `autos-lavrados.md` num caminho fixo na raiz e lista os demais
+>    relatórios com um glob de **primeiro nível** (`pasta.glob("*.md")`) — `.md` em
+>    subpasta **desaparece do painel**;
+> 2. a rota `/doc/` do `servir_painel.py` aceita exatamente
+>    `/doc/<pasta-da-OS>/<arquivo>.md` e **rejeita qualquer `/` no nome do arquivo**
+>    (guarda contra path traversal) — `.md` em subpasta também deixa de ser clicável.
+>
+> A linha divisória, então, é o **formato**, não o assunto: **documento fechado
+> (PDF/DOCX) vai para a caixa; `.md` é material de trabalho vivo e fica na raiz, onde o
+> painel enxerga.** Isso separa o par `tn-nco-*.md` / `tn-nco-*.docx` de propósito — o
+> `.md` é justamente o que o AFT reabre para recolar no DET.
 
 Regras do plano:
 - **Nome da pasta**: `<EMPREGADOR EM CAIXA ALTA> <identificador só dígitos>` (padrão do
@@ -195,6 +206,11 @@ Regras do plano:
   subpasta `NOTIFICACOES/notificacao-<CODIGO>/` (mantendo `item1/`, `item2/`... ou
   `01 - .../`). Sufixo descritivo que o AFT tenha dado à pasta é **preservado**
   (`notificacao-<CODIGO> jornada/`) — o que identifica é o código.
+- **Notificação também é o que o AFT emitiu**, não só o que voltou do DET: os `.docx`
+  de Termo de Notificação para Correção (`tn-nco-*.docx`) e de Notificação para
+  Apresentação de Documentos (`nad-*.docx`) vão para `NOTIFICACOES/` junto com os PDFs.
+  Os `.md` correspondentes (`tn-nco-*.md`, `nad-*.md`) **ficam na raiz** pela regra dura
+  acima — é o texto que o AFT recopia para o DET, e o painel só o lista se estiver lá.
 - **Nomes de download duplicado**: normalize sufixos do navegador —
   `notificacao-XYZ (1).pdf` → `notificacao-XYZ.pdf` (idem `relatorio-atendimento`). Se o
   nome-alvo já existir com outro conteúdo, mantenha os dois e relate.
