@@ -105,6 +105,39 @@ python ~/.claude/skills/_scripts/checar_acentos.py "[caminho do autos.md]"
 
 ---
 
+## FASE 2.6 — Vazamento do ambiente de trabalho (gate obrigatório)
+
+O auto é **documento legal entregue ao autuado** e juntado ao processo administrativo.
+Os arquivos do nosso ambiente de trabalho — `inspecao-fisica.md`, `memory.md`,
+`analise-PGR.md`, `.depara_*.json`, a pasta `OS ATIVAS`, o caminho do computador do
+auditor, o nome de uma skill `/aft-*` — **não são elementos de convicção, não vão
+anexos ao auto e não podem ser citados em nenhum subtítulo**. Citá-los expõe a rotina
+interna da fiscalização e aponta o autuado para uma "prova" que ele não recebe e não
+pode contraditar.
+
+```bash
+python ~/.claude/skills/_scripts/checar_arquivos_internos.py "[caminho do autos.md]"
+```
+
+- **OK (exit 0)** → siga.
+- **REPROVADO (exit 1)** → **reescreva o trecho descrevendo a PROVA, não o arquivo.**
+  O que instrui o auto é o ato e o documento externo, não o relato que o auditor
+  escreveu para si mesmo:
+
+  | Errado (arquivo interno) | Certo (a prova em si) |
+  |---|---|
+  | `(ver relato de campo em inspecao-fisica.md)` | `Inspeção física realizada em 26/06/2026 no setor de recepção do gado do estabelecimento fiscalizado` |
+  | `conforme analise-PGR.md` | `PGR apresentado pela organização em resposta à notificação DET código XXXX, anexado a este Auto de Infração` |
+  | `dados do memory.md` | `consulta ao eSocial realizada em dd/mm/aaaa` |
+
+  Corrija e rode de novo até passar. Não altere a tese fiscal — só a referência.
+
+> O verificador roda tanto no `autos.md` quanto no `.txt` final (nesse caso varre os
+> campos de texto e de ELEMENTOS DE CONVICÇÃO de cada auto). É de alta precisão: um
+> achado é sempre defeito real.
+
+---
+
 ## FASE 2.7 — Paragrafação do bloco II (evitar parágrafo monolítico)
 
 Skills redatoras às vezes entregam o bloco II inteiro (às vezes o auto todo) como **um
@@ -151,7 +184,8 @@ Política: **corrige o que puder e segue direto** (sem reapresentar para aprova�
 
 1. **Correções determinísticas → aplique direto:** parágrafo de dano coletivo ausente em
    auto de SST; travessões/aspas curvas → pontuação latin-1-safe; acentuação pt-br
-   reposta nas palavras apontadas pelo `checar_acentos.py` (FASE 2.5); bloco II monolítico
+   reposta nas palavras apontadas pelo `checar_acentos.py` (FASE 2.5); referência a
+   arquivo/pasta interna reescrita como descrição da prova (FASE 2.6); bloco II monolítico
    dividido em parágrafos (FASE 2.7).
 2. **Pendência factual (não inventável) → NÃO preencha; sinalize com `⚠️` e prossiga.**
    Você não pode inventar local, data ou fato. Ex.: "Onde" vago ("no estabelecimento"
