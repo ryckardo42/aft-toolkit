@@ -3,7 +3,7 @@
 bloco3_inject.py — injeta o Subtítulo 3 (OBSERVAÇÕES) canônico nos autos (AFT Toolkit).
 
 As skills que redigem autos terminam cada auto no bloco 2 (IRREGULARIDADE) + ELEMENTOS
-DE CONVICÇÃO, SEM o bloco 3. O /gera-ai chama este script para inserir, em TODO auto, o
+DE CONVICÇÃO, SEM o bloco 3. O /aft-gera-ai chama este script para inserir, em TODO auto, o
 bloco 3 único e fixo definido em `config/blocos_auto.md` (entre as marcas <BLOCO3>).
 
 - Insere o bloco 3 imediatamente ANTES de "ELEMENTOS DE CONVICÇÃO:" de cada auto.

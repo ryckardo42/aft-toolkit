@@ -68,6 +68,13 @@ python ~/.claude/skills/_scripts/checar_diff.py        # varredura das linhas no
 O `checar_diff.py` é um alarme: nunca bloqueia nem altera nada, só relata. Quem decide
 seguir é sempre o AFT.
 
+> **Diff muito grande não é, por si, sinal de adulteração.** Uma renomeação em massa
+> (como a que prefixou `aft-` em todas as skills, em 26/07/2026) muda dezenas de arquivos
+> de uma vez, e o `git diff --stat` fica enorme. O que importa é o resultado do
+> `checar_diff.py`: se ele disser `✓`, o conteúdo que está chegando não tem sinal
+> suspeito, por maior que seja a lista. Explique isso ao AFT em vez de alarmá-lo com o
+> tamanho da mudança.
+
 ### Passo 1b — Capturar as novidades (antes do pull)
 
 O `NOVIDADES.md` na raiz do repositório é o changelog escrito **para o AFT** (sem jargão
@@ -102,7 +109,7 @@ curl -s https://pypi.org/pypi/notebooklm-py/json | python3 -c "import json,sys; 
 ```
 
 - Se o `notebooklm --version` falhar ("comando não encontrado"), o pacote não está
-  instalado — não é erro desta skill; apenas informe e siga (o `/notebooklm-login`
+  instalado — não é erro desta skill; apenas informe e siga (o `/aft-notebooklm-login`
   ou o `/aft-setup` cuidam da instalação na próxima vez que forem usados).
 - Se as duas versões forem **iguais**, informe que já está atualizado.
 - Se a versão instalada for **mais antiga**, atualize automaticamente, sem perguntar
@@ -119,7 +126,7 @@ curl -s https://pypi.org/pypi/notebooklm-py/json | python3 -c "import json,sys; 
 
 ## Passo 2b — Oferecer a rotina diária do painel (só na primeira vez)
 
-O toolkit ganhou a opção de o `/painel` se atualizar sozinho toda manhã (agendamento do
+O toolkit ganhou a opção de o `/aft-painel` se atualizar sozinho toda manhã (agendamento do
 próprio sistema operacional — launchd/Agendador de Tarefas, zero tokens, sem abrir o
 Claude Code). AFTs que instalaram o toolkit antes dessa novidade nunca foram perguntados.
 Confira se já foi oferecida:
@@ -163,7 +170,7 @@ grep -q 'servidor_painel: *"ligado"' ~/Documents/AFT/aft-config.md && echo "ja_l
 ## Passo 2d — Oferecer os prazos de DET no Google Calendar (só na primeira vez)
 
 Mesma lógica do Passo 2b, para a novidade do **Google Calendar** (Passo 7d do
-`/aft-setup` — skill `/agenda-det`). Confira:
+`/aft-setup` — skill `/aft-agenda-det`). Confira:
 
 ```bash
 grep -q "agenda_det" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
@@ -177,7 +184,7 @@ grep -q "agenda_det" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || ec
   - **Não** → grave `agenda_det: ""` no `aft-config.md` e siga (lembre que o painel tem
     o botão "agendar no Google Calendar", sem login).
   - **Sim** → siga exatamente o Passo 7d do `/aft-setup` (conector Google Calendar +
-    primeira sincronização pela `/agenda-det`) e grave `agenda_det: "diario"` ou
+    primeira sincronização pela `/aft-agenda-det`) e grave `agenda_det: "diario"` ou
     `"manual"` conforme a escolha.
 
 ## Passo 2e — Re-sincronizar o perfil do auditor (CLAUDE.md)

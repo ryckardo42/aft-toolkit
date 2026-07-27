@@ -101,7 +101,7 @@
     suas palavras ("me ajuda a fazer um relatório técnico de interdição para um elevador
     cremalheira sem interface de segurança", "quero relatar minha inspeção física") e o
     Claude ativa a skill certa sozinho, no meio do trabalho. Chamar pelo nome
-    (ex.: <code>/painel</code>) é só um atalho opcional. Você não precisa saber programar —
+    (ex.: <code>/aft-painel</code>) é só um atalho opcional. Você não precisa saber programar —
     quem digita comandos é o Claude, nunca você.</p>
   </div>
 
@@ -141,9 +141,9 @@
       "OS ATIVAS" do menu lateral — cada auditoria passa a viver na sessão dela.</div>
       <div class="fala">"copiei as pastas das minhas fiscalizações para OS ATIVAS — organiza tudo para mim"</div>
       <div class="chips">
-        <span class="chip c-ambar">/organiza-os</span>
-        <span class="chip c-azul">/autos-lavrados</span>
-        <span class="chip c-roxo">/sessoes-os</span>
+        <span class="chip c-ambar">/aft-organiza-os</span>
+        <span class="chip c-azul">/aft-autos-lavrados</span>
+        <span class="chip c-roxo">/aft-sessoes-os</span>
       </div>
     </div>
 
@@ -155,7 +155,7 @@
       aqui (só vira obrigatório na hora de gerar os autos). O RI também é opcional, mas vale
       informar: é ele que identifica a auditoria para o sync automático do DET.</div>
       <div class="fala">"abre uma auditoria nova para a CONSTRUTORA EXEMPLO"</div>
-      <div class="chips"><span class="chip c-verde">/nova-os</span></div>
+      <div class="chips"><span class="chip c-verde">/aft-nova-os</span></div>
     </div>
 
     <div class="passo">
@@ -166,8 +166,8 @@
       <div class="fala">"vou fiscalizar uma obra semana que vem, me ajuda a planejar a visita"</div>
       <div class="fala">"notifica a empresa a apresentar o PGR e os controles de ponto"</div>
       <div class="chips">
-        <span class="chip c-azul">/preparacao-acao-fiscal</span>
-        <span class="chip c-azul">/NAD</span>
+        <span class="chip c-azul">/aft-preparacao-acao-fiscal</span>
+        <span class="chip c-azul">/aft-NAD</span>
       </div>
     </div>
 
@@ -177,7 +177,7 @@
       <div class="txt">Conte o que viu — por voz ou texto corrido. O relato vira uma lista
       organizada de achados, fiel ao que você disse, pronta para embasar autos e análises.</div>
       <div class="fala">"quero relatar minha inspeção física"</div>
-      <div class="chips"><span class="chip c-ceu">/inspecao-fisica</span></div>
+      <div class="chips"><span class="chip c-ceu">/aft-inspecao-fisica</span></div>
     </div>
 
     <div class="passo">
@@ -191,12 +191,12 @@
       <div class="fala">"valida os arquivos de ponto AFD e AEJ que a empresa mandou"</div>
       <div class="fala">"qual ementa uso para serra circular sem coifa de proteção?"</div>
       <div class="chips">
-        <span class="chip c-teal">/PGR-analise</span>
-        <span class="chip c-teal">/aet-auditoria</span>
-        <span class="chip c-teal">/jornada-analise</span>
-        <span class="chip c-teal">/auditoria-AR-NR12</span>
-        <span class="chip c-teal">/analise-acidente</span>
-        <span class="chip c-ceu">/consulta</span>
+        <span class="chip c-teal">/aft-PGR-analise</span>
+        <span class="chip c-teal">/aft-aet-auditoria</span>
+        <span class="chip c-teal">/aft-jornada-analise</span>
+        <span class="chip c-teal">/aft-auditoria-AR-NR12</span>
+        <span class="chip c-teal">/aft-analise-acidente</span>
+        <span class="chip c-ceu">/aft-consulta</span>
       </div>
     </div>
 
@@ -212,16 +212,16 @@
       <div class="fala">"achei dois trabalhadores sem registro na obra"</div>
       <div class="fala">"gera o TXT para eu importar no Sistema Auditor"</div>
       <div class="chips">
-        <span class="chip c-verde">/auditoria-geral</span>
-        <span class="chip c-verde">/registro</span>
-        <span class="chip c-verde">/det-630</span>
-        <span class="chip c-verde">/revisa-auto</span>
-        <span class="chip c-verde">/gera-ai</span>
+        <span class="chip c-verde">/aft-auditoria-geral</span>
+        <span class="chip c-verde">/aft-registro</span>
+        <span class="chip c-verde">/aft-det-630</span>
+        <span class="chip c-verde">/aft-revisa-auto</span>
+        <span class="chip c-verde">/aft-gera-ai</span>
       </div>
-      <div class="dica"><b>Consultoras de NR:</b> /NR12 (máquinas) e /NR18 (obras) ajudam no
-      enquadramento durante a redação. Para a NR-04, /cnae-grau-risco-nr04 dá o grau de risco
-      pelo CNAE e /dimensionamento-sesmt-nr04 calcula o SESMT exigido; para a NR-05,
-      /cipa-nr05-dimensionamento calcula a composição da CIPA.</div>
+      <div class="dica"><b>Consultoras de NR:</b> /aft-NR01 (disposições gerais e PGR), /aft-NR12 (máquinas) e /aft-NR18 (obras) ajudam no
+      enquadramento durante a redação. Para a NR-04, /aft-cnae-grau-risco-nr04 dá o grau de risco
+      pelo CNAE e /aft-dimensionamento-sesmt-nr04 calcula o SESMT exigido; para a NR-05,
+      /aft-cipa-nr05-dimensionamento calcula a composição da CIPA.</div>
     </div>
 
     <div class="passo">
@@ -234,8 +234,8 @@
       <div class="fala">"a empresa pediu a suspensão da interdição e mandou um laudo — analisa para mim"</div>
       <div class="chips">
         <span class="chip c-verm">/aft-rt-rgi</span>
-        <span class="chip c-verm">/rt-manutencao</span>
-        <span class="chip c-teal">/auditoria-AR-NR12</span>
+        <span class="chip c-verm">/aft-rt-manutencao</span>
+        <span class="chip c-teal">/aft-auditoria-AR-NR12</span>
       </div>
     </div>
 
@@ -248,8 +248,8 @@
       <div class="fala">"abre o painel das minhas auditorias"</div>
       <div class="fala">"coloca os prazos do DET no meu Google Calendar"</div>
       <div class="chips">
-        <span class="chip c-roxo">/painel</span>
-        <span class="chip c-roxo">/agenda-det</span>
+        <span class="chip c-roxo">/aft-painel</span>
+        <span class="chip c-roxo">/aft-agenda-det</span>
       </div>
     </div>
 
@@ -261,8 +261,8 @@
       <div class="fala">"quais autos dessa empresa eu já transmiti?"</div>
       <div class="fala">"gera o relatório final da fiscalização da CONSTRUTORA EXEMPLO"</div>
       <div class="chips">
-        <span class="chip c-azul">/autos-lavrados</span>
-        <span class="chip c-azul">/sfitweb-rel</span>
+        <span class="chip c-azul">/aft-autos-lavrados</span>
+        <span class="chip c-azul">/aft-sfitweb-rel</span>
       </div>
     </div>
 

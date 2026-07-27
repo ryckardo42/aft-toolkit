@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-instalar_rotina_painel.py — instala/remove/consulta a rotina diária do /painel
+instalar_rotina_painel.py — instala/remove/aft-consulta a rotina diária do /aft-painel
 como agendamento do PRÓPRIO sistema operacional (launchd no macOS, Agendador
 de Tarefas no Windows). Zero tokens, zero Claude Code: o SO chama o Python
 diretamente, todo dia, no horário configurado.
@@ -142,7 +142,7 @@ def main() -> int:
     if sistema == "outro":
         return resultado(False, sys.platform,
                          "Sistema não suportado pela rotina automática (só macOS e Windows). "
-                         "Use o Passo 5 do painel/SKILL.md para agendar manualmente.", acao)
+                         "Use o Passo 5 do aft-painel/SKILL.md para agendar manualmente.", acao)
 
     if acao == "instalar":
         if len(sys.argv) < 4:

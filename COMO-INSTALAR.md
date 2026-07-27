@@ -67,14 +67,14 @@ instalação:
 
 1. **Copie as pastas das suas fiscalizações** (do jeito que estiverem, com os documentos
    acumulados) para dentro de `Documentos\AFT\OS ATIVAS\` — uma pasta por empresa.
-2. Na conversa do `</> Code`, digite **`/organiza-os`**.
+2. Na conversa do `</> Code`, digite **`/aft-organiza-os`**.
 
 Com uma única aprovação sua, ele faz três coisas:
 
 - **organiza tudo** no padrão do toolkit (nomes de pasta, ficha `memory.md` com
   empregador/CNPJ/notificações DET extraídos dos próprios documentos, arquivos nos
   lugares certos — sem apagar nada);
-- **busca os autos já lavrados**: roda o `/autos-lavrados`, que vai às pastas do Sistema
+- **busca os autos já lavrados**: roda o `/aft-autos-lavrados`, que vai às pastas do Sistema
   Auditor, encontra os autos transmitidos de cada empresa e os registra no `memory.md`;
 - **cria uma sessão de chat por empresa** no menu lateral do app, no grupo "OS ATIVAS" —
   automático: o vigia de sessões (instalado pelo `/aft-setup`) aplica sozinho, e as
@@ -82,7 +82,7 @@ Com uma única aprovação sua, ele faz três coisas:
   daquela auditoria é tratado na sessão dela.
 
 Quem está começando do zero (sem fiscalizações em andamento) pula este passo e usa o
-`/nova-os` a cada auditoria nova.
+`/aft-nova-os` a cada auditoria nova.
 
 ---
 
@@ -91,7 +91,7 @@ Quem está começando do zero (sem fiscalizações em andamento) pula este passo
 Com o NotebookLM ativo, as skills encontram o **código da ementa sozinhas**. A ferramenta `notebooklm` já foi instalada no Passo 3. Você **não precisa do terminal**: o Claude faz a conexão por você.
 
 1. Entre em **https://notebooks-aft.vercel.app** com sua conta Google e solicite acesso; aguarde a liberação pelo mantenedor.
-2. Na conversa do `</> Code`, digite **`/notebooklm-login`** (ou peça "conecte o notebooklm"). O Claude tenta conectar sozinho pelos cookies do navegador e, se precisar, **abre uma janela do Edge** onde você só faz login na sua conta Google — ele salva a conexão automaticamente. O `/aft-setup` também conduz esse passo.
+2. Na conversa do `</> Code`, digite **`/aft-notebooklm-login`** (ou peça "conecte o notebooklm"). O Claude tenta conectar sozinho pelos cookies do navegador e, se precisar, **abre uma janela do Edge** onde você só faz login na sua conta Google — ele salva a conexão automaticamente. O `/aft-setup` também conduz esse passo.
 3. Se um dia a consulta de ementa parar de funcionar ("authentication expired"), é só pedir "reconecte o notebooklm" — sem mexer em terminal.
 
 Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da ementa ou indicam o ementário no Google Drive.
@@ -102,18 +102,18 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 
 | Situação | Digite |
 |---|---|
-| Importar suas fiscalizações em andamento (1º passo!) | copie as pastas para `OS ATIVAS` e digite `/organiza-os` |
-| Cadastrar uma auditoria nova | `/nova-os` |
-| Ver suas OS e prazos de DET | `/painel` |
-| Voltou de uma inspeção | `/inspecao-fisica` e narre o que viu |
-| Quer redigir os autos | `/auditoria-geral` |
-| Trabalhador sem registro | `/registro` |
-| Analisar um PGR | `/PGR-analise` |
-| Empresa não entregou documentos do DET | `/det-630` |
+| Importar suas fiscalizações em andamento (1º passo!) | copie as pastas para `OS ATIVAS` e digite `/aft-organiza-os` |
+| Cadastrar uma auditoria nova | `/aft-nova-os` |
+| Ver suas OS e prazos de DET | `/aft-painel` |
+| Voltou de uma inspeção | `/aft-inspecao-fisica` e narre o que viu |
+| Quer redigir os autos | `/aft-auditoria-geral` |
+| Trabalhador sem registro | `/aft-registro` |
+| Analisar um PGR | `/aft-PGR-analise` |
+| Empresa não entregou documentos do DET | `/aft-det-630` |
 | Interdição/embargo | `/aft-rt-rgi` |
-| Analisar AFD/AEJ/atestado de ponto | `/jornada-analise` |
-| Gerar o TXT do Sistema Auditor | `/gera-ai` |
-| Relatório final | `/sfitweb-rel` |
+| Analisar AFD/AEJ/atestado de ponto | `/aft-jornada-analise` |
+| Gerar o TXT do Sistema Auditor | `/aft-gera-ai` |
+| Relatório final | `/aft-sfitweb-rel` |
 
 ## Como receber atualizações
 
@@ -140,7 +140,7 @@ Regra geral: **descreva o problema ao próprio Claude** no `</> Code` ("o comand
 | "Git is required for local sessions" | Instale o Git (Passo 2) e feche o app de verdade: ícone do Claude na bandeja → Sair; reabra. Se persistir, reinicie o computador |
 | Python "não encontrado" | Peça ao Claude: "instale o Python com winget". Se a rede bloquear, plano B manual acima e reinicie o app |
 | Skill não aparece com `/` | Feche e reabra o Claude Code. Se persistir, peça a ele: "as skills estão diretamente em ~/.claude/skills (ex.: ~/.claude/skills/aft-setup)? Se estiverem dentro de uma subpasta aft-toolkit, mova todo o conteúdo um nível acima" |
-| NotebookLM não conecta / "command not found" / pede login | Peça ao Claude: "conecte o notebooklm" (skill `/notebooklm-login`). Ele instala o que faltar e abre a janela de login do Edge — você só entra na sua conta Google |
+| NotebookLM não conecta / "command not found" / pede login | Peça ao Claude: "conecte o notebooklm" (skill `/aft-notebooklm-login`). Ele instala o que faltar e abre a janela de login do Edge — você só entra na sua conta Google |
 | Skill `/notebooklm` não aparece (mas o comando `notebooklm --help` funciona) | Peça ao Claude: "rode notebooklm skill install" e depois feche e reabra o app. O pip/pipx instala só o comando de terminal — a skill precisa desse passo extra |
 | NotebookLM responde "sem acesso" | Solicite acesso em https://notebooks-aft.vercel.app e aguarde a liberação do mantenedor |
 | NotebookLM parou ("authentication expired") | A sessão expira de tempos em tempos. Peça ao Claude "reconecte o notebooklm" — ele reabre o login, sem terminal |

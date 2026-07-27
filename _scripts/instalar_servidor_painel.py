@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-instalar_servidor_painel.py — instala/remove/consulta o SERVIDOR interativo
+instalar_servidor_painel.py — instala/remove/aft-consulta o SERVIDOR interativo
 do painel (servir_painel.py, http://127.0.0.1:8347) como serviço em segundo
 plano do próprio sistema operacional: sobe sozinho no login e se reinicia se
 cair. É diferente da rotina diária (instalar_rotina_painel.py), que só

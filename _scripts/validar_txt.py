@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-validar_txt.py — validacao pre-importacao do TXT do Sistema Auditor (skill /gera-ai).
+validar_txt.py — validacao pre-importacao do TXT do Sistema Auditor (skill /aft-gera-ai).
 
 Confere o arquivo .txt ANTES de o AFT tentar importar no Sistema Auditor, pegando
 em segundos os erros que, de outro modo, so apareceriam como "AI RECUSADO" la dentro

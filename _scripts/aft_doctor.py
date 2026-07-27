@@ -75,7 +75,7 @@ else:
 
 # 3. Skills descobertas (1o nivel) -------------------------------------------
 # O Claude Code so enxerga skills em ~/.claude/skills/<skill>/SKILL.md.
-marcos = ["aft-setup", "nova-os", "painel", "gera-ai", "auditoria-geral"]
+marcos = ["aft-setup", "aft-nova-os", "aft-painel", "aft-gera-ai", "aft-auditoria-geral"]
 faltando_skill = [s for s in marcos if not (SKILLS_DIR / s / "SKILL.md").is_file()]
 total_skills = len(list(SKILLS_DIR.glob("*/SKILL.md")))
 em_claude = SKILLS_DIR.name == "skills" and SKILLS_DIR.parent.name == ".claude"
@@ -259,12 +259,12 @@ elif cfg_path.is_file():
 
 # 9. NotebookLM (opcional) ---------------------------------------------------
 # Checa o CLI e, se presente, o estado da sessao (validacao LOCAL, sem rede).
-# A dica nunca manda o AFT ao terminal: aponta para a skill /notebooklm-login.
+# A dica nunca manda o AFT ao terminal: aponta para a skill /aft-notebooklm-login.
 nlm_path = shutil.which("notebooklm")
 if not nlm_path:
     add("NotebookLM (CLI)", "aviso", "comando 'notebooklm' nao encontrado",
         "Opcional: acelera a busca de ementas. Peca ao Claude 'conecte o notebooklm' "
-        "(skill /notebooklm-login) - ele instala e faz o login por voce, sem terminal. "
+        "(skill /aft-notebooklm-login) - ele instala e faz o login por voce, sem terminal. "
         "Sem ele, as skills usam o Drive ou pedem o codigo da ementa.")
 else:
     estado = None
@@ -291,12 +291,12 @@ else:
             "comando disponivel e sessao salva (login local OK)")
     elif not chk.get("storage_exists"):
         add("NotebookLM (CLI)", "aviso", "instalado, mas ainda nao conectado (sem login)",
-            "Peca ao Claude 'conecte o notebooklm' (skill /notebooklm-login) - ele abre "
+            "Peca ao Claude 'conecte o notebooklm' (skill /aft-notebooklm-login) - ele abre "
             "o login na sua conta Google e salva sozinho, sem terminal.")
     else:
         add("NotebookLM (CLI)", "aviso",
             "instalado, mas a sessao parece incompleta ou expirada",
-            "Peca ao Claude 'reconecte o notebooklm' (skill /notebooklm-login).")
+            "Peca ao Claude 'reconecte o notebooklm' (skill /aft-notebooklm-login).")
 
 # 9b. Reconexao automatica do NotebookLM (NOTEBOOKLM_REFRESH_CMD) --------------
 # Faz o 'notebooklm ask' se reautenticar sozinho ao expirar. Pode estar so no
@@ -317,7 +317,7 @@ else:
     add("Reconexao automatica do NotebookLM", "aviso",
         "NOTEBOOKLM_REFRESH_CMD nao configurada",
         "Sem ela, o 'notebooklm ask' nao se reautentica sozinho ao expirar. "
-        "Rode /aft-setup (passo 7) ou /notebooklm-login para configurar.")
+        "Rode /aft-setup (passo 7) ou /aft-notebooklm-login para configurar.")
 
 # 10. Skills - frontmatter e modelos ------------------------------------------
 # Tres camadas, todas somente leitura:
@@ -478,7 +478,7 @@ if n_proprias:
             f"{n_proprias} skill(s) propria(s); com frontmatter/name a corrigir: "
             + ", ".join(proprias_quebradas) + f" - {nota_protecao}",
             "Sao SUAS skills. Para o Claude Code aciona-las, o 'name' do frontmatter "
-            "deve ser igual ao nome da pasta. O /nova-skill cria ja no formato certo.")
+            "deve ser igual ao nome da pasta. O /aft-nova-skill cria ja no formato certo.")
     elif not protegidas:
         add("Skills proprias (minha-*)", "aviso",
             f"{n_proprias} skill(s) propria(s) valida(s), mas {nota_protecao}",
@@ -579,7 +579,7 @@ elif _vigia_ok is False:
         "Ele faz parte da instalacao padrao. Rode 'Atualize o AFT Toolkit' "
         "(/aft-atualizar) para instalar - ou peca 'instala o vigia de "
         "sessoes'. Sem ele, as sessoes por empresa so sao criadas pedindo "
-        "a /sessoes-os.")
+        "a /aft-sessoes-os.")
 
 # ----------------------------------------------------------------------------
 resumo = {

@@ -155,7 +155,7 @@ def main():
     else:
         print(f"⚠️  {total} ocorrência(s) de PII de alto dano (CPF/PIS) detectada(s).")
         if depara_path:
-            print("   Confirme que os números marcados [SOLTO] entram no de-para antes do /gera-ai.")
+            print("   Confirme que os números marcados [SOLTO] entram no de-para antes do /aft-gera-ai.")
         else:
             print("   Confirme que cada um está tokenizado no de-para antes de gerar o TXT.")
 

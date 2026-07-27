@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-rehydrate.py — re-hidratação determinística de autos pseudonimizados (skill /gera-ai).
+rehydrate.py — re-hidratação determinística de autos pseudonimizados (skill /aft-gera-ai).
 
 Troca os tokens [[AUTUADA]] / [[TRAB_NN]] / [[CPF_NN]] de um TXT tokenizado pelos
 valores reais lidos de um mapa de-para JSON, produzindo o TXT real importável pelo

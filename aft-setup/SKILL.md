@@ -182,7 +182,7 @@ path_windows: "C:\\Users\\joao\\Documents\\AFT"
 # vazio "python3" da Microsoft Store). As skills devem invocar este executavel:
 python_path: "C:\\Users\\joao\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
 # Navegador que o AFT usa com a conta Google do NotebookLM (chrome | edge):
-notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /notebooklm-login
+notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /aft-notebooklm-login
 # Dados fixos do TXT (não alterar sem orientação):
 cod_1: "8211300"           # CNAE placeholder — o Sistema Auditor corrige pela lupa
 cod_2: "1008"              # tipo de ação fiscal
@@ -264,7 +264,7 @@ Se `python` não existir, tente `py -c "import sys; print(sys.executable)"` ou
 ```
 
 Explique: `pillow` converte fotos de evidência em PDF; `pikepdf` inspeciona assinaturas
-e comprime anexos grandes; `pypdf` lê os autos lavrados (`/autos-lavrados`);
+e comprime anexos grandes; `pypdf` lê os autos lavrados (`/aft-autos-lavrados`);
 `python-docx` gera e edita o Relatório Técnico (.docx) da interdição (`/aft-rt-rgi`);
 `pdfplumber` extrai texto de PDFs de fiscalização (termos, autos-modelo);
 `pillow-heif` lê fotos HEIC/HEIF do iPhone (opcional, só se houver esse formato).
@@ -274,7 +274,7 @@ e comprime anexos grandes; `pypdf` lê os autos lavrados (`/autos-lavrados`);
 As skills de lavratura consultam ementários no Google NotebookLM para achar o código
 da ementa automaticamente. **Conecte com a menor intervenção possível e sem nunca
 mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
-`/notebooklm-login`; conduza-o aqui mesmo:
+`/aft-notebooklm-login`; conduza-o aqui mesmo:
 
 1. **Confirmar/instalar o CLI e a skill** (você roda — instale com os dois extras:
    `browser` para o login por janela e `cookies` para o login silencioso):
@@ -289,7 +289,7 @@ mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
    `notebooklm skill install`, a skill `/notebooklm` (acesso completo à API: criar
    notebooks, adicionar fontes, gerar artefatos) não aparece no Claude Code, mesmo com
    o CLI funcionando — esse é o passo mais fácil de esquecer numa instalação nova. Essa
-   skill é independente da `/notebooklm-login` (que só cuida da autenticação, já
+   skill é independente da `/aft-notebooklm-login` (que só cuida da autenticação, já
    incluída neste toolkit) e não vem pelo `git clone` do aft-toolkit — pertence ao
    projeto teng-lin/notebooklm-py.
 2. **Já conectado?** `notebooklm auth check --test --json` — se `status: ok`, pule
@@ -331,12 +331,12 @@ mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
    [Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','notebooklm login --browser <NAV>','User')
    ```
    Avise o AFT que isso passa a valer ao **reabrir o Claude Code**. (Detalhes na skill
-   `/notebooklm-login`.)
+   `/aft-notebooklm-login`.)
 
 Se o AFT pular este passo, as skills continuam funcionando: elas oferecem o ementário
 no Google Drive (link nas próprias skills) ou pedem o código da ementa diretamente.
 Quando a sessão expirar no futuro, basta pedir "reconectar o notebooklm"
-(skill `/notebooklm-login`) — sem mexer em terminal.
+(skill `/aft-notebooklm-login`) — sem mexer em terminal.
 
 ## Passo 7b — Rotina diária do painel (opcional)
 
@@ -345,7 +345,7 @@ atualize sozinho toda manhã, sem precisar me pedir? Isso não gasta nada — é
 computador rodando um programinha, sem abrir o Claude Code."*
 
 - **Se não** → pule este passo (sem instalar nada); explique que dá para pedir a
-  qualquer momento depois, ou rodar `/painel` manualmente quando quiser.
+  qualquer momento depois, ou rodar `/aft-painel` manualmente quando quiser.
 - **Se sim**:
   1. Confirme/pergunte a pasta de OS ATIVAS a usar (a criada no Passo 2, salvo se o AFT
      já apontou outra) e use o `python_path` já resolvido no Passo 6a.
@@ -357,7 +357,7 @@ computador rodando um programinha, sem abrir o Claude Code."*
      `--hora HH:MM`.)
   3. Leia o JSON de retorno (`ok`, `sistema`, `detalhe`) e traduza em uma frase. Se
      `ok: false`, explique o erro em linguagem simples — não é bloqueante, o AFT segue
-     podendo rodar `/painel` manualmente.
+     podendo rodar `/aft-painel` manualmente.
   4. Grave no `aft-config.md` (acrescente ao front-matter) `rotina_painel: "07:00"` (ou
      o horário escolhido) para o `/aft-atualizar` e o `/aft-doctor` saberem que já foi
      oferecida/instalada e não perguntarem de novo.
@@ -366,7 +366,7 @@ computador rodando um programinha, sem abrir o Claude Code."*
 > Tarefas no Windows) — chama o `gerar_painel.py` direto, com `--scan`. Se o Sistema
 > Auditor não estiver acessível no horário (VM desligada), o script degrada sozinho
 > para o último snapshot salvo; nunca falha por isso. Detalhes e como remover:
-> `painel/SKILL.md`, Passo 5.
+> `aft-painel/SKILL.md`, Passo 5.
 
 ## Passo 7c — Painel interativo sempre ligado (parte padrão da instalação)
 
@@ -394,7 +394,7 @@ internet."*
 
 > Não é uma prisão: se depois o AFT **não** quiser mais o servidor sempre ligado, dá para
 > remover com `python instalar_servidor_painel.py remover` (é só pedir). Detalhes:
-> `painel/SKILL.md`, Passo 3.5.
+> `aft-painel/SKILL.md`, Passo 3.5.
 
 ## Passo 7d — Prazos de DET no Google Calendar (opcional)
 
@@ -410,8 +410,8 @@ login único do Google, feito com segurança pela interface do Claude."*
      listar os calendários). Se não estiver, oriente: aplicativo do Claude/claude.ai →
      **Configurações → Conectores → Google Calendar → Conectar** (na CLI, `/mcp`) —
      nenhuma senha passa pelo toolkit.
-  2. Rode a primeira sincronização seguindo a skill `/agenda-det` (Passos 1–3).
-  3. Ofereça a rotina diária do Passo 4 da `/agenda-det` (tarefas agendadas do Claude
+  2. Rode a primeira sincronização seguindo a skill `/aft-agenda-det` (Passos 1–3).
+  3. Ofereça a rotina diária do Passo 4 da `/aft-agenda-det` (tarefas agendadas do Claude
      Code, se disponíveis) e grave `agenda_det: "diario"` ou `agenda_det: "manual"` no
      `aft-config.md`, conforme a escolha.
 
@@ -449,29 +449,29 @@ Apresente:
 📊 Painel diário:      [instalado, roda às HH:MM / não instalado — peça a qualquer hora]
 🖥️ Painel interativo:  sempre ligado (sobe sozinho no login; só na sua máquina — peça
                        "remover o painel sempre ligado" se não quiser)
-📅 Google Calendar:    [prazos de DET sincronizando via /agenda-det / não ativado —
+📅 Google Calendar:    [prazos de DET sincronizando via /aft-agenda-det / não ativado —
                        peça a qualquer hora]
 
 ➡️ JÁ FISCALIZAVA ANTES DO TOOLKIT? Primeiro passo essencial:
    copie as pastas das suas auditorias (do jeito que estiverem) para
-   ~/Documents/AFT/OS ATIVAS/ e me peça /organiza-os — eu organizo tudo e
-   trago os autos do Sistema Auditor (/autos-lavrados). As sessões por
+   ~/Documents/AFT/OS ATIVAS/ e me peça /aft-organiza-os — eu organizo tudo e
+   trago os autos do Sistema Auditor (/aft-autos-lavrados). As sessões por
    empresa (grupo "OS ATIVAS" do menu lateral) são automáticas: aparecem
    na próxima vez que você fechar e reabrir o app.
 
 Fluxo típico de uma fiscalização:
-  1. /nova-os           → cadastra a empresa e o prazo do DET
-  2. /painel            → vê todas as OS e os prazos vencendo
-  3. /inspecao-fisica   → registra o relato da visita
-  4. /auditoria-geral  → enquadra NR/ementa e redige os autos
-  5. /gera-ai           → gera o TXT para importar no Sistema Auditor
-  6. /autos-lavrados    → confere o que foi transmitido
-Outras: /registro · /PGR-analise · /aft-rt-rgi · /det-630 · /jornada-analise · /sfitweb-rel
+  1. /aft-nova-os           → cadastra a empresa e o prazo do DET
+  2. /aft-painel            → vê todas as OS e os prazos vencendo
+  3. /aft-inspecao-fisica   → registra o relato da visita
+  4. /aft-auditoria-geral  → enquadra NR/ementa e redige os autos
+  5. /aft-gera-ai           → gera o TXT para importar no Sistema Auditor
+  6. /aft-autos-lavrados    → confere o que foi transmitido
+Outras: /aft-registro · /aft-PGR-analise · /aft-rt-rgi · /aft-det-630 · /aft-jornada-analise · /aft-sfitweb-rel
 ```
 
 Se a pasta `OS ATIVAS/` estiver vazia, pergunte ativamente: *"Você já tem fiscalizações
 em andamento? Copie as pastas delas para ~/Documents/AFT/OS ATIVAS/ (do jeito que
-estiverem) e me avise — eu rodo o /organiza-os, que organiza tudo e busca os autos já
+estiverem) e me avise — eu rodo o /aft-organiza-os, que organiza tudo e busca os autos já
 transmitidos no Sistema Auditor. As sessões por empresa aparecem sozinhas no grupo
 'OS ATIVAS' quando você fechar e reabrir o app."*
 
