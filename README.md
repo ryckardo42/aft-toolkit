@@ -47,7 +47,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ### Preparação da ação fiscal (antes da visita)
 | Skill | O que faz |
 |---|---|
-| `/aft-preparacao-acao-fiscal` | Planeja a fiscalização ANTES de ir a campo: lê a Demanda/Ordem de Serviço do SFIT (anonimizando o denunciante), resolve/cria a OS, tokeniza qualquer lista nominal de trabalhadores, monta o link do endereço no Maps e o checklist de documentos a solicitar — salva tudo em `preparacao.md`. Aprofundamento técnico fica com `/aft-consulta` |
+| `/aft-preparacao-acao-fiscal` | Planeja a fiscalização ANTES de ir a campo: lê a Demanda/Ordem de Serviço do SFIT (anonimizando o denunciante), resolve/cria a OS, tokeniza qualquer lista nominal de trabalhadores, monta o link do endereço no Maps e o checklist de documentos a solicitar — salva tudo em `preparacao.md` e gera o `preparacao.docx`, a triagem "constatar no local x notificar" para levar impressa na visita. Aprofundamento técnico fica com `/aft-consulta` |
 | `/aft-NAD` | Redige a Notificação para Apresentação de Documentos — documentos que se presume existir (PGR, controles de jornada, ASOs...), texto pronto para colar no DET, item por item |
 
 ### Inspeção e lavratura

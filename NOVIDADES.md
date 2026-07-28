@@ -34,6 +34,14 @@ empresa no menu lateral continua aparecendo sozinha, como sempre.
   apontava CPF/PIS, agora avisa também e-mails e telefones que escapem para um arquivo
   de trabalho; as skills já mandam ignorar o telefone da própria empresa, então o alarme
   que sobrar merece atenção (pode ser o contato do denunciante).
+- **`preparacao.docx`: a triagem para levar impressa na visita** — além da ficha em
+  markdown, a preparação passa a gerar um documento no padrão do toolkit (cabeçalho
+  oficial, pronto para imprimir) montado sobre uma única pergunta: *o que dá para
+  constatar no local e o que, só faltando isso, precisa ser notificado?* São três
+  seções — o quadro de triagem (ementas da OS de um lado, o que verificar em campo do
+  outro), os documentos a exigir logo na chegada e, por último, o mínimo que sobra para
+  o DET. A ideia é que a inspeção física resolva a maior parte: documento pedido por
+  notificação chega depois e já ajustado.
 - **Fim do "estudo prévio"** — a preparação não pergunta mais quais temas você quer
   estudar nos NotebookLMs antes da visita. Ela ficou focada no que é dela: organizar a
   OS, as ementas, o endereço e o checklist de documentos. Para tirar dúvida técnica,

@@ -20,7 +20,10 @@ description: >
   link do endereço no Google Maps (e, se o AFT quiser, confere o local);
   tokeniza qualquer lista nominal de trabalhadores antes de processá-la,
   monta um checklist de documentos a solicitar e, com aprovação do AFT,
-  encadeia a /aft-NAD. Salva tudo em preparacao.md na pasta da OS. NÃO
+  encadeia a /aft-NAD. Salva tudo em preparacao.md e gera o preparacao.docx —
+  a triagem "constatar no local x notificar" que o AFT imprime e leva na
+  visita, para que a inspeção física resolva o máximo e sobre o mínimo para o
+  DET. NÃO
   estuda os temas por conta própria — dúvida técnica, ementa ou
   enquadramento é a /aft-consulta. NÃO redige auto nem faz o relato de
   campo (isso é /aft-inspecao-fisica → /aft-auditoria-geral, depois da visita).
@@ -239,7 +242,53 @@ Não inclua nome nem CPF de trabalhador em nenhum campo — só o token, se prec
 
 ---
 
-## FASE 7 — Checagem de PII
+## FASE 7 — Gravar o preparacao.docx (resumo para levar a campo)
+
+O `preparacao.md` é a ficha da preparação; o **`preparacao.docx` é o que o AFT imprime e leva na visita**. Ele não repete o `.md`: é uma **triagem** — para cada frente da OS, o que dá para constatar no local e o que, só faltando isso, precisa ser notificado.
+
+**A tese do documento (não a perca de vista ao redigir):** documento pedido por notificação chega depois e já ajustado, e adia a ação fiscal. O objetivo é que a inspeção física constate a maioria das irregularidades e sobre o mínimo para o DET. Portanto, ao preencher, empurre tudo o que for possível para a coluna do meio.
+
+Gere sempre que a OS tiver ementas (FASE 1.1) — não pergunte; é barato e o AFT decide se imprime.
+
+1. Redija o conteúdo da triagem e grave num JSON temporário (fora da pasta da OS), com **uma entrada por frente** do `memory.md` (`REGISTRO`, `NR-01`, `NR-12`...):
+
+   ```json
+   {
+     "frentes": {
+       "NR-12": {
+         "titulo": "NR-12 — Máquinas e equipamentos",
+         "constatar": ["o que olhar em campo e o que perguntar a quem opera"],
+         "na_hora": ["documento a exigir durante a visita, que costuma existir no local"],
+         "so_det": ["o que, só faltando o acima, vai para a notificação"]
+       }
+     },
+     "minimo_det": ["o que realisticamente sobra para o DET"]
+   }
+   ```
+
+2. Rode:
+   ```bash
+   python ~/.claude/skills/aft-preparacao-acao-fiscal/scripts/preparacao_docx.py \
+     "$PASTA_OS" "<conteudo.json>"
+   ```
+   O script lê o `memory.md`, agrupa as ementas por frente **na ordem do arquivo** e grava `preparacao.docx` na pasta da OS. Se o arquivo já existir, rode antes o `backup_arquivo.py` e o `checar_arquivo_aberto.py` (o AFT pode estar com ele aberto no Word).
+
+**Como preencher cada coluna:**
+
+- **`constatar`** — o que se vê e o que se ouve: percurso pelo estabelecimento, entrevista reservada com quem opera, identificação de quem está trabalhando. Cite entre parênteses o código da ementa que aquele achado materializa. Máquinas (NR-12), edificações (NR-08), incêndio (NR-23) e elétrico (NR-10) são quase inteiramente constatáveis a olho nu — trate-os assim.
+- **`na_hora`** — documento a exigir **durante** a visita, que costuma estar no estabelecimento (PGR e inventário de riscos, prontuário elétrico, atas da CIPA, procedimento e relação de autorizados de trabalho em altura). Deixe claro que apresentação prometida "para depois" vira notificação, e notificação atrasa a ação fiscal.
+- **`so_det`** — o mínimo: em regra, apenas "se a empresa não apresentar durante a visita".
+
+**Regras de conteúdo:**
+
+- **Registro de empregados** se apura pela consulta do AFT ao **eSocial**, cruzada com a identificação dos trabalhadores em campo. **Nunca** escreva "livro", "ficha" ou "sistema eletrônico de registro" como documento a exigir da empresa — não existem mais.
+- **Nunca** transcreva nem parafraseie ementa no JSON: código e descrição são lidos literalmente do `memory.md` pelo próprio script. Se um código não estiver lá, o script avisa.
+- Frente que existir no `memory.md` e faltar no JSON sai com "(a preencher)" — o script avisa no fim. Não deixe nenhuma assim.
+- Nada de nome/CPF de trabalhador nem de dado de denunciante no `.docx` (as mesmas regras das FASES 0 e 3).
+
+---
+
+## FASE 8 — Checagem de PII
 
 Antes de encerrar, rode o guard-rail sobre o arquivo gerado — passando em `--ignorar` os contatos **da própria empresa** (telefone/e-mail dela são dado de pessoa jurídica e podem ficar no arquivo):
 
@@ -254,7 +303,7 @@ O script avisa três coisas (e nunca bloqueia nem corrige sozinho):
 
 ---
 
-## FASE 8 — Atualizar o memory.md e encerrar
+## FASE 9 — Atualizar o memory.md e encerrar
 
 1. Se a OS tem `memory.md`, adicione **uma** linha em `## Registro de atividades`:
    ```
@@ -270,6 +319,7 @@ Apresente o resumo final:
 ```
 ✅ Preparação registrada — <EMPREGADOR>
 📄 ~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/preparacao.md
+🖨️ preparacao.docx — triagem para levar impressa na visita
 
 Documentos no checklist: M   ·   NAD gerada: sim/não
 Ementas da OS: K no memory.md   ·   🗺️ Maps: link no preparacao.md
@@ -290,6 +340,7 @@ Próximos passos:
 ## Encadeamento
 
 - Chama `/aft-nova-os` (FASE 1) para resolver/criar a OS — não duplica essa lógica.
+- Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho oficial AFT/SIT.
 - Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
 - Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).
 - Sucede naturalmente para `/aft-inspecao-fisica` depois da visita (fora do escopo desta skill).
