@@ -82,6 +82,9 @@ RE_DET_ULTIMA = re.compile(r"[uú]ltima\s+entrega\s+(\d{2}/\d{2}/\d{4})", re.IGN
 # Flag do triângulo amarelo do DET ("Existe atualização pendente"): o item mais
 # acionável da sub-linha — pedido de prazo, dispensa, item não aberto.
 RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
+# Notificação lavrada mas ainda sem ciência do empregador (ciência tácita em
+# até 15 dias) — o det_sync escreve "aguardando ciência" na sub-linha.
+RE_DET_AGUARDA = re.compile(r"aguardando\s+ci[eê]ncia", re.IGNORECASE)
 # Rótulo e notas da linha do checkbox: além das datas (que viram campos
 # estruturados do card), a linha carrega texto do próprio AFT — o tipo da
 # notificação ("NAD jornada/ponto") e observações ("itens 3, 4 e 9 não
@@ -265,7 +268,7 @@ def parse_memory(path: Path) -> dict:
         # Sub-linha de detalhes do det_sync, se presente logo abaixo do checkbox:
         # lavratura, ciência e última entrega vêm do próprio DET.
         lavrada = ciencia = ultima = None
-        pendente = False
+        pendente = aguarda = False
         if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
             det = linhas_sec[idx + 1]
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
@@ -274,11 +277,13 @@ def parse_memory(path: Path) -> dict:
             ciencia = parse_data(mc.group(1)) if mc else None
             ultima = parse_data(mu.group(1)) if mu else None
             pendente = bool(RE_DET_PENDENTE.search(det))
+            aguarda = bool(RE_DET_AGUARDA.search(det))
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
                      "linha": resto, "rotulo": rotulo, "notas": notas,
                      "lavrada": lavrada, "ciencia": ciencia,
-                     "ultima_entrega": ultima, "atualizacao_pendente": pendente})
+                     "ultima_entrega": ultima, "atualizacao_pendente": pendente,
+                     "aguardando_ciencia": aguarda})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -963,7 +968,8 @@ function cartaoDets(o,i){
    (d.pendente?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
     ' style="cursor:pointer" title="clique se já viu esta atualização no DET — o alerta some e só volta se houver entrega nova"'+
     ' onclick="event.stopPropagation();agDetVisto('+i+','+k+')"':'')+
-    '>⚠️ atualização pendente</span> ':'')+esc(d.codigo||'?')+
+    '>⚠️ atualização pendente</span> ':'')+
+   (d.aguarda?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
@@ -1057,8 +1063,9 @@ function secaoAutos(o,i){
    o.autos_pendentes.length+'</h4>'+o.autos_pendentes.map(s=>'<p>'+esc(s)+'</p>').join('')+'</div>';
   h+='</div>'}
  return h}
+let ABERTA=null; // pasta da OS do card aberto (p/ reabrir após auto-refresh)
 function abre(i){
- const o=DATA.os[i],st=stageOS(o);
+ const o=DATA.os[i],st=stageOS(o);ABERTA=o.pasta||null;
  let h='<div class="topo"><button class="voltar" onclick="fecha()">← voltar ao painel</button>'+
   '<span class="status-pill">'+esc((o.status||'').replace(/_/g,' '))+'</span></div>';
  const meta=[esc(o.cnpj_fmt||'CNPJ não informado'),esc(o.municipio),
@@ -1094,13 +1101,29 @@ function abre(i){
  h+=secaoAutos(o,i);
  P.innerHTML=h;P.classList.add('aberto');V.classList.add('aberto');P.scrollTop=0;
 }
-function fecha(){P.classList.remove('aberto');V.classList.remove('aberto')}
+function fecha(){P.classList.remove('aberto');V.classList.remove('aberto');ABERTA=null}
 V.addEventListener('click',fecha);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
 // Depois de uma ação, reabre o mesmo card (a página recarrega para refletir a edição).
 (function(){const alvo=sessionStorage.getItem('painel-reabrir');
  if(!alvo)return;sessionStorage.removeItem('painel-reabrir');
  const i=DATA.os.findIndex(o=>o.pasta===alvo);if(i>=0)abre(i)})();
+// Auto-refresh: o servidor expõe /api/estado com um carimbo da última mudança
+// nos memory.md — inclusive as gravadas pelo sync da extensão Chrome do DET.
+// Quando o carimbo muda, a página recarrega sozinha (o GET / regenera o
+// painel), preservando o card aberto. Só no modo interativo (http local).
+if(ATIVO){let carimbo=null;
+ setInterval(async()=>{try{
+  const r=await fetch('/api/estado');const j=await r.json();
+  if(!j.ok||j.estado==null)return;
+  if(carimbo===null){carimbo=j.estado;return}
+  if(j.estado===carimbo)return;
+  carimbo=j.estado;
+  const a=document.activeElement; // não derruba o AFT no meio de uma digitação
+  if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;
+  if(P.classList.contains('aberto')&&ABERTA)sessionStorage.setItem('painel-reabrir',ABERTA);
+  location.reload();
+ }catch(e){}},4000)}
 """
 
 
@@ -1236,6 +1259,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "prox_entrega": d["prazo"].strftime("%d/%m/%Y") if d["prazo"] else "",
                       "ultima_entrega": d["ultima_entrega"].strftime("%d/%m/%Y") if d.get("ultima_entrega") else "",
                       "pendente": bool(d.get("atualizacao_pendente")),
+                      "aguarda": bool(d.get("aguardando_ciencia")),
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
             "novas": o.get("novas") or [],

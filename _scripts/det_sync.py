@@ -118,9 +118,14 @@ def consultar_det(token: str, cnpj: str, ri: str) -> list[dict]:
 
 
 def elegiveis(notificacoes: list[dict]) -> list[dict]:
-    """Só confirmadas (status=1) com data de lavratura — igual ao SisOS."""
-    return [n for n in notificacoes
-            if n.get("status") == 1 and n.get("dataEnvio")]
+    """Toda notificação LAVRADA (com dataEnvio) entra — inclusive as que ainda
+    aguardam ciência do empregador (que pode demorar até 15 dias, com ciência
+    tácita). A existência da notificação é fato relevante para o painel desde a
+    lavratura; o estado real (Confirmada / aguardando ciência / status N) vai
+    na sub-linha de detalhes e é atualizado a cada sync. (O SisOS filtra por
+    status=1 — Confirmada —; aqui o filtro foi relaxado de propósito para o
+    painel local refletir a NAD recém-lavrada.)"""
+    return [n for n in notificacoes if n.get("dataEnvio")]
 
 
 # ── Vínculo notificação × OS (o filtro que importa) ─────────────────────────
@@ -226,8 +231,12 @@ def _linha_detalhe(n: dict, visto: str = "") -> str:
         partes.append(f"ciência {_data_br(n['dataCiencia'])}")
     if n.get("itemDataUltimaEntrega"):
         partes.append(f"última entrega {_data_br(n['itemDataUltimaEntrega'])}")
-    partes.append("Confirmada" if n.get("status") == 1
-                  else f"status {n.get('status')}")
+    if n.get("status") == 1:
+        partes.append("Confirmada")
+    elif not n.get("dataCiencia"):
+        partes.append(f"aguardando ciência (status {n.get('status')})")
+    else:
+        partes.append(f"status {n.get('status')}")
     atualizado = n.get("itemAtualizado")
     if isinstance(atualizado, str):  # blindagem: "false"/"N" são falsos
         atualizado = atualizado.strip().lower() in ("true", "s", "sim", "1")

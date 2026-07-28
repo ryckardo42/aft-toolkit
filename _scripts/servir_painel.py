@@ -515,6 +515,17 @@ class Handler(BaseHTTPRequestHandler):
             self._responde(200, painel.read_bytes(), "text/html; charset=utf-8")
         elif self.path == "/api/ping":
             self._json(200, {"ok": True, "painel_aft": True})
+        elif self.path == "/api/estado":
+            # Carimbo da última mudança nas fichas: o maior mtime dos memory.md.
+            # O painel aberto consulta isto a cada poucos segundos e recarrega
+            # quando muda (ex.: logo após o sync da extensão DET gravar).
+            try:
+                mts = [m.stat().st_mtime for m in self.base.glob("*/memory.md")]
+                self._json(200, {"ok": True,
+                                 "estado": max(mts) if mts else 0,
+                                 "fichas": len(mts)})
+            except OSError as e:
+                self._json(500, {"ok": False, "erro": str(e)})
         elif self.path.startswith("/doc/"):
             self._serve_doc()
         else:
