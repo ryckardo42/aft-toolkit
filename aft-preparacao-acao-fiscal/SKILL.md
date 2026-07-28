@@ -19,11 +19,11 @@ description: >
   no PDF arquivado na OS); grava as ementas da OS no memory.md; monta o
   link do endereço no Google Maps (e, se o AFT quiser, confere o local);
   tokeniza qualquer lista nominal de trabalhadores antes de processá-la,
-  tira dúvidas técnicas nos NotebookLMs pertinentes (com fontes, sem nome
-  de empresa/trabalhador), monta um checklist de documentos a solicitar e,
-  com aprovação do AFT, encadeia a /aft-NAD. Salva tudo em preparacao.md na
-  pasta da OS. NÃO redige auto nem faz o relato de campo (isso é
-  /aft-inspecao-fisica → /aft-auditoria-geral, depois da visita).
+  monta um checklist de documentos a solicitar e, com aprovação do AFT,
+  encadeia a /aft-NAD. Salva tudo em preparacao.md na pasta da OS. NÃO
+  estuda os temas por conta própria — dúvida técnica, ementa ou
+  enquadramento é a /aft-consulta. NÃO redige auto nem faz o relato de
+  campo (isso é /aft-inspecao-fisica → /aft-auditoria-geral, depois da visita).
 ---
 
 # preparacao-acao-fiscal — Planejamento pré-visita da ação fiscal
@@ -31,9 +31,11 @@ description: >
 
 ## Objetivo
 
-Organizar o que o AFT já sabe **antes de ir a campo**: quem vai fiscalizar, por quê (denúncia, OS, rotina), o que precisa estudar antes (temas técnicos, via NotebookLM) e quais documentos vale a pena já solicitar pelo DET (via `/aft-NAD`). O resultado é um `preparacao.md` na pasta da OS — um roteiro de estudo e ação, não um auto nem um relato de inspeção.
+Organizar o que o AFT já sabe **antes de ir a campo**: quem vai fiscalizar, por quê (denúncia, OS, rotina), o que a OS manda verificar e quais documentos vale a pena já solicitar pelo DET (via `/aft-NAD`). O resultado é um `preparacao.md` na pasta da OS — um roteiro de ação, não um auto nem um relato de inspeção.
 
 Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o próximo passo é `/aft-inspecao-fisica` (relato do que foi constatado) → `/aft-auditoria-geral` (autos). Esta skill **não** redige autos e **não** registra achados de campo — ela planeja.
+
+**Aprofundamento técnico é da `/aft-consulta`.** Esta skill não consulta os NotebookLMs nem estuda temas por conta própria: ela organiza os fatos e os documentos. Quando o AFT quiser tirar uma dúvida técnica, achar a ementa certa ou entender o que exigir sobre um tema, o caminho é `/aft-consulta` — antes, durante ou depois da preparação, quantas vezes precisar. Não ofereça estudo prévio nem pergunte "quais temas quer estudar".
 
 ## Pasta base
 `~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/aft-nova-os`)
@@ -122,7 +124,7 @@ Pergunte (ou aceite o que o AFT já colou/anexou) em uma única rodada:
 | Origem da ação | Não | denúncia, OS/projeto, rotina, reincidência — texto livre |
 | Teor da denúncia/motivação | Não | texto colado no chat, PDF anexado no chat, ou PDF já salvo na pasta da OS |
 | Nº de trabalhadores | Não | número aproximado; se vier lista nominal, trate na FASE 3 |
-| Temas prováveis | Não | ex.: "jornada", "NR-12", "PGR desatualizado" — usados para guiar o estudo (FASE 4) |
+| Temas prováveis | Não | ex.: "jornada", "NR-12", "PGR desatualizado" — usados para guiar o checklist de documentos (FASE 5) |
 
 Se o AFT anexar um PDF (denúncia, extrato de OS, lista do eSocial), leia-o normalmente. Se ele mencionar que salvou algo na pasta da OS, procure lá (`ls "$PASTA_OS"`).
 
@@ -130,7 +132,7 @@ Se o AFT anexar um PDF (denúncia, extrato de OS, lista do eSocial), leia-o norm
 
 **Resumo desidentificado da denúncia:** reescreva o teor mantendo **todos os fatos fiscalizáveis** (máquina/equipamento, setor, jornada, EPI, acidente, condições sanitárias, refeitório...) e removendo o que identifica o denunciante: parentesco, "trabalha há X meses", função ou setor que aponte uma pessoa única, e qualquer nome/contato. Onde precisar citá-lo, use `[[DENUNCIANTE_NN]]`. É esse resumo — nunca o texto bruto — que vai para o chat e para o `preparacao.md`.
 
-> Nenhum campo é obrigatório para prosseguir — trabalhe com o que houver. Se não houver nada além do nome da empresa, ainda assim é válido pular direto para a FASE 4 (estudo) ou FASE 5 (checklist), sem denúncia.
+> Nenhum campo é obrigatório para prosseguir — trabalhe com o que houver. Se não houver nada além do nome da empresa, ainda assim é válido pular direto para a FASE 5 (checklist), sem denúncia.
 
 ---
 
@@ -160,7 +162,7 @@ O denunciante **não entra no `.depara`** — nem nome, nem contato. O token `[[
 
 ---
 
-## FASE 3.5 — Endereço e acesso (Google Maps)
+## FASE 4 — Endereço e acesso (Google Maps)
 
 Com o endereço do estabelecimento (da demanda ou informado pelo AFT):
 
@@ -175,25 +177,9 @@ Com o endereço do estabelecimento (da demanda ou informado pelo AFT):
 
 ---
 
-## FASE 4 — Estudo prévio (NotebookLM)
-
-Para cada tema prévio informado (FASE 2) ou identificado na denúncia, tire as dúvidas técnicas necessárias **antes da visita** — isso evita voltar à empresa por falta de preparo. Se a OS trouxe a tabela de ementas (FASE 0), os **grupos de NR** dela são os temas naturais de estudo (ex.: ementas de NR-12 na OS + denúncia de prensa hidráulica → estudar proteções de prensas); priorize os grupos que conversam com a denúncia.
-
-1. Resolva o(s) notebook(s) pelo assunto, do mesmo jeito que `/aft-consulta`: leia `~/.claude/skills/config/notebooks.json`, escolha a NR (`nr-12`, `nr-35`...) ou o tema (`jornada`, `esocial`, `informalidade`, `dupla-visita`...); sem NR específica, use `ementario-sst`.
-2. Consulte:
-   ```bash
-   notebooklm ask "O que a fiscalização deve verificar/exigir sobre [TEMA] segundo [NR ou legislação aplicável]? Quais documentos costumam ser necessários para comprovar conformidade?" --notebook [notebook_id] --json
-   ```
-3. **Nunca envie nome da empresa nem de trabalhador ao NotebookLM** — só o tema/pergunta técnica.
-4. Registre cada resposta com a fonte citada (mesmo padrão de `/aft-consulta`), para entrar no `preparacao.md`.
-
-Se o AFT não informou nenhum tema, pule esta fase (ou pergunte se quer estudar algo específico antes de ir).
-
----
-
 ## FASE 5 — Checklist de documentos a solicitar
 
-A partir da denúncia, dos temas, do estudo (FASE 4) e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: ementas de REGISTRO → livro/ficha/sistema de registro de empregados; NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
+A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: ementas de REGISTRO → livro/ficha/sistema de registro de empregados; NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
 
 1. Apresente a lista ao AFT como **sugestão**, nunca como decisão tomada — ele risca, ajusta ou acrescenta itens.
 2. **Não invente** exigência documental sem base — cada item candidato deve estar amparado por uma NR/artigo (mesmo que a ementa exata só seja resolvida depois, na `/aft-NAD`).
@@ -226,7 +212,7 @@ nº de vitimados, CAT emitida ou não, situação persiste ou não>
 
 ## Endereço e acesso
 <endereço completo da ação fiscal, com CEP e ponto de referência>
-Google Maps: <link montado na FASE 3.5> · <link exato do lugar, se houve busca ativa>
+Google Maps: <link montado na FASE 4> · <link exato do lugar, se houve busca ativa>
 <observações de acesso da busca ativa, se houver>
 
 ## Quadro de trabalhadores
@@ -239,20 +225,12 @@ Google Maps: <link montado na FASE 3.5> · <link exato do lugar, se houve busca 
 ## Ementas da OS
 <"N ementas a fiscalizar — ver memory.md → ## Ementas da OS" ou "OS sem tabela de ementas">
 
-## Estudo prévio (NotebookLM)
-### <tema 1>
-<resposta objetiva>
-Fonte: <notebook + trecho citado>
-
-### <tema 2>
-...
-
 ## Checklist de documentos a solicitar
 - [ ] <documento 1> — <base legal> <(NAD gerada em DD/MM, se aplicável)>
 - [ ] <documento 2> — <base legal>
 
 ## Pontos de atenção para a visita
-<riscos identificados no estudo que merecem atenção em campo, se houver>
+<o que a denúncia e as ementas da OS mandam olhar de perto em campo, se houver>
 ```
 
 Não inclua nome nem CPF de trabalhador em nenhum campo — só o token, se precisar referenciar algum caso específico da denúncia. O mesmo vale, com mais força ainda, para o denunciante: nem nome, nem contato, nem traço identificador (FASE 0).
@@ -291,13 +269,14 @@ Apresente o resumo final:
 ✅ Preparação registrada — <EMPREGADOR>
 📄 ~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/preparacao.md
 
-Temas estudados: N   ·   Documentos no checklist: M   ·   NAD gerada: sim/não
+Documentos no checklist: M   ·   NAD gerada: sim/não
 Ementas da OS: K no memory.md   ·   🗺️ Maps: link no preparacao.md
 ⏱️ Fiscalização: iniciar até <dd/mm/aaaa> · terminar até <dd/mm/aaaa>   (só se a OS foi lida)
 🗂️ Sessão no menu lateral: automática (aparece no próximo reinício do app)
 
 Próximos passos:
   • /aft-NAD                → gerar a notificação (se ainda não gerou)
+  • /aft-consulta           → tirar dúvida técnica / achar ementa de algum tema
   • Visita ao estabelecimento
   • /aft-inspecao-fisica     → quando voltar, registrar o relato
 ```
@@ -310,6 +289,7 @@ Próximos passos:
 
 - Chama `/aft-nova-os` (FASE 1) para resolver/criar a OS — não duplica essa lógica.
 - Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
+- Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).
 - Sucede naturalmente para `/aft-inspecao-fisica` depois da visita (fora do escopo desta skill).
 - Não confundir com `/aft-inspecao-fisica` (relato do que já foi constatado, DEPOIS da visita).
 
@@ -319,8 +299,8 @@ Próximos passos:
 
 - **Nunca** escreva nome, telefone, e-mail ou traço identificador do **denunciante** no chat ou em arquivo `.md` — só `[[DENUNCIANTE_NN]]`; o contato real vive exclusivamente no PDF da demanda arquivado na pasta da OS (FASE 0).
 - **Nunca** processe lista nominal de trabalhadores sem tokenizar primeiro (FASE 3) — nome/CPF real não aparece no chat nem no `preparacao.md` a partir do momento em que a lista é fornecida.
-- **Nunca** envie nome de empresa ou de trabalhador ao NotebookLM — só o tema técnico.
-- Na busca ativa do Google Maps (FASE 3.5), envie **apenas** razão social/nome fantasia + endereço — nunca teor de denúncia, nome de pessoa ou qualquer outro dado da fiscalização.
+- **Não** faça estudo prévio nem consulte NotebookLM aqui, e **não** pergunte ao AFT que temas ele quer estudar: aprofundamento técnico é `/aft-consulta`.
+- Na busca ativa do Google Maps (FASE 4), envie **apenas** razão social/nome fantasia + endereço — nunca teor de denúncia, nome de pessoa ou qualquer outro dado da fiscalização.
 - Ementa é texto oficial: código e descrição copiados **literais** da demanda — nunca parafrasear.
 - **Nunca** invente exigência documental, ementa ou dispositivo legal — o que não vier de fonte confiável, pergunte ao AFT ou deixe em aberto.
 - O checklist de documentos é sempre **sugestão para aprovação do AFT** — nunca gere a `/aft-NAD` sem essa aprovação explícita.
