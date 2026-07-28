@@ -131,6 +131,17 @@ def instalar_windows(python_path: str, pasta_os: str, porta: int) -> int:
     script_ps = f"""
 $ErrorActionPreference = 'Stop'
 $user = "$env:USERDOMAIN\\$env:USERNAME"
+# Derruba QUALQUER servidor de painel que ainda esteja rodando antes de
+# registrar o novo. Sem isto, o Register-ScheduledTask -Force troca a definicao
+# da tarefa mas o processo ANTIGO sobrevive segurando a porta - e o novo, que
+# aponta para a pasta certa, nao consegue subir. O sintoma e traicoeiro: a porta
+# responde, o /aft-doctor diz "no ar", e o painel continua servindo a pasta de
+# ANTES da mudanca (chegando a recriar a pasta antiga ao salvar o painel.html).
+Stop-ScheduledTask -TaskName {_ps_aspas(NOME_TAREFA)} -ErrorAction SilentlyContinue
+Get-CimInstance Win32_Process -Filter "Name like '%python%'" |
+  Where-Object {{ $_.CommandLine -like '*servir_painel.py*' }} |
+  ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }}
+Start-Sleep -Milliseconds 700
 $action = New-ScheduledTaskAction -Execute {_ps_aspas(exe)} `
   -Argument ('"{script_servidor()}" "{pasta_os}" --porta {porta}')
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user

@@ -381,11 +381,101 @@ def _atualizar_path_windows(config: Path, destino: Path) -> bool:
     return False
 
 
+def _ext(p) -> str:
+    """Caminho no formato ESTENDIDO do Windows (\\\\?\\C:\\...), que dispensa o
+    limite de 260 caracteres (MAX_PATH).
+
+    Por que isto existe: as pastas de notificacao baixadas do DET aninham muito
+    (OS ATIVAS\\<EMPRESA>\\notificacao-XXX\\NOTIFICACAO_XXX\\NOTIFICACAO_XXX\\
+    ITEM_NN_<descricao>\\<arquivo>.pdf) e estouram os 260 caracteres com
+    facilidade. Sem este prefixo, o proprio Python nao ENXERGA esses arquivos:
+    exists() e is_file() devolvem False e a copia os pula em silencio - foi o
+    que aconteceu num teste real (28/07/2026), em que 6 PDFs de uma analise de
+    acidente fatal (ASO, PCMSO, CAF/CEF) ficaram para tras.
+
+    Fora do Windows nao ha limite: devolve o caminho como esta."""
+    if not sys.platform.startswith("win"):
+        return str(p)
+    bruto = os.path.abspath(str(p))
+    if bruto.startswith("\\\\?\\"):
+        return bruto
+    if bruto.startswith("\\\\"):  # rede: \\servidor\compartilhamento
+        return "\\\\?\\UNC\\" + bruto[2:]
+    return "\\\\?\\" + bruto
+
+
+def _copiar_arvore(origem: Path, destino: Path) -> list[str]:
+    """Copia origem -> destino SEMPRE por caminho estendido. Devolve a lista de
+    erros (vazia = copia integral). Nao apaga nada: quem apaga e o mover_para,
+    e so depois de conferir."""
+    import shutil
+    erros: list[str] = []
+    raiz, alvo_raiz = _ext(origem), _ext(destino)
+    for atual, _dirs, arqs in os.walk(raiz):
+        rel = os.path.relpath(atual, raiz)
+        alvo = alvo_raiz if rel == "." else os.path.join(alvo_raiz, rel)
+        try:
+            os.makedirs(alvo, exist_ok=True)
+        except Exception as e:
+            erros.append(f"{rel}: {type(e).__name__}: {e}")
+            continue
+        for a in arqs:
+            try:
+                shutil.copy2(os.path.join(atual, a), os.path.join(alvo, a))
+            except Exception as e:
+                erros.append(f"{os.path.join(rel, a)}: {type(e).__name__}: {e}")
+    return erros
+
+
+def _medir_arvore(alvo: Path) -> tuple[int, int]:
+    """(quantidade de arquivos, soma dos bytes) - a conferencia da copia."""
+    n = tam = 0
+    for atual, _dirs, arqs in os.walk(_ext(alvo)):
+        for a in arqs:
+            try:
+                tam += os.path.getsize(os.path.join(atual, a))
+                n += 1
+            except Exception:
+                pass
+    return n, tam
+
+
+def _apagar_arvore(alvo: Path) -> list[str]:
+    """Apaga a arvore de baixo para cima, por caminho estendido. Devolve os
+    caminhos que resistiram - normalmente pastas que algum programa mantem
+    abertas (o Windows nao deixa remover o diretorio de trabalho de um
+    processo). Arquivo que resiste e problema; pasta VAZIA que resiste, nao."""
+    resistiram: list[str] = []
+    for atual, dirs, arqs in os.walk(_ext(alvo), topdown=False):
+        for a in arqs:
+            try:
+                os.remove(os.path.join(atual, a))
+            except Exception:
+                resistiram.append(os.path.join(atual, a))
+        for d in dirs:
+            try:
+                os.rmdir(os.path.join(atual, d))
+            except Exception:
+                resistiram.append(os.path.join(atual, d))
+    try:
+        os.rmdir(_ext(alvo))
+    except Exception:
+        resistiram.append(str(alvo))
+    return resistiram
+
+
 def mover_para(destino: Path | None = None) -> dict:
     """Move a pasta AFT em uso para `destino` (por omissao, a Documentos real).
-    NUNCA sobrescreve: se o destino ja tiver dados, recusa e explica."""
-    import shutil
+    NUNCA sobrescreve: se o destino ja tiver dados, recusa e explica.
 
+    Estrategia em dois tempos:
+      1. os.rename - instantaneo, atomico, mesmo volume. E o caminho feliz.
+      2. Se o rename for negado (a pasta esta aberta por algum programa - a
+         propria sessao do Claude Code, por exemplo) ou for outro disco (o caso
+         do HD externo), cai para COPIAR-CONFERIR-APAGAR, sempre com caminho
+         estendido. A origem so e apagada depois que a copia confere em numero
+         de arquivos e em bytes; se algo falhar no meio, a copia parcial e
+         desfeita e a origem fica intacta."""
     origem = pasta_aft()
     if destino:
         destino = Path(os.path.expandvars(str(destino))).expanduser()
@@ -400,35 +490,89 @@ def mover_para(destino: Path | None = None) -> dict:
         return {"ok": False, "movido": False,
                 "erro": f"a pasta de origem nao existe: {origem}"}
     if destino.is_dir():
-        if any(destino.iterdir()):
+        # "Tem conteudo" = tem ARQUIVO. Pasta vazia nao e dado do AFT: costuma
+        # ser o esqueleto que uma mudanca anterior deixou para tras, quando o
+        # Windows nao deixou remover um diretorio aberto em algum programa (o
+        # caso classico: a pasta que a propria sessao do Claude Code usa como
+        # diretorio de trabalho). Recusar por causa dele impediria o AFT de
+        # voltar a pasta para o lugar de onde ela saiu.
+        n_dest, _ = _medir_arvore(destino)
+        if n_dest:
             return {"ok": False, "movido": False,
-                    "erro": (f"o destino ja existe e tem conteudo: {destino}. "
-                             "Junte as duas a mao (mova as subpastas de "
-                             f"'{origem / 'OS ATIVAS'}' para "
-                             f"'{destino / 'OS ATIVAS'}') e apague a antiga.")}
+                    "erro": (f"'{destino}' ja existe e tem {n_dest} arquivo(s) "
+                             f"dentro - nao vou escrever por cima. Escolha uma "
+                             f"pasta vazia (ou uma que ainda nao exista), ou "
+                             f"junte as duas a mao antes de tentar de novo.")}
         try:
-            destino.rmdir()  # destino vazio: sai da frente
-        except OSError as e:
-            return {"ok": False, "movido": False,
-                    "erro": f"nao consegui remover o destino vazio: {e}"}
+            destino.rmdir()  # esqueleto vazio: sai da frente se puder
+        except OSError:
+            pass  # nao saiu: a copia escreve dentro dele mesmo
     try:
         destino.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(origem), str(destino))
     except Exception as e:
         return {"ok": False, "movido": False,
-                "erro": (f"falha ao mover ({type(e).__name__}: {e}). No Windows "
-                         "isso costuma ser um servico do toolkit segurando um "
-                         "arquivo: pare o vigia de sessoes e o servidor do "
-                         "painel e tente de novo.")}
+                "erro": f"nao consegui criar '{destino.parent}' ({e})"}
+
+    n_origem, bytes_origem = _medir_arvore(origem)
+    sobras: list[str] = []
+    try:
+        os.rename(origem, destino)  # caminho feliz: instantaneo
+        modo = "rename"
+    except OSError:
+        # Negado (pasta aberta por um programa) ou outro disco: copia conferida.
+        modo = "copia"
+        erros = _copiar_arvore(origem, destino)
+        if erros:
+            _apagar_arvore(destino)  # nao deixa copia parcial de dado sigiloso
+            amostra = "; ".join(erros[:3])
+            return {"ok": False, "movido": False, "erros": erros,
+                    "erro": (f"a copia falhou em {len(erros)} item(ns) e foi "
+                             f"desfeita - nada foi perdido, a pasta continua em "
+                             f"'{origem}'. Primeiros casos: {amostra}")}
+        n_dest, bytes_dest = _medir_arvore(destino)
+        if (n_dest, bytes_dest) != (n_origem, bytes_origem):
+            _apagar_arvore(destino)
+            return {"ok": False, "movido": False,
+                    "erro": (f"a copia saiu diferente do original "
+                             f"({n_dest} arquivos/{bytes_dest} bytes contra "
+                             f"{n_origem}/{bytes_origem}) e foi desfeita - nada "
+                             f"foi perdido, a pasta continua em '{origem}'.")}
+        # So agora a origem pode sair. Pasta VAZIA que resistir (por estar
+        # aberta em algum programa) fica para tras sem prejuizo: os dados ja
+        # estao no destino conferidos.
+        resistiram = _apagar_arvore(origem)
+        sobras = [c for c in resistiram if os.path.isfile(c)]
+        # A COPIA JA CONFERIU: a mudanca esta consumada e precisa ser gravada.
+        # Arquivo que resistiu ao apagamento (tipico: um .docx aberto no Word)
+        # e apenas uma copia velha sobrando - virou aviso, nunca falha. Tratar
+        # isso como erro seria pior: o ponteiro nao seria gravado e o toolkit
+        # continuaria apontando para a pasta de origem, agora esvaziada.
     cfg = destino / "aft-config.md"
     # O ponteiro guardava a pasta ANTIGA - que acabou de deixar de existir. Sem
     # reescrever, a proxima execucao resolveria para um caminho morto e o
     # garantir_estrutura() criaria uma pasta vazia no lugar: todas as OS
     # sumiriam da vista do AFT sem nenhuma mensagem de erro.
     ponteiro_realinhado = ponteiro_gravar(destino) if PONTEIRO.is_file() else False
+    # Pastas vazias que resistiram (estavam abertas em algum programa). Nao e
+    # defeito: os arquivos ja foram conferidos no destino - so o esqueleto ficou.
+    cascas = [c for c in (sobras or []) if not os.path.isfile(c)]
+    if origem.is_dir():
+        cascas.append(str(origem))
+    saida_sobras = {}
+    if sobras:
+        nomes = ", ".join(os.path.basename(c) for c in sobras[:3])
+        saida_sobras = {"sobras": sobras, "aviso_sobras": (
+            f"a mudanca foi concluida e conferida, mas {len(sobras)} arquivo(s) "
+            f"nao puderam ser apagados da pasta antiga porque estao abertos em "
+            f"algum programa ({nomes}). A copia nova ja esta completa em "
+            f"'{destino}': feche esses arquivos e apague '{origem}' quando quiser.")}
     return {"ok": True, "movido": True, "de": str(origem),
             "pasta_aft": str(destino),
             "os_ativas": str(destino / "OS ATIVAS"),
+            "modo": modo,
+            "arquivos": n_origem,
+            "pastas_vazias_restantes": sorted(set(cascas)),
+            **saida_sobras,
             "ponteiro_realinhado": ponteiro_realinhado,
             "pasta_os_realinhado": _realinhar_pasta_os(cfg, origem, destino),
             "config_atualizado": _atualizar_path_windows(cfg, destino)
