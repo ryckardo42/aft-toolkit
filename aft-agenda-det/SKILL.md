@@ -19,6 +19,20 @@ description: >
 # agenda-det — Prazos de DET no Google Calendar
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Espelhar no **Google Calendar do AFT** os prazos das notificações DET de todas as OS
@@ -51,11 +65,10 @@ os calendários). Se não estiverem:
 
 ## Passo 1 — Levantar os vencimentos
 
-Resolva a pasta das OS como no `/aft-painel` (Passo 0 de lá: `pasta_os:` do
-`aft-config.md`; padrão `~/Documents/AFT/OS ATIVAS`) e rode o gerador:
+Resolva a pasta das OS (`<OS_ATIVAS>`, como no bloco acima) e rode o gerador:
 
 ```bash
-python ~/.claude/skills/_scripts/gerar_painel.py "<PASTA_OS_ATIVAS>"
+python ~/.claude/skills/_scripts/gerar_painel.py "<OS_ATIVAS>"
 ```
 
 Do JSON impresso, use o campo **`vencimentos`**: a lista já vem pronta e ordenada, um

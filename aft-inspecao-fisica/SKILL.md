@@ -19,6 +19,20 @@ description: >
 # Skill: Inspeção Física (relato de campo → bullets)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 O AFT volta da inspeção com tudo fresco na cabeça e narra, de forma corrida, o que viu. Essa
@@ -54,7 +68,7 @@ mapa de-para da OS (se existir), as skills seguintes referem-se a eles por token
 ### Passo 1 — Localizar a pasta da OS
 
 O arquivo precisa ser salvo na pasta certa para as skills seguintes o encontrarem. Determine a
-pasta da empresa em `~/Documents/AFT/OS ATIVAS/`:
+pasta da empresa em `<OS_ATIVAS>/`:
 
 - Se o AFT já citou a empresa/CNPJ nesta conversa, use-a.
 - A narrativa às vezes não nomeia a empresa ("na empresa", "nessa obra"). Se você não tiver
@@ -62,7 +76,7 @@ pasta da empresa em `~/Documents/AFT/OS ATIVAS/`:
   candidatas.
 
 ```bash
-ls ~/Documents/AFT/"OS ATIVAS"/
+ls "<OS_ATIVAS>"/
 ```
 
 Se a OS ainda não tiver pasta (empresa nova), pergunte ao AFT como quer nomear a pasta
@@ -168,7 +182,7 @@ ajuda a rastreabilidade sem poluir o relato:
 ...
 ```
 
-Caminho: `~/Documents/AFT/OS ATIVAS/<PASTA_EMPRESA>/inspecao-fisica.md`
+Caminho: `<OS_ATIVAS>/<PASTA_EMPRESA>/inspecao-fisica.md`
 
 **Se o arquivo já existir** (ex: segunda visita à mesma obra), pergunte ao AFT: *"Já existe
 `inspecao-fisica.md` nesta OS. Deseja (a) acrescentar estes achados ao final, (b) substituir o

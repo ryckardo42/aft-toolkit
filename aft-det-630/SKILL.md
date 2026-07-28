@@ -16,6 +16,20 @@ description: >
 # det-630 — Auto de Infração por omissão documental DET (Ementa 001168-1)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Quando usar
 
 Duas situações:
@@ -31,7 +45,7 @@ A skill produz o texto do auto já no formato que o `/aft-gera-ai` consome, e pr
 
 ## Passo 1 — Localizar a OS e os documentos do DET
 
-1. Identifique a pasta da empresa em `~/Documents/AFT/OS ATIVAS/` (liste e pergunte se ambíguo).
+1. Identifique a pasta da empresa em `<OS_ATIVAS>/` (liste e pergunte se ambíguo).
 2. Peça ao AFT os dois PDFs do DET, se ainda não estiverem na pasta da OS:
    > "Baixe do DET (det.sit.trabalho.gov.br) e salve na pasta da OS (ou arraste aqui no chat): (1) o **PDF da notificação** e (2) o **Relatório de Atendimento** (ou de Não Atendimento) da notificação."
 3. Variáveis a partir daqui:

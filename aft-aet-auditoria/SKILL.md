@@ -20,6 +20,20 @@ description: >
 # aet-auditoria — Auditoria de AET (NR-17)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Auditar criticamente uma Análise Ergonômica do Trabalho (AET) sob a ótica da NR-17,
@@ -52,7 +66,7 @@ não avance sem ela:
 > expedição que tem carga pesada", ou "não vi nada sobre pausas"). Capturar isso antes
 > orienta a varredura e evita uma análise genérica.
 
-**Localize a pasta da OS** em `~/Documents/AFT/OS ATIVAS/`. Se o AFT já
+**Localize a pasta da OS** em `<OS_ATIVAS>/`. Se o AFT já
 citou a empresa/CNPJ na conversa, use-a; senão, pergunte qual OS (ou liste as candidatas).
 
 **Procure o `inspecao-fisica.md` antes de prosseguir.** Esse arquivo é a fonte do contexto

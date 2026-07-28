@@ -67,6 +67,9 @@ instalação:
 
 1. **Copie as pastas das suas fiscalizações** (do jeito que estiverem, com os documentos
    acumulados) para dentro de `Documentos\AFT\OS ATIVAS\` — uma pasta por empresa.
+   (Prefere essa pasta em outro lugar, como um HD externo? Peça ao Claude: *"quero
+   minhas fiscalizações no HD externo"*. Ele muda tudo de lugar e a escolha vale para
+   sempre — nem a atualização do toolkit desfaz.)
 2. Na conversa do `</> Code`, digite **`/aft-organiza-os`**.
 
 Com uma única aprovação sua, ele faz três coisas:

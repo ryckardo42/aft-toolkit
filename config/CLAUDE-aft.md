@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v7 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v8 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -94,8 +94,14 @@ até que eu revise e aprove — e quem transmite sou sempre eu.
 ## AFT Toolkit
 
 Minhas skills de fiscalização estão em `~/.claude/skills/` e minha pasta de
-trabalho é `~/Documents/AFT/` (`OS ATIVAS/`, `OS ARQUIVADAS/`, `aft-config.md` com meus
-dados de CIF/UORG). Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`,
+trabalho tem `OS ATIVAS/`, `OS ARQUIVADAS/` e o `aft-config.md` com meus dados de
+CIF/UORG. Ela fica em `~/Documents/AFT/` **por padrão, mas eu posso tê-la mudado de
+lugar** (HD externo, nuvem, outro disco) — então **nunca presuma o caminho**: descubra
+com `python ~/.claude/skills/_scripts/pasta_aft.py --path` (ou `--os-ativas` para a
+pasta das OS) antes de listar, ler ou gravar qualquer coisa. Para mudar de lugar, é
+`--definir "<caminho>" --mover`; a escolha fica em `~/.claude/aft-pasta.txt`, fora do
+repositório das skills, e **nenhuma atualização do toolkit a desfaz**.
+Cada empresa fiscalizada tem uma pasta própria em `OS ATIVAS/`,
 nomeada como eu quiser na `/aft-nova-os` (razão social, fantasia, com ou sem CNPJ/CPF), com a
 ficha `memory.md`. O CNPJ (14 dígitos) ou CPF/CAEPF (11 dígitos, ex.: produtor rural) é
 opcional ao abrir a OS e só se torna obrigatório na hora de gerar os autos (`/aft-gera-ai`).
@@ -139,7 +145,7 @@ Termo de Interdição) e pedir para gerar os autos de infração, use **sempre**
 fora). Mostre os autos na tela e **pergunte se estão OK**; quando eu confirmar, chame a skill
 `/aft-gera-ai` para empacotar o TXT.
 
-Se a configuração (`~/Documents/AFT/aft-config.md`) não existir, oriente-me a rodar
+Se a configuração (`aft-config.md`, dentro da pasta de trabalho) não existir, oriente-me a rodar
 `/aft-setup` primeiro.
 
 ## Minhas skills próprias (personalizadas)

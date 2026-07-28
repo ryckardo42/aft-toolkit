@@ -19,6 +19,20 @@ description: >
 # aft-rt-rgi — Relatório Técnico para Interdição e Embargo
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Gerar um **Relatório Técnico para Interdição e/ou Embargo** em formato `.docx`, baseado no
@@ -235,8 +249,8 @@ no Word**, a cópia falharia com erro de permissão — cheque e peça para fech
 backup do RT anterior (o backup é silencioso se não houver arquivo a salvar):
 
 ```bash
-mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/interdicao-embargo/
-DEST=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/interdicao-embargo/RT_Interdicao.docx
+mkdir -p "<OS_ATIVAS>"/"[PASTA_EMPRESA]"/interdicao-embargo/
+DEST="<OS_ATIVAS>"/"[PASTA_EMPRESA]"/interdicao-embargo/RT_Interdicao.docx
 python ~/.claude/skills/_scripts/checar_arquivo_aberto.py "$DEST"
 python ~/.claude/skills/_scripts/backup_arquivo.py "$DEST"
 cp /tmp/RT_temp/RT_Interdicao.docx "$DEST"
@@ -348,7 +362,7 @@ python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[ca
 - **Imprima no chat os N blocos `=== AUTO DE INFRAÇÃO #N ===` na íntegra** (para o AFT revisar
   visualmente) e indique o caminho da pasta e os arquivos gerados. Exemplo:
 
-  > RT e autos salvos em `~/Documents/AFT/OS ATIVAS/{PASTA_EMPRESA}/interdicao-embargo/`
+  > RT e autos salvos em `<OS_ATIVAS>/{PASTA_EMPRESA}/interdicao-embargo/`
   > (`autos.md` + RT em .docx).
 
 - **Encerramento conforme o modo de entrada:**

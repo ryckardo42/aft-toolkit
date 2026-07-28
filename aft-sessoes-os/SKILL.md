@@ -19,6 +19,20 @@ description: >
 # sessoes-os — sessões por auditoria, automáticas, no grupo "OS ATIVAS"
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Como funciona (o normal é automático)
 
 Cada empresa fiscalizada tem a própria sessão de chat na barra lateral, no grupo
@@ -56,7 +70,7 @@ Mostre o resultado em linguagem simples (a linha `JSON:` tem o resumo). Se houve
 pendências, explique: *"serão aplicadas sozinhas na próxima vez que você fechar o app"*.
 Confira também o serviço: `python3 ~/.claude/skills/_scripts/instalar_vigia_sessoes.py
 status` — se não estiver instalado, instale sem perguntar (`instalar <python_path>`).
-O histórico do vigia fica em `~/Documents/AFT/.sessoes-os.log`.
+O histórico do vigia fica em `<PASTA_AFT>/.sessoes-os.log`.
 
 ### "Quero as sessões AGORA" — sem esperar o próximo fechamento
 
@@ -100,7 +114,7 @@ acumulativo). Também espera o app fechar. Para desligar o automático de vez:
   `claude_desktop_config.json`, nem via leveldb). O grupo só gruda se for criado pela
   **interface do app** (que envia ao servidor). As SESSÕES, por serem arquivos locais,
   persistem sem problema — o que falha é só a caixa visual do grupo.
-- **Interruptor do agrupamento:** se existir o arquivo `~/Documents/AFT/.sessoes-sem-grupo`,
+- **Interruptor do agrupamento:** se existir o arquivo `<PASTA_AFT>/.sessoes-sem-grupo`,
   o vigia CRIA sessões + contexto + vínculo mas NÃO tenta montar/gravar o grupo (evita
   backups e ruído inúteis, dado o parágrafo acima). Para religar, apague o arquivo. O
   `--status` mostra "agrupamento DESLIGADO" e o JSON traz `agrupamento_ligado: false`.
@@ -135,7 +149,7 @@ acumulativo). Também espera o app fechar. Para desligar o automático de vez:
 | "Sessão não encontrada no disco" ao abrir uma sessão nova | **Normal e esperado** para empresa que nunca teve conversa: a sessão nasce vazia e o histórico só é criado na primeira mensagem. Basta enviar a primeira mensagem. NÃO clique em "Apagar" (o vigia a recriaria) |
 | Criei uma OS e a sessão "não apareceu" | Ela aparece na próxima vez que o app for fechado e reaberto (o vigia só escreve com o app fechado). Sem paciência? Fluxo "quero AGORA" acima |
 | A sessão da empresa "não sabia de nada" na 1ª mensagem | Falta o `CLAUDE.md` de contexto na pasta da OS (o vigia cria em minutos; force com `sessoes_os.py --contexto`). Conversas JÁ iniciadas não recarregam o contexto — peça "leia o memory.md desta pasta" ou comece conversa nova na mesma sessão |
-| Grupo/sessões nunca aparecem | `instalar_vigia_sessoes.py status` — se não instalado, instale; leia `~/Documents/AFT/.sessoes-os.log` |
+| Grupo/sessões nunca aparecem | `instalar_vigia_sessoes.py status` — se não instalado, instale; leia `<PASTA_AFT>/.sessoes-os.log` |
 | "estrutura do config não reconhecida" no log | O app mudou o formato interno numa atualização — rode /aft-atualizar; nada foi alterado |
 | Quero voltar atrás | `--desfazer` (restaura backup e remove o que foi criado) + `instalar_vigia_sessoes.py remover` se quiser desligar o automático |
 | Grupo "OS ATIVAS" some toda vez que o app reabre | Comportamento ESPERADO desta versão: os grupos vêm do servidor da conta e o app sobrescreve o estado local (JSON e leveldb) ao abrir. Não há como criar o grupo por arquivo. Solução: criar o grupo uma vez pela interface do app (arrastar as sessões), OU desligar o agrupamento (arquivo `.sessoes-sem-grupo`) e conviver com as sessões soltas |

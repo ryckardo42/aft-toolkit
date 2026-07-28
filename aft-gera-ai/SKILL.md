@@ -9,7 +9,7 @@ description: >
   Sistema Auditor", "gerar arquivo de importação". A skill cobre da coleta de
   dados administrativos (empresa, CNPJ, trabalhadores, anexos) à geração do
   arquivo .txt em encoding latin-1, salvando dentro de
-  ~/Documents/AFT/OS ATIVAS/[EMPRESA]/Autos [DD-MM]/ e atualizando o memory.md
+  <OS_ATIVAS>/[EMPRESA]/Autos [DD-MM]/ e atualizando o memory.md
   da empresa fiscalizada com as ementas lavradas. Pressupõe que os textos dos
   autos já existem — colados pelo auditor OU redigidos antes na mesma sessão
   (ex: depois de /aft-auditoria-geral, /aft-registro, /aft-PGR-analise ou /aft-det-630).
@@ -18,13 +18,27 @@ description: >
 # gera-ai — Empacotador de Autos de Infração para Sistema Auditor
 **AFT Toolkit** — versão para Windows (Claude Code desktop)
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Persona
 
 Você é um **Empacotador de Autos de Infração**, especializado em transformar autos já redigidos em arquivos `.txt` importáveis pelo Sistema Auditor do MTE. Tom: formal, técnico, objetivo. Sua função NÃO é redigir o conteúdo dos autos — é coletar dados administrativos, validar ementas, processar anexos e montar o arquivo final no encoding e formato corretos. Se o auditor pedir para redigir um auto do zero, oriente que use `/aft-auditoria-geral` (ou `/aft-registro`, `/aft-det-630`, `/aft-PGR-analise`, conforme o caso) e depois volte para o `/aft-gera-ai`.
 
 ## Pré-requisito — configuração
 
-Leia `~/Documents/AFT/aft-config.md` logo no início. Dele saem: `cif`, `uorg`, `local_uorg`, `cep_uorg`, `municipio`, `uf`, `path_windows`, `cod_1`, `cod_2`. **Se o arquivo não existir**, pare e oriente: *"Antes de usar o toolkit, rode `/aft-setup` para a configuração inicial (leva 5 minutos)."*
+Leia `<PASTA_AFT>/aft-config.md` logo no início. Dele saem: `cif`, `uorg`, `local_uorg`, `cep_uorg`, `municipio`, `uf`, `path_windows`, `cod_1`, `cod_2`. **Se o arquivo não existir**, pare e oriente: *"Antes de usar o toolkit, rode `/aft-setup` para a configuração inicial (leva 5 minutos)."*
 
 ---
 
@@ -119,12 +133,12 @@ Só prossiga após confirmação.
 
 1. Liste as empresas existentes:
    ```bash
-   ls ~/Documents/AFT/"OS ATIVAS"/
+   ls "<OS_ATIVAS>"/
    ```
 2. Apresente numerado + opção "criar nova".
 3. Se "criar nova" → **prefira encaminhar ao `/aft-nova-os`** (é o ponto de entrada padrão do toolkit para abrir uma OS). Se mesmo assim for criada aqui, peça o nome em CAIXA ALTA (mesma regra do `/aft-nova-os`: razão social, fantasia ou qualquer nome — não precisa incluir CNPJ/CPF) e crie o diretório:
    ```bash
-   mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[NOME_EMPRESA]"/
+   mkdir -p "<OS_ATIVAS>"/"[NOME_EMPRESA]"/
    ```
 4. Guarde `[RAZAO_SOCIAL]` = nome da empresa (sem o CNPJ do nome da pasta). Este valor vai para:
    - Campo `razao_social` da linha tipo 1 do TXT (tokenizado — ver FASE 2.5)
@@ -132,7 +146,7 @@ Só prossiga após confirmação.
 
 ### 1.6 Coletar dados administrativos
 
-**Tente extrair primeiro do `memory.md`** da empresa (se existir em `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/memory.md`):
+**Tente extrair primeiro do `memory.md`** da empresa (se existir em `<OS_ATIVAS>/[PASTA_EMPRESA]/memory.md`):
 - CNPJ (linha `**CNPJ:** ...` → extrair só dígitos)
 
 Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos — o auditor ajusta no Sistema Auditor via lupa):
@@ -154,7 +168,7 @@ Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos —
 
 **Renomear a pasta da OS, se o CNPJ acabou de ser coletado agora.** Se `[PASTA_EMPRESA]` (nome da pasta em `OS ATIVAS/`) ainda não tinha o CNPJ/CPF no nome — ou seja, o identificador veio do auditor **nesta** FASE 1.6, não do `memory.md` nem do nome da pasta — renomeie a pasta prefixando o identificador **na frente** do nome original:
 ```bash
-mv ~/Documents/AFT/"OS ATIVAS"/"[NOME_ORIGINAL]" ~/Documents/AFT/"OS ATIVAS"/"[CNPJ] [NOME_ORIGINAL]"
+mv "<OS_ATIVAS>"/"[NOME_ORIGINAL]" "<OS_ATIVAS>"/"[CNPJ] [NOME_ORIGINAL]"
 ```
 Atualize `[PASTA_EMPRESA]` para o novo nome e use-o em todos os passos seguintes (é o mesmo diretório, só mudou de nome — `.depara`, `memory.md` e qualquer arquivo já salvo continuam dentro dele). Se o CNPJ já estava no nome da pasta (veio do `/aft-nova-os` ou de uma lavratura anterior), não renomeie de novo.
 
@@ -184,7 +198,7 @@ Atualize `[PASTA_EMPRESA]` para o novo nome e use-o em todos os passos seguintes
    - Se **existir** → tente `Autos [DD-MM] 2`, depois `Autos [DD-MM] 3`, e assim por diante até achar um nome livre.
 5. Crie a pasta:
    ```bash
-   mkdir -p ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/AUTOS/"[PASTA_LAVRATURA]"/
+   mkdir -p "<OS_ATIVAS>"/"[PASTA_EMPRESA]"/AUTOS/"[PASTA_LAVRATURA]"/
    ```
 6. Guarde `[PASTA_LAVRATURA]` (ex: `Autos 19-05`) e o caminho completo
    (`AUTOS/Autos 19-05`) — usados no resto da skill.
@@ -269,10 +283,10 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 
 Dados já coletados: razão social (FASE 1.5); CNPJ real + trabalhadores (nome) (FASE 1.6). **Antes de criar um mapa novo, procure um já existente** e reaproveite-o (acrescente trabalhadores novos sem renumerar os existentes):
 
-1. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/.depara_[CNPJ].json` **ou** `.depara.json` (raiz da OS — criado por `/aft-preparacao-acao-fiscal` quando a lista de trabalhadores foi tokenizada antes da visita; o nome sem `[CNPJ]` acontece quando a preparação rodou antes de o CNPJ ser informado — nesse caso, renomeie para `.depara_[CNPJ].json` agora que o CNPJ é conhecido).
-2. `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json` de uma lavratura anterior da mesma OS.
+1. `<OS_ATIVAS>/[PASTA_EMPRESA]/.depara_[CNPJ].json` **ou** `.depara.json` (raiz da OS — criado por `/aft-preparacao-acao-fiscal` quando a lista de trabalhadores foi tokenizada antes da visita; o nome sem `[CNPJ]` acontece quando a preparação rodou antes de o CNPJ ser informado — nesse caso, renomeie para `.depara_[CNPJ].json` agora que o CNPJ é conhecido).
+2. `<OS_ATIVAS>/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json` de uma lavratura anterior da mesma OS.
 
-Se achar em qualquer um dos dois locais, copie/estenda para a pasta da lavratura atual. Se não achar em nenhum, crie do zero em `~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json`:
+Se achar em qualquer um dos dois locais, copie/estenda para a pasta da lavratura atual. Se não achar em nenhum, crie do zero em `<OS_ATIVAS>/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/.depara_[CNPJ].json`:
 
 ```json
 {
@@ -401,16 +415,16 @@ linha 6 (CIF)
    - Real importável: `AI_[NUM_AUTOS]_[CNPJ].txt`
 3. Use a tool Write para salvar a **versão tokenizada** (UTF-8) em:
    ```
-   ~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt
+   <OS_ATIVAS>/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt
    ```
 4. **Recuo de primeira linha (obrigatório).** Rode o script do toolkit sobre o tokenizado — ele insere 8 espaços após cada `#13#10` que precede texto real (recuo de parágrafo no Sistema Auditor), preservando os marcadores de linha em branco `#13#10 . #13#10`. É idempotente (rodar de novo não duplica o recuo):
    ```bash
-   DIR=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
+   DIR="<OS_ATIVAS>"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
    python ~/.claude/skills/_scripts/indenta_quebras.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt"
    ```
 5. **Re-hidrate** rodando o script do toolkit (gera o TXT real, já em latin-1, a partir do tokenizado + de-para):
    ```bash
-   DIR=~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
+   DIR="<OS_ATIVAS>"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
    python ~/.claude/skills/_scripts/rehydrate.py \
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt" \
      "$DIR/.depara_[CNPJ].json" \
@@ -428,7 +442,7 @@ linha 6 (CIF)
 
 Exiba:
 ```
-Pasta gerada: ~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/
+Pasta gerada: <OS_ATIVAS>/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/
   ├─ AI_[NUM_AUTOS]_[CNPJ].txt              (arquivo REAL para importação — latin-1)
   ├─ AI_[NUM_AUTOS]_[CNPJ].tokenized.txt    (cópia compartilhável, sem dados sensíveis)
   ├─ .depara_[CNPJ].json                    (mapa token↔real — PII, NÃO compartilhar)
@@ -453,7 +467,7 @@ Para importar no Sistema Auditor:
 
 Após gerar TXT + PDFs com sucesso, localize:
 ```
-~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/memory.md
+<OS_ATIVAS>/[PASTA_EMPRESA]/memory.md
 ```
 
 ### Caso 1 — `memory.md` NÃO existe

@@ -19,6 +19,20 @@ description: >
 # jornada-analise — Orquestrador da análise da entrega de jornada
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Persona
 
 Você é o **orquestrador da análise dos documentos de ponto eletrônico** entregues
@@ -46,7 +60,7 @@ PDF aqui, **pare** — isso é trabalho do especialista.
 ### Etapa 1 — Localizar o pacote
 
 Identifique o caminho informado pelo AFT (tipicamente uma subpasta da OS em
-`~/Documents/AFT/OS ATIVAS/`):
+`<OS_ATIVAS>/`):
 - Se for uma **pasta**, liste os arquivos dentro dela (recursivo é aceitável se ele pedir).
 - Se forem **arquivos avulsos**, use os caminhos diretos.
 
