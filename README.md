@@ -47,7 +47,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 ### Preparação da ação fiscal (antes da visita)
 | Skill | O que faz |
 |---|---|
-| `/aft-preparacao-acao-fiscal` | Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS, coleta denúncia/dados prévios, tokeniza qualquer lista nominal de trabalhadores, estuda os temas nos NotebookLMs (com fontes) e monta o checklist de documentos a solicitar — salva tudo em `preparacao.md` |
+| `/aft-preparacao-acao-fiscal` | Planeja a fiscalização ANTES de ir a campo: lê a Demanda/Ordem de Serviço do SFIT (anonimizando o denunciante), resolve/cria a OS, tokeniza qualquer lista nominal de trabalhadores, monta o link do endereço no Maps e o checklist de documentos a solicitar — salva tudo em `preparacao.md`. Aprofundamento técnico fica com `/aft-consulta` |
 | `/aft-NAD` | Redige a Notificação para Apresentação de Documentos — documentos que se presume existir (PGR, controles de jornada, ASOs...), texto pronto para colar no DET, item por item |
 
 ### Inspeção e lavratura
@@ -101,8 +101,8 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 ## Fluxo típico de uma fiscalização
 
 ```
-0. /aft-preparacao-acao-fiscal → (opcional, antes da visita) planeja a ação: cadastra/usa a OS,
-                              estuda os temas no NotebookLM, monta o checklist de documentos
+0. /aft-preparacao-acao-fiscal → (opcional, antes da visita) planeja a ação: lê a Demanda/OS do
+                              SFIT, cadastra/usa a OS, monta o checklist de documentos
    /aft-NAD                     → notifica a empresa a apresentar os documentos do checklist
    /aft-painel                  → a qualquer momento, vê todas as OS e os prazos vencendo
 1. Visita ao estabelecimento
@@ -116,7 +116,7 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 7. /aft-sfitweb-rel          → relatório final consolidado
 ```
 
-Sem `/aft-preparacao-acao-fiscal`, o começo do fluxo continua sendo `/aft-nova-os` (cadastro simples, sem estudo prévio).
+Sem `/aft-preparacao-acao-fiscal`, o começo do fluxo continua sendo `/aft-nova-os` (cadastro simples, sem checklist de documentos). Dúvida técnica ou pesquisa de ementa, em qualquer ponto do fluxo, é `/aft-consulta`.
 
 ## Estrutura de trabalho
 

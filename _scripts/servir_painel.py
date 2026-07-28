@@ -390,7 +390,19 @@ def md_para_html(md: str) -> str:
                 fecha_lista()
                 out.append(f"<{tipo}>")
                 lista = tipo
-            out.append(f"<li>{_md_inline((m_ul or m_ol).group(1))}</li>")
+            item = (m_ul or m_ol).group(1)
+            # Checkbox de tarefa ("- [ ] item" / "- [x] item"): vira caixinha
+            # em vez dos colchetes crus. Os relatórios do toolkit são cheios
+            # deles (checklists, ementas da OS, autos lavrados, pendências).
+            m_cb = re.match(r"^\[([ xX])\]\s+(.*)$", item)
+            if m_cb:
+                feito = m_cb.group(1).lower() == "x"
+                classe = "tarefa feita" if feito else "tarefa"
+                marca = "&#9745;" if feito else "&#9744;"   # ☑ / ☐
+                out.append(f'<li class="{classe}"><span class="cb">{marca}</span>'
+                           f"{_md_inline(m_cb.group(2))}</li>")
+            else:
+                out.append(f"<li>{_md_inline(item)}</li>")
         elif s in ("---", "***", "___"):
             fecha_lista()
             out.append("<hr>")
@@ -423,6 +435,10 @@ h4{font-size:14.5px;margin:18px 0 6px}
 p{margin:8px 0}
 ul,ol{margin:8px 0;padding-left:24px}
 li{margin-bottom:6px}
+li.tarefa{list-style:none;margin-left:-20px}
+li.tarefa .cb{display:inline-block;width:20px;color:var(--coral);font-size:17px}
+li.tarefa.feita{color:var(--t2)}
+li.tarefa.feita .cb{color:var(--teal)}
 code{background:var(--cream);border:1px solid var(--bds);border-radius:4px;
 padding:1px 5px;font-size:13px}
 hr{border:none;border-top:1px solid var(--bds);margin:24px 0}

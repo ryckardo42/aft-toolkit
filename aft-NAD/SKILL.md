@@ -62,7 +62,7 @@ A fonte é **contexto da sessão + lista colada** (a skill detecta):
 
 1. **Encadeada:** se a sessão já contém um checklist de documentos aprovado pelo AFT (saída de `/aft-preparacao-acao-fiscal`), reaproveite-o direto.
 2. **Colada:** se o AFT colou uma lista de documentos no prompt, use-a.
-3. **Standalone sem lista:** pergunte ao AFT quais documentos solicitar. Pode oferecer um catálogo comum como ponto de partida (PGR, PCMSO, ASOs, controles de jornada — AFD/AEJ, atas da CIPA, certificados de treinamento NR-XX, livro/ficha de registro, folha de pagamento, laudo/AET), mas **não presuma** — o AFT decide o que pedir.
+3. **Standalone sem lista:** pergunte ao AFT quais documentos solicitar. Pode oferecer um catálogo comum como ponto de partida (PGR, PCMSO, ASOs, controles de jornada — AFD/AEJ, atas da CIPA, certificados de treinamento NR-XX, folha de pagamento, contratos de trabalho, laudo/AET), mas **não presuma** — o AFT decide o que pedir. **Nunca** ofereça "livro/ficha de registro de empregados": o registro é feito no eSocial, e livro/ficha não existem mais.
 
 Para **cada** documento, capture:
 
