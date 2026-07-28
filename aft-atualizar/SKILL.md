@@ -255,6 +255,22 @@ python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py status
   app — sem perguntar nada.
 - **Falhou** → registre no resumo do Passo 4; não é bloqueante.
 
+## Passo 2g — Sincronizar os agentes do toolkit
+
+Os **agentes** (`agents/*.md` do repositório — hoje o revisor de autos e a varredura do
+Sistema Auditor) precisam de uma cópia em `~/.claude/agents/`, e o `git pull` sozinho
+não a atualiza. Rode **sem perguntar** (idempotente, só copia o que mudou):
+
+```bash
+python ~/.claude/skills/_scripts/instalar_agentes.py
+```
+
+- `instalados` ou `atualizados` não vazio → mencione no resumo do Passo 4 que os
+  agentes novos/atualizados valem a partir do **próximo reinício do app**.
+- Tudo em `em_dia` → nada a fazer.
+- Falhou → **não é bloqueante** (as skills degradam para o modo inline); registre no
+  resumo.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve

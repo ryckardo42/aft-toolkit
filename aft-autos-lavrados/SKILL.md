@@ -79,6 +79,36 @@ Cenários típicos:
    - **Modo lote** → **não** interrompa o lote perguntando: pule essa OS e registre na tabela final o status `sem CNPJ — rode /aft-autos-lavrados "<nome>" e informe os 8 dígitos`.
    - Se o AFT informar só os 8 dígitos, o cross-check de CNPJ do Passo 2 compara apenas esse prefixo (avise que a conferência é parcial).
 
+### Passo 1b — Despachar para o agente isolado (padrão)
+
+> **Se você É o agente `aft-autos-lavrados`** (foi invocado pela tool Agent), pule este
+> passo: execute os Passos 2–6 diretamente, seguindo as regras do seu prompt de agente
+> (nunca perguntar; pontos de decisão viram a seção "Decisões pendentes do AFT").
+
+Com o(s) alvo(s) resolvido(s) no Passo 1, a varredura pesada (Passos 2–6) roda, por
+padrão, no **agente isolado** `aft-autos-lavrados` (instalado em `~/.claude/agents/`):
+a leitura dos PDFs acontece fora da conversa principal, e aqui só chega o relatório.
+
+1. Invoque a tool `Agent` com `subagent_type: "aft-autos-lavrados"` e um prompt com:
+   (a) a **lista de alvos** — caminho absoluto da pasta da OS + CNPJ/CPF ou 8 dígitos,
+   um por linha (OS sem identificador ficam de fora, com a linha de status do item 5
+   do Passo 1); (b) o `python_path` do `aft-config.md` (macOS: `python3`); (c) a pasta
+   PRO alternativa, se a instalação for fora do padrão; (d) o caminho absoluto deste
+   manual (`~/.claude/skills/aft-autos-lavrados/SKILL.md`, com o `~` expandido).
+   No **modo lote** (todas as OS), rode o agente em segundo plano se a tool permitir
+   (`run_in_background`) e avise o AFT que a tabela chega quando a varredura terminar.
+2. Ao receber o retorno, apresente o relatório do Passo 7 ao AFT (é o próprio texto
+   devolvido pelo agente — confira o formato e repasse).
+3. **Decisões pendentes:** se a seção "Decisões pendentes do AFT" vier com itens,
+   conduza cada um com `AskUserQuestion` (as mesmas opções que os Passos 1, 2 e 2.5
+   definem) e **aplique a resposta você mesmo** — são edições pequenas: promover ou
+   rebaixar linhas no `memory.md` e no `autos-lavrados.md`, ou re-despachar o agente
+   só para a OS destravada (ex.: pasta ambígua resolvida, 8 dígitos informados).
+4. **Fallback (sem agente):** se a invocação falhar porque o tipo `aft-autos-lavrados`
+   não existe (agente não instalado ou app não reiniciado após a atualização), execute
+   você mesmo os Passos 2–6 abaixo, inline, como esta skill sempre funcionou —
+   inclusive as perguntas interativas — e sugira ao AFT rodar `/aft-atualizar` depois.
+
 ### Passo 2 — Para cada OS, chamar o scan
 
 ```bash

@@ -39,6 +39,33 @@ não tokenizado.
 
 ---
 
+## Como executar (despacho para o agente)
+
+> **Se você É o agente `aft-revisor-autos`** (foi invocado pela tool Agent), esta seção
+> não é para você: pule direto para a FASE 1 e execute o miolo sobre o arquivo recebido.
+
+A revisão roda, por padrão, no **agente isolado** `aft-revisor-autos` (instalado pelo
+toolkit em `~/.claude/agents/`). A vantagem é a de todo revisor humano: **olhos
+frescos** — o agente julga só o texto do arquivo, sem ver a conversa que redigiu os
+autos, exatamente como fará o julgador do auto.
+
+1. **Garanta um arquivo.** Modo arquivo: já existe (o `autos.md` do `/aft-gera-ai`). Modo
+   conversa: **materialize as minutas** num `autos.md` na pasta da OS (sem OS envolvida,
+   num arquivo temporário) antes de despachar — a revisão sempre deixa rastro em arquivo.
+2. **Despache:** invoque a tool `Agent` com `subagent_type: "aft-revisor-autos"` e um
+   prompt contendo: (a) o caminho absoluto do `autos.md`; (b) o `python_path` do
+   `aft-config.md` (macOS: `python3`); (c) o caminho absoluto deste manual
+   (`~/.claude/skills/aft-revisa-auto/SKILL.md`, com o `~` expandido).
+3. **Repasse o relatório** devolvido pelo agente (formato da FASE 3) ao AFT e/ou devolva
+   o controle ao `/aft-gera-ai`. No modo conversa, releia o arquivo revisado e
+   reapresente as minutas corrigidas.
+4. **Fallback (sem agente):** se a invocação falhar porque o tipo `aft-revisor-autos`
+   não existe (agente não instalado ou app não reiniciado após a atualização), execute
+   você mesmo as FASES 1–3 abaixo, inline, como esta skill sempre funcionou — e sugira
+   ao AFT rodar `/aft-atualizar` depois. Nunca trave a revisão por falta do agente.
+
+---
+
 ## FASE 1 — Checklist 5W1H (por auto)
 
 Para **cada** auto, verifique se o bloco 2 (IRREGULARIDADE) traz dado concreto para

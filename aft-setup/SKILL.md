@@ -98,6 +98,22 @@ vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização), u
 > para `OS ARQUIVADAS` (mesmo nível, ao lado de `OS ATIVAS`). Tudo fica **no seu
 > computador** — nada é enviado para fora.
 
+## Passo 2b — Instalar os agentes do toolkit
+
+Além das skills, o toolkit traz **agentes** — ajudantes que trabalham numa conversa
+isolada, sem entulhar a principal (hoje: o revisor de autos `aft-revisor-autos` e a
+varredura do Sistema Auditor `aft-autos-lavrados`). Eles vêm no repositório em
+`~/.claude/skills/agents/`, mas o Claude Code só os descobre em `~/.claude/agents/`.
+Instale (idempotente, você roda):
+
+```bash
+python ~/.claude/skills/_scripts/instalar_agentes.py
+```
+
+Leia o JSON (`instalados`/`atualizados`/`em_dia`). Os agentes passam a valer quando o
+app for reiniciado — o mesmo reinício que o fim do setup já pede. Se falhar, **não é
+bloqueante**: as skills funcionam sem os agentes (modo inline); registre no resumo.
+
 ## Passo 3 — Coletar os dados do auditor (uma única vez)
 
 Pergunte, em uma única mensagem, apenas **três coisas** (o resto você descobre na
@@ -443,6 +459,8 @@ Apresente:
    (arquivadas ao final da fiscalização em ~/Documents/AFT/OS ARQUIVADAS/)
 📄 Configuração:      ~/Documents/AFT/aft-config.md
 👤 Perfil do auditor: ~/.claude/CLAUDE.md [instalado / mantido o existente]
+🤖 Agentes:           [N instalados em ~/.claude/agents (revisor de autos + varredura
+                       do Sistema Auditor) / falhou — skills seguem no modo inline]
 🛡️ Proteção:          ~/.claude/settings.json [deny-list de segurança aplicada]
 🐍 Python:            [versão] · pillow/pikepdf instalados
 📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]

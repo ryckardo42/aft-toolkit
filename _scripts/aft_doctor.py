@@ -94,6 +94,33 @@ else:
         "Provavel clone aninhado (ex.: ~/.claude/skills/aft-toolkit/...). "
         "O repositorio precisa SER a pasta ~/.claude/skills.")
 
+# 3b. Agentes do toolkit (~/.claude/agents) ----------------------------------
+# As skills /aft-revisa-auto e /aft-autos-lavrados despacham o trabalho pesado
+# para agentes isolados. O repositorio os traz em skills/agents/, mas o Claude
+# Code so os descobre em ~/.claude/agents/ - a copia e feita pelo
+# instalar_agentes.py (via /aft-setup ou /aft-atualizar). Sem a copia nada
+# quebra (as skills degradam para o modo inline), por isso severidade aviso.
+agents_src = SKILLS_DIR / "agents"
+agents_dst = SKILLS_DIR.parent / "agents"
+if agents_src.is_dir():
+    fontes_ag = sorted(agents_src.glob("*.md"))
+    pendentes_ag = []
+    for f in fontes_ag:
+        alvo = agents_dst / f.name
+        try:
+            if not (alvo.is_file() and alvo.read_bytes() == f.read_bytes()):
+                pendentes_ag.append(f.name)
+        except OSError:
+            pendentes_ag.append(f.name)
+    if fontes_ag and not pendentes_ag:
+        add("Agentes do toolkit", "ok",
+            f"{len(fontes_ag)} agentes instalados em {agents_dst}")
+    elif fontes_ag:
+        add("Agentes do toolkit", "aviso",
+            "Agentes nao instalados ou desatualizados: " + ", ".join(pendentes_ag),
+            "Rode /aft-atualizar (ele executa _scripts/instalar_agentes.py) e "
+            "reinicie o app. Sem os agentes as skills funcionam no modo inline.")
+
 # 4. Arquivos de configuracao do repo ----------------------------------------
 cfg = SKILLS_DIR / "config"
 need_cfg = ["notebooks.json", "uorgs.csv", "CLAUDE-aft.md"]
