@@ -34,6 +34,11 @@ empresa no menu lateral continua aparecendo sozinha, como sempre.
   apontava CPF/PIS, agora avisa também e-mails e telefones que escapem para um arquivo
   de trabalho; as skills já mandam ignorar o telefone da própria empresa, então o alarme
   que sobrar merece atenção (pode ser o contato do denunciante).
+- **Fim do "estudo prévio"** — a preparação não pergunta mais quais temas você quer
+  estudar nos NotebookLMs antes da visita. Ela ficou focada no que é dela: organizar a
+  OS, as ementas, o endereço e o checklist de documentos. Para tirar dúvida técnica,
+  achar a ementa certa ou entender o que exigir sobre um tema, use a `/aft-consulta` —
+  antes, durante ou depois da preparação, quantas vezes precisar.
 
 **O que você precisa fazer: nada.** Anexe o PDF da OS na conversa e diga que vai
 fiscalizar a empresa — o resto do fluxo segue como sempre.
