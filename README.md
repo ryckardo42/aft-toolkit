@@ -16,7 +16,7 @@ Você vai ver, em várias skills, referência a arquivos com nome tipo `gerar_pa
 
 ## Instalação (resumo)
 
-Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apostila `Apostila-AFT-Toolkit.docx`). São 4 passos — só os dois primeiros são manuais:
+Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apostila `Apostila-AFT-Toolkit.pdf` — protegida por senha, distribuída pelo autor no grupo de AFTs). São 4 passos — só os dois primeiros são manuais:
 
 1. **Instale o aplicativo Claude** (claude.com/claude-code).
 2. **Instale o Git** (git-scm.com — o app desktop exige o Git para abrir sessões locais no Windows) e reinicie o app pela bandeja.
@@ -168,7 +168,7 @@ As skills buscam o código da ementa em 3 camadas:
 
 ```
 ~/.claude/skills/   (= este repositório)
-├── README.md · COMO-INSTALAR.md · Apostila-AFT-Toolkit.docx
+├── README.md · COMO-INSTALAR.md · Apostila-AFT-Toolkit.pdf
 ├── config/notebooks.json    (IDs dos notebooks do NotebookLM)
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
