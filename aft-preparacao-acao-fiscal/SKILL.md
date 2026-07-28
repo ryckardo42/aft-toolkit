@@ -179,7 +179,9 @@ Com o endereço do estabelecimento (da demanda ou informado pelo AFT):
 
 ## FASE 5 — Checklist de documentos a solicitar
 
-A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: ementas de REGISTRO → livro/ficha/sistema de registro de empregados; NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
+A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
+
+> **Registro de empregados não se pede em livro nem em ficha.** O registro é feito no **eSocial** — livro e ficha de registro não existem mais. **Nunca** liste no checklist "livro de registro", "ficha de registro" ou "sistema eletrônico de registro de empregados". Para as ementas de REGISTRO, o caminho é a consulta do próprio AFT ao eSocial, cruzada em campo com quem está trabalhando no local; se for o caso, peça folha de pagamento, contratos e recibos — nunca o livro.
 
 1. Apresente a lista ao AFT como **sugestão**, nunca como decisão tomada — ele risca, ajusta ou acrescenta itens.
 2. **Não invente** exigência documental sem base — cada item candidato deve estar amparado por uma NR/artigo (mesmo que a ementa exata só seja resolvida depois, na `/aft-NAD`).
