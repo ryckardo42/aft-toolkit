@@ -9,13 +9,15 @@ rever tudo, basta abrir este arquivo.
 ## 28/07/2026 (2)
 <!-- commit: preparacao-le-a-os-do-sfit -->
 
-**Anexou a Ordem de Serviço? O toolkit lê sozinho — e protege o denunciante.** A
-`/aft-preparacao-acao-fiscal` e a `/aft-nova-os` agora entendem o PDF da demanda do
-SFIT-WEB ("Detalhar Demanda"): basta anexar o arquivo e dizer que vai fiscalizar aquela
-empresa. A pasta da OS é criada com tudo preenchido — razão social, CNPJ, endereço
-completo, telefone, CNAE (já com o grau de risco), número da OS e da demanda — sem
-redigitar nada; a sessão da empresa no menu lateral continua aparecendo sozinha, como
-sempre.
+**Anexou a Ordem de Serviço ou a Demanda? O toolkit lê sozinho — e protege o
+denunciante.** A `/aft-preparacao-acao-fiscal` e a `/aft-nova-os` agora entendem os dois
+PDFs que o SFIT-WEB gera: a **Demanda** ("Detalhar Demanda", com a denúncia e os dados
+do demandante) e a **Ordem de Serviço** (mais resumida, com os prazos da fiscalização e
+a equipe de AFTs). Basta anexar um deles — ou os dois — e dizer que vai fiscalizar
+aquela empresa. A pasta da OS é criada com tudo preenchido — razão social, CNPJ,
+endereço completo, telefone, CNAE (já com o grau de risco), número da OS e da demanda,
+prazos para iniciar e terminar a fiscalização, equipe — sem redigitar nada; a sessão da
+empresa no menu lateral continua aparecendo sozinha, como sempre.
 
 - **Ementas da OS no dossiê** — a tabela de irregularidades "a fiscalizar" da demanda
   vira a seção `## Ementas da OS` no memory.md, com caixinhas para marcar o que já foi
