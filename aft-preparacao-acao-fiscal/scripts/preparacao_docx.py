@@ -117,9 +117,21 @@ def le_memory(pasta: Path):
     return dados, frentes
 
 
+def caminho_config() -> Path:
+    """aft-config.md dentro da pasta de trabalho do AFT — que pode ter sido
+    movida (HD externo, nuvem). Resolve pelo pasta_aft.py; só cai no caminho
+    canônico se ele não estiver disponível."""
+    try:
+        sys.path.insert(0, str(Path.home() / ".claude/skills/_scripts"))
+        from pasta_aft import pasta_aft  # type: ignore
+        return Path(pasta_aft()) / "aft-config.md"
+    except Exception:
+        return Path.home() / "Documents/AFT/aft-config.md"
+
+
 def le_config():
     """Nome e CIF do auditor, do aft-config.md (silencioso se faltar)."""
-    cfg = Path.home() / "Documents/AFT/aft-config.md"
+    cfg = caminho_config()
     if not cfg.exists():
         return "", ""
     txt = cfg.read_text(encoding="utf-8", errors="replace")

@@ -23,6 +23,20 @@ compatibility: macOS e Windows (Git Bash). Requer o template.docx da skill aft-r
 # rt-manutencao — RT de Manutenção de Interdição/Embargo
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Redigir o **Relatório Técnico de Manutenção de Interdição/Embargo** em `.docx`: o documento
@@ -49,7 +63,7 @@ seção 2 deste RT.
 
 ### Etapa 1 — Localizar a OS e os documentos (procure ANTES de perguntar)
 
-**Pasta da OS** em `~/Documents/AFT/OS ATIVAS/` (empresa/CNPJ citados na
+**Pasta da OS** em `<OS_ATIVAS>/` (empresa/CNPJ citados na
 conversa; senão pergunte ou liste candidatas).
 
 **A pasta canônica de interdição/embargo da OS é `interdicao-embargo/`** — é onde todo o

@@ -18,6 +18,20 @@ description: >
 # PGR-analise — Análise de PGR (NR-01)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Analisar um Programa de Gerenciamento de Riscos (PGR) sob a ótica da NR-01, identificando
@@ -40,14 +54,14 @@ para a empresa.
 > PGR.**
 
 **Localize a pasta da OS.** Determine a pasta da empresa em
-`~/Documents/AFT/OS ATIVAS/`. Se o AFT já citou a empresa/CNPJ na conversa,
+`<OS_ATIVAS>/`. Se o AFT já citou a empresa/CNPJ na conversa,
 use-a; senão, pergunte qual OS (ou liste as candidatas).
 
 **Procure o `inspecao-fisica.md` antes de perguntar.** Esse arquivo é a fonte primária do
 contexto de campo — irregularidades encontradas in loco que influenciam a análise do PGR:
 
 ```bash
-ls ~/Documents/AFT/"OS ATIVAS"/"<PASTA_EMPRESA>"/inspecao-fisica.md
+ls "<OS_ATIVAS>"/"<PASTA_EMPRESA>"/inspecao-fisica.md
 ```
 
 - **Encontrado:** leia-o e use seu conteúdo como a lista de achados de campo (modo
@@ -444,7 +458,7 @@ que a irregularidade **não parece estar presente** com base no documento fornec
 forçar enquadramento.
 
 Ao final, salve a análise completa em
-`~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/analise-PGR.md`.
+`<OS_ATIVAS>/[PASTA_EMPRESA]/analise-PGR.md`.
 
 ---
 
@@ -544,7 +558,7 @@ remove o hífen no cod_3):
 | 1011154 | `101115-4` |
 
 **Salvar e handoff**: salve todos os blocos em
-`~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/autos-pgr.md` e exiba:
+`<OS_ATIVAS>/[PASTA_EMPRESA]/autos-pgr.md` e exiba:
 
 ```
 ✅ N autos de PGR redigidos — salvos em autos-pgr.md

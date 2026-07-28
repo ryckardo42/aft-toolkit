@@ -142,6 +142,20 @@ Documentos\AFT\
 └── OS ARQUIVADAS\
 ```
 
+### Quer a pasta em outro lugar?
+
+Dá — e a escolha é permanente. Peça ao Claude *"quero minhas fiscalizações no HD externo"*
+(ou onde for) e ele cuida do resto: leva os arquivos que já existem, sem sobrescrever
+nada, e passa a usar o lugar novo em todas as skills. O `/aft-setup` também pergunta isso
+na instalação, e o `/aft-doctor` mostra onde a pasta está e move se você pedir.
+
+A escolha fica gravada em `~/.claude/aft-pasta.txt`, **fora** da pasta das skills — então
+**atualizar o toolkit (`/aft-atualizar`) nunca a desfaz**: você configura uma vez e
+esquece. Se um dia quiser voltar ao padrão, é só pedir.
+
+> Nuvem (OneDrive, Dropbox, iCloud): funciona, mas lembre que aí os documentos de
+> fiscalização passam a ser copiados para o servidor do provedor. Decisão sua.
+
 ## Segurança dos dados
 
 - Tudo roda e fica **no seu computador**. Nenhuma skill envia arquivos para serviços externos (a compressão de PDF, conversão de fotos e validação de arquivos são scripts Python locais).

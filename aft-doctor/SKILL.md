@@ -99,6 +99,31 @@ Esta skill **so diagnostica**. Para resolver, encaminhe para o lugar certo:
   3. mostre o `pasta_aft` do JSON como o novo lugar. Nada e apagado, e o `path_windows`
      do aft-config.md e atualizado sozinho.
   Se ele preferir deixar como esta, tudo continua funcionando — nao insista.
+- **O AFT quer a pasta de trabalho em OUTRO lugar** (HD externo, nuvem, outro disco;
+  ex.: "quero minhas OS no HD externo", "posso mudar a pasta AFT de lugar?") → pode:
+  1. peca para **fechar o app do Claude** (mesmo motivo do item acima);
+  2. rode, com o caminho que ele indicar — **a pasta que vai CONTER `OS ATIVAS`**, nao a
+     `OS ATIVAS` em si (o script recusa e explica se ele apontar a subpasta):
+     ```bash
+     python "<python_path>" ~/.claude/skills/_scripts/pasta_aft.py --definir "<caminho>" --mover
+     ```
+     Sem `--mover`, so passa a apontar para la (util se ele mesmo ja moveu os arquivos).
+     O script **nunca sobrescreve**: se o destino ja tiver dados, recusa e explica.
+  3. a escolha fica gravada em `~/.claude/aft-pasta.txt` — **fora** do repositorio das
+     skills, entao `/aft-atualizar` nunca a desfaz. Diga isso ao AFT: ele nao vai
+     precisar reconfigurar a cada atualizacao.
+  4. **Reinstale os servicos** que guardam o caminho antigo por dentro (rotina do painel
+     e servidor do painel) — ver "Servicos apontando para a pasta antiga" abaixo.
+  Para voltar ao automatico: `pasta_aft.py --soltar`.
+- **"Servicos apontando para a pasta antiga"** (aviso do doctor apos uma mudanca de
+  pasta) → a rotina e o servidor do painel guardam o caminho de quando foram instalados.
+  Ofereca reinstalar os dois com o caminho novo — `<OS_ATIVAS>` abaixo e o campo
+  `os_ativas` do JSON do proprio diagnostico, nunca um caminho presumido:
+  ```bash
+  python "<python_path>" ~/.claude/skills/_scripts/instalar_rotina_painel.py instalar "<python_path>" "<OS_ATIVAS>"
+  python "<python_path>" ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<OS_ATIVAS>"
+  ```
+  O vigia de sessoes nao precisa: ele resolve a pasta a cada execucao.
 - Frontmatter de skill quebrado ou modelo pinado indisponivel → ofereca `/aft-atualizar`;
   se ja estiver atualizado e o problema persistir, oriente a avisar o mantenedor
   citando a mensagem do check (pode ser modelo descontinuado ou limitacao do plano).

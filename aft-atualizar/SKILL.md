@@ -132,7 +132,7 @@ Claude Code). AFTs que instalaram o toolkit antes dessa novidade nunca foram per
 Confira se já foi oferecida:
 
 ```bash
-grep -q "rotina_painel" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
+grep -q "rotina_painel" "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/aft-config.md" && echo "ja_perguntado" || echo "nunca_perguntado"
 ```
 
 - **`ja_perguntado`** → não pergunte de novo; siga para o Passo 2c.
@@ -153,7 +153,7 @@ máquina ainda não o tem ligado, instale-o **sem perguntar** (roda só em `127.
 sai da máquina). Confira o estado no `aft-config.md`:
 
 ```bash
-grep -q 'servidor_painel: *"ligado"' ~/Documents/AFT/aft-config.md && echo "ja_ligado" || echo "instalar"
+grep -q 'servidor_painel: *"ligado"' "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/aft-config.md" && echo "ja_ligado" || echo "instalar"
 ```
 
 - **`ja_ligado`** → nada a fazer; siga para o Passo 2d.
@@ -173,7 +173,7 @@ Mesma lógica do Passo 2b, para a novidade do **Google Calendar** (Passo 7d do
 `/aft-setup` — skill `/aft-agenda-det`). Confira:
 
 ```bash
-grep -q "agenda_det" ~/Documents/AFT/aft-config.md && echo "ja_perguntado" || echo "nunca_perguntado"
+grep -q "agenda_det" "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/aft-config.md" && echo "ja_perguntado" || echo "nunca_perguntado"
 ```
 
 - **`ja_perguntado`** → não pergunte de novo; siga para o Passo 2e.

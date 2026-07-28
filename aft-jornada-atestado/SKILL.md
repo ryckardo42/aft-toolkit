@@ -18,6 +18,20 @@ description: >
 # jornada-atestado — Auditor de Atestado Técnico e Termo de Responsabilidade (REP/PTRP)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Conferência de conformidade ao art. 89 da Portaria MTP nº 671/2021
 
 ## Papel e contexto
@@ -68,7 +82,7 @@ O máximo que o skill afirma é que há ou não há indício de assinatura no pa
 ### Etapa 1 — Localizar e ler o atestado
 
 Identifique o caminho do PDF do atestado (anexado pelo usuário ou indicado por ele —
-tipicamente numa subpasta da OS em `~/Documents/AFT/OS ATIVAS/`). Leia o conteúdo
+tipicamente numa subpasta da OS em `<OS_ATIVAS>/`). Leia o conteúdo
 textual do documento para extrair os campos declarados.
 
 ### Etapa 2 — Inspeção estrutural da assinatura (por código)

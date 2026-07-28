@@ -16,7 +16,7 @@ description: >
   (razão social, fantasia ou qualquer nome — CNPJ/CPF é opcional aqui, só vira obrigatório
   no /aft-gera-ai), município, RI (avisa que sem ele o sync do DET não importa notificações) e
   (opcional) os dados do primeiro DET (código, ciência, prazo),
-  cria a pasta `~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/` e o `memory.md` da OS no
+  cria a pasta `<OS_ATIVAS>/<NOME_DA_AUDITORIA>/` e o `memory.md` da OS no
   esquema padrão do toolkit. É o ponto de entrada do fluxo de fiscalização; depois o AFT
   usa /aft-inspecao-fisica, /aft-gera-ai, etc. O painel (/aft-painel) lê os memory.md criados aqui
   para mostrar prazos.
@@ -25,9 +25,23 @@ description: >
 # nova-os — Cadastrar uma auditoria (OS)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
-Abrir uma nova fiscalização: criar a pasta da empresa em `~/Documents/AFT/OS ATIVAS/` e a
+Abrir uma nova fiscalização: criar a pasta da empresa em `<OS_ATIVAS>/` e a
 ficha `memory.md` com os dados básicos e, se já houver, a notificação do DET com o prazo de
 entrega. É o "começo do fluxo" — equivale a abrir uma OS. Depois, o `/aft-painel` mostra todas as
 OS e seus prazos, e as demais skills (`/aft-inspecao-fisica`, `/aft-auditoria-geral`, `/aft-gera-ai`...)
@@ -37,7 +51,7 @@ Tom: simples e direto, para quem está começando. Pergunte só o necessário, e
 
 ## Pré-requisito
 
-A pasta de trabalho `~/Documents/AFT/OS ATIVAS/` deve existir (criada pelo `/aft-setup`). Se
+A pasta de trabalho `<OS_ATIVAS>/` deve existir (criada pelo `/aft-setup`). Se
 não existir, crie-a (`mkdir -p`) e siga — mas se faltar o `aft-config.md`, oriente a rodar
 `/aft-setup` antes.
 
@@ -119,7 +133,7 @@ lá, com o CNPJ **na frente** do nome original (`<CNPJ> <NOME_DA_AUDITORIA>`). O
 não faz esse rename — só o `/aft-gera-ai`, quando o CNPJ é finalmente coletado.
 
 ```bash
-ls ~/Documents/AFT/"OS ATIVAS"/
+ls "<OS_ATIVAS>"/
 ```
 
 - Se já existir uma pasta com o mesmo CNPJ/CPF (quando informado) **ou** nome muito
@@ -129,12 +143,12 @@ ls ~/Documents/AFT/"OS ATIVAS"/
   AFT que a comparação é mais fraca nesse caso.
 - Senão, crie:
   ```bash
-  mkdir -p ~/Documents/AFT/"OS ATIVAS"/"<NOME_DA_AUDITORIA>"/
+  mkdir -p "<OS_ATIVAS>"/"<NOME_DA_AUDITORIA>"/
   ```
 
 ## Passo 3 — Escrever o memory.md
 
-Crie `~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/memory.md` neste esquema (front-matter
+Crie `<OS_ATIVAS>/<NOME_DA_AUDITORIA>/memory.md` neste esquema (front-matter
 leve + seções fixas). É o mesmo esquema que `/aft-gera-ai`, `/aft-auditoria-geral` e `/aft-det-630`
 mantêm, e que o `/aft-painel` lê:
 
@@ -199,7 +213,7 @@ Mostre um resumo curto e ofereça o próximo passo:
 
 ```
 ✅ OS cadastrada — <NOME_DA_AUDITORIA>
-📁 ~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/
+📁 <OS_ATIVAS>/<NOME_DA_AUDITORIA>/
 🪪 CNPJ/CPF: <formatado>   (ou "ainda não informado — obrigatório no /aft-gera-ai")
 🔢 RI: <RI>   (se vazio: "não informado — o sync do DET só importa notificações com RI conhecido; ele mesmo se preenche na 1ª sincronização, ou informe agora")
 🗓️  DET: <CÓDIGO> · prazo <dd/mm/aaaa>   (ou "sem DET cadastrado")

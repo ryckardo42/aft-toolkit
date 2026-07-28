@@ -35,12 +35,17 @@ demais skills).
 
 ## Passo 0 — Resolver a pasta das OS
 
-- **Windows**: use o padrão do toolkit, `~/Documents/AFT/OS ATIVAS` — não pergunte.
-- **macOS**: verifique se `~/Documents/AFT/aft-config.md` tem a linha `pasta_os: <caminho>`.
-  - Se tiver, use-a sem perguntar.
-  - Se não tiver, pergunte ao AFT qual pasta contém as OS ATIVAS (ofereça o padrão
-    `~/Documents/AFT/OS ATIVAS` como sugestão) e **grave a resposta** como linha
-    `pasta_os: <caminho>` no `aft-config.md`, para nunca mais perguntar.
+**Não pergunte nada e não presuma `~/Documents/AFT`** — o AFT pode ter mudado a pasta de
+trabalho de lugar (HD externo, nuvem, outro disco). Resolva com o script, que já considera,
+nesta ordem: a escolha gravada pelo AFT (`~/.claude/aft-pasta.txt`), a pasta Documentos
+verdadeira do Windows (OneDrive/idioma) e o campo legado `pasta_os:` do `aft-config.md`:
+
+```bash
+python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas
+```
+
+Use o caminho retornado como `<OS_ATIVAS>` nos passos seguintes. Se ele não existir ou
+estiver vazio, é caso de `/aft-setup` (nunca crie a pasta por conta própria aqui).
 
 ## Passo 1 — Gerar o painel
 
@@ -48,10 +53,10 @@ Rode o gerador do toolkit (acrescente `--scan` se o AFT quiser os autos direto d
 Auditor — ver Passo 1.1):
 
 ```bash
-python ~/.claude/skills/_scripts/gerar_painel.py "<PASTA_OS_ATIVAS>"
+python ~/.claude/skills/_scripts/gerar_painel.py "<OS_ATIVAS>"
 ```
 
-> Sem argumento, o caminho das OS é `~/Documents/AFT/OS ATIVAS` e a saída é o
+> Sem argumento, o script resolve a pasta das OS sozinho (mesma ordem do Passo 0) e a saída é o
 > `painel.html` na pasta acima das OS. Argumentos: `[PASTA_OS_ATIVAS] [SAIDA_HTML]
 > [SAIDA_ARTIFACT] [--scan]`.
 
@@ -136,7 +141,7 @@ Se o AFT pedir o painel **interativo** ("quero marcar direto no painel", "painel
 mesmo painel, mas os cards ganham ações:
 
 ```bash
-python ~/.claude/skills/_scripts/servir_painel.py "<PASTA_OS_ATIVAS>" --abrir
+python ~/.claude/skills/_scripts/servir_painel.py "<OS_ATIVAS>" --abrir
 ```
 
 - Endereço: **http://127.0.0.1:8347** (só a máquina do AFT enxerga — nada sai para a
@@ -163,7 +168,7 @@ python ~/.claude/skills/_scripts/servir_painel.py "<PASTA_OS_ATIVAS>" --abrir
   `/aft-setup` instala isso por padrão e o `/aft-atualizar` garante em quem ainda não tem;
   se faltar nesta máquina, instale com:
   ```bash
-  python ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<PASTA_OS_ATIVAS>"
+  python ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<OS_ATIVAS>"
   ```
   No Windows usa o Agendador de Tarefas (gatilho "ao fazer logon", `pythonw.exe` sem
   janela, reinício automático se cair); no macOS um LaunchAgent com `KeepAlive`. Remover:
@@ -189,7 +194,7 @@ na conta claude.ai do AFT, fora do computador dele.
    computador."* Se a resposta não for sim, pare aqui.
 2. Gere a versão para artefato (sem caminhos locais):
    ```bash
-   python ~/.claude/skills/_scripts/gerar_painel.py "<PASTA_OS_ATIVAS>" "" "<PASTA_OS_ATIVAS>/../painel-artifact.html"
+   python ~/.claude/skills/_scripts/gerar_painel.py "<OS_ATIVAS>" "" "<OS_ATIVAS>/../painel-artifact.html"
    ```
 3. Chame a tool **Artifact** com `action: "list"` e procure um artefato de título
    **"Painel AFT"**.
@@ -210,7 +215,7 @@ na instalação/primeira atualização. Se o AFT pedir aqui, fora desses fluxos 
 painel se atualize sozinho todo dia"), use o mesmo script — não reescreva a lógica na mão:
 
 ```bash
-python "<python_path>" ~/.claude/skills/_scripts/instalar_rotina_painel.py instalar "<python_path>" "<PASTA_OS_ATIVAS>"
+python "<python_path>" ~/.claude/skills/_scripts/instalar_rotina_painel.py instalar "<python_path>" "<OS_ATIVAS>"
 ```
 
 Detecta macOS (launchd) ou Windows (Agendador de Tarefas) sozinho; padrão 07:00 (`--hora

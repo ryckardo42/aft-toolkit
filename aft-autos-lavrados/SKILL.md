@@ -25,6 +25,20 @@ description: >
 # autos-lavrados — Snapshot do Sistema Auditor
 **AFT Toolkit** (Windows)
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Quando usar
 
 Use quando o AFT quer um retrato atualizado do que **efetivamente já foi transmitido** no Sistema Auditor — distinto dos rascunhos `.txt` gerados pelo `/aft-gera-ai`, que são apenas o ponto de partida da importação.
@@ -42,7 +56,7 @@ Cenários típicos:
   - **Windows:** o script usa esse caminho automaticamente.
   - **Mac com Parallels:** o disco C: da máquina virtual precisa estar compartilhado/montado (aparece no Finder como `/Volumes/[C] Windows 11/…`). O script **detecta sozinho** a pasta PRO sob `/Volumes/*/SistemasAFT/…` — não precisa informar caminho. Se o volume não estiver montado, peça ao AFT (em uma frase) para ativar o compartilhamento do disco no Parallels.
   - Instalação em caminho fora do padrão (qualquer SO): passe a pasta `PRO` como 3º argumento ao script (veja Passo 2).
-- Pasta da OS em `~/Documents/AFT/OS ATIVAS/<NOME_DA_OS>` com `memory.md` (o nome pode ou não conter o CNPJ — ver Passo 1).
+- Pasta da OS em `<OS_ATIVAS>/<NOME_DA_OS>` com `memory.md` (o nome pode ou não conter o CNPJ — ver Passo 1).
 - `pypdf` instalado (`pip install pypdf` — o `/aft-setup` já faz). Se ausente, o
   scan reporta o auto como ilegível com a dica de instalação.
 - (opcional) `soffice` (LibreOffice) no PATH, para o Passo 5.5 exportar o
@@ -61,7 +75,7 @@ Cenários típicos:
 
 1. Liste OS ATIVAS:
    ```bash
-   ls ~/Documents/AFT/"OS ATIVAS"/
+   ls "<OS_ATIVAS>"/
    ```
 2. Para cada pasta, descubra o **identificador** (CNPJ/CPF) do autuado, nesta ordem:
    - regex `^(.+) (\d{11,14})$` sobre o nome da pasta (14 díg. = CNPJ, 11 = CPF/CAEPF);
@@ -187,8 +201,8 @@ Para cada auto **válido** (Passo 2.5 — `unico`, `mantido_ultimo`, `manter_tod
 1. Liste as subpastas de lote. No layout de 22/07/2026 elas ficam em `AUTOS/`; OS ainda
    não migradas as têm na raiz — procure **nos dois lugares**:
    ```bash
-   ls -d ~/Documents/AFT/"OS ATIVAS"/"<PASTA_EMPRESA>"/AUTOS/Autos*/ 2>/dev/null
-   ls -d ~/Documents/AFT/"OS ATIVAS"/"<PASTA_EMPRESA>"/Autos*/ 2>/dev/null
+   ls -d "<OS_ATIVAS>"/"<PASTA_EMPRESA>"/AUTOS/Autos*/ 2>/dev/null
+   ls -d "<OS_ATIVAS>"/"<PASTA_EMPRESA>"/Autos*/ 2>/dev/null
    ```
 2. Em cada subpasta, leia os `.txt` (saídas do `/aft-gera-ai`) e os `autos*.md` (rascunhos). Extraia números de ementa via regex `(\d{6}-\d)` ou `Ementa:\s*(\d{6,7})`. Normalize removendo hífen (7 dígitos) para comparar.
 3. Compare com `ementa_num` dos autos lavrados (também normalizado).

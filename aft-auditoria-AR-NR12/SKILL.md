@@ -22,6 +22,20 @@ compatibility: Windows (Git Bash) e macOS. NotebookLM opcional (config do /aft-s
 # auditoria-AR-NR12 — Julgamento de laudos e apreciações de risco (NR-12 / ISO 12100)
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Julgar tecnicamente o documento que a empresa fiscalizada apresenta para demonstrar a
@@ -66,7 +80,7 @@ faça UMA pergunta e aguarde:
 > (b) resposta a notificação? E tem algum ponto que você já suspeita ou quer que eu observe
 > com atenção?"
 
-**Localize a pasta da OS** em `~/Documents/AFT/OS ATIVAS/` (empresa/CNPJ citados na
+**Localize a pasta da OS** em `<OS_ATIVAS>/` (empresa/CNPJ citados na
 conversa; senão, pergunte ou liste candidatas). Procure `inspecao-fisica.md` e `memory.md`
 na pasta — o que o AFT constatou in loco (proteções ausentes, máquina interditada) é a
 lente de confronto: um laudo que atesta conformidade de máquina cujo defeito de campo não

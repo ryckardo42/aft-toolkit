@@ -17,6 +17,20 @@ description: >
 
 # notebooklm-login — Conectar o NotebookLM (mínima intervenção, sem terminal)
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Deixar o comando `notebooklm` autenticado na conta Google do AFT, para as skills
@@ -68,7 +82,7 @@ notebooklm auth check --test --json
 
 ## Passo 1b - Descobrir o navegador do AFT (uma vez)
 
-Leia `notebooklm_browser` em `~/Documents/AFT/aft-config.md`. Se estiver vazio (ou o
+Leia `notebooklm_browser` em `<PASTA_AFT>/aft-config.md`. Se estiver vazio (ou o
 arquivo não existir), pergunte ao AFT, em uma frase: *"Você usa o Chrome ou o Edge com
 a sua conta do Gmail?"* e grave a resposta nesse campo (`chrome` ou `edge`) para não
 perguntar de novo nas próximas reconexões. Chame a escolha de `<NAV>` nos passos abaixo.

@@ -131,6 +131,16 @@ def log(msg):
 def pasta_os_ativas(cli=None):
     if cli:
         return Path(cli)
+    # Mesma resolucao do painel e do doctor (inclui o campo `pasta_os:` do
+    # aft-config.md); sem isso o vigia varreria uma pasta diferente da deles.
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pasta_aft import pasta_os_ativas as _resolver
+        p = _resolver()
+        if p.is_dir() and any(p.iterdir()):
+            return p
+    except Exception:
+        pass
     p = PASTA_AFT / "OS ATIVAS"
     if p.is_dir() and any(p.iterdir()):
         return p

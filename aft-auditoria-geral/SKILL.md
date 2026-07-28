@@ -21,6 +21,20 @@ description: >
 # auditoria-geral — Auditoria (campo + documental) com Redação de Autos de Infração
 **AFT Toolkit** — versão para Windows (Claude Code desktop)
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 > Antes chamada `/aft-auditoria-geral`. O nome mudou porque a skill nunca foi só da "inicial":
 > ela enquadra e redige autos tanto dos achados de campo quanto da auditoria documental
 > (análise do PGR, do PPRA, dos ASOs, das respostas ao DET, etc.). Os gatilhos antigos
@@ -47,13 +61,13 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
 
 1. **Identificar a empresa.** Liste as OS ativas:
    ```bash
-   ls ~/Documents/AFT/"OS ATIVAS"/
+   ls "<OS_ATIVAS>"/
    ```
    Apresente a lista numerada ao AFT e pergunte qual empresa está sendo fiscalizada. Se o contexto da conversa já menciona a empresa, confirme em vez de perguntar.
 
 2. **Ler o `memory.md`** da empresa selecionada (se existir):
    ```
-   ~/Documents/AFT/OS ATIVAS/[PASTA_EMPRESA]/memory.md
+   <OS_ATIVAS>/[PASTA_EMPRESA]/memory.md
    ```
    Extraia o que houver: razão social (título), `**CNPJ:**`, município, número de trabalhadores, datas. É um arquivo markdown simples — não exige schema.
 
@@ -77,7 +91,7 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
 
    **Fonte A — relato de campo (`inspecao-fisica.md`):** produzido pela `/aft-inspecao-fisica` — bullets fiéis, conferidos, porém descritivos (sem NR). Procure-o:
    ```bash
-   ls ~/Documents/AFT/"OS ATIVAS"/"[PASTA_EMPRESA]"/inspecao-fisica.md
+   ls "<OS_ATIVAS>"/"[PASTA_EMPRESA]"/inspecao-fisica.md
    ```
    - **Encontrado:** leia-o; cada bullet é matéria-prima factual. O cabeçalho traz empresa e data da inspeção (use a data como default de `[data_inspecao]`).
    - **Não encontrado:** siga só com as outras fontes (não é obrigatório).

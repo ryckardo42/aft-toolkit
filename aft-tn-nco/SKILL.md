@@ -20,12 +20,26 @@ description: >
 # tn-nco — Notificação para Correção de Irregularidades
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 Gera o **texto** de uma notificação para a empresa **corrigir** irregularidades de Segurança e Medicina do Trabalho constatadas em inspeção física ou auditoria documental. O AFT cola o resultado no DET (campo Introdução + um Item Solicitado por irregularidade + campo Observações) e o documento fica salvo como `.md` na pasta da OS.
 
 Esta skill **só redige o texto da notificação**. Ela não lavra auto de infração (isso é `/aft-auditoria-geral` → `/aft-gera-ai`). O preenchimento do template no DET é manual (o AFT cola cada bloco) — o toolkit não automatiza o DET.
 
 ## Pasta base
-`~/Documents/AFT/OS ATIVAS/<EMPREGADOR> <CNPJ>/`
+`<OS_ATIVAS>/<EMPREGADOR> <CNPJ>/`
 
 ---
 
@@ -33,7 +47,7 @@ Esta skill **só redige o texto da notificação**. Ela não lavra auto de infra
 
 A notificação final é salva como `.md` na pasta da OS, então preciso saber qual é.
 
-1. Se um argumento posicional (CNPJ de 14 dígitos ou substring do nome) foi passado, faça match nas pastas de `~/Documents/AFT/OS ATIVAS/`.
+1. Se um argumento posicional (CNPJ de 14 dígitos ou substring do nome) foi passado, faça match nas pastas de `<OS_ATIVAS>/`.
 2. Se a skill foi encadeada na mesma sessão (ex.: depois de `/aft-auditoria-geral`, `/aft-PGR-analise`), herde a OS do contexto.
 3. Múltiplos matches → `AskUserQuestion`. Zero matches e nenhum contexto → pergunte ao AFT o empregador (e, se quiser salvar mesmo sem pasta de OS, ofereça a Área de Trabalho como fallback).
 

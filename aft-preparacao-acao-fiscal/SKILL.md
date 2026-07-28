@@ -32,6 +32,20 @@ description: >
 # preparacao-acao-fiscal — Planejamento pré-visita da ação fiscal
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 Organizar o que o AFT já sabe **antes de ir a campo**: quem vai fiscalizar, por quê (denúncia, OS, rotina), o que a OS manda verificar e quais documentos vale a pena já solicitar pelo DET (via `/aft-NAD`). O resultado é um `preparacao.md` na pasta da OS — um roteiro de ação, não um auto nem um relato de inspeção.
@@ -41,7 +55,7 @@ Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o pró
 **Aprofundamento técnico é da `/aft-consulta`.** Esta skill não consulta os NotebookLMs nem estuda temas por conta própria: ela organiza os fatos e os documentos. Quando o AFT quiser tirar uma dúvida técnica, achar a ementa certa ou entender o que exigir sobre um tema, o caminho é `/aft-consulta` — antes, durante ou depois da preparação, quantas vezes precisar. Não ofereça estudo prévio nem pergunte "quais temas quer estudar".
 
 ## Pasta base
-`~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/aft-nova-os`)
+`<OS_ATIVAS>/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/aft-nova-os`)
 
 ---
 
@@ -318,7 +332,7 @@ Apresente o resumo final:
 
 ```
 ✅ Preparação registrada — <EMPREGADOR>
-📄 ~/Documents/AFT/OS ATIVAS/<NOME_DA_AUDITORIA>/preparacao.md
+📄 <OS_ATIVAS>/<NOME_DA_AUDITORIA>/preparacao.md
 🖨️ preparacao.docx — triagem para levar impressa na visita
 
 Documentos no checklist: M   ·   NAD gerada: sim/não

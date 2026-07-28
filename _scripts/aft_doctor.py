@@ -33,6 +33,7 @@ HOME = Path.home()
 # Resolvido de verdade na checagem 6 (pasta_aft.py). Este e so o fallback se
 # o import falhar - no Windows com OneDrive ele costuma estar errado.
 AFT_DIR = HOME / "Documents" / "AFT"
+OS_DIR = None  # idem; a checagem 15 so roda se a 6 tiver resolvido
 
 checks = []
 
@@ -179,12 +180,21 @@ try:
 
     diag = diagnostico()
     AFT_DIR = Path(diag["pasta_aft"])
+    # A OS ATIVAS pode estar redirecionada sozinha (campo `pasta_os:`), entao
+    # nunca presuma AFT_DIR/"OS ATIVAS" - use o que o resolvedor devolveu.
+    OS_DIR = Path(diag.get("os_ativas") or (AFT_DIR / "OS ATIVAS"))
     _, criadas = garantir_estrutura()
 
     # O rotulo so vale quando a pasta em uso E a da Documentos real; se estiver
     # fora do lugar, quem explica e a checagem seguinte (nao rotule errado).
     onde = f"{AFT_DIR}"
-    if not diag["fora_do_lugar"]:
+    # Quando o AFT escolheu a pasta, diga isso: senao ele ve um caminho fora do
+    # padrao e acha que e defeito (e o /aft-doctor iria "consertar" a escolha).
+    if diag.get("origem") == "ponteiro":
+        onde += " (lugar escolhido por voce - atualizar o toolkit nao muda isso)"
+    elif diag.get("origem") == "env":
+        onde += " (definida pela variavel de ambiente PASTA_AFT)"
+    elif not diag["fora_do_lugar"]:
         if diag["onedrive"]:
             onde += " (dentro do OneDrive - e a sua pasta Documentos de verdade)"
         elif diag["redirecionada"]:
@@ -197,7 +207,7 @@ try:
             "Se ainda nao rodou o /aft-setup, rode - ele grava o aft-config.md "
             "com os seus dados (CIF/UORG).")
     else:
-        n_empresas = len(list((AFT_DIR / "OS ATIVAS").glob("*/memory.md")))
+        n_empresas = len(list(OS_DIR.glob("*/memory.md")))
         add("Pasta de trabalho", "ok",
             f"{onde} - {n_empresas} empresa(s) em OS ATIVAS")
 
@@ -607,6 +617,66 @@ elif _vigia_ok is False:
         "(/aft-atualizar) para instalar - ou peca 'instala o vigia de "
         "sessoes'. Sem ele, as sessoes por empresa so sao criadas pedindo "
         "a /aft-sessoes-os.")
+
+# 15. Servicos apontando para a pasta antiga ---------------------------------
+# A rotina e o servidor do painel guardam o caminho das OS por DENTRO (plist no
+# macOS, tarefa agendada no Windows), congelado na hora da instalacao. Se o AFT
+# mudou a pasta de trabalho de lugar depois, eles continuam varrendo a pasta
+# velha - o painel some ou congela sem dar erro nenhum. Aqui so relatamos.
+try:
+    _servicos_velhos = []
+    _alvo = str(OS_DIR)  # so existe se a checagem 6 resolveu a pasta
+    if not _alvo:
+        raise RuntimeError("pasta de trabalho nao resolvida")
+    if sys.platform == "darwin":
+        for _label, _nome in (("br.aft.painel", "rotina do painel"),
+                              ("br.aft.painel-servidor", "servidor do painel")):
+            _p = HOME / "Library" / "LaunchAgents" / f"{_label}.plist"
+            if _p.is_file():
+                _txt = _p.read_text(encoding="utf-8", errors="replace")
+                # O caminho vai num <string> proprio dos ProgramArguments.
+                if "OS ATIVAS" in _txt and _alvo not in _txt:
+                    _servicos_velhos.append(_nome)
+    elif sys.platform.startswith("win"):
+        for _tarefa, _nome in (("Painel AFT", "rotina do painel"),
+                               ("Painel AFT - Servidor", "servidor do painel")):
+            _r = subprocess.run(["schtasks", "/Query", "/TN", _tarefa, "/XML"],
+                                capture_output=True, text=True)
+            if _r.returncode == 0 and "OS ATIVAS" in _r.stdout \
+                    and _alvo not in _r.stdout:
+                _servicos_velhos.append(_nome)
+
+    if _servicos_velhos:
+        add("Servicos apontando para a pasta antiga", "aviso",
+            f"{' e '.join(_servicos_velhos)} ainda varre(m) a pasta de OS de "
+            f"antes da mudanca - a sua pasta agora e '{_alvo}'",
+            "Eles guardam o caminho de quando foram instalados. Reinstale os "
+            "dois com o caminho novo: instalar_rotina_painel.py e "
+            "instalar_servidor_painel.py, passando "
+            f"'{_alvo}' como pasta de OS. Ate la, o painel automatico mostra "
+            "dados da pasta antiga (o /aft-painel na mao continua correto).")
+except Exception:
+    pass  # checagem acessoria: nunca derruba o diagnostico
+
+# 16. Skills proprias com o caminho da pasta fixo ----------------------------
+# As skills `minha-*` sao do AFT e o toolkit nunca as edita. Mas uma que tenha
+# '~/Documents/AFT' escrito no texto vai olhar a pasta errada no dia em que ele
+# mudar a pasta de trabalho de lugar - e falhar calada. So avisamos.
+try:
+    if OS_DIR and str(OS_DIR) != str(HOME / "Documents" / "AFT" / "OS ATIVAS"):
+        _fixas = [p.parent.name for p in SKILLS_DIR.glob("minha-*/SKILL.md")
+                  if "Documents/AFT" in p.read_text(encoding="utf-8",
+                                                    errors="replace")]
+        if _fixas:
+            add("Skills proprias com o caminho antigo", "aviso",
+                f"{', '.join('/' + n for n in _fixas)} tem '~/Documents/AFT' "
+                f"escrito por dentro, mas a sua pasta agora e '{OS_DIR}'",
+                "Sao skills suas - o toolkit nunca as edita sozinho. Peca ao "
+                "Claude para trocar o caminho fixo pela resolucao usada nas "
+                "skills oficiais (pasta_aft.py --os-ativas), senao elas vao "
+                "procurar seus arquivos no lugar errado.")
+except Exception:
+    pass  # checagem acessoria: nunca derruba o diagnostico
 
 # ----------------------------------------------------------------------------
 resumo = {

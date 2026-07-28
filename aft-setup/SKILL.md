@@ -21,8 +21,9 @@ description: >
 Deixar o computador do AFT pronto para usar todas as skills do toolkit. Roda uma única
 vez (ou quando o auditor quiser mudar algo). Ao final, existe:
 
-- A pasta de trabalho `~/Documents/AFT/` com `OS ATIVAS/` e `OS ARQUIVADAS/`.
-- O arquivo `~/Documents/AFT/aft-config.md` com os dados do auditor e da unidade.
+- A pasta de trabalho (padrão `~/Documents/AFT/`, mas o AFT pode escolher outro
+  lugar no Passo 2) com `OS ATIVAS/` e `OS ARQUIVADAS/`.
+- O arquivo `aft-config.md`, dentro dela, com os dados do auditor e da unidade.
 - As bibliotecas Python instaladas (`pillow`, `pikepdf`).
 - (Opcional, recomendado) O CLI do NotebookLM autenticado.
 
@@ -86,6 +87,33 @@ vigia de sessões). É idempotente: rodar de novo não recria nada.
 > Se o JSON trouxer `duplicadas`, existe outra pasta AFT de uma instalação anterior no
 > lugar errado. Avise o AFT: se tiver fiscalizações dentro, mover as subpastas para a
 > `OS ATIVAS` correta; se estiver vazia, pode apagar.
+
+### O AFT quer a pasta em outro lugar?
+
+Mostre o caminho resolvido e pergunte, **em uma frase**, se ele quer manter ali ou usar
+outro lugar (HD externo, pasta sincronizada na nuvem, outro disco). Não insista: o padrão
+serve para quase todo mundo — só siga adiante se ele **pedir** a mudança.
+
+Se ele quiser outro lugar, peça a pasta que vai **conter** a `OS ATIVAS` (não a própria
+`OS ATIVAS` — o script recusa e explica se ele apontar a subpasta) e rode:
+
+```bash
+python "<python_path>" ~/.claude/skills/_scripts/pasta_aft.py --definir "<caminho>" --mover
+```
+
+- `--mover` leva junto o que já existir na pasta antiga. **Nunca sobrescreve**: se o
+  destino já tiver dados, o script recusa e explica como juntar as duas à mão.
+- A escolha fica gravada em `~/.claude/aft-pasta.txt`, **fora** do repositório das skills.
+  Diga isso ao AFT: *"atualizar o toolkit nunca vai desfazer essa escolha"*.
+- Daí em diante, **use o `pasta_aft` do JSON** em todos os passos seguintes.
+
+> Deste ponto em diante, onde este texto disser `<PASTA_AFT>` use o `pasta_aft` do JSON
+> (a pasta de trabalho) e onde disser `<OS_ATIVAS>` use `<PASTA_AFT>/OS ATIVAS`. Nunca
+> escreva `~/Documents/AFT` nas mensagens ao AFT: mostre sempre o caminho real dele.
+
+> Nuvem (OneDrive/Dropbox/iCloud): funciona, mas avise em uma frase que o sincronismo
+> pode segurar arquivos abertos e que os dados de fiscalização passam a ser copiados para
+> o servidor do provedor — decisão dele, não sua.
 
 Explique ao AFT, com destaque (essa é a informação mais importante do setup — o AFT
 vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização), usando o
@@ -455,9 +483,9 @@ Apresente:
 ```
 ✅ AFT Toolkit configurado!
 
-📁 Suas empresas fiscalizadas ficam em: ~/Documents/AFT/OS ATIVAS/
-   (arquivadas ao final da fiscalização em ~/Documents/AFT/OS ARQUIVADAS/)
-📄 Configuração:      ~/Documents/AFT/aft-config.md
+📁 Suas empresas fiscalizadas ficam em: <OS_ATIVAS>/
+   (arquivadas ao final da fiscalização em <PASTA_AFT>/OS ARQUIVADAS/)
+📄 Configuração:      <PASTA_AFT>/aft-config.md
 👤 Perfil do auditor: ~/.claude/CLAUDE.md [instalado / mantido o existente]
 🤖 Agentes:           [N instalados em ~/.claude/agents (revisor de autos + varredura
                        do Sistema Auditor) / falhou — skills seguem no modo inline]
@@ -472,7 +500,7 @@ Apresente:
 
 ➡️ JÁ FISCALIZAVA ANTES DO TOOLKIT? Primeiro passo essencial:
    copie as pastas das suas auditorias (do jeito que estiverem) para
-   ~/Documents/AFT/OS ATIVAS/ e me peça /aft-organiza-os — eu organizo tudo e
+   <OS_ATIVAS>/ e me peça /aft-organiza-os — eu organizo tudo e
    trago os autos do Sistema Auditor (/aft-autos-lavrados). As sessões por
    empresa (grupo "OS ATIVAS" do menu lateral) são automáticas: aparecem
    na próxima vez que você fechar e reabrir o app.
@@ -488,7 +516,7 @@ Outras: /aft-registro · /aft-PGR-analise · /aft-rt-rgi · /aft-det-630 · /aft
 ```
 
 Se a pasta `OS ATIVAS/` estiver vazia, pergunte ativamente: *"Você já tem fiscalizações
-em andamento? Copie as pastas delas para ~/Documents/AFT/OS ATIVAS/ (do jeito que
+em andamento? Copie as pastas delas para <OS_ATIVAS>/ (do jeito que
 estiverem) e me avise — eu rodo o /aft-organiza-os, que organiza tudo e busca os autos já
 transmitidos no Sistema Auditor. As sessões por empresa aparecem sozinhas no grupo
 'OS ATIVAS' quando você fechar e reabrir o app."*

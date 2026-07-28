@@ -55,7 +55,9 @@ Pergunte, em linguagem simples e em uma rodada (aceite o que ele já contou):
    organiza depois. Se ele não souber detalhar, ajude com perguntas ("de onde vêm os
    dados? o resultado é um texto na tela, um arquivo salvo?").
 4. **Ela usa algum arquivo ou pasta?** (ex.: lê o `memory.md` da OS, salva um `.md` na
-   pasta da empresa). Opcional.
+   pasta da empresa). Opcional. Se a resposta envolver a pasta de trabalho do AFT,
+   anote: a skill nova vai precisar **resolver** esse caminho, nunca escrevê-lo fixo
+   (ver a regra da pasta de trabalho na FASE 3).
 
 Se algo ficar vago, pergunte antes de escrever — é melhor uma pergunta a mais do que uma
 skill que não faz o que ele quis.
@@ -97,6 +99,21 @@ description: >
 # minha-<nome> — <título curto>
 **Skill própria do AFT**
 
+<!-- SÓ inclua o bloco abaixo se a skill mexer na pasta de trabalho do AFT;
+     numa skill que não toca em arquivo, ele é ruído — apague. -->
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
 ## Objetivo
 <o que faz, em 1–2 frases>
 
@@ -118,6 +135,12 @@ Regras ao escrever:
   explicitamente um modelo, e nesse caso use um apelido (`sonnet`, `opus`, `haiku`).
 - A `description` é a parte mais importante: é o que dispara a skill. Capriche nos
   gatilhos que o AFT deu, com as frases literais entre aspas.
+- **Pasta de trabalho: nunca fixe o caminho.** Se a skill lê ou grava qualquer coisa em
+  `OS ATIVAS/` (ou na pasta AFT), **não escreva `~/Documents/AFT`** — esse é só o padrão,
+  e o AFT pode ter mudado a pasta de lugar. Mantenha o bloco do esqueleto e use
+  `<OS_ATIVAS>`/`<PASTA_AFT>` no texto da skill; quem resolve é o
+  `pasta_aft.py`, como fazem todas as skills oficiais. Uma skill com o caminho fixo passa
+  a olhar a pasta errada no dia em que ele mudar — e falha em silêncio, sem erro nenhum.
 - Se a skill precisar de lógica exata e repetitiva (cálculo, formatação rígida, troca de
   dados), lembre que o certo é um **script** determinístico — ofereça criar um `.py` na
   pasta da skill em vez de pedir para a IA "fazer de cabeça" (mesma filosofia do toolkit).

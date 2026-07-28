@@ -24,6 +24,20 @@ description: >
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
 **AFT Toolkit**
 
+> **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
+> lugar (HD externo, nuvem, outro disco). Nunca presuma `~/Documents/AFT`:
+> resolva **uma vez, no início**, e use o que voltar onde este texto disser
+> `<OS_ATIVAS>` (a pasta que contém as OS) ou `<PASTA_AFT>` (a pasta acima dela).
+>
+> **Nas mensagens ao AFT, escreva o caminho de verdade** — nunca ecoe
+> `<OS_ATIVAS>`/`<PASTA_AFT>` na tela: ele precisa saber onde abrir a pasta.
+>
+> ```bash
+> python ~/.claude/skills/_scripts/pasta_aft.py --os-ativas   # -> <OS_ATIVAS>
+> python ~/.claude/skills/_scripts/pasta_aft.py --path        # -> <PASTA_AFT>
+> ```
+
+
 ## Objetivo
 
 O colega que começa a usar o toolkit já tem fiscalizações em andamento, com os documentos
@@ -54,7 +68,7 @@ Processe **sempre a pasta OS ATIVAS inteira** — não pergunte qual auditoria o
 Classifique cada subpasta em três grupos:
 
 ```bash
-for d in ~/Documents/AFT/"OS ATIVAS"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
+for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
 ```
 
 (No Mac, use a pasta de OS do `aft-config.md` — campo `pasta_os` — se existir.)
