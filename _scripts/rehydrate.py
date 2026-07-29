@@ -19,6 +19,20 @@ Aborta (exit 1) se:
   - sobrar qualquer token [[...]] não resolvido no arquivo de saída;
   - algum caractere do texto não existir em ISO-8859-1.
 """
+
+try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
+    import sys as _sys
+    from pathlib import Path as _Path
+    _aqui = _Path(__file__).resolve()
+    for _p in (_aqui.parent, *(_a / "_scripts" for _a in _aqui.parents)):
+        if (_p / "erro_ticket.py").is_file():
+            _sys.path.insert(0, str(_p))
+            from erro_ticket import ativar as _ativar_ticket
+            _ativar_ticket(__file__)
+            break
+except Exception:
+    pass
+
 import json
 import re
 import sys

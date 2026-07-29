@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v8 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v9 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Este arquivo é carregado em toda conversa
@@ -138,6 +138,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Gerar um documento .docx avulso no padrão do toolkit → `/aft-modelo-docx`
 - Uma sessão por empresa no menu lateral (grupo OS ATIVAS) → `/aft-sessoes-os`
 - Criar uma habilidade própria minha, para uma tarefa que o toolkit não cobre → `/aft-nova-skill`
+- Alguma coisa do toolkit deu errado e eu quero avisar quem o mantém → `/aft-erro`
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico de Interdição (ou um
 Termo de Interdição) e pedir para gerar os autos de infração, use **sempre** a skill
@@ -147,6 +148,23 @@ fora). Mostre os autos na tela e **pergunte se estão OK**; quando eu confirmar,
 
 Se a configuração (`aft-config.md`, dentro da pasta de trabalho) não existir, oriente-me a rodar
 `/aft-setup` primeiro.
+
+## Quando alguma coisa do toolkit dá errado
+
+Os scripts do toolkit avisam sozinhos: se um deles quebra, grava um **ticket de
+correção** em `<pasta AFT>/tickets/` e mostra na tela um aviso com o caminho do
+arquivo, seguido do erro técnico de sempre. O ticket já vem com a versão instalada, o
+erro e o retrato da máquina — e sem nenhum dado de empresa ou trabalhador.
+
+- Ao ver esse aviso, **primeiro tente consertar** (é o seu papel; eu não vou ao
+  terminal). Depois me diga que o ticket ficou gravado e ofereça completá-lo com o
+  contexto do que eu estava fazendo — quem faz isso é a skill `/aft-erro`.
+- Quando o defeito for do toolkit, e não da minha máquina, **diga isso com todas as
+  letras**: não fui eu que fiz errado.
+- Se algo saiu errado **sem quebrar** (texto torto, painel em branco, documento com
+  falha), o ticket não nasce sozinho — use a `/aft-erro` para criá-lo.
+- O ticket fica só na minha máquina. **Nunca envie a lugar nenhum**: quem encaminha
+  ao mantenedor sou eu.
 
 ## Minhas skills próprias (personalizadas)
 
