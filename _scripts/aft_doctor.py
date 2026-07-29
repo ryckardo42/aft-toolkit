@@ -20,6 +20,20 @@ Severidades:
 
 Uso: python ~/.claude/skills/_scripts/aft_doctor.py
 """
+
+try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
+    import sys as _sys
+    from pathlib import Path as _Path
+    _aqui = _Path(__file__).resolve()
+    for _p in (_aqui.parent, *(_a / "_scripts" for _a in _aqui.parents)):
+        if (_p / "erro_ticket.py").is_file():
+            _sys.path.insert(0, str(_p))
+            from erro_ticket import ativar as _ativar_ticket
+            _ativar_ticket(__file__)
+            break
+except Exception:
+    pass
+
 import json
 import shutil
 import subprocess
@@ -294,6 +308,40 @@ elif cfg_path.is_file():
         "Rode /aft-setup para gravar o caminho completo do Python (evita o atalho "
         "vazio 'python3' da Microsoft Store).")
 
+# 8c. Conversor de .docx em PDF ----------------------------------------------
+# A Relacao de autos (e outros documentos) sai em .docx e tenta virar PDF
+# sozinha. Quem converte e o LibreOffice headless ou, no Windows, o proprio
+# Word por automacao. Sem nenhum dos dois o .docx continua saindo normalmente -
+# so o PDF exige exportar na mao -, por isso e aviso, nunca erro.
+_conv = shutil.which("soffice") or shutil.which("libreoffice")
+_word = None
+if not _conv and sys.platform.startswith("win"):
+    try:
+        import winreg as _wr
+        _chave = r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\winword.exe"
+        for _raiz in (_wr.HKEY_LOCAL_MACHINE, _wr.HKEY_CURRENT_USER):
+            try:
+                with _wr.OpenKey(_raiz, _chave) as _k:
+                    _word = _wr.QueryValueEx(_k, None)[0]
+                    break
+            except OSError:
+                continue
+    except Exception:
+        _word = None
+
+if _conv:
+    add("Conversor de PDF", "ok", f"LibreOffice em {_conv}")
+elif _word:
+    add("Conversor de PDF", "ok", "Microsoft Word (automacao COM) - "
+                                  "usado quando nao ha LibreOffice")
+else:
+    add("Conversor de PDF", "aviso",
+        "nem LibreOffice nem Word encontrados nesta maquina",
+        "Os documentos .docx continuam sendo gerados normalmente; so a versao "
+        "em PDF sai na mao (abra o .docx e use Arquivo > Salvar como... > PDF). "
+        "Para automatizar, instale o LibreOffice (gratuito) - o toolkit o usa "
+        "sozinho assim que ele aparecer.")
+
 # 9. NotebookLM (opcional) ---------------------------------------------------
 # Checa o CLI e, se presente, o estado da sessao (validacao LOCAL, sem rede).
 # A dica nunca manda o AFT ao terminal: aponta para a skill /aft-notebooklm-login.
@@ -530,17 +578,44 @@ if n_proprias:
 # /aft-atualizar garante em quem nao tem. Aqui so conferimos se esta no ar.
 import urllib.request as _url
 
+# Pergunta pelo /api/ping, que responde na hora. NUNCA pela raiz "/": ela
+# regenera o painel antes de responder (varre as OS e le a 1a pagina dos PDFs)
+# e, com uma dezena de auditorias, passa de 10 segundos - o diagnostico
+# acusava "nao esta respondendo" um servidor perfeitamente saudavel.
+_no_ar, _pasta_servida, _lento = False, None, False
 try:
-    # A 1a resposta apos o servidor subir pode levar alguns segundos (varre
-    # todas as OS ATIVAS antes de responder) - 3s gerava falso "nao responde".
-    with _url.urlopen("http://127.0.0.1:8347/", timeout=10) as _r:
+    with _url.urlopen("http://127.0.0.1:8347/api/ping", timeout=15) as _r:
         _no_ar = 200 <= _r.status < 500
+        try:
+            _pasta_servida = json.loads(_r.read().decode("utf-8")).get("os_ativas")
+        except Exception:
+            _pasta_servida = None
 except Exception:
-    _no_ar = False
+    # Servidor de versao antiga (sem /api/ping) responde 404 - urlopen levanta.
+    # Ai vale a pena esperar a raiz, com folga para a varredura.
+    try:
+        with _url.urlopen("http://127.0.0.1:8347/", timeout=40) as _r:
+            _no_ar = 200 <= _r.status < 500
+            _lento = True
+    except Exception:
+        _no_ar = False
 
-if _no_ar:
+if _no_ar and _pasta_servida and OS_DIR and \
+        Path(_pasta_servida).resolve() != Path(OS_DIR).resolve():
+    # Sintoma tipico de servidor antigo sobrevivente: a porta responde, mas
+    # quem responde varre a pasta de OS de ANTES da mudanca de lugar.
+    add("Painel interativo (servidor)", "aviso",
+        f"o servidor no ar esta servindo '{_pasta_servida}', mas a sua pasta de "
+        f"OS agora e '{OS_DIR}'",
+        "Provavelmente um servidor antigo continuou de pe segurando a porta "
+        "8347. Peca ao Claude para reinstalar o servidor do painel "
+        "(_scripts/instalar_servidor_painel.py instalar), que derruba o "
+        "antigo antes de subir o novo.")
+elif _no_ar:
     add("Painel interativo (servidor)", "ok",
-        "no ar em http://127.0.0.1:8347 (so na sua maquina)")
+        "no ar em http://127.0.0.1:8347 (so na sua maquina)"
+        + (" - versao antiga, sem /api/ping; sera atualizada no proximo login"
+           if _lento else ""))
 else:
     add("Painel interativo (servidor)", "aviso",
         "servidor do painel nao esta respondendo em 127.0.0.1:8347",

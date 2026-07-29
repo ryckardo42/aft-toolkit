@@ -59,9 +59,14 @@ Cenários típicos:
 - Pasta da OS em `<OS_ATIVAS>/<NOME_DA_OS>` com `memory.md` (o nome pode ou não conter o CNPJ — ver Passo 1).
 - `pypdf` instalado (`pip install pypdf` — o `/aft-setup` já faz). Se ausente, o
   scan reporta o auto como ilegível com a dica de instalação.
-- (opcional) `soffice` (LibreOffice) no PATH, para o Passo 5.5 exportar o
-  `relacao-autos.pdf` automaticamente. Sem ele, o `.docx` é gerado normalmente
-  e a skill orienta a exportar o PDF manualmente pelo Word.
+- (opcional) um conversor de PDF para o Passo 5.5 exportar o `relacao-autos.pdf`
+  automaticamente: `soffice` (LibreOffice) no PATH ou, no Windows, o próprio
+  Microsoft Word (o toolkit o dirige por automação COM, sem exigir instalação
+  nenhuma). Sem nenhum dos dois, o `.docx` é gerado normalmente e a skill
+  orienta a exportar o PDF manualmente pelo Word.
+- **Nada de `zip`/`unzip`:** o `.docx` é montado com a biblioteca padrão do
+  Python. Uma instalação limpa do Windows não tem esses comandos (e o Git for
+  Windows traz só o `unzip.exe`), então o script nunca depende deles.
 
 ## Constantes
 
@@ -277,11 +282,12 @@ python3 ~/.claude/skills/aft-autos-lavrados/scripts/gera_relacao_autos.py "<past
 O script:
 - cria (se não existir) a pasta `<pasta-OS>/AUTOS/Relacao de autos/` (em OS ainda não migradas, sem a caixa `AUTOS/`, usa o lugar antigo `<pasta-OS>/Relacao de autos/`);
 - gera `relacao-autos.docx` a partir do template oficial (`scripts/template-relacao-autos.docx`) — cabeçalho com os logos SIT/AFT **nunca é alterado**; corpo com EMPREGADOR + INSCRIÇÃO, autos agrupados por data (mais antigo → mais recente, ordem do MD preservada), fonte Times New Roman 12pt, texto sempre justificado;
-- tenta converter o mesmo `.docx` para `relacao-autos.pdf` (LibreOffice `soffice` se disponível, senão Word via `docx2pdf`), sem alterar o visual.
+- tenta converter o mesmo `.docx` para `relacao-autos.pdf` sem alterar o visual, pelo `_scripts/docx_para_pdf.py`: LibreOffice headless se disponível, senão o Microsoft Word por automação COM (no Windows). O motor usado aparece no stdout.
 
 Leia o stdout do script:
 - `OK docx: ...` e `OK pdf: ... (via <motor>)` → os dois arquivos foram gerados; informe os caminhos ao AFT.
 - `OK docx: ...` seguido de `AVISO: PDF não gerado automaticamente...` → o `.docx` foi gerado normalmente, mas a conversão para PDF não está disponível nesta máquina (falta LibreOffice/Word, ou a automação do Word não tem permissão do sistema). **Não trate como erro da skill**: informe ao AFT que o `.docx` está pronto em `AUTOS/Relacao de autos/relacao-autos.docx` e que, para o PDF, é só abrir esse arquivo no Word e usar **Arquivo > Salvar como... > PDF**.
+- Se o script parar com um **traceback** e o aviso de que um ticket foi gravado em `<pasta AFT>/tickets/` → é defeito do toolkit, não da máquina do AFT. Diagnostique e conserte se der; depois ofereça a skill `/aft-erro` para completar o ticket com o contexto e encaminhá-lo ao mantenedor.
 - Se o `autos-lavrados.md` não tiver nenhum auto válido no Detalhamento (OS sem autos lavrados), pule este passo — não há o que relacionar.
 
 > Read-only sobre o template: o script sempre lê `template-relacao-autos.docx` e grava um `.docx` novo em `AUTOS/Relacao de autos/`; o template da skill nunca é sobrescrito.

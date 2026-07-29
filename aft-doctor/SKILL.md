@@ -124,9 +124,21 @@ Esta skill **so diagnostica**. Para resolver, encaminhe para o lugar certo:
   python "<python_path>" ~/.claude/skills/_scripts/instalar_servidor_painel.py instalar "<python_path>" "<OS_ATIVAS>"
   ```
   O vigia de sessoes nao precisa: ele resolve a pasta a cada execucao.
+- **"Painel interativo (servidor)" acusando pasta DIFERENTE** (`o servidor no ar esta
+  servindo X, mas a sua pasta de OS agora e Y`) → um servidor antigo sobreviveu a uma
+  mudanca de pasta e continua segurando a porta 8347, servindo dados da pasta de antes.
+  Ofereca reinstalar o servidor (o comando acima), que derruba o antigo antes de subir
+  o novo.
+- **"Conversor de PDF" ausente** → nao e defeito: os documentos `.docx` continuam sendo
+  gerados. So a versao em PDF sai na mao (abrir o `.docx` e usar Arquivo > Salvar
+  como... > PDF). Se o AFT quiser automatizar, o LibreOffice e gratuito e o toolkit
+  passa a usa-lo sozinho assim que ele existir. No Windows com Word instalado esse
+  check ja aparece como ok.
 - Frontmatter de skill quebrado ou modelo pinado indisponivel → ofereca `/aft-atualizar`;
   se ja estiver atualizado e o problema persistir, oriente a avisar o mantenedor
   citando a mensagem do check (pode ser modelo descontinuado ou limitacao do plano).
+- **Qualquer defeito que pareca do proprio toolkit** (e nao da maquina do AFT) → ofereca
+  a skill `/aft-erro`, que monta o ticket de correcao para ele encaminhar ao mantenedor.
 
 So execute uma correcao se o AFT pedir. Nunca instale nada silenciosamente neste fluxo.
 

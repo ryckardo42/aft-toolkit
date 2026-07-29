@@ -35,13 +35,28 @@ e sai — pode chamar quantas vezes quiser.
 """
 from __future__ import annotations
 
+try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
+    import sys as _sys
+    from pathlib import Path as _Path
+    _aqui = _Path(__file__).resolve()
+    for _p in (_aqui.parent, *(_a / "_scripts" for _a in _aqui.parents)):
+        if (_p / "erro_ticket.py").is_file():
+            _sys.path.insert(0, str(_p))
+            from erro_ticket import ativar as _ativar_ticket
+            _ativar_ticket(__file__)
+            break
+except Exception:
+    pass
+
 import datetime
 import html
 import json
+import os
 import re
 import socket
 import subprocess
 import sys
+import threading
 import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -473,6 +488,62 @@ def pagina_doc(titulo: str, corpo: str, pasta: str) -> str:
 """
 
 
+# ── Cache da geração do painel ───────────────────────────────────────────────
+# Gerar o painel varre todas as OS e lê a 1ª página dos PDFs de notificação:
+# com uma dezena de auditorias isso passa de 10 segundos. Regerar a CADA
+# carregamento fazia o painel parecer travado e chegava a derrubar a checagem
+# do /aft-doctor por tempo esgotado. Agora só regeramos quando alguma coisa
+# mudou de verdade.
+
+_cache_lock = threading.Lock()
+_cache_assinatura: tuple | None = None
+
+
+def assinatura_os(base: Path) -> tuple:
+    """Retrato barato do conteúdo das OS: quantidade de arquivos, a data de
+    modificação mais recente entre as PASTAS (que muda quando entra ou sai
+    arquivo, ex.: um PDF novo de notificação) e entre os memory.md, mais a
+    versão do gerador. Só faz stat de diretório e de ficha — nunca abre um
+    PDF —, então custa milissegundos."""
+    n_arquivos = 0
+    mais_novo = 0.0
+    for raiz, _dirs, arquivos in os.walk(base):
+        n_arquivos += len(arquivos)
+        try:
+            mais_novo = max(mais_novo, os.stat(raiz).st_mtime)
+        except OSError:
+            pass
+        if "memory.md" in arquivos:
+            try:
+                mais_novo = max(mais_novo, os.stat(os.path.join(raiz, "memory.md")).st_mtime)
+            except OSError:
+                pass
+    try:
+        versao_gerador = GERAR.stat().st_mtime
+    except OSError:
+        versao_gerador = 0.0
+    return (n_arquivos, round(mais_novo, 3), versao_gerador)
+
+
+def garantir_painel(base: Path, painel: Path) -> None:
+    """Regera o painel.html se (e só se) algo mudou desde a última geração.
+    Serializado: dois carregamentos simultâneos não disparam duas varreduras."""
+    global _cache_assinatura
+    with _cache_lock:
+        try:
+            agora = assinatura_os(base)
+        except Exception:
+            agora = None
+        if agora is not None and agora == _cache_assinatura and painel.exists():
+            return
+        try:
+            subprocess.run([sys.executable, str(GERAR), str(base)],
+                           capture_output=True, timeout=180)
+            _cache_assinatura = agora
+        except Exception:
+            pass  # serve o painel anterior, se existir
+
+
 # ── Servidor ─────────────────────────────────────────────────────────────────
 
 class Handler(BaseHTTPRequestHandler):
@@ -503,18 +574,19 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok():
             return self._json(403, {"ok": False, "erro": "host não permitido"})
         if self.path in ("/", "/index.html", "/painel.html"):
-            try:
-                subprocess.run([sys.executable, str(GERAR), str(self.base)],
-                               capture_output=True, timeout=120)
-            except Exception:
-                pass  # serve o painel anterior, se existir
             painel = self.base.parent / "painel.html"
+            garantir_painel(self.base, painel)
             if not painel.exists():
                 return self._responde(404, "painel.html não encontrado — rode a skill /aft-painel"
                                       .encode("utf-8"), "text/plain; charset=utf-8")
             self._responde(200, painel.read_bytes(), "text/html; charset=utf-8")
         elif self.path == "/api/ping":
-            self._json(200, {"ok": True, "painel_aft": True})
+            # Responde na hora, sem varrer nada: é por aqui que o /aft-doctor
+            # confere se o servidor está no ar — e QUAL pasta ele está
+            # servindo, que é o que denuncia um servidor sobrevivente
+            # apontando para a pasta de antes de uma mudança de lugar.
+            self._json(200, {"ok": True, "painel_aft": True,
+                             "os_ativas": str(self.base), "pid": os.getpid()})
         elif self.path == "/api/estado":
             # Carimbo da última mudança nas fichas: o maior mtime dos memory.md.
             # O painel aberto consulta isto a cada poucos segundos e recarrega

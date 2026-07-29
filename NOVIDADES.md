@@ -6,6 +6,72 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 29/07/2026 (2)
+<!-- commit: ticket-de-correcao-quando-o-toolkit-quebra -->
+
+**Quando o toolkit quebrar, ele agora escreve o chamado por você.** Até hoje, um defeito
+aparecia na sua tela como um monte de linhas em inglês — e não havia como saber o que
+dessa bagunça o mantenedor precisava para corrigir. Agora todo script do toolkit, ao
+quebrar, grava sozinho um **ticket de correção**:
+
+```
+==================================================================
+  O AFT TOOLKIT ENCONTROU UM ERRO E PREPAROU UM TICKET.
+  Arquivo: ...\AFT\tickets\ticket-2026-07-29-1432.md
+==================================================================
+```
+
+- **O que vai no ticket:** o erro exato, a versão do toolkit que você tem instalada, e o
+  retrato da máquina — sistema, Python, quais programas existem aí, bibliotecas,
+  serviços do painel. É a informação que o mantenedor precisaria pedir por mensagem, uma
+  a uma.
+- **O que NÃO vai, nunca:** nome de empresa, CNPJ/CPF, e-mail, conteúdo de documento de
+  fiscalização. Tudo isso sai trocado por `<EMPRESA>`, `<INSCRICAO>`, `<PASTA AFT>`.
+  Dê uma lida antes de enviar mesmo assim — quem decide o que sai da sua máquina é você.
+- **Nova skill `/aft-erro`.** Para o que dá errado *sem* quebrar — a skill devolveu texto
+  torto, o painel abriu em branco, o documento saiu estranho —, peça "/aft-erro" ou
+  simplesmente diga "deu erro": o assistente monta o mesmo ticket com o contexto do que
+  você estava fazendo. Ele também serve para completar um ticket que nasceu sozinho.
+- Os tickets ficam em `tickets/`, dentro da sua pasta de trabalho. Nada é enviado a lugar
+  nenhum: o arquivo fica na sua máquina até você encaminhá-lo.
+
+**O que você precisa fazer: nada.** Se aparecer o aviso, peça ao assistente para
+resolver — e mande o arquivo para quem mantém o toolkit.
+
+---
+
+## 29/07/2026 (1)
+<!-- commit: relacao-de-autos-funciona-no-windows-sem-instalar-nada -->
+
+**A Relação de autos lavrados voltou a funcionar no Windows.** Um colega reportou que o
+Passo 5.5 da `/aft-autos-lavrados` nunca gerava o documento na máquina dele. O defeito
+era real e atingia **todo Windows**: o script pedia ao sistema dois programas de
+compactação (`zip` e `unzip`) que o Windows não tem. Ele quebrava no meio, deixando a
+Relação por fazer.
+
+- **O documento agora é montado pelo próprio Python**, que já sabe fazer isso sozinho.
+  Nada para instalar, nada para configurar. O cabeçalho oficial com os logos SIT/AFT
+  continua idêntico.
+- **O PDF passou a sair pelo Word.** Antes, a versão em PDF só era gerada se você tivesse
+  o LibreOffice instalado — que quase ninguém tem. Agora, quando falta o LibreOffice, o
+  toolkit usa o **Microsoft Word que você já tem**, sem abrir janela e sem instalar
+  biblioteca nenhuma. Se não houver nem um nem outro, o `.docx` sai normalmente e o
+  assistente orienta a exportar o PDF na mão.
+- **O `/aft-doctor` passou a conferir** se existe um conversor de PDF nesta máquina, para
+  você saber disso antes de precisar.
+
+**O painel também ficou muito mais rápido.** Ele era refeito do zero a cada vez que a
+página era aberta — com uma dezena de auditorias, isso passava de 10 segundos, e chegava
+a fazer o `/aft-doctor` acusar como "fora do ar" um painel perfeitamente saudável. Agora
+o painel só é refeito quando alguma coisa muda de verdade: abrir a página de novo é
+instantâneo. E o diagnóstico ganhou uma checagem nova, que percebe quando o servidor no
+ar está lendo a pasta **errada** (sintoma de um servidor antigo que sobreviveu a uma
+mudança de pasta de lugar).
+
+**O que você precisa fazer: nada.**
+
+---
+
 ## 28/07/2026 (6)
 <!-- commit: painel-atualiza-sozinho-e-mostra-nad-sem-ciencia -->
 

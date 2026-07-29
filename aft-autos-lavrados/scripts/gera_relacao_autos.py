@@ -15,19 +15,43 @@ Uso:
   de cada data.
 - Gera o `relacao-autos.docx` na pasta de saída (por padrão `<pasta da OS>/
   Relacao de autos/`) e tenta também `relacao-autos.pdf` (mesmo conteúdo
-  visual) via LibreOffice `soffice --headless`, se instalado. Se o soffice
-  não estiver disponível, o script avisa e orienta a exportar o PDF
-  manualmente a partir do .docx (Word: Arquivo > Salvar como... > PDF) — a
-  ausência do PDF nunca impede a geração do .docx.
+  visual) pelo `_scripts/docx_para_pdf.py`, que usa o LibreOffice ou, no
+  Windows, o próprio Word. Se nenhum dos dois servir, o script avisa e orienta
+  a exportar o PDF manualmente a partir do .docx (Word: Arquivo > Salvar
+  como... > PDF) — a ausência do PDF nunca impede a geração do .docx.
+- O .docx é montado com a `zipfile` da biblioteca padrão (via
+  `_scripts/docx_unpack.py` e `docx_pack.py`). Nada de chamar os comandos
+  `zip`/`unzip`: o Windows não os traz, e o Git for Windows distribui só o
+  `unzip.exe` — o script morria no meio, com o .docx pela metade.
 """
+
+try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
+    import sys as _sys
+    from pathlib import Path as _Path
+    _aqui = _Path(__file__).resolve()
+    for _p in (_aqui.parent, *(_a / "_scripts" for _a in _aqui.parents)):
+        if (_p / "erro_ticket.py").is_file():
+            _sys.path.insert(0, str(_p))
+            from erro_ticket import ativar as _ativar_ticket
+            _ativar_ticket(__file__)
+            break
+except Exception:
+    pass
+
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 from xml.sax.saxutils import escape
+
+# Ferramentas compartilhadas do toolkit (skills/_scripts). Ficam num pacote
+# irmão, então o caminho entra no sys.path na mão.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
+from docx_pack import empacotar          # noqa: E402
+from docx_unpack import desempacotar     # noqa: E402
+import docx_para_pdf                     # noqa: E402
 
 NAVY = "103B5A"  # cor do logo AFT no cabeçalho
 TNR = "Times New Roman"
@@ -154,7 +178,7 @@ def gerar_docx(md_path: Path, out_docx: Path):
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
-        subprocess.run(["unzip", "-q", str(TEMPLATE), "-d", str(tmp / "doc")], check=True)
+        desempacotar(TEMPLATE, tmp / "doc")
         doc_xml = (tmp / "doc/word/document.xml").read_text(encoding="utf-8")
 
         body = build_body(empresa, insc_fmt, grupos)
@@ -164,7 +188,7 @@ def gerar_docx(md_path: Path, out_docx: Path):
         (tmp / "doc/word/document.xml").write_text(novo, encoding="utf-8")
 
         out_tmp = tmp / "out.docx"
-        subprocess.run(["zip", "-Xrq", str(out_tmp), "."], cwd=tmp / "doc", check=True)
+        empacotar(tmp / "doc", out_tmp)
         out_docx.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(out_tmp, out_docx)
 
@@ -172,40 +196,13 @@ def gerar_docx(md_path: Path, out_docx: Path):
     return total, len(grupos)
 
 
-def gerar_pdf(docx_path: Path, pdf_path: Path, timeout=25):
-    """Converte docx -> pdf sem alterar o visual, best-effort, só via
-    LibreOffice `soffice --headless --convert-to pdf` (se instalado) —
-    conversão headless, não depende de automação nem de diálogos de
-    permissão do sistema. Levanta RuntimeError com instrução para exportar
-    manualmente se o soffice não estiver disponível ou falhar.
-
-    Propositalmente NÃO usa docx2pdf/Word aqui: a biblioteca docx2pdf chama
-    sys.exit(1) internamente quando a automação do Word falha, o que encerra
-    o processo Python inteiro em vez de permitir tratar o erro — e em
-    ambientes sandboxed (ex.: Terminal sem permissão de Automação no macOS)
-    essa falha é o caso comum, não a exceção."""
-    soffice = shutil.which("soffice")
-    if soffice:
-        try:
-            with tempfile.TemporaryDirectory() as tmp:
-                subprocess.run(
-                    [soffice, "--headless", "--convert-to", "pdf",
-                     "--outdir", tmp, str(docx_path)],
-                    check=True, timeout=timeout,
-                )
-                gerado = Path(tmp) / (docx_path.stem + ".pdf")
-                if gerado.exists():
-                    shutil.copy(gerado, pdf_path)
-                    return "soffice"
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-            pass
-
-    raise RuntimeError(
-        "PDF não gerado automaticamente (LibreOffice/soffice não está "
-        "instalado ou a conversão falhou nesta máquina). Abra o "
-        f"{docx_path.name} no Word, confira os dados e use "
-        "Arquivo > Salvar como... > formato PDF para gerar o PDF manualmente."
-    )
+def gerar_pdf(docx_path: Path, pdf_path: Path):
+    """Converte docx -> pdf sem alterar o visual, best-effort. A regra de qual
+    motor usar (LibreOffice headless, ou o Word no Windows) mora no
+    `_scripts/docx_para_pdf.py`, compartilhado com o resto do toolkit. Levanta
+    RuntimeError com a orientação manual quando nenhum motor serve."""
+    _, motor = docx_para_pdf.converter(docx_path, pdf_path)
+    return motor
 
 
 def main():
@@ -231,7 +228,7 @@ def main():
     try:
         motor = gerar_pdf(out_docx, out_pdf)
         print(f"OK pdf: {out_pdf} (via {motor})")
-    except (RuntimeError, subprocess.TimeoutExpired) as e:
+    except RuntimeError as e:
         print(f"AVISO: {e}")
 
 
