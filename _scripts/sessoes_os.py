@@ -620,6 +620,12 @@ def realinhar_pendente():
         import realinhar_mudanca as rm  # noqa: PLC0415
         if not rm.pendencia_ler():
             return
+        # O app acabou de fechar? Ele ainda pode estar despejando o estado das
+        # sessões em disco — escrever agora seria escrever para ser sobrescrito
+        # (é assim que 2 de 8 sessões escapam da correção e viram "Sessão não
+        # encontrada no disco"). Espera o config parar de mudar, o mesmo sinal
+        # que o --aplicar já usa.
+        espera_gravacao_config()
         r = rm.executar_pendencias()
         if r.get("aplicadas"):
             for feito in r["aplicadas"]:
