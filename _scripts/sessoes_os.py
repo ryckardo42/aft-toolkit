@@ -606,6 +606,32 @@ def garantir_contexto(oss) -> int:
     return criados
 
 
+def realinhar_pendente():
+    """Aplica o realinhamento que sobrou de uma mudanca de pasta de trabalho.
+
+    Quando o AFT muda a pasta AFT de lugar com o app ABERTO, o `pasta_aft.py`
+    move os arquivos na hora mas NAO pode reescrever os `local_*.json` (o app
+    regravaria por cima ao fechar) — ele deixa uma pendencia em
+    ~/.claude/aft-realinhar-pendente.json. Quem a executa e este ponto, que so
+    roda com o app fechado. Sem isto, as sessoes das empresas ficam com o `cwd`
+    antigo e o app mostra "Sessao nao encontrada no disco"."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import realinhar_mudanca as rm  # noqa: PLC0415
+        if not rm.pendencia_ler():
+            return
+        r = rm.executar_pendencias()
+        if r.get("aplicadas"):
+            for feito in r["aplicadas"]:
+                res = feito.get("resultado", {})
+                log(f"Sessoes realinhadas apos a mudanca de pasta "
+                    f"({feito.get('de')} -> {feito.get('para')}): "
+                    f"{len(res.get('sessoes_corrigidas', []))} sessao(oes), "
+                    f"{len(res.get('historicos_migrados', []))} historico(s).")
+    except Exception as e:  # noqa: BLE001  (acessorio: nunca derruba o vigia)
+        log(f"AVISO: nao consegui realinhar as sessoes apos a mudanca de pasta ({e}).")
+
+
 def grava_vinculo(pasta_os: Path, sessao_id: str):
     mem = pasta_os / "memory.md"
     texto = mem.read_text(encoding="utf-8", errors="replace")
@@ -626,6 +652,8 @@ def grava_vinculo(pasta_os: Path, sessao_id: str):
 def aplicar(pasta_cli=None, agora=False, reabrir=True):
     p = plano(pasta_cli)
     garantir_contexto(ler_oss(pasta_os_ativas(pasta_cli)))
+    if not app_aberto():
+        realinhar_pendente()  # com o app já fechado, aplica antes de qualquer coisa
     agrupar = agrupamento_ligado()
     pend = [i for i in p["itens"] if i["criar"] or i["agrupar"] or i["vincular"]]
     # Com agrupamento desligado, "grupo existir" não é requisito para "nada a fazer".
@@ -642,6 +670,7 @@ def aplicar(pasta_cli=None, agora=False, reabrir=True):
             time.sleep(2)
         log("App fechado. Aguardando o app terminar de gravar as preferências...")
         espera_gravacao_config()
+        realinhar_pendente()  # mudança de pasta feita com o app aberto
         p = plano(pasta_cli)  # relê: o app pode ter regravado o config ao fechar
 
     # ── Grupo (só quando o agrupamento está LIGADO) ──────────────────────────
@@ -792,6 +821,7 @@ def vigia():
             if app_aberto():
                 atraso = 20
                 continue
+            realinhar_pendente()  # mudança de pasta feita com o app aberto
             p = plano()
             pend = [i for i in p["itens"] if i["criar"] or i["agrupar"] or i["vincular"]]
             if not pend and (p["grupo_existe"] or not agrupamento_ligado()):

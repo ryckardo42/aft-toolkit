@@ -135,6 +135,16 @@ def instalar_windows(python_path: str) -> int:
     script_ps = f"""
 $ErrorActionPreference = 'Stop'
 $user = "$env:USERDOMAIN\\$env:USERNAME"
+# Derruba o vigia que ja estiver rodando antes de registrar o novo. Sem isto
+# ficam DOIS: o Register-ScheduledTask -Force troca a definicao da tarefa, mas o
+# processo antigo sobrevive - e ele guarda em memoria os caminhos de quando
+# subiu (o .pid, o log, a flag de agrupamento), entao depois de uma mudanca de
+# pasta de trabalho os dois vigias passam a olhar lugares diferentes.
+Stop-ScheduledTask -TaskName {_ps_aspas(NOME_TAREFA)} -ErrorAction SilentlyContinue
+Get-CimInstance Win32_Process -Filter "Name like '%python%'" |
+  Where-Object {{ $_.CommandLine -like '*sessoes_os.py*--vigia*' }} |
+  ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }}
+Start-Sleep -Milliseconds 700
 $action = New-ScheduledTaskAction -Execute {_ps_aspas(exe)} `
   -Argument ('"{script_vigia()}" --vigia')
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $user

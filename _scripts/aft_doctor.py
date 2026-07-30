@@ -210,7 +210,7 @@ try:
         onde += " (definida pela variavel de ambiente PASTA_AFT)"
     elif not diag["fora_do_lugar"]:
         if diag["onedrive"]:
-            onde += " (dentro do OneDrive - e a sua pasta Documentos de verdade)"
+            onde += " (dentro do OneDrive - sincronizada na nuvem)"
         elif diag["redirecionada"]:
             onde += " (sua pasta Documentos fica fora do caminho padrao)"
 
@@ -238,6 +238,22 @@ try:
             f"'{diag['destino_sugerido']}'. Antes, feche o app do Claude para "
             "soltar os arquivos dos servicos. Nada e apagado; se preferir "
             "deixar como esta, tudo continua funcionando.")
+
+    # Sugestao, nao defeito: o OneDrive esta configurado nesta maquina e a
+    # pasta de trabalho ficou de fora dele. Some assim que o AFT decidir - se
+    # ele quiser continuar fora, um --definir na propria pasta atual fixa a
+    # escolha e o aviso nao volta.
+    if diag.get("sugestao_onedrive"):
+        add("Pasta de trabalho fora do OneDrive", "aviso",
+            f"o seu OneDrive esta em '{diag['onedrive_raizes'][0]}', mas as suas "
+            f"fiscalizacoes ficam em '{diag['pasta_aft']}' - fora dele, elas nao "
+            "sao sincronizadas nem entram no backup da instituicao",
+            "Nada esta quebrado: e so uma sugestao. Para levar tudo para o "
+            "OneDrive (com os dados, as sessoes do app e os servicos "
+            "realinhados): python ~/.claude/skills/_scripts/pasta_aft.py "
+            f"--definir \"{diag['destino_onedrive']}\" --mover. Para manter onde "
+            "esta e nao ver mais este aviso: pasta_aft.py --definir "
+            f"\"{diag['pasta_aft']}\".")
 
     # Instalacao anterior pode ter criado uma pasta ORFA no caminho errado
     # (o mkdir ~/Documents/AFT cru, antes desta correcao).
@@ -704,6 +720,46 @@ try:
             "instalar_servidor_painel.py, passando "
             f"'{_alvo}' como pasta de OS. Ate la, o painel automatico mostra "
             "dados da pasta antiga (o /aft-painel na mao continua correto).")
+except Exception:
+    pass  # checagem acessoria: nunca derruba o diagnostico
+
+# 15b. Sessoes do app presas no caminho antigo -------------------------------
+# Cada sessao de empresa guarda a pasta da OS (cwd) por dentro. Mudar a pasta
+# de trabalho de lugar com o app ABERTO deixa isso para depois (uma pendencia
+# que o vigia aplica no proximo fechamento do app). Enquanto nao aplica - ou se
+# o vigia nao estiver instalado - o app diz "Sessao nao encontrada no disco".
+try:
+    sys.path.insert(0, str(SKILLS_DIR / "_scripts"))
+    import realinhar_mudanca as _rm
+
+    _pendentes = _rm.pendencia_ler()
+    if _pendentes:
+        _ult = _pendentes[-1]
+        add("Mudanca de pasta a concluir", "aviso",
+            f"a pasta de trabalho mudou para '{_ult['para']}' e as sessoes por "
+            "empresa ainda apontam para o lugar antigo",
+            "Falta o passo que so pode ser feito com o app FECHADO. Feche e "
+            "reabra o app do Claude: o vigia de sessoes aplica sozinho. Se "
+            "preferir na hora: python "
+            "~/.claude/skills/_scripts/realinhar_mudanca.py --pendencias "
+            "--esperar-app (ele espera o app fechar).")
+
+    import sessoes_os as _so
+    _dir_s = _so.dir_sessoes()
+    _mortas = 0
+    if _dir_s:
+        _mortas = sum(1 for s in _so.ler_sessoes(_dir_s)
+                      if s["cwd"] and not Path(s["cwd"]).is_dir())
+    if _mortas and not _pendentes:
+        # Sem contar titulo nem caminho: nomes de empresa nao entram no
+        # diagnostico (ele vai inteiro para dentro dos tickets de correcao).
+        add("Sessoes do app sem pasta", "aviso",
+            f"{_mortas} sessao(oes) do app apontam para pastas que nao existem "
+            "mais - no app elas aparecem como 'Sessao nao encontrada no disco'",
+            "Costuma acontecer quando uma pasta de OS e renomeada/arquivada a "
+            "mao, ou depois de mudar a pasta de trabalho de lugar por fora do "
+            "toolkit. Peca 'realinhar as sessoes' ao Claude, ou arquive essas "
+            "sessoes no proprio app se forem conversas antigas.")
 except Exception:
     pass  # checagem acessoria: nunca derruba o diagnostico
 

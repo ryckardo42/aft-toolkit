@@ -93,6 +93,66 @@ def _documentos_registro() -> Path | None:
         return None
 
 
+def _onedrive_raizes() -> list[Path]:
+    """As raizes de OneDrive configuradas nesta maquina, da mais provavel para
+    a menos. Fonte de verdade: as contas em
+    HKCU\\Software\\Microsoft\\OneDrive\\Accounts\\<conta>\\UserFolder - elas
+    existem mesmo quando a variavel de ambiente nao foi exportada para o
+    processo (o caso do OneDrive corporativo, que so define %OneDrive% em
+    algumas sessoes).
+
+    O CORPORATIVO (Business) vem antes do pessoal: a pasta de trabalho do AFT e
+    material de servico, e o OneDrive da instituicao e o que ela sincroniza,
+    versiona e faz backup."""
+    if not sys.platform.startswith("win"):
+        return []
+    achados: list[Path] = []
+
+    def juntar(bruto) -> None:
+        if not bruto:
+            return
+        p = Path(os.path.expandvars(str(bruto)))
+        if p.is_dir() and p not in achados:
+            achados.append(p)
+
+    try:
+        import winreg
+        chave = r"Software\Microsoft\OneDrive\Accounts"
+        contas: list[str] = []
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, chave) as k:
+            i = 0
+            while True:
+                try:
+                    contas.append(winreg.EnumKey(k, i))
+                except OSError:
+                    break
+                i += 1
+        for conta in sorted(contas, key=lambda c: (not c.startswith("Business"), c)):
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, chave + "\\" + conta) as kc:
+                    juntar(winreg.QueryValueEx(kc, "UserFolder")[0])
+            except OSError:
+                continue
+    except Exception:
+        pass
+
+    # Fallback por variavel de ambiente (registro ilegivel). Aqui somos mais
+    # exigentes: uma pasta OneDrive VAZIA que sobrou de uma conta desconectada
+    # ainda deixa a variavel para tras, e nao e lugar para os dados do AFT.
+    for var in ("OneDriveCommercial", "OneDrive", "OneDriveConsumer"):
+        bruto = os.environ.get(var)
+        if not bruto:
+            continue
+        p = Path(os.path.expandvars(bruto))
+        try:
+            util = [x for x in p.iterdir() if x.name.lower() != "desktop.ini"]
+        except OSError:
+            continue
+        if util:
+            juntar(p)
+    return achados
+
+
 def candidatos_documentos() -> list[Path]:
     """Candidatos a pasta Documentos, do mais confiavel ao menos. O primeiro
     que existir e a resposta; a lista tambem serve para procurar uma pasta AFT
@@ -105,12 +165,14 @@ def candidatos_documentos() -> list[Path]:
             vistos.append(p)
 
     juntar(_documentos_registro())
-    # OneDrive por variavel de ambiente (Windows sem registro legivel).
-    for var in ("OneDriveCommercial", "OneDrive", "OneDriveConsumer"):
-        raiz = os.environ.get(var)
-        if raiz:
-            for nome in ("Documentos", "Documents"):
-                juntar(Path(raiz) / nome)
+    # OneDrive: a "Documentos" de dentro dele quando existe e, se nao existir
+    # (tipico do OneDrive corporativo, que nao tem subpasta Documentos), a
+    # propria raiz - e la que a pasta AFT vai morar nessas maquinas.
+    for raiz in _onedrive_raizes():
+        for nome in ("Documentos", "Documents"):
+            if (raiz / nome).is_dir():
+                juntar(raiz / nome)
+        juntar(raiz)
     # Caminhos diretos (macOS/Linux e Windows sem redirecionamento).
     for nome in ("Documents", "Documentos"):
         juntar(home / nome)
@@ -126,16 +188,70 @@ def documentos() -> Path:
     return Path.home() / "Documents"
 
 
+def pasta_padrao() -> Path:
+    """Onde uma instalacao NOVA deve criar a pasta AFT.
+
+    No Windows, com OneDrive configurado, o padrao e DENTRO do OneDrive - a
+    maioria dos colegas quer a pasta de trabalho sincronizada (troca de
+    maquina, notebook em campo, backup da instituicao). Quando o OneDrive ja
+    faz backup da pasta Documentos, os dois caminhos coincidem; quando nao faz
+    (o comum no OneDrive corporativo, que nem tem subpasta Documentos), o
+    padrao passa a ser a raiz do OneDrive em vez da Documentos local.
+
+    Isto vale so para decidir onde CRIAR: uma pasta AFT que ja exista com dados
+    nunca e abandonada (ver pasta_aft()), e mudar uma instalacao de lugar
+    continua sendo escolha explicita do AFT (--definir/--mover)."""
+    raizes = _onedrive_raizes()
+    if raizes:
+        raiz = raizes[0]  # o mais provavel: corporativo antes do pessoal
+        for nome in ("Documentos", "Documents"):
+            if (raiz / nome).is_dir():
+                return raiz / nome / "AFT"
+        return raiz / "AFT"
+    return documentos() / "AFT"
+
+
+def _no_onedrive(alvo: Path) -> bool:
+    """A pasta ja esta sincronizada por algum OneDrive desta maquina?"""
+    for raiz in _onedrive_raizes():
+        try:
+            alvo.relative_to(raiz)
+            return True
+        except ValueError:
+            continue
+    return "onedrive" in str(alvo).lower()
+
+
 def _tem_conteudo(aft: Path) -> bool:
-    """A pasta AFT ja e usada de verdade? (tem OS ATIVAS/ARQUIVADAS ou config)"""
+    """A pasta AFT ja e usada de verdade? (tem config, ou ARQUIVO em OS
+    ATIVAS/ARQUIVADAS)
+
+    Exige ARQUIVO, nao "subpasta nao vazia": depois de mudar a pasta de lugar,
+    o Windows deixa para tras o esqueleto das pastas que algum programa
+    mantinha abertas (ex.: 'AFT/OS ATIVAS/EMPRESA X' vazia). Se esse esqueleto
+    contasse como conteudo, ele venceria a pasta de verdade na hora de
+    resolver - e o AFT, se perdesse o ponteiro, veria "0 empresas" sem nenhum
+    erro na tela."""
     if not aft.is_dir():
         return False
     if (aft / "aft-config.md").is_file():
         return True
     for sub in SUBPASTAS:
         d = aft / sub
-        if d.is_dir() and any(d.iterdir()):
+        if d.is_dir() and _tem_arquivo(d):
             return True
+    return False
+
+
+def _tem_arquivo(alvo: Path) -> bool:
+    """Tem ao menos um ARQUIVO em qualquer nivel? (pasta so com subpastas
+    vazias nao conta - e o esqueleto que sobra de uma mudanca de lugar)."""
+    try:
+        for _atual, _dirs, arqs in os.walk(_ext(alvo)):
+            if arqs:
+                return True
+    except Exception:
+        pass
     return False
 
 
@@ -210,8 +326,8 @@ def pasta_aft() -> Path:
     for c in candidatas:
         if c.is_dir():
             return c
-    # 3) O caminho canonico (sera criado).
-    return documentos() / "AFT"
+    # 3) O lugar padrao (sera criado) - no Windows, dentro do OneDrive.
+    return pasta_padrao()
 
 
 def _pasta_os_do_config(aft: Path) -> Path | None:
@@ -340,9 +456,14 @@ def diagnostico() -> dict:
     aft = pasta_aft()
     docs = documentos()
     canonico = docs / "AFT"
-    # Outras pastas AFT existentes (instalacao anterior no lugar errado).
+    # Outras pastas AFT existentes (instalacao anterior no lugar errado). So
+    # conta a que tem ARQUIVO dentro: depois de mudar a pasta de lugar, o
+    # Windows costuma deixar para tras o esqueleto vazio das pastas que algum
+    # programa mantinha abertas - isso e residuo, nao instalacao duplicada, e
+    # avisar sobre ele so assusta.
     outras = [str(d / "AFT") for d in candidatos_documentos()
-              if (d / "AFT").is_dir() and (d / "AFT") != aft]
+              if (d / "AFT").is_dir() and (d / "AFT") != aft
+              and _tem_arquivo(d / "AFT")]
     origem = _origem()
     # "Fora do lugar": a pasta em uso NAO e a da Documentos real POR ACIDENTE.
     # Acontece com quem instalou antes da correcao de 22/07/2026 - o mkdir cru
@@ -351,15 +472,26 @@ def diagnostico() -> dict:
     # o AFT MANDOU: nao e defeito, e escolha - nao reclame dela.
     escolhida = origem in ("env", "ponteiro")
     fora = aft.is_dir() and aft != canonico and not escolhida
+    # Sugestao (nunca defeito): o OneDrive esta configurado, mas a pasta de
+    # trabalho ficou de fora dele. Funciona perfeitamente assim - so nao esta
+    # sincronizada. Quem decide mudar e o AFT.
+    raizes = _onedrive_raizes()
+    padrao = pasta_padrao()
+    sugere_od = bool(raizes) and not escolhida and not fora \
+        and not _no_onedrive(aft) and aft != padrao
     return {
         "pasta_aft": str(aft),
         "os_ativas": str(pasta_os_ativas()),
         "documentos": str(docs),
         "canonico": str(canonico),
+        "padrao": str(padrao),
         "existe": aft.is_dir(),
         "faltando": [s for s in SUBPASTAS if not (aft / s).is_dir()],
         "redirecionada": docs != Path.home() / "Documents",
-        "onedrive": "onedrive" in str(docs).lower(),
+        "onedrive": _no_onedrive(aft),
+        "onedrive_raizes": [str(r) for r in raizes],
+        "sugestao_onedrive": sugere_od,
+        "destino_onedrive": str(padrao) if sugere_od else "",
         "duplicadas": outras,
         "origem": origem,
         "escolhida": escolhida,
@@ -477,6 +609,20 @@ def _apagar_arvore(alvo: Path) -> list[str]:
     return resistiram
 
 
+def _realinhador():
+    """O modulo que costura o resto da mudanca (sessoes do app, historico de
+    conversa e servicos do sistema). Importado tarde e de proposito: ele
+    importa o `sessoes_os`, que importa este arquivo - e este modulo e usado
+    por quase todo o toolkit, entao nao pode carregar nada disso no topo.
+    Devolve None se algo faltar: a mudanca dos arquivos nunca depende dele."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import realinhar_mudanca  # noqa: PLC0415
+        return realinhar_mudanca
+    except Exception:
+        return None
+
+
 def mover_para(destino: Path | None = None) -> dict:
     """Move a pasta AFT em uso para `destino` (por omissao, a Documentos real).
     NUNCA sobrescreve: se o destino ja tiver dados, recusa e explica.
@@ -526,6 +672,24 @@ def mover_para(destino: Path | None = None) -> dict:
         return {"ok": False, "movido": False,
                 "erro": f"nao consegui criar '{destino.parent}' ({e})"}
 
+    # Os servicos do toolkit (servidor do painel, rotina diaria, vigia de
+    # sessoes) LEEM E ESCREVEM dentro da pasta AFT o tempo todo. Derrubados
+    # antes: senao o servidor salva o painel.html no meio da mudanca e RECRIA a
+    # pasta antiga, e o vigia segue com os caminhos velhos em memoria. Voltam
+    # ao ar no fim, ja apontando para o lugar novo (ou para o de origem, se a
+    # mudanca falhar).
+    rm = _realinhador()
+    servicos = rm.parar_servicos() if rm else {}
+    parados = servicos.get("instalados", [])
+
+    def _voltar_servicos(pasta: Path) -> dict:
+        if not (rm and parados):
+            return {}
+        try:
+            return rm.realinhar_servicos(pasta, parados)
+        except Exception as e:  # servico e acessorio: nunca derruba a mudanca
+            return {"falhas": [f"{type(e).__name__}: {e}"]}
+
     n_origem, bytes_origem = _medir_arvore(origem)
     sobras: list[str] = []
     try:
@@ -538,6 +702,7 @@ def mover_para(destino: Path | None = None) -> dict:
         if erros:
             _apagar_arvore(destino)  # nao deixa copia parcial de dado sigiloso
             amostra = "; ".join(erros[:3])
+            _voltar_servicos(origem)
             return {"ok": False, "movido": False, "erros": erros,
                     "erro": (f"a copia falhou em {len(erros)} item(ns) e foi "
                              f"desfeita - nada foi perdido, a pasta continua em "
@@ -545,6 +710,7 @@ def mover_para(destino: Path | None = None) -> dict:
         n_dest, bytes_dest = _medir_arvore(destino)
         if (n_dest, bytes_dest) != (n_origem, bytes_origem):
             _apagar_arvore(destino)
+            _voltar_servicos(origem)
             return {"ok": False, "movido": False,
                     "erro": (f"a copia saiu diferente do original "
                              f"({n_dest} arquivos/{bytes_dest} bytes contra "
@@ -579,17 +745,28 @@ def mover_para(destino: Path | None = None) -> dict:
             f"nao puderam ser apagados da pasta antiga porque estao abertos em "
             f"algum programa ({nomes}). A copia nova ja esta completa em "
             f"'{destino}': feche esses arquivos e apague '{origem}' quando quiser.")}
-    return {"ok": True, "movido": True, "de": str(origem),
-            "pasta_aft": str(destino),
-            "os_ativas": str(destino / "OS ATIVAS"),
-            "modo": modo,
-            "arquivos": n_origem,
-            "pastas_vazias_restantes": sorted(set(cascas)),
-            **saida_sobras,
-            "ponteiro_realinhado": ponteiro_realinhado,
-            "pasta_os_realinhado": _realinhar_pasta_os(cfg, origem, destino),
-            "config_atualizado": _atualizar_path_windows(cfg, destino)
-            if cfg.is_file() else False}
+    saida = {"ok": True, "movido": True, "de": str(origem),
+             "pasta_aft": str(destino),
+             "os_ativas": str(destino / "OS ATIVAS"),
+             "modo": modo,
+             "arquivos": n_origem,
+             "pastas_vazias_restantes": sorted(set(cascas)),
+             **saida_sobras,
+             "ponteiro_realinhado": ponteiro_realinhado,
+             "pasta_os_realinhado": _realinhar_pasta_os(cfg, origem, destino),
+             "config_atualizado": _atualizar_path_windows(cfg, destino)
+             if cfg.is_file() else False}
+    # Os arquivos ja estao no lugar novo. Falta o que guarda o caminho POR
+    # DENTRO: as sessoes do app (cwd de cada empresa + historico de conversa) e
+    # os servicos do sistema. Sem isto o app diz "Sessao nao encontrada no
+    # disco" e o painel automatico varre a pasta que nao existe mais.
+    if rm:
+        try:
+            saida["sessoes"] = rm.executar(origem, destino)
+        except Exception as e:
+            saida["sessoes"] = {"ok": False, "erros": [f"{type(e).__name__}: {e}"]}
+    saida["servicos"] = _voltar_servicos(destino)
+    return saida
 
 
 def garantir_estrutura() -> tuple[Path, list[str]]:

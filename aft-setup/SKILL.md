@@ -68,31 +68,38 @@ winget (o AFT só precisa aprovar os comandos):
 
 ## Passo 2 — Criar a estrutura de pastas
 
-**Não use `mkdir ~/Documents/AFT` direto.** No Windows, "Documentos" quase nunca fica
-em `C:\Users\<usuário>\Documents`: o **OneDrive** redireciona a pasta para
-`C:\Users\<usuário>\OneDrive\Documentos` e o Windows em português a chama de
-**Documentos**, não *Documents*. Um `mkdir` cru cria uma pasta **órfã** que o AFT nunca
-encontra no Explorer (aconteceu numa instalação real). Use o resolvedor, que lê a pasta
-Documentos verdadeira no registro do Windows:
+**Não use `mkdir ~/Documents/AFT` direto** e **não presuma o caminho**. No Windows,
+"Documentos" quase nunca fica em `C:\Users\<usuário>\Documents`: o Windows em português
+chama a pasta de **Documentos** e o **OneDrive** costuma redirecioná-la para dentro
+dele. Um `mkdir` cru cria uma pasta **órfã** que o AFT nunca encontra no Explorer
+(aconteceu numa instalação real). Use o resolvedor:
 
 ```bash
 python "<python_path>" ~/.claude/skills/_scripts/pasta_aft.py --criar
 ```
 
-Ele devolve um JSON com o caminho real (`pasta_aft`), o que criou (`criadas`) e se a
-pasta está redirecionada (`onedrive`/`redirecionada`). **Use esse caminho** — e não o
-`~/Documents/AFT` presumido — em todos os passos seguintes (aft-config.md, painel,
-vigia de sessões). É idempotente: rodar de novo não recria nada.
+Ele devolve um JSON com o caminho real (`pasta_aft`), o que criou (`criadas`) e o que
+descobriu do ambiente (`padrao`, `onedrive`, `onedrive_raizes`, `redirecionada`).
+**Use esse caminho** — e não o `~/Documents/AFT` presumido — em todos os passos
+seguintes (aft-config.md, painel, vigia de sessões). É idempotente: rodar de novo não
+recria nada.
 
-> Se o JSON trouxer `duplicadas`, existe outra pasta AFT de uma instalação anterior no
-> lugar errado. Avise o AFT: se tiver fiscalizações dentro, mover as subpastas para a
-> `OS ATIVAS` correta; se estiver vazia, pode apagar.
+> **No Windows com OneDrive, o padrão é dentro do OneDrive.** É o que a maioria dos
+> colegas quer: a pasta de trabalho sincronizada, disponível no notebook de campo e
+> dentro do backup da instituição. O resolvedor prefere o OneDrive **corporativo** (o do
+> trabalho) ao pessoal; quando o OneDrive já faz backup da sua pasta Documentos, os dois
+> caminhos são o mesmo. **Uma pasta AFT que já exista com fiscalizações dentro nunca é
+> abandonada** — o padrão só decide onde CRIAR numa instalação nova.
+
+> Se o JSON trouxer `duplicadas`, existe outra pasta AFT com arquivos em outro lugar
+> (instalação anterior). Avise o AFT: se tiver fiscalizações dentro, mover as subpastas
+> para a `OS ATIVAS` correta; se estiver vazia, pode apagar.
 
 ### O AFT quer a pasta em outro lugar?
 
 Mostre o caminho resolvido e pergunte, **em uma frase**, se ele quer manter ali ou usar
-outro lugar (HD externo, pasta sincronizada na nuvem, outro disco). Não insista: o padrão
-serve para quase todo mundo — só siga adiante se ele **pedir** a mudança.
+outro lugar (HD externo, outra nuvem, outro disco). Não insista: o padrão serve para
+quase todo mundo — só siga adiante se ele **pedir** a mudança.
 
 Se ele quiser outro lugar, peça a pasta que vai **conter** a `OS ATIVAS` (não a própria
 `OS ATIVAS` — o script recusa e explica se ele apontar a subpasta) e rode:
@@ -106,6 +113,16 @@ python "<python_path>" ~/.claude/skills/_scripts/pasta_aft.py --definir "<caminh
 - A escolha fica gravada em `~/.claude/aft-pasta.txt`, **fora** do repositório das skills.
   Diga isso ao AFT: *"atualizar o toolkit nunca vai desfazer essa escolha"*.
 - Daí em diante, **use o `pasta_aft` do JSON** em todos os passos seguintes.
+
+> **O `--mover` não move só os arquivos.** Ele derruba e reinstala com o caminho novo os
+> serviços que guardam a pasta por dentro (servidor do painel, rotina diária, vigia de
+> sessões) e realinha as **sessões por empresa** do app — o `cwd` de cada `local_*.json`
+> e a pasta de histórico da conversa em `~/.claude/projects`. Leia esses campos do JSON
+> (`servicos`, `sessoes`) e traduza o resultado. Se o app do Claude estiver **aberto** na
+> hora (o normal, já que você está conversando por ele), a parte das sessões vira uma
+> **pendência**: o vigia aplica sozinho no próximo fechamento do app. Diga isso ao AFT em
+> uma frase — *"feche e reabra o app uma vez e as suas conversas por empresa acompanham a
+> mudança"* — em vez de deixá-lo descobrir com um "Sessão não encontrada no disco".
 
 > Deste ponto em diante, onde este texto disser `<PASTA_AFT>` use o `pasta_aft` do JSON
 > (a pasta de trabalho) e onde disser `<OS_ATIVAS>` use `<PASTA_AFT>/OS ATIVAS`. Nunca
