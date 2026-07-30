@@ -134,13 +134,13 @@
 const ARCH = {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-07-26",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 39 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "data": "2026-07-29",
+  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 40 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 39,
-    "scripts": 28,
+    "skills": 40,
+    "scripts": 27,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 28/07/2026"
+    "commit": "ver `git log -1` — atualizado em 29/07/2026"
   },
   "atores": [
     {
@@ -247,6 +247,11 @@ const ARCH = {
           "nome": "/aft-doctor",
           "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta. Não altera arquivos, com UMA exceção: cria a pasta de trabalho (via pasta_aft.py) se faltar — e, se detectar que ela está fora da Documentos real (instalação anterior à correção de 22/07/2026), oferece migrar com consentimento (--mover), sem sobrescrever nada.",
           "tech": "aft_doctor.py · model: sonnet"
+        },
+        {
+          "nome": "/aft-erro",
+          "role": "Ticket de correção quando algo do toolkit dá errado: monta um .md em <pasta AFT>/tickets/ com o que o AFT estava fazendo, a mensagem de erro, a versão instalada e o retrato da máquina (SO, Python, programas externos, bibliotecas, serviços do painel) — já pseudonimizado, sem nome de empresa, CNPJ/CPF nem conteúdo de documento de fiscalização. Serve para o que falha SEM quebrar (skill devolveu texto torto, painel em branco) e para completar o ticket que o erro_ticket.py gerou sozinho num traceback. Nada é enviado a lugar nenhum: o arquivo fica na máquina até o AFT encaminhá-lo.",
+          "tech": "erro_ticket.py · model: sonnet"
         },
         {
           "nome": "/aft-atualizar",
@@ -444,7 +449,7 @@ const ARCH = {
         },
         {
           "nome": "/aft-autos-lavrados",
-          "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos em AUTOS/Autos DD-MM/ (ou na raiz, em OS não migradas), marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto. A \"Relação de autos lavrados\" (.docx/.pdf) é gravada em AUTOS/Relacao de autos/ quando a caixa AUTOS/ existe, senão no lugar antigo (raiz). Desde 28/07/2026 a varredura pesada (Passos 2-6) roda no agente isolado aft-autos-lavrados (em segundo plano no modo lote); decisões do AFT voltam na seção 'Decisões pendentes' e são conduzidas na conversa principal; sem o agente, executa inline como antes.",
+          "role": "Lê os PDFs já transmitidos (C:\\SistemasAFT\\...\\PRO) e cruza com os rascunhos em AUTOS/Autos DD-MM/ (ou na raiz, em OS não migradas), marcando no memory.md [x]/[ ] — read-only sobre o Sistema Auditor; allowed-tools sem rede (os PDFs trazem dados pessoais). Acha a pasta pelos 8 primeiros dígitos do CNPJ/CPF (sufixo padrão do Sistema Auditor); se a OS não tiver identificador, pergunta os 8 dígitos ao AFT. No relatório, cada auto é identificado pelo número do AI (derivado do nome do PDF AI_<9díg>, ex.: 23.284.209-4), único por auto. A \"Relação de autos lavrados\" (.docx, sem PDF) é gravada em AUTOS/Relacao de autos/ quando a caixa AUTOS/ existe, senão no lugar antigo (raiz). Desde 28/07/2026 a varredura pesada (Passos 2-6) roda no agente isolado aft-autos-lavrados (em segundo plano no modo lote); decisões do AFT voltam na seção 'Decisões pendentes' e são conduzidas na conversa principal; sem o agente, executa inline como antes.",
           "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
         },
         {
@@ -577,7 +582,7 @@ const ARCH = {
     {
       "nome": "gera_relacao_autos.py",
       "caminho": "aft-autos-lavrados/scripts/gera_relacao_autos.py",
-      "papel": "Gera a 'Relação de autos lavrados' (.docx, com tentativa de .pdf) a partir do autos-lavrados.md — só os autos válidos (seção Detalhamento), agrupados por data do mais antigo ao mais recente. Usa template-relacao-autos.docx (cabeçalho SIT/AFT fixo, nunca alterado); Times New Roman 12pt, texto justificado, filetes e barra lateral navy.",
+      "papel": "Gera a 'Relação de autos lavrados' (.docx) a partir do autos-lavrados.md — só os autos válidos (seção Detalhamento), agrupados por data do mais antigo ao mais recente. Usa template-relacao-autos.docx (cabeçalho SIT/AFT fixo, nunca alterado); Times New Roman 12pt, texto justificado, filetes e barra lateral navy. Não converte para PDF (ver decisão 'Relação de autos é .docx, sem PDF').",
       "runtime": "Python (python-docx)"
     },
     {
@@ -607,6 +612,48 @@ const ARCH = {
     {
       "nome": "instalar_agentes.py",
       "papel": "Copia os agentes do toolkit (agents/*.md do repositório, que É ~/.claude/skills) para ~/.claude/agents/, onde o Claude Code os descobre. Idempotente (compara bytes, só copia o que mudou), saída JSON (instalados/atualizados/em_dia/erros), modo 'status' só relata. Chamado pelo /aft-setup e /aft-atualizar; o /aft-doctor faz a mesma comparação em modo leitura."
+    },
+    {
+      "nome": "erro_ticket.py",
+      "caminho": "_scripts/erro_ticket.py",
+      "papel": "Rede de segurança do toolkit: todo script chama ativar() no começo; se morrer com exceção não tratada, em vez de traceback cru o AFT recebe um TICKET DE CORREÇÃO pronto em <pasta AFT>/tickets/ — erro, versão do toolkit e retrato da máquina, com empresa/CNPJ/caminhos trocados por <EMPRESA>/<INSCRICAO>/<PASTA AFT>. Base da skill /aft-erro.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "sync_perfil.py",
+      "caminho": "_scripts/sync_perfil.py",
+      "papel": "Re-sincroniza o perfil do auditor (~/.claude/CLAUDE.md) com o template config/CLAUDE-aft.md, substituindo SÓ o miolo entre os marcadores versionados (AFT-TOOLKIT-PERFIL:INICIO vN … :FIM) e preservando o que o AFT escreveu fora deles. --status devolve EM_DIA/DESATUALIZADO/SEM_MARCADOR/SEM_ARQUIVO; instalação antiga sem marcador recebe oferta de adoção (--adotar-substituir / --adotar-acrescentar). Chamado pelo /aft-atualizar (Passo 2e).",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "sessoes_os.py",
+      "caminho": "_scripts/sessoes_os.py",
+      "papel": "Uma sessão do app por empresa fiscalizada, no grupo 'OS ATIVAS', com o vínculo sessao_claude: no front-matter do memory.md. Escreve no armazenamento interno do app (não documentado: claude_desktop_config.json para os grupos, claude-code-sessions/… para as sessões) e SÓ com o app fechado, porque o app regrava o config enquanto está aberto — daí o modo --vigia. Backup antes de cada escrita e --desfazer.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "instalar_vigia_sessoes.py",
+      "caminho": "_scripts/instalar_vigia_sessoes.py",
+      "papel": "Instala/remove/consulta o vigia de sessões (sessoes_os.py --vigia) como serviço do SO — LaunchAgent com RunAtLoad+KeepAlive no macOS, Tarefa Agendada 'ao fazer logon' com reinício automático no Windows. É o que torna as sessões por empresa 100% automáticas: quando o app fecha, o vigia aplica as pendências e as sessões novas aparecem na próxima abertura. Parte padrão da instalação (/aft-setup e /aft-atualizar Passo 2f).",
+      "runtime": "Python stdlib (+ PowerShell no Windows)"
+    },
+    {
+      "nome": "checar_acentos.py",
+      "caminho": "_scripts/checar_acentos.py",
+      "papel": "Pega minuta de auto escrita 'chapada' (sem acentuação) antes do empacotamento. Não é exigência de encoding — o latin-1 do Sistema Auditor aceita todos os acentos do português; o que ele não aceita é travessão, aspas curvas e emoji. Texto sem acento é falha de qualidade do auto, detectada aqui de forma determinística e com quase zero falso-positivo.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "checar_arquivos_internos.py",
+      "caminho": "_scripts/checar_arquivos_internos.py",
+      "papel": "Impede que o ambiente de trabalho do AFT vaze para dentro do auto: o auto é documento legal entregue ao autuado, e inspecao-fisica.md, memory.md, .depara_*.json, 'OS ATIVAS', nomes de skill /aft-* e caminhos do computador não são elementos de convicção. Varre a minuta e avisa, com atenção especial ao subtítulo ELEMENTOS DE CONVICÇÃO.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "indenta_quebras.py",
+      "caminho": "_scripts/indenta_quebras.py",
+      "papel": "Recuo de primeira linha nos autos do Sistema Auditor: o campo é uma linha única em que a quebra é o comando #13#10, e sem recuo os parágrafos chegam grudados na importação. Insere 8 espaços após cada #13#10 que precede texto real, poupando o marcador ' . ' de linha em branco entre subtítulos.",
+      "runtime": "Python stdlib"
     }
   ],
   "dados": [
@@ -664,6 +711,10 @@ const ARCH = {
     "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais. Única exceção, opt-in e com consentimento por sessão: o /aft-painel pode publicar o painel (empresas e prazos, sem dados de trabalhador) como Artifact privado na conta claude.ai do AFT."
   ],
   "decisoes": [
+    {
+      "topico": "Relação de autos é .docx, sem PDF",
+      "txt": "A Relação de autos lavrados sai só em .docx (29/07/2026). A conversão automática para PDF foi retirada junto com o _scripts/docx_para_pdf.py, que era seu único consumidor. Motivo: o documento que vai ao processo já é o .docx, então o PDF nunca foi exigência — era conveniência. Em troca, ele obrigava a existir LibreOffice ou automação COM do Word, e o /aft-doctor passou a acusar 'nem LibreOffice nem Word encontrados' em máquina Windows COM Word instalado: a checagem olhava uma única chave de registro (App Paths\\winword.exe) numa única visão de 32/64 bits, então Python 64 bits + Office 32 bits dava falso negativo. Vários colegas reportaram o aviso. Em vez de endurecer a detecção (mais código para sustentar uma conversão dispensável), removeu-se a exigência inteira: a checagem saiu do /aft-doctor e quem quiser PDF usa Arquivo > Salvar como... > PDF no Word. Menos dependência de máquina, menos aviso assustando o AFT."
+    },
     {
       "topico": "Nomes das skills",
       "txt": "Toda skill oficial usa o prefixo `aft-` (26/07/2026): /NR12 virou /aft-NR12, /gera-ai virou /aft-gera-ai etc. Sem prefixo comum, as skills do toolkit ficavam espalhadas no menu / do Claude Code, misturadas ao que o AFT tem instalado; agora digitar /aft reúne todas em bloco. Corte seco, sem alias do nome antigo — a tabela de-para vai no NOVIDADES.md, que o /aft-atualizar mostra a cada usuário, e o disparo por linguagem natural continua igual. O namespace `minha-` das skills próprias do AFT não é afetado. Como ~/.claude/skills É o clone do repo, o git pull renomeia as pastas sozinho, sem script de migração."

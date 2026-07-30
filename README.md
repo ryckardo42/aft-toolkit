@@ -137,7 +137,7 @@ Documentos\AFT\
 │       │   └── notificacao-ABC123\  (itens entregues pela empresa)
 │       ├── AUTOS\
 │       │   ├── Autos 19-05\         (TXT importável + anexos PDF)
-│       │   └── Relacao de autos\    (relação .docx/.pdf)
+│       │   └── Relacao de autos\    (relação .docx)
 │       └── interdicao-embargo\      (termo, RT, laudos)
 └── OS ARQUIVADAS\
 ```

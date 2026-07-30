@@ -191,7 +191,7 @@ só com as fichas e os relatórios `.md`**:
 │   └── notificacao-<CODIGO>/     ← resposta do empregador (item1/, item2/...)
 ├── AUTOS/
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
-│   └── Relacao de autos/         ← relação .docx/.pdf do /aft-autos-lavrados
+│   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
 ├── interdicao-embargo/           ← termo, RT, laudos, juntados
 └── fotos/
 ```

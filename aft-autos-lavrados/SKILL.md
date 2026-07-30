@@ -59,11 +59,10 @@ Cenários típicos:
 - Pasta da OS em `<OS_ATIVAS>/<NOME_DA_OS>` com `memory.md` (o nome pode ou não conter o CNPJ — ver Passo 1).
 - `pypdf` instalado (`pip install pypdf` — o `/aft-setup` já faz). Se ausente, o
   scan reporta o auto como ilegível com a dica de instalação.
-- (opcional) um conversor de PDF para o Passo 5.5 exportar o `relacao-autos.pdf`
-  automaticamente: `soffice` (LibreOffice) no PATH ou, no Windows, o próprio
-  Microsoft Word (o toolkit o dirige por automação COM, sem exigir instalação
-  nenhuma). Sem nenhum dos dois, o `.docx` é gerado normalmente e a skill
-  orienta a exportar o PDF manualmente pelo Word.
+- **Nada de conversor de PDF:** o documento final da Relação de autos é o
+  `.docx`. A skill não converte para PDF e não depende de LibreOffice nem de
+  automação do Word. Se o AFT quiser um PDF, é abrir o `.docx` no Word e usar
+  Arquivo > Salvar como... > PDF.
 - **Nada de `zip`/`unzip`:** o `.docx` é montado com a biblioteca padrão do
   Python. Uma instalação limpa do Windows não tem esses comandos (e o Git for
   Windows traz só o `unzip.exe`), então o script nunca depende deles.
@@ -271,7 +270,7 @@ Nenhum auto lavrado encontrado no Sistema Auditor para esta empresa.
 <linha sobre pendentes de transmissão, se houver rascunho>
 ```
 
-### Passo 5.5 — Gerar "Relação de autos lavrados" (.docx + .pdf)
+### Passo 5.5 — Gerar "Relação de autos lavrados" (.docx)
 
 Sempre que o Passo 5 gravar um `autos-lavrados.md` com pelo menos um auto **válido** no Detalhamento, gere também o documento formatado para juntar ao processo:
 
@@ -281,12 +280,12 @@ python3 ~/.claude/skills/aft-autos-lavrados/scripts/gera_relacao_autos.py "<past
 
 O script:
 - cria (se não existir) a pasta `<pasta-OS>/AUTOS/Relacao de autos/` (em OS ainda não migradas, sem a caixa `AUTOS/`, usa o lugar antigo `<pasta-OS>/Relacao de autos/`);
-- gera `relacao-autos.docx` a partir do template oficial (`scripts/template-relacao-autos.docx`) — cabeçalho com os logos SIT/AFT **nunca é alterado**; corpo com EMPREGADOR + INSCRIÇÃO, autos agrupados por data (mais antigo → mais recente, ordem do MD preservada), fonte Times New Roman 12pt, texto sempre justificado;
-- tenta converter o mesmo `.docx` para `relacao-autos.pdf` sem alterar o visual, pelo `_scripts/docx_para_pdf.py`: LibreOffice headless se disponível, senão o Microsoft Word por automação COM (no Windows). O motor usado aparece no stdout.
+- gera `relacao-autos.docx` a partir do template oficial (`scripts/template-relacao-autos.docx`) — cabeçalho com os logos SIT/AFT **nunca é alterado**; corpo com EMPREGADOR + INSCRIÇÃO, autos agrupados por data (mais antigo → mais recente, ordem do MD preservada), fonte Times New Roman 12pt, texto sempre justificado.
+
+O `.docx` é o documento final — **a skill não gera PDF** e não depende de LibreOffice nem do Word. Se o AFT pedir um PDF, oriente-o a abrir o `.docx` no Word e usar **Arquivo > Salvar como... > PDF**.
 
 Leia o stdout do script:
-- `OK docx: ...` e `OK pdf: ... (via <motor>)` → os dois arquivos foram gerados; informe os caminhos ao AFT.
-- `OK docx: ...` seguido de `AVISO: PDF não gerado automaticamente...` → o `.docx` foi gerado normalmente, mas a conversão para PDF não está disponível nesta máquina (falta LibreOffice/Word, ou a automação do Word não tem permissão do sistema). **Não trate como erro da skill**: informe ao AFT que o `.docx` está pronto em `AUTOS/Relacao de autos/relacao-autos.docx` e que, para o PDF, é só abrir esse arquivo no Word e usar **Arquivo > Salvar como... > PDF**.
+- `OK docx: ...` → o documento foi gerado; informe o caminho ao AFT.
 - Se o script parar com um **traceback** e o aviso de que um ticket foi gravado em `<pasta AFT>/tickets/` → é defeito do toolkit, não da máquina do AFT. Diagnostique e conserte se der; depois ofereça a skill `/aft-erro` para completar o ticket com o contexto e encaminhá-lo ao mantenedor.
 - Se o `autos-lavrados.md` não tiver nenhum auto válido no Detalhamento (OS sem autos lavrados), pule este passo — não há o que relacionar.
 
@@ -326,7 +325,6 @@ Depois, adicione 1 linha em `## Registro de atividades` (append na tabela; não 
 
 📄 Relatório: <caminho do autos-lavrados.md>
 📑 Relação formatada: <caminho do relacao-autos.docx>
-📄 PDF: <caminho do relacao-autos.pdf> | ou: "PDF não gerado automaticamente — abra o .docx e exporte pelo Word (Salvar como... > PDF)"
 🗂️  Pasta auditor: <basename> (match: <estrategia>)
 
 Resumo:

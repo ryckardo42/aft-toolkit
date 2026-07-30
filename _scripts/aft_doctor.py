@@ -308,39 +308,13 @@ elif cfg_path.is_file():
         "Rode /aft-setup para gravar o caminho completo do Python (evita o atalho "
         "vazio 'python3' da Microsoft Store).")
 
-# 8c. Conversor de .docx em PDF ----------------------------------------------
-# A Relacao de autos (e outros documentos) sai em .docx e tenta virar PDF
-# sozinha. Quem converte e o LibreOffice headless ou, no Windows, o proprio
-# Word por automacao. Sem nenhum dos dois o .docx continua saindo normalmente -
-# so o PDF exige exportar na mao -, por isso e aviso, nunca erro.
-_conv = shutil.which("soffice") or shutil.which("libreoffice")
-_word = None
-if not _conv and sys.platform.startswith("win"):
-    try:
-        import winreg as _wr
-        _chave = r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\winword.exe"
-        for _raiz in (_wr.HKEY_LOCAL_MACHINE, _wr.HKEY_CURRENT_USER):
-            try:
-                with _wr.OpenKey(_raiz, _chave) as _k:
-                    _word = _wr.QueryValueEx(_k, None)[0]
-                    break
-            except OSError:
-                continue
-    except Exception:
-        _word = None
-
-if _conv:
-    add("Conversor de PDF", "ok", f"LibreOffice em {_conv}")
-elif _word:
-    add("Conversor de PDF", "ok", "Microsoft Word (automacao COM) - "
-                                  "usado quando nao ha LibreOffice")
-else:
-    add("Conversor de PDF", "aviso",
-        "nem LibreOffice nem Word encontrados nesta maquina",
-        "Os documentos .docx continuam sendo gerados normalmente; so a versao "
-        "em PDF sai na mao (abra o .docx e use Arquivo > Salvar como... > PDF). "
-        "Para automatizar, instale o LibreOffice (gratuito) - o toolkit o usa "
-        "sozinho assim que ele aparecer.")
+# 8c. (removido em 29/07/2026) Conversor de .docx em PDF ---------------------
+# O toolkit nao converte mais .docx em PDF: todo documento que ele gera - a
+# Relacao de autos inclusive - E o .docx. Quem quiser um PDF exporta pelo Word
+# (Arquivo > Salvar como... > PDF). A checagem antiga avisava "nem LibreOffice
+# nem Word encontrados" em maquina Windows COM Word instalado (ela olhava uma
+# unica chave de registro, numa unica visao de 32/64 bits), assustando o AFT
+# por causa de uma conversao que nem era necessaria.
 
 # 9. NotebookLM (opcional) ---------------------------------------------------
 # Checa o CLI e, se presente, o estado da sessao (validacao LOCAL, sem rede).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera a "Relação de autos lavrados" (.docx + .pdf) a partir de um
+"""Gera a "Relação de autos lavrados" (.docx) a partir de um
 autos-lavrados.md (saída da skill /aft-autos-lavrados).
 
 Uso:
@@ -14,11 +14,9 @@ Uso:
   por data do mais antigo para o mais recente, mantendo a ordem do MD dentro
   de cada data.
 - Gera o `relacao-autos.docx` na pasta de saída (por padrão `<pasta da OS>/
-  Relacao de autos/`) e tenta também `relacao-autos.pdf` (mesmo conteúdo
-  visual) pelo `_scripts/docx_para_pdf.py`, que usa o LibreOffice ou, no
-  Windows, o próprio Word. Se nenhum dos dois servir, o script avisa e orienta
-  a exportar o PDF manualmente a partir do .docx (Word: Arquivo > Salvar
-  como... > PDF) — a ausência do PDF nunca impede a geração do .docx.
+  Relacao de autos/`). O documento final é o .docx: o toolkit não converte
+  para PDF (se o AFT precisar de um, é Arquivo > Salvar como... > PDF no
+  Word) — assim a skill não depende de LibreOffice nem de automação do Word.
 - O .docx é montado com a `zipfile` da biblioteca padrão (via
   `_scripts/docx_unpack.py` e `docx_pack.py`). Nada de chamar os comandos
   `zip`/`unzip`: o Windows não os traz, e o Git for Windows distribui só o
@@ -51,7 +49,6 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
 from docx_pack import empacotar          # noqa: E402
 from docx_unpack import desempacotar     # noqa: E402
-import docx_para_pdf                     # noqa: E402
 
 NAVY = "103B5A"  # cor do logo AFT no cabeçalho
 TNR = "Times New Roman"
@@ -196,15 +193,6 @@ def gerar_docx(md_path: Path, out_docx: Path):
     return total, len(grupos)
 
 
-def gerar_pdf(docx_path: Path, pdf_path: Path):
-    """Converte docx -> pdf sem alterar o visual, best-effort. A regra de qual
-    motor usar (LibreOffice headless, ou o Word no Windows) mora no
-    `_scripts/docx_para_pdf.py`, compartilhado com o resto do toolkit. Levanta
-    RuntimeError com a orientação manual quando nenhum motor serve."""
-    _, motor = docx_para_pdf.converter(docx_path, pdf_path)
-    return motor
-
-
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -220,16 +208,9 @@ def main():
                        else base / "Relacao de autos")
 
     out_docx = pasta_saida / "relacao-autos.docx"
-    out_pdf = pasta_saida / "relacao-autos.pdf"
 
     total, n_datas = gerar_docx(md_path, out_docx)
     print(f"OK docx: {out_docx} — {total} autos em {n_datas} data(s).")
-
-    try:
-        motor = gerar_pdf(out_docx, out_pdf)
-        print(f"OK pdf: {out_pdf} (via {motor})")
-    except RuntimeError as e:
-        print(f"AVISO: {e}")
 
 
 if __name__ == "__main__":

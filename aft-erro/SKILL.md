@@ -78,7 +78,7 @@ Todos os campos são opcionais menos `--mensagem`. O script devolve
 
 1. o que o AFT pediu ("gerar a Relação de autos lavrados da OS X");
 2. o que a ferramenta fez ("o script parou no meio; o .docx não foi criado");
-3. o que se esperava ("o .docx e o PDF na pasta AUTOS/Relacao de autos/");
+3. o que se esperava ("o .docx na pasta AUTOS/Relacao de autos/");
 4. se já aconteceu antes, e se tem jeito de contornar.
 
 Não escreva nome de empresa, CNPJ/CPF nem nome de trabalhador — use "a
