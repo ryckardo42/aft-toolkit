@@ -5,7 +5,7 @@ description: >
   AFT Toolkit. Invocado pela skill /aft-autos-lavrados com os alvos já resolvidos
   (pasta da OS + CNPJ/CPF ou 8 primeiros dígitos). Executa o scan dos PDFs, resolve
   duplicidades, cruza com rascunhos, grava o autos-lavrados.md, gera a Relação de
-  autos (.docx/.pdf) e atualiza o memory.md — tudo fora da conversa principal. Nunca
+  autos (.docx) e atualiza o memory.md — tudo fora da conversa principal. Nunca
   pergunta nada: pontos de decisão viram a seção "Decisões pendentes do AFT" do
   relatório final.
 tools: Read, Glob, Grep, Bash, Write, Edit

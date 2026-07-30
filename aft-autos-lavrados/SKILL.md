@@ -17,8 +17,8 @@ description: >
   gera um `autos-lavrados.md` na pasta da OS e atualiza a seção
   `## Autos lavrados` do memory.md marcando [x] os lavrados e [ ] os pendentes.
   Também gera a "Relação de autos lavrados" em .docx (template oficial,
-  cabeçalho SIT/AFT preservado) e tenta exportar o mesmo documento em .pdf,
-  salvando ambos em `AUTOS/Relacao de autos/` dentro da pasta da OS.
+  cabeçalho SIT/AFT preservado), salvando em `AUTOS/Relacao de autos/` dentro
+  da pasta da OS. Não gera PDF: o .docx é o documento final.
   Read-only sobre o Sistema Auditor (nunca toca nos PDFs nem na pasta PRO).
 ---
 
