@@ -35,6 +35,7 @@ except Exception:
     pass
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -342,6 +343,23 @@ if not nlm_path:
         "(skill /aft-notebooklm-login) - ele instala e faz o login por voce, sem terminal. "
         "Sem ele, as skills usam o Drive ou pedem o codigo da ementa.")
 else:
+    # Versao minima conhecida-boa: o rebrand "Gemini Notebook" (16/07/2026)
+    # mudou o endereco de pouso do login para notebook.google.com, e toda a
+    # serie 0.7.x falha o login por janela com "Login not detected within
+    # 5 minutes" MESMO com o login feito. A correcao existe a partir da 0.8.x.
+    try:
+        vout = subprocess.run(
+            [nlm_path, "--version"], capture_output=True, text=True, timeout=15,
+        )
+        m = re.search(r"version\s+(\d+)\.(\d+)\.(\d+)", vout.stdout or "")
+    except Exception:
+        m = None
+    if m and (int(m.group(1)), int(m.group(2))) < (0, 8):
+        add("NotebookLM (versao)", "aviso",
+            f"versao {m.group(1)}.{m.group(2)}.{m.group(3)} com defeito conhecido de "
+            "login (rebrand Gemini Notebook de 16/07/2026)",
+            "O login por janela expira mesmo com o login feito. Peca ao Claude "
+            "para rodar /aft-atualizar - ele instala a versao corrigida.")
     estado = None
     try:
         out = subprocess.run(
@@ -374,20 +392,34 @@ else:
             "Peca ao Claude 'reconecte o notebooklm' (skill /aft-notebooklm-login).")
 
 # 9b. Reconexao automatica do NotebookLM (NOTEBOOKLM_REFRESH_CMD) --------------
-# Faz o 'notebooklm ask' se reautenticar sozinho ao expirar. Pode estar so no
-# ambiente persistente (registro do Windows) e nao no processo atual.
+# Faz o 'notebooklm ask' se reautenticar sozinho ao expirar. No Windows a
+# fonte da verdade e o REGISTRO (valor persistente, vale para as proximas
+# sessoes): o ambiente deste processo pode estar defasado quando a variavel
+# acabou de mudar e o app ainda nao reabriu. So se nao houver valor no
+# registro e que o ambiente do processo conta.
 import os as _os
-_refresh = _os.environ.get("NOTEBOOKLM_REFRESH_CMD")
-if not _refresh and _os.name == "nt":
+_refresh = None
+if _os.name == "nt":
     try:
         import winreg
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as _k:
             _refresh, _ = winreg.QueryValueEx(_k, "NOTEBOOKLM_REFRESH_CMD")
     except (FileNotFoundError, OSError):
         _refresh = None
-if _refresh:
+if not _refresh:
+    _refresh = _os.environ.get("NOTEBOOKLM_REFRESH_CMD")
+if _refresh and "notebooklm_reauth" in _refresh:
     add("Reconexao automatica do NotebookLM", "ok",
         f"NOTEBOOKLM_REFRESH_CMD = {_refresh}")
+elif _refresh:
+    # Modo antigo: 'notebooklm login --browser ...' abre janela e, numa sessao
+    # sem tela (agente), estoura o timeout de 60 s do gancho. O modo novo e o
+    # script notebooklm_reauth.py: renova sem janela, pelo perfil persistente.
+    add("Reconexao automatica do NotebookLM", "aviso",
+        f"configurada no modo antigo (abre janela): {_refresh}",
+        "O novo padrao renova a sessao sem janela nenhuma. Peca ao Claude para "
+        "rodar /aft-notebooklm-login - ele atualiza a variavel para o modo "
+        "silencioso (script notebooklm_reauth.py).")
 else:
     add("Reconexao automatica do NotebookLM", "aviso",
         "NOTEBOOKLM_REFRESH_CMD nao configurada",

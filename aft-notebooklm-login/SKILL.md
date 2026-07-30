@@ -59,10 +59,27 @@ dois extras que esta skill usa - `browser` (login por janela) e `cookies` (login
 silencioso por cookies):
 
 ```bash
-pipx install "notebooklm-py[browser,cookies]"
+pipx install --force "notebooklm-py[browser,cookies] @ git+https://github.com/teng-lin/notebooklm-py@main"
 # se não houver pipx: python -m pip install --user pipx && python -m pipx ensurepath
 # (depois feche e reabra o app para o PATH novo valer, e rode esta skill de novo)
 ```
+
+> **Por que do git e não do PyPI:** em 16/07/2026 o Google rebatizou o NotebookLM
+> como "Gemini Notebook" e o login passou a pousar em `notebook.google.com`. Toda
+> a série 0.7.x publicada no PyPI não reconhece esse endereço e o login por janela
+> expira ("Login not detected within 5 minutes") **mesmo com o login feito**. A
+> correção está no `main` do projeto. Quando o PyPI publicar a 0.8.0 (ou mais
+> nova), pode-se voltar ao `pipx install "notebooklm-py[browser,cookies]"`.
+
+Se o comando **já existir**, confira a versão antes de qualquer login:
+
+```bash
+notebooklm --version
+```
+
+Se aparecer `0.7.x` (ou mais antiga), **atualize primeiro** com o mesmo comando
+`pipx install --force ... @main` acima - senão o login por janela do Passo 3 vai
+falhar por causa do rebrand, por mais que o AFT faça tudo certo.
 
 Não mande o AFT instalar nada à mão. Se o PATH só atualizar na próxima sessão,
 avise que será preciso reabrir o app e siga.
@@ -117,7 +134,25 @@ notebooklm auth inspect --browser <NAV> --json
 > **É normal falhar** em Chrome/Edge atualizados: a mensagem "Could not decrypt ...
 > cookies" ou "App-Bound Encryption" significa que o navegador moderno bloqueia a
 > leitura dos cookies de fora. Não é problema do AFT nem motivo de alarme - apenas
-> siga para o Passo 3 sem expor esse erro técnico ao AFT.
+> siga para o Passo 2b sem expor esse erro técnico ao AFT.
+
+## Passo 2b - Reconexão silenciosa pelo perfil salvo (zero cliques, sem janela)
+
+Se o AFT **já se logou por esta skill alguma vez**, o perfil de navegador salvo em
+`~/.notebooklm` costuma continuar com a sessão Google viva mesmo depois que os
+cookies do NotebookLM expiram. Antes de abrir qualquer janela, renove por ele
+(você roda; nenhuma janela aparece, o navegador roda invisível):
+
+```bash
+python ~/.claude/skills/_scripts/notebooklm_reauth.py
+```
+
+- **Exit 0** -> renovado. Valide com `notebooklm auth check --test` e encerre - o
+  AFT não fez nada.
+- **Exit 3** -> o notebooklm-py instalado é antigo demais (série 0.7.x, sem esse
+  mecanismo): volte ao Passo 0 e atualize, depois tente de novo.
+- **Exit 1** -> a sessão do perfil também morreu (ou nunca houve login): siga para
+  o Passo 3.
 
 ## Passo 3 - Login por janela (uma única ação do AFT: entrar no Google)
 
@@ -159,6 +194,11 @@ Se a janela fechar no meio ou der "Browser closed", recomece acrescentando `--fr
 (ex.: `notebooklm login --browser chrome --fresh`) para limpar a sessão de navegador
 cacheada.
 
+> **"Login not detected within 5 minutes" com o login feito?** Isso NÃO é erro do
+> AFT: é o defeito do rebrand (Passo 0) numa versão 0.7.x do notebooklm-py. Não
+> insista em mais tentativas de login - atualize o pacote (Passo 0) e rode o login
+> de novo.
+
 ## Passo 4 - Conferir
 
 ```bash
@@ -194,22 +234,28 @@ A sessão do NotebookLM **expira de tempos em tempos**, inclusive no meio de uma
 Em vez de cada skill tratar isso, o toolkit usa o **gancho nativo da CLI**: a variável de
 ambiente `NOTEBOOKLM_REFRESH_CMD`. Quando ela aponta para um comando de reconexão, o próprio
 `notebooklm ask` **se reautentica sozinho** ao detectar a sessão expirada — sem wrapper, e
-valendo para TODAS as skills que usam `notebooklm ask` (testado: recupera até sessão
-totalmente expirada, pelo perfil persistente do navegador).
+valendo para TODAS as skills que usam `notebooklm ask`.
+
+O comando de reconexão é o **script silencioso** do Passo 2b (`notebooklm_reauth.py`):
+renova pelo perfil salvo, **sem abrir janela nenhuma** — funciona até em sessão de agente
+sem tela, e cabe no timeout de 60 s do gancho. (O valor antigo, `notebooklm login
+--browser <NAV>`, abria janela e estourava esse timeout: se encontrar uma máquina ainda
+configurada assim, atualize a variável.)
 
 **Deixe a variável configurada** (você roda; é persistente — vale para as próximas sessões).
-No Windows, use o `<NAV>` do AFT (`chrome` ou `msedge`):
+No Windows, monte o valor com caminhos completos — o `python.exe` do `python_path` do
+`aft-config.md` e a pasta do usuário — usando **barras normais** (`/`) e aspas, e o `<NAV>`
+do AFT (`chrome` ou `msedge`):
 
 ```powershell
-[Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','notebooklm login --browser <NAV>','User')
+[Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','"C:/caminho/do/python.exe" "C:/Users/FULANO/.claude/skills/_scripts/notebooklm_reauth.py" <NAV>','User')
 [Environment]::GetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','User')   # conferir
 ```
 
 > A variável só passa a valer em **processos novos** — avise o AFT que pode ser preciso
-> **reabrir o Claude Code uma vez** para o gancho entrar em vigor nas skills. Quando o
-> `notebooklm` precisar abrir o navegador para reconectar, rode-o **fora do sandbox**
-> (mesma regra do login). Esta skill continua sendo o caminho **manual** de reconexão
-> quando o gancho não basta (ex.: sem rede, ou primeiro login do navegador).
+> **reabrir o Claude Code uma vez** para o gancho entrar em vigor nas skills. Esta skill
+> continua sendo o caminho **manual** de reconexão quando o gancho não basta (ex.: sem
+> rede, primeiro login do navegador, ou a sessão do perfil também expirada).
 
 ## Regras
 

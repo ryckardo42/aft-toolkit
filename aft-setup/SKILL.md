@@ -341,11 +341,16 @@ mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
    `browser` para o login por janela e `cookies` para o login silencioso):
    ```bash
    notebooklm --help            # se faltar, instale:
-   pipx install "notebooklm-py[browser,cookies]"
+   pipx install --force "notebooklm-py[browser,cookies] @ git+https://github.com/teng-lin/notebooklm-py@main"
    notebooklm skill install     # registra a skill /notebooklm no Claude Code
    ```
-   (Pacote publicado em https://github.com/teng-lin/notebooklm-py. Se não houver pipx:
+   (Pacote de https://github.com/teng-lin/notebooklm-py — **instale do git, não do
+   PyPI**: o rebrand "Gemini Notebook" de 16/07/2026 quebrou o login de toda a série
+   0.7.x publicada, e a correção por ora só está no `main`; detalhes no Passo 0 da
+   `/aft-notebooklm-login`. Se não houver pipx:
    `python -m pip install --user pipx && python -m pipx ensurepath`, reabrir o app.)
+   Se o comando já existir mas `notebooklm --version` mostrar `0.7.x`, atualize com o
+   mesmo comando acima antes de qualquer login.
    **Atenção:** o `pip`/`pipx install` só instala o comando de terminal. Sem o
    `notebooklm skill install`, a skill `/notebooklm` (acesso completo à API: criar
    notebooks, adicionar fontes, gerar artefatos) não aparece no Claude Code, mesmo com
@@ -387,12 +392,15 @@ mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
    Se aparecer a lista de notebooks, está pronto.
 7. **Reconexão automática (recomendado):** grave a variável `NOTEBOOKLM_REFRESH_CMD` para o
    `notebooklm ask` se reautenticar sozinho quando a sessão expirar — vale para TODAS as
-   skills, sem wrapper. Use o `<NAV>` do AFT (`chrome` ou `msedge`):
+   skills, sem wrapper. O valor é o script **silencioso** do toolkit (renova sem abrir
+   janela, pelo perfil salvo). Monte-o com caminhos completos — o `python_path` do
+   `aft-config.md` e a pasta do usuário — com **barras normais** (`/`) e aspas, e o
+   `<NAV>` do AFT (`chrome` ou `msedge`):
    ```powershell
-   [Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','notebooklm login --browser <NAV>','User')
+   [Environment]::SetEnvironmentVariable('NOTEBOOKLM_REFRESH_CMD','"C:/caminho/do/python.exe" "C:/Users/FULANO/.claude/skills/_scripts/notebooklm_reauth.py" <NAV>','User')
    ```
-   Avise o AFT que isso passa a valer ao **reabrir o Claude Code**. (Detalhes na skill
-   `/aft-notebooklm-login`.)
+   Avise o AFT que isso passa a valer ao **reabrir o Claude Code**. (Detalhes e o valor
+   antigo a substituir na skill `/aft-notebooklm-login`.)
 
 Se o AFT pular este passo, as skills continuam funcionando: elas oferecem o ementário
 no Google Drive (link nas próprias skills) ou pedem o código da ementa diretamente.

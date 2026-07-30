@@ -111,18 +111,34 @@ curl -s https://pypi.org/pypi/notebooklm-py/json | python3 -c "import json,sys; 
 - Se o `notebooklm --version` falhar ("comando não encontrado"), o pacote não está
   instalado — não é erro desta skill; apenas informe e siga (o `/aft-notebooklm-login`
   ou o `/aft-setup` cuidam da instalação na próxima vez que forem usados).
-- Se as duas versões forem **iguais**, informe que já está atualizado.
-- Se a versão instalada for **mais antiga**, atualize automaticamente, sem perguntar
-  (mantendo os mesmos extras usados na instalação original):
+
+**Enquanto o PyPI publicar versão anterior à 0.8.0** (rebrand "Gemini Notebook" de
+16/07/2026: toda a série 0.7.x tem o login por janela quebrado — ver Passo 0 da
+`/aft-notebooklm-login`), o alvo da atualização é o **`main` do git**, não o PyPI:
+
+- Se a versão instalada for `0.7.x` ou anterior, atualize automaticamente, sem
+  perguntar:
   ```bash
-  pipx upgrade notebooklm-py
+  pipx install --force "notebooklm-py[browser,cookies] @ git+https://github.com/teng-lin/notebooklm-py@main"
+  ```
+- Se a versão instalada já vier do git (aparece com o hash, ex.: `0.8.0rc1 (7d0aa42c)`),
+  rode o mesmo comando acima — ele é idempotente e só avança para o `main` mais novo.
+
+**Quando o PyPI passar a publicar 0.8.0 ou mais nova**, volte ao fluxo normal:
+
+- Se as duas versões forem **iguais**, informe que já está atualizado.
+- Senão, atualize para a versão do PyPI (o `--force` também serve para sair da
+  instalação via git e voltar à publicada):
+  ```bash
+  pipx install --force "notebooklm-py[browser,cookies]"
   ```
   Se o pacote não foi instalado via pipx (comando acima falha ou não muda nada),
   use o equivalente em pip:
   ```bash
   python -m pip install --user --upgrade "notebooklm-py[browser,cookies]"
   ```
-  Depois confirme com `notebooklm --version` que a versão nova ficou ativa.
+
+Depois confirme com `notebooklm --version` que a versão nova ficou ativa.
 
 ## Passo 2b — Oferecer a rotina diária do painel (só na primeira vez)
 

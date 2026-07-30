@@ -299,7 +299,24 @@ def registrar(titulo: str, *, mensagem: str = "", script: str = "",
             return Path("(não foi possível gravar o ticket)")
 
 
+def _normalizar_skill(valor: str) -> str:
+    """Desfaz a conversão de caminho do Git Bash (MSYS) em ``--skill /aft-x``.
+
+    No Git Bash do Windows, um argumento que começa com ``/`` é tratado como
+    caminho absoluto e chega aqui como ``C:/Program Files/Git/aft-x``. Se o
+    valor parecer um caminho e o último componente for uma skill instalada,
+    devolve ``/nome-da-skill``; senão, devolve como veio.
+    """
+    v = (valor or "").strip()
+    if re.match(r"^[A-Za-z]:[/\\]", v):
+        nome = re.split(r"[/\\]", v)[-1]
+        if nome and (SKILLS_DIR / nome / "SKILL.md").is_file():
+            return "/" + nome
+    return v
+
+
 def _registrar(titulo, mensagem, script, skill, erro, automatico) -> Path:
+    skill = _normalizar_skill(skill)
     v = versao_toolkit()
     agora = datetime.datetime.now()
     alvo = _caminho_novo(pasta_tickets())
