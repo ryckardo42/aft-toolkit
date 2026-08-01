@@ -38,6 +38,21 @@ uso. Fomos atrás e achamos três causas. Você não precisa fazer nada: tudo ch
   CNPJ, códigos de DET, ementas e enquadramentos já decididos, e o que já foi gravado
   em disco. Os apelidos de trabalhador (`[[TRAB_01]]`) continuam protegidos no resumo.
 
+**E uma recomendação simples, que vale mais que todas as outras juntas: deixe a caixa de
+modelo do app em Sonnet.** Depois desta atualização, 31 das 40 skills usam Sonnet — com a
+caixa nele, o toolkit inteiro trabalha sem ficar trocando de modelo no meio da conversa
+(cada troca faz o app reler tudo o que já foi dito, e é isso que mais consome). Duas
+observações:
+
+- **Ponha a caixa em Opus só quando a sessão for julgar um documento técnico que a
+  empresa entregou** — análise de PGR, de AET, de acidente, de laudo de máquina, ou RT de
+  manutenção de interdição. Nesses casos o Claude passa a te lembrar sozinho no começo da
+  conversa. Nas demais, Sonnet.
+- **O nível de esforço fica em "alto"** — o `/aft-setup` já configura isso para quem
+  ainda não escolheu um nível (se você já escolheu o seu, ele não mexe). As tarefas
+  mecânicas do toolkit baixam esse nível sozinhas quando é o caso; o que continua no alto
+  é justamente enquadrar irregularidade, consultar ementa e redigir auto ou RT.
+
 ## 30/07/2026
 <!-- commit: notebooklm-rebrand-e-reconexao-silenciosa -->
 

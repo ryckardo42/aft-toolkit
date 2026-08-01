@@ -293,9 +293,14 @@ tentar induzir o assistente a vazar dados, esses bloqueios seguram. O template f
   acrescente as entradas de `config/settings-aft.json` que faltarem dentro de
   `permissions.deny` (sem duplicar) e regrave o arquivo, preservando tudo que já estava
   lá (outras permissões, `allow`, etc.). Use a tool Write com o JSON resultante.
+  **Também acrescente a chave `effortLevel` — mas SÓ se ela ainda não existir** no
+  arquivo do AFT. Se já existir com qualquer valor, deixe como está: significa que ele
+  escolheu o próprio nível (pelo `/effort` ou à mão) e essa escolha manda.
 
-Explique em uma frase: *"Instalei uma rede de proteção: o Claude agora fica proibido de
-ler suas senhas e os dados reais dos trabalhadores, mesmo que algum documento peça."*
+Explique em duas frases: *"Instalei uma rede de proteção: o Claude agora fica proibido de
+ler suas senhas e os dados reais dos trabalhadores, mesmo que algum documento peça. E
+deixei o nível de esforço em 'alto', que é o certo para enquadramento e redação de auto —
+as tarefas mecânicas do toolkit já baixam isso sozinhas."*
 
 > Como o `CLAUDE.md`, esse arquivo não muda sozinho num `git pull`; rode `/aft-setup`
 > de novo para reaplicar uma versão nova do template.

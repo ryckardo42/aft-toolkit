@@ -109,6 +109,23 @@ chame a `/aft-gera-ai`.
 
 Se o `aft-config.md` não existir, oriente-me a rodar `/aft-setup` primeiro.
 
+## Modelo e esforço da sessão
+
+A caixa de modelo do app governa a conversa inteira; o `model:` que cada skill declara
+vale **só no turno em que ela é invocada**. Como 31 das 40 skills são `sonnet`, o padrão
+é **deixar a caixa em Sonnet** — assim a maioria do trabalho roda sem troca de modelo
+(cada troca invalida o cache e reprocessa a conversa a preço cheio).
+
+**Me avise para pôr a caixa em Opus** quando eu abrir uma sessão dedicada a julgar um
+documento técnico entregue pela empresa: `/aft-PGR-analise`, `/aft-aet-auditoria`,
+`/aft-analise-acidente`, `/aft-auditoria-AR-NR12` ou `/aft-rt-manutencao`. Elas declaram
+`opus`, mas o pin só cobre o primeiro turno — numa análise de vários turnos quem decide é
+a caixa. Avise uma vez, no começo; se eu preferir seguir em Sonnet, siga sem insistir.
+
+Esforço: manter **alto**. As skills mecânicas já declaram o seu (`low`/`medium`) e
+ignoram a caixa; o que herda dela é justamente enquadramento, consulta de ementa e
+redação de auto/RT.
+
 ## Quando alguma coisa do toolkit dá errado
 
 Se um script quebra, ele grava sozinho um **ticket de correção** em

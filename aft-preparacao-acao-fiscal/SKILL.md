@@ -1,6 +1,6 @@
 ---
 name: aft-preparacao-acao-fiscal
-model: opus
+model: sonnet
 description: >
   Use quando o AFT quiser planejar uma ação fiscal ANTES da visita — já sabe
   a empresa e tem dados preliminares (denúncia, nº de trabalhadores, temas
