@@ -8,7 +8,11 @@ description: >
   "montar o RT", "AFT-RT-RGI". Logo após o RT, redige obrigatoriamente os
   autos derivados das ementas da seção 4. Acione TAMBÉM quando o AFT ANEXAR
   um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta skill
-  que os redige, nunca improvisar por fora.
+  que os redige, nunca improvisar por fora. Acione AINDA quando o AFT
+  descrever uma situação encontrada na inspeção e perguntar se cabe
+  interdição/embargo ("isso é grave e iminente?", "devo interditar?"): a
+  skill consulta precedentes reais de interdição e sugere — quem decide é
+  sempre o AFT.
 ---
 
 # aft-rt-rgi — Relatório Técnico para Interdição e Embargo
@@ -52,8 +56,41 @@ com os dados fornecidos pelo AFT.
   **passo 7** para redigir os autos. Use o `.docx`/PDF anexado como o RT da OS (copie-o para a
   pasta `interdicao-embargo/` como elemento de convicção, fazendo backup/checagem de arquivo
   aberto antes de sobrescrever).
+- **Modo C — Dúvida de enquadramento (cabe interditar?):** o AFT descreve uma situação
+  encontrada na inspeção e ainda **não decidiu** pela interdição — pergunta se configura
+  risco grave e iminente, se "cabe interdição", ou pede sugestão. Rode a
+  **consulta a precedentes** (seção abaixo) e apresente o resultado: precedentes análogos
+  (nº do termo, ementas usadas, redação do fator de risco) e a sua leitura sobre a
+  similaridade com o caso concreto. **Sugira; nunca decida.** Se o AFT decidir interditar,
+  siga para o Modo A reaproveitando tudo o que a consulta trouxe.
 
-> Em ambos os modos, os autos são redigidos AQUI (nesta skill) — nunca improvisados fora dela.
+> Em todos os modos, os autos são redigidos AQUI (nesta skill) — nunca improvisados fora dela.
+
+### Consulta a precedentes de interdição (notebook `interdicoes`)
+
+O toolkit mantém uma base de **precedentes reais**: mais de uma centena de Relatórios
+Técnicos de Interdição/Embargo (máquinas NR-12, obras NR-18/NR-35, e outros), cada um com
+objetos interditados, ementas, fatores de risco, medidas de proteção e documentos
+solicitados. Ela vive no NotebookLM, na key `interdicoes` do
+`~/.claude/skills/config/notebooks.json`.
+
+- **Quando consultar:** sempre no **Modo C**; e no **Modo A** quando o AFT não ditar o
+  conteúdo das seções 5, 6 ou 7 (fatores de risco, medidas de proteção, documentos) — os
+  precedentes viram a minuta proposta, que o AFT revisa.
+- **Como consultar** (uma pergunta objetiva por situação):
+  ```bash
+  notebooklm ask "Situação encontrada: [descrição objetiva]. Há precedentes de interdição para essa situação? Cite os números dos termos, as ementas usadas (código e descrição), como foi redigida a seção de fatores de risco (risco atual x risco de referência, excesso de risco) e quais medidas de proteção e documentos foram exigidos." --notebook [notebook_id de 'interdicoes'] --json
+  ```
+- **Como apresentar:** cite os termos precedentes pelo número (rastreabilidade), mas deixe
+  claro que precedente **não substitui** a avaliação do caso concreto — a decisão de
+  interditar é ato do AFT (art. 161 da CLT).
+- **Se a key `interdicoes` não existir** no `notebooks.json` (ou o NotebookLM não responder
+  mesmo após a reconexão automática), **pule a camada sem alarde**: no Modo C, diga que a
+  base de precedentes não está configurada e siga com a análise pelos critérios da NR-03;
+  nos demais modos, peça os dados ao AFT como sempre.
+- Os precedentes **não dispensam** o sub-fluxo 4b (resolução de ementas): eles servem de
+  cheque cruzado ("em casos análogos usou-se a ementa X"), mas o código/capitulação final
+  continua vindo do ementário.
 
 ### 1. Coletar os dados necessários
 
@@ -167,6 +204,12 @@ Formato visual final (um bullet por ementa, logo abaixo do cabeçalho "4. IRREGU
 
 **Seção 7 — DOCUMENTOS SOLICITADOS:**
 - Lista dos documentos (um por parágrafo de tabulação)
+
+> **Seções 5, 6 e 7 sem dados do AFT?** Antes de cair no `[A PREENCHER]`, consulte os
+> precedentes (seção "Consulta a precedentes de interdição") com a descrição da situação
+> e **proponha a minuta** dessas seções baseada nos casos análogos, marcando-a como
+> proposta para o AFT revisar. `[A PREENCHER]` fica só para quando nem os precedentes
+> cobrirem o caso.
 
 **Seção 8 — CONCLUSÃO/OBSERVAÇÃO:**
 - Texto de conclusão (breve, objetivo)
@@ -428,6 +471,8 @@ Competência delegada pela Portaria 1719/2014...
 | Múltiplas irregularidades | Consultar NotebookLM em paralelo, uma pergunta por irregularidade |
 | Mesma ementa atinge múltiplos objetos | 1 único auto na Fase 7, listando todos os objetos na parte 2 (não duplicar) |
 | Ementa ficou como `[EMENTA A PREENCHER]` no RT | Pular esta ementa na Fase 7 e avisar o AFT no fechamento |
+| AFT em dúvida se a situação justifica interdição | Modo C: consultar o notebook `interdicoes` e apresentar precedentes análogos — sugerir, nunca decidir |
+| Key `interdicoes` ausente no notebooks.json | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
 | AFT de outra SRTE (não GO) | Avisar que o template é da SRTE/GO; preencher cidade/UF do aft-config.md e sugerir ajustar o cabeçalho no Word após gerar |
