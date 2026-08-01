@@ -1,17 +1,15 @@
 ---
 name: aft-setup
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) acabou de instalar o AFT Toolkit
-  e precisa configurá-lo pela primeira vez, ou quando quiser revisar/alterar a
-  configuração. Acione com "/aft-setup", "configurar o toolkit", "primeira
-  configuração", "configuração inicial", "setup", "mudar minha CIF", "mudar minha
-  UORG". A skill verifica os pré-requisitos (Python, pip), cria a estrutura de
-  pastas de trabalho em ~/Documents/AFT/, coleta os dados do auditor (nome, CIF,
-  UORG, município) uma única vez, grava tudo em aft-config.md, instala as
-  bibliotecas Python necessárias e orienta a configuração do NotebookLM. Todas as
-  outras skills do toolkit leem essa configuração — sem ela, pedem para rodar
-  /aft-setup primeiro.
+  Use quando o AFT acabou de instalar o AFT Toolkit e precisa configurá-lo
+  pela primeira vez, ou quando quiser revisar/alterar a configuração. Acione
+  com "/aft-setup", "configurar o toolkit", "primeira configuração",
+  "configuração inicial", "setup", "mudar minha CIF", "mudar minha UORG".
+  Verifica pré-requisitos, cria a pasta de trabalho, coleta os dados do
+  auditor (nome, CIF, UORG, município) e grava o aft-config.md. Todas as
+  outras skills leem essa configuração.
 ---
 
 # aft-setup — Configuração inicial do AFT Toolkit

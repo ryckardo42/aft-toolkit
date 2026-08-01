@@ -1,19 +1,15 @@
 ---
 name: aft-NR12
+model: sonnet
 description: >
-  Use SEMPRE que o AFT mencionar irregularidade, autuação, interdição,
-  embargo, RT ou ementa relacionados à NR-12 (máquinas e equipamentos). Acione
-  com /aft-NR12 ou quando a narrativa envolver "máquina", "proteção fixa/móvel",
+  Consultora de ementas da NR-12 (máquinas e equipamentos). Acione com /aft-
+  NR12 ou quando a narrativa envolver "máquina", "proteção fixa/móvel",
   "intertravamento", "zona de perigo", "parada de emergência",
-  "polia/correia/engrenagem exposta", "categoria de segurança", "apreciação de
-  riscos de máquina", "partida inesperada", "capacitação NR-12". Acione também
-  quando /aft-auditoria-geral ou /aft-rt-rgi estiverem em curso e a NR
-  identificada for a 12 — é a consultora especializada para NR-12. Retorna:
-  (1) código da ementa + descrição oficial; (2) bloco II - IRREGULARIDADE pronto
-  para o auto de infração; (3) linha formatada para a Seção 4 do RT; (4)
-  fragmento de fundamentação para o Termo de Interdição. NÃO empacota TXT
-  (delega a /aft-gera-ai) e NÃO redige o auto inteiro (delega a
-  /aft-auditoria-geral).
+  "polia/correia/engrenagem exposta", "categoria de segurança", "apreciação
+  de riscos de máquina", "partida inesperada", "capacitação NR-12" — e
+  sempre que /aft-auditoria-geral ou /aft-rt-rgi identificarem a NR-12. NÃO
+  redige o auto inteiro (/aft-auditoria-geral) nem empacota TXT (/aft-gera-
+  ai).
 ---
 
 # NR12 — Consultora especializada para irregularidades de máquinas e equipamentos

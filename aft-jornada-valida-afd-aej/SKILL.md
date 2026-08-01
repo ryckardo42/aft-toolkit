@@ -1,21 +1,15 @@
 ---
 name: aft-jornada-valida-afd-aej
 model: sonnet
+effort: low
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser validar o arquivo
-  fiscal de ponto eletronico AEJ (Arquivo Eletronico de Jornada) recebido do
-  empregador. Acione com "/aft-jornada-valida-afd-aej", "valida AEJ", "validar
-  arquivo de jornada", "validar arquivo de ponto", "conferir AEJ", "checar
-  integridade do AEJ", "o AEJ esta correto?", "validar arquivo do REP". Aceita
-  como argumento o caminho de um arquivo .TXT (AEJ) ou de uma pasta contendo
-  varios. A skill roda um validador Python que confere estrutura (tipos de
-  registro, numero de campos, formatos de data/hora/CNPJ/CPF, versao, contagens
-  do trailer) E integridade referencial (cada marcacao referencia um vinculo,
-  REP e horario existentes), gera um relatorio markdown com veredito e lista de
-  inconsistencias por linha, e apresenta um resumo no chat. O AFD foi EXCLUIDO
-  desta validacao: se um AFD for informado, ele e reportado como IGNORADO (fora
-  de escopo) sem reprovar o lote. NAO faz analise de jornada (confronto marcacao
-  x horario) — isso e outra etapa.
+  Use quando o AFT quiser validar o arquivo fiscal de ponto eletronico AEJ
+  (Arquivo Eletronico de Jornada) recebido do empregador. Acione com "/aft-
+  jornada-valida-afd-aej", "valida AEJ", "validar arquivo de jornada",
+  "validar arquivo de ponto", "conferir AEJ", "checar integridade do AEJ",
+  "o AEJ esta correto?", "validar arquivo do REP". Aceita um .TXT ou uma
+  pasta com varios. O AFD esta FORA de escopo: se informado, e reportado
+  como IGNORADO sem reprovar o lote. NAO faz analise de jornada.
 ---
 
 # jornada-valida-afd-aej — Validador do arquivo fiscal AEJ

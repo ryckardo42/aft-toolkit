@@ -1,21 +1,14 @@
 ---
 name: aft-NAD
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o AFT quiser redigir uma Notificação para Apresentação de
-  Documentos (NAD) — o texto que vai no DET pedindo à empresa documentos que
-  se presume existirem. Acione com /aft-NAD, "gera a NAD", "notificação para
+  Use quando o AFT quiser redigir a Notificação para Apresentação de
+  Documentos (NAD) — o texto que vai no DET pedindo documentos que se
+  presume existirem. Acione com /aft-NAD, "gera a NAD", "notificação para
   apresentar documentos", "pede o PGR pelo DET", "solicita documentos à
-  empresa", "monta a notificação de documentos". Origem natural:
-  /aft-preparacao-acao-fiscal, ao final do checklist de documentos aprovado; mas
-  funciona standalone, a qualquer momento da fiscalização. Produz: introdução
-  fixa (art. 630, §§3º/4º, CLT c/c art. 23 da Lei 8.036/90 c/c art. 18, IV e
-  V, do Dec. 4.552/02) + um item por documento no formato "*Subtítulo* - item
-  X.X.X da NR-YY: Apresentar [...]. [ementa]" (SST) ou com artigo de
-  lei/CLT (não-SST), ementa via NotebookLM só quando existir, apresentado
-  BLOCO A BLOCO para colar no DET e salvo como .md na pasta da OS. NÃO é
-  auto de infração nem TN de correção (isso é /aft-auditoria-geral → /aft-gera-ai
-  e /aft-tn-nco) — é só o TEXTO da notificação de documentos, pronto para colar.
+  empresa", "monta a notificação de documentos". NÃO é auto de infração
+  (/aft-auditoria-geral) nem TN de correção (/aft-tn-nco).
 ---
 
 # NAD — Notificação para Apresentação de Documentos

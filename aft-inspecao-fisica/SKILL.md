@@ -1,19 +1,16 @@
 ---
 name: aft-inspecao-fisica
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o AFT chegar de uma inspeção/fiscalização de campo e narrar — por voz ditada
-  ou texto corrido — o que encontrou in loco, e quiser registrar isso como um relato
-  estruturado. Dispare com /aft-inspecao-fisica, ou frases como "cheguei da inspeção e vou narrar
-  o que vi", "registra o relato da visita", "transforma minha narrativa em bullet points",
-  "monta o inspecao-fisica.md", "anota os achados de campo da empresa X", "documenta a
-  inspeção física". A skill pega a narrativa bruta e a converte numa lista de bullet points
-  fiéis (descrição da visita + irregularidades constatadas), salvando em `inspecao-fisica.md`
-  na pasta da OS para ser consumida depois por /aft-PGR-analise (confronto campo × PGR) e
-  /aft-auditoria-geral (redação dos autos). É PURAMENTE DESCRITIVA: não classifica NR, não cita
-  ementa, não enquadra infração nem opina — só organiza os fatos relatados. Não confundir com
-  /aft-auditoria-geral, que redige os autos de infração; esta skill apenas produz o relato de
-  campo que aquela consome.
+  Use quando o AFT chegar de uma inspeção de campo e narrar — por voz ditada
+  ou texto corrido — o que encontrou in loco. Dispare com /aft-inspecao-
+  fisica, "cheguei da inspeção e vou narrar o que vi", "registra o relato da
+  visita", "transforma minha narrativa em bullet points", "monta o inspecao-
+  fisica.md", "anota os achados de campo da empresa X", "documenta a
+  inspeção física". É PURAMENTE DESCRITIVA: não classifica NR, não cita
+  ementa, não enquadra infração — quem redige os autos é /aft-auditoria-
+  geral.
 ---
 
 # Skill: Inspeção Física (relato de campo → bullets)

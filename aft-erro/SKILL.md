@@ -1,20 +1,16 @@
 ---
 name: aft-erro
 model: sonnet
+effort: low
 allowed-tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 description: >
-  Use SEMPRE que alguma coisa do AFT Toolkit der errado e o Auditor-Fiscal do
-  Trabalho (AFT) quiser avisar quem mantem o toolkit. Acione com "/aft-erro",
-  "deu erro", "isso nao funcionou", "reportar um problema", "avisar o
-  mantenedor", "gerar um ticket", "abrir um chamado", "reclamar de um bug",
-  "a skill X quebrou", "apareceu uma mensagem estranha". A skill monta um
-  TICKET DE CORRECAO: um arquivo .md em <pasta AFT>/tickets/ com o que o AFT
-  estava fazendo, a mensagem de erro, a versao do toolkit instalada e o retrato
-  da maquina (sistema, Python, programas externos, bibliotecas, servicos do
-  painel) - tudo ja pseudonimizado, sem nome de empresa, CNPJ/CPF nem conteudo
-  de documento de fiscalizacao. O AFT so encaminha o arquivo. Quando um script
-  do toolkit quebra sozinho, o ticket ja e gerado automaticamente e esta skill
-  serve para COMPLETA-LO com o contexto do que ele estava fazendo.
+  Use quando alguma coisa do AFT Toolkit der errado e o AFT quiser avisar
+  quem mantem o toolkit. Acione com "/aft-erro", "deu erro", "isso nao
+  funcionou", "reportar um problema", "avisar o mantenedor", "gerar um
+  ticket", "abrir um chamado", "reclamar de um bug", "a skill X quebrou",
+  "apareceu uma mensagem estranha". Monta um ticket de correcao
+  pseudonimizado em <pasta AFT>/tickets/ — sem nome de empresa, CNPJ/CPF nem
+  conteudo de documento. Quem encaminha e sempre o AFT.
 ---
 
 # aft-erro — Ticket de correção do AFT Toolkit

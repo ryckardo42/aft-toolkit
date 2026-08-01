@@ -1,16 +1,14 @@
 ---
 name: aft-det-630
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o empregador omitir (total ou parcialmente) a entrega de
-  documentos notificados via DET (Domicílio Eletrônico Trabalhista). Dispare
-  com /aft-det-630, "auto 630", "redigir auto DET", "omissão documental DET",
-  "lavrar 630", "ementa 001168-1", "empregador não entregou", "documentos não
-  apresentados DET", "auto art 630", "auto omissão documentos". A skill redige
-  o auto de infração da Ementa 001168-1 (art. 630, §4º CLT) já no formato
-  estruturado consumido por /aft-gera-ai (=== AUTO DE INFRAÇÃO #1 === / 1) DA
-  FISCALIZAÇÃO / II - IRREGULARIDADE / III - OBSERVAÇÕES / ELEMENTOS DE CONVICÇÃO)
-  e prepara o Relatório de Atendimento do DET como anexo do auto.
+  Use quando o empregador omitir, total ou parcialmente, a entrega de
+  documentos notificados via DET. Dispare com /aft-det-630, "auto 630",
+  "redigir auto DET", "omissão documental DET", "lavrar 630", "ementa
+  001168-1", "empregador não entregou", "documentos não apresentados DET",
+  "auto art 630". Redige o auto da Ementa 001168-1 (art. 630, §4º CLT) no
+  formato consumido pelo /aft-gera-ai.
 ---
 
 # det-630 — Auto de Infração por omissão documental DET (Ementa 001168-1)

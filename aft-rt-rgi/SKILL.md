@@ -1,19 +1,14 @@
 ---
 name: aft-rt-rgi
+model: sonnet
 description: >
-  Use SEMPRE que o AFT pedir para criar, gerar ou redigir um Relatório Técnico
-  para Interdição e/ou Embargo (RT). Acione com "relatório técnico de
-  interdição/embargo", "RT de interdição", "gerar o relatório técnico",
-  "montar o RT", "AFT-RT-RGI". Produz um .docx completo no modelo oficial
-  (template incluído no toolkit), preenchendo empregador, ação fiscal, objetos
-  interditados, irregularidades, fatores de risco, medidas de proteção,
-  documentos solicitados e conclusão, mantendo todo o conteúdo fixo
-  (cabeçalho, seções legais, imagens, tabelas NR-3). Logo após o RT,
-  OBRIGATORIAMENTE redige os autos de infração derivados das ementas da seção
-  4 (um por ementa, no formato do /aft-gera-ai) e salva na pasta
-  `interdicao-embargo/` da OS. Acione TAMBÉM quando o AFT ANEXAR um RT ou Termo de Interdição
-  já pronto e pedir os autos de infração dele: é esta skill que redige esses
-  autos, nunca improvisar por fora.
+  Use SEMPRE que o AFT pedir para criar, gerar ou redigir um Relatório
+  Técnico para Interdição e/ou Embargo (RT). Acione com "relatório técnico
+  de interdição/embargo", "RT de interdição", "gerar o relatório técnico",
+  "montar o RT", "AFT-RT-RGI". Logo após o RT, redige obrigatoriamente os
+  autos derivados das ementas da seção 4. Acione TAMBÉM quando o AFT ANEXAR
+  um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta skill
+  que os redige, nunca improvisar por fora.
 ---
 
 # aft-rt-rgi — Relatório Técnico para Interdição e Embargo

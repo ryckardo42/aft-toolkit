@@ -1,18 +1,15 @@
 ---
 name: aft-gera-ai
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) tiver autos de infração já
-  redigidos e quiser empacotá-los em arquivo TXT importável pelo Sistema Auditor.
-  Acione com: "/aft-gera-ai", "gera-ai", "gerar TXT", "exportar auto", "transportar
-  para sistema auditor", "empacotar AI", "montar arquivo importável", "TXT do
-  Sistema Auditor", "gerar arquivo de importação". A skill cobre da coleta de
-  dados administrativos (empresa, CNPJ, trabalhadores, anexos) à geração do
-  arquivo .txt em encoding latin-1, salvando dentro de
-  <OS_ATIVAS>/[EMPRESA]/Autos [DD-MM]/ e atualizando o memory.md
-  da empresa fiscalizada com as ementas lavradas. Pressupõe que os textos dos
-  autos já existem — colados pelo auditor OU redigidos antes na mesma sessão
-  (ex: depois de /aft-auditoria-geral, /aft-registro, /aft-PGR-analise ou /aft-det-630).
+  Use quando o AFT tiver autos de infração já redigidos e quiser empacotá-
+  los no arquivo TXT importável pelo Sistema Auditor. Acione com "/aft-gera-
+  ai", "gera-ai", "gerar TXT", "exportar auto", "transportar para sistema
+  auditor", "empacotar AI", "montar arquivo importável", "TXT do Sistema
+  Auditor", "gerar arquivo de importação". Pressupõe que os textos já
+  existem — colados pelo AFT ou redigidos antes na mesma sessão (/aft-
+  auditoria-geral, /aft-registro, /aft-PGR-analise, /aft-det-630).
 ---
 
 # gera-ai — Empacotador de Autos de Infração para Sistema Auditor

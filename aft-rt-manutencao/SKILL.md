@@ -1,22 +1,16 @@
 ---
 name: aft-rt-manutencao
-model: claude-opus-4-8[1m]
+model: opus
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para redigir o
-  Relatório Técnico de MANUTENÇÃO de interdição ou embargo — o RT que analisa o
-  requerimento de suspensão/levantamento formulado pelo empregador e conclui pela
-  manutenção da medida (quando o único ou todos os objetos serão mantidos). Acione com
-  "/aft-rt-manutencao", "manutenção da interdição", "manutenção do embargo", "manter a
-  interdição", "manter o embargo", "RT de manutenção", "relatório técnico de manutenção",
-  "negar a suspensão", "indeferir o levantamento", "a empresa pediu suspensão e não vou
-  levantar". Produz o .docx no cabeçalho oficial (template do aft-rt-rgi) com a estrutura:
-  dados do empregador + 1) OBJETIVO + 2) DA ANÁLISE DOS DOCUMENTOS SOLICITADOS E
-  APRESENTADOS E DO CUMPRIMENTO DAS MEDIDAS DE PROTEÇÃO + 3) CONCLUSÃO (texto padrão de
-  manutenção) + 4) REQUISITOS PARA NOVO REQUERIMENTO (opcional). NÃO confundir com
-  /aft-rt-rgi (RT que FUNDAMENTA a interdição/embargo original + autos derivados) nem com
-  /aft-auditoria-AR-NR12 (julga o laudo/apreciação de riscos — cujo resultado esta skill
-  reaproveita como núcleo da análise). Encadeia naturalmente após /aft-auditoria-AR-NR12 com
-  parecer INSUFICIENTE em pedido de suspensão.
+  Use quando o AFT pedir para redigir o Relatório Técnico de MANUTENÇÃO de
+  interdição ou embargo — o RT que analisa o requerimento de suspensão
+  formulado pelo empregador e conclui pela manutenção da medida. Acione com
+  "/aft-rt-manutencao", "manutenção da interdição", "manutenção do embargo",
+  "manter a interdição", "manter o embargo", "RT de manutenção", "negar a
+  suspensão", "indeferir o levantamento", "a empresa pediu suspensão e não
+  vou levantar". NÃO confundir com /aft-rt-rgi (RT que fundamenta a
+  interdição original) nem /aft-auditoria-AR-NR12 (julga o laudo). Encadeia
+  após /aft-auditoria-AR-NR12 com parecer INSUFICIENTE.
 compatibility: macOS e Windows (Git Bash). Requer o template.docx da skill aft-rt-rgi instalada. Script em Python 3 (stdlib).
 ---
 

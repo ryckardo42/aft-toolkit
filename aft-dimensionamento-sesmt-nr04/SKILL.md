@@ -1,17 +1,15 @@
 ---
 name: aft-dimensionamento-sesmt-nr04
+model: haiku
 description: >
-  Use este skill SEMPRE que o usuário pedir para dimensionar, calcular, verificar ou
-  conferir o SESMT de uma empresa ou estabelecimento (Anexo II da NR-04). Acione quando
-  mencionar "dimensionamento do SESMT", "SESMT", "Anexo II da NR-04", "quantos técnicos
-  de segurança", "quantos médicos do trabalho", "precisa de engenheiro de segurança?",
-  "enquadramento NR-4", "composição do SESMT", ou informar um grau de risco e um número
-  de empregados pedindo os profissionais exigidos — mesmo sem usar a palavra "SESMT".
-  Também acione para verificar, em fiscalização, se o SESMT constituído atende ao mínimo
-  legal (subdimensionamento). Calcula de forma determinística (script Python) a
-  quantidade mínima de cada profissional, com regime (integral/parcial), regra para mais
-  de 5.000 trabalhadores e Observações A/B para estabelecimentos de saúde. NUNCA leia a
-  tabela matricial original do Anexo II — use o script deste skill.
+  Use quando o usuário pedir para dimensionar, calcular ou conferir o SESMT
+  de um estabelecimento (Anexo II da NR-04). Acione com "dimensionamento do
+  SESMT", "SESMT", "Anexo II da NR-04", "quantos técnicos de segurança",
+  "quantos médicos do trabalho", "precisa de engenheiro de segurança?",
+  "enquadramento NR-4", "composição do SESMT", ou ao informar grau de risco
+  e nº de empregados — mesmo sem usar a palavra "SESMT". Também para
+  verificar subdimensionamento em fiscalização. NUNCA calcule de memória:
+  use o script deste skill.
 ---
 
 # Dimensionamento do SESMT — Anexo II da NR-04

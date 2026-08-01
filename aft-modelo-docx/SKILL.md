@@ -1,17 +1,15 @@
 ---
 name: aft-modelo-docx
 model: sonnet
+effort: low
 description: >
-  Use este skill SEMPRE que for gerar QUALQUER documento .docx no contexto do AFT Toolkit
-  que não tenha template oficial próprio — relatórios avulsos, minutas, resumos, pareceres,
-  documentos pedidos fora das skills, ou saídas .docx de outras skills. Acione com
-  "/aft-modelo-docx", "documento no padrão do toolkit", "gera um docx", "modelo de documento",
-  ou automaticamente sempre que outra skill ou pedido avulso exigir um .docx. É o PADRÃO
-  VISUAL de todo .docx do toolkit: template oficial com o cabeçalho da auditoria (AFT/SIT),
-  Times New Roman 12, paleta azul institucional (#1F3864/#2E5496), corpo justificado 1,15,
-  tabelas com cabeçalho azul e zebra. NÃO substitui os templates oficiais específicos do
-  /aft-rt-rgi, /aft-rt-manutencao (RT de interdição) e /aft-autos-lavrados (Relação de autos) —
-  esses continuam com seus modelos próprios.
+  Use SEMPRE que for gerar qualquer documento .docx do AFT Toolkit que não
+  tenha template oficial próprio — relatórios avulsos, minutas, resumos,
+  pareceres, documentos pedidos fora das skills, ou saídas .docx de outras
+  skills. Acione com "/aft-modelo-docx", "documento no padrão do toolkit",
+  "gera um docx", "modelo de documento", ou automaticamente sempre que outra
+  skill ou pedido avulso exigir um .docx. NÃO substitui os templates
+  oficiais de /aft-rt-rgi, /aft-rt-manutencao e /aft-autos-lavrados.
 ---
 
 # modelo-docx — o padrão de documento .docx do AFT Toolkit

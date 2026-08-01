@@ -1,19 +1,14 @@
 ---
 name: aft-consulta
+model: sonnet
 description: >
-  Use quando o AFT quiser CONSULTAR os ementários e notebooks do NotebookLM —
-  tirar dúvidas técnico-jurídicas OU enquadrar uma situação de fato. Acione
-  com "/aft-consulta", "consultar o ementário", "tirar dúvida sobre a NR-XX",
-  "qual a ementa para [situação]", "qual a capitulação", "qual a gradação",
-  "me ajuda a enquadrar", "sugere o histórico do auto". Missão TRIPLA diante
-  de uma irregularidade: (1) IDENTIFICAR a ementa mais específica (código +
-  descrição); (2) FUNDAMENTAR (capitulação legal exata + gradação da
-  penalidade + notas técnicas/precedentes); (3) REDIGIR minuta do campo
-  "Histórico" do Auto de Infração com metodologia anti-nulidade. Para
-  perguntas gerais, responde usando as fontes do notebook, com citações. É
-  SOMENTE consulta: não lavra autos nem gera o TXT (delega a /aft-auditoria-geral
-  → /aft-gera-ai) e NUNCA inventa código, capitulação ou gradação — tudo vem do
-  NotebookLM, com fonte.
+  Use quando o AFT quiser CONSULTAR os ementários e notebooks do NotebookLM
+  — tirar dúvida técnico-jurídica ou enquadrar uma situação de fato. Acione
+  com "/aft-consulta", "consultar o ementário", "tirar dúvida sobre a NR-
+  XX", "qual a ementa para [situação]", "qual a capitulação", "qual a
+  gradação", "me ajuda a enquadrar", "sugere o histórico do auto". É SOMENTE
+  consulta: não lavra autos (/aft-auditoria-geral) nem gera o TXT (/aft-
+  gera-ai), e nunca inventa código, capitulação ou gradação.
 ---
 
 # consulta — Consulta aos ementários/notebooks (missão tripla)

@@ -1,23 +1,16 @@
 ---
 name: aft-sfitweb-rel
 model: sonnet
+effort: medium
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) precisar gerar um Relatório Final
-  Simplificado de fiscalização trabalhista. Acione quando o usuário mencionar "SFITWEB-REL",
-  "relatório final de fiscalização", "gerar relatório", "relatório simplificado", "consolidar a
-  fiscalização", "relatório de encerramento da ação fiscal" ou pedir para sintetizar autos de
-  infração, termos de interdição/embargo e notificações em um único relatório. A fonte primária é
-  o memory.md da OS (notificações DET, autos lavrados, interdições, pendências), complementada
-  por autos-lavrados.md, pela pasta interdicao-embargo/ e pelas análises da pasta da OS. Produz
-  texto 100% limpo (para colar no SFITWEB) com seções obrigatórias — Notificações Lavradas
-  (resumo dos itens + data de lavratura), Autos de Infração TRANSMITIDOS agrupados por tema
-  (nº, ementa, fundamento, descrição e constatação), Interdições/Embargos com estado atual.
-  Antes de gerar, lê e entende o memory.md e PERGUNTA ao AFT se quer incluir outras ocorrências
-  (ex.: empregados sem registro após a NCRE, itens não regularizados); destaca em caixa própria
-  qualquer embaraço à fiscalização ou fraude (art. 630 da CLT), detalhando a conduta. Salva
-  .md + .docx (template oficial com cabeçalho da auditoria) na subpasta "Relatórios de
-  Fiscalização/" da OS e avisa o destino — prontos para encaminhar a chefia e órgãos externos
-  (ex.: MPT).
+  Use quando o AFT precisar gerar o Relatório Final Simplificado da
+  fiscalização trabalhista. Acione com "SFITWEB-REL", "relatório final de
+  fiscalização", "gerar relatório", "relatório simplificado", "consolidar a
+  fiscalização", "relatório de encerramento da ação fiscal", ou ao pedir
+  para sintetizar autos de infração, termos de interdição/embargo e
+  notificações num único relatório. Fonte primária é o memory.md da OS.
+  Antes de gerar, PERGUNTA ao AFT se quer incluir outras ocorrências, e
+  destaca embaraço à fiscalização ou fraude (art. 630 da CLT).
 ---
 
 # sfitweb-rel — Relatório Final Simplificado de Fiscalização

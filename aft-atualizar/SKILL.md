@@ -1,16 +1,14 @@
 ---
 name: aft-atualizar
 model: sonnet
+effort: low
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para atualizar o AFT
-  Toolkit. Acione com "/aft-atualizar", "atualize o toolkit", "atualize o aft
-  toolkit", "atualizar o kit", "tem atualização?", "verificar atualizações",
-  "buscar novidades do toolkit", "puxar a última versão". A skill confere DUAS
-  fontes — o repositório https://github.com/ryckardo42/aft-toolkit (as skills) e
-  o pacote https://github.com/teng-lin/notebooklm-py (o comando `notebooklm`) —,
-  atualiza as que estiverem desatualizadas e, ao final, roda o /aft-doctor para
-  confirmar que nada quebrou. Diferente do /aft-doctor (só diagnostica, nunca
-  instala), esta skill É a que efetivamente baixa e instala as atualizações.
+  Use quando o AFT pedir para atualizar o AFT Toolkit. Acione com "/aft-
+  atualizar", "atualize o toolkit", "atualizar o kit", "tem atualização?",
+  "verificar atualizações", "buscar novidades do toolkit", "puxar a última
+  versão". Confere o repositório das skills e o pacote notebooklm-py,
+  instala o que estiver desatualizado e roda o /aft-doctor ao final.
+  Diferente do /aft-doctor, que só diagnostica.
 ---
 
 # aft-atualizar — Atualizar o AFT Toolkit (skills + notebooklm-py)

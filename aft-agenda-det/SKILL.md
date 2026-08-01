@@ -1,19 +1,13 @@
 ---
 name: aft-agenda-det
 model: sonnet
+effort: low
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser os prazos de DET no
-  Google Calendar. Acione com /aft-agenda-det, "manda os prazos para o calendário",
-  "agenda os vencimentos", "sincroniza o google calendar", "põe o DET na
-  agenda". Lê a agenda consolidada de vencimentos do gerar_painel.py (campo
-  "vencimentos" do JSON) e, pelo conector Google Calendar do Claude, cria um
-  evento de DIA INTEIRO por notificação DET com prazo — título
-  'DET <código> <12 primeiros caracteres do empregador>' —, atualiza a data
-  quando o prazo muda (prorrogação) e renomeia com ✓ quando a notificação é
-  marcada como checada no memory.md. Nunca apaga eventos e nunca toca em
-  eventos fora do padrão "DET ...". Requer o conector Google Calendar
-  conectado na conta Claude do AFT (a skill orienta a conexão se faltar).
-  Pendências não vão ao calendário — só notificações DET.
+  Use quando o AFT quiser os prazos de DET no Google Calendar. Acione com
+  /aft-agenda-det, "manda os prazos para o calendário", "agenda os
+  vencimentos", "sincroniza o google calendar", "põe o DET na agenda".
+  Requer o conector Google Calendar na conta Claude do AFT. Só notificações
+  DET vão ao calendário — pendências não.
 ---
 
 # agenda-det — Prazos de DET no Google Calendar

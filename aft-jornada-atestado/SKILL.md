@@ -1,18 +1,16 @@
 ---
 name: aft-jornada-atestado
+model: sonnet
+effort: medium
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) apresentar um Atestado
-  Técnico e Termo de Responsabilidade de sistema de registro eletrônico de ponto (REP-C,
-  REP-A, REP-P ou PTRP) e pedir para auditar, verificar, conferir ou validar a sua
-  conformidade com o art. 89 da Portaria MTP nº 671/2021. Acione quando o usuário
-  mencionar "atestado técnico", "termo de responsabilidade", "atestado do REP", "atestado
-  do ponto eletrônico", "auditar o atestado", "conferir o atestado", "REP-C", "REP-A",
-  "REP-P", "PTRP", "programa de tratamento de registro de ponto", "art. 89 da 671", ou
-  anexar um PDF de atestado e pedir verificação de conformidade. O skill inspeciona a
-  estrutura de assinatura do PDF por código, confere item a item os requisitos do art. 89
-  e entrega um parecer conciso já encaminhável para autuação (com ementa 002277-2 ou
-  002278-0, capitulação e minuta de histórico). NÃO use para lavratura geral de autos
-  (use /aft-auditoria-geral).
+  Use quando o AFT apresentar um Atestado Técnico e Termo de
+  Responsabilidade de sistema de registro eletrônico de ponto (REP-C, REP-A,
+  REP-P ou PTRP) e pedir para auditar sua conformidade com o art. 89 da
+  Portaria MTP nº 671/2021. Acione com "atestado técnico", "termo de
+  responsabilidade", "atestado do REP", "atestado do ponto eletrônico",
+  "auditar o atestado", "conferir o atestado", "REP-C", "REP-A", "REP-P",
+  "PTRP", "art. 89 da 671", ou ao anexar o PDF do atestado. NÃO use para
+  lavratura geral de autos (/aft-auditoria-geral).
 ---
 
 # jornada-atestado — Auditor de Atestado Técnico e Termo de Responsabilidade (REP/PTRP)

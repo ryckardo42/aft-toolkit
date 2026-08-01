@@ -2,31 +2,15 @@
 name: aft-preparacao-acao-fiscal
 model: opus
 description: >
-  Use SEMPRE que o AFT quiser planejar uma ação fiscal ANTES da visita —
-  já sabe a empresa e tem dados preliminares (denúncia, nº de
-  trabalhadores, temas prováveis), mas ainda não foi ao local. Acione com
-  "/aft-preparacao-acao-fiscal", "vou fiscalizar a empresa X", "estou indo
-  numa empresa", "preciso planejar essa ação fiscal" — e SEMPRE que o AFT
-  anexar um PDF do SFIT-WEB dizendo que vai fiscalizar aquela empresa, seja
-  a Demanda ("Detalhar Demanda", com denúncia e denunciante) ou a Ordem de
-  Serviço ("Ordem de Serviço", com prazos da fiscalização e equipe AFT) —
-  ou os dois. NÃO acionar com relatos do PASSADO ("cheguei da inspeção",
-  "constatei") — isso é /aft-inspecao-fisica.
-  Lê o(s) PDF(s) quando houver (empresa, CNPJ, CNAE, endereço, ementas a
-  fiscalizar, denúncia, prazos, equipe) e cria a OS via /aft-nova-os sem
-  re-perguntar nada; ANONIMIZA o denunciante (nome/telefone/e-mail nunca aparecem no
-  chat nem nos .md — só o token [[DENUNCIANTE_01]]; o contato real fica só
-  no PDF arquivado na OS); grava as ementas da OS no memory.md; monta o
-  link do endereço no Google Maps (e, se o AFT quiser, confere o local);
-  tokeniza qualquer lista nominal de trabalhadores antes de processá-la,
-  monta um checklist de documentos a solicitar e, com aprovação do AFT,
-  encadeia a /aft-NAD. Salva tudo em preparacao.md e gera o preparacao.docx —
-  a triagem "constatar no local x notificar" que o AFT imprime e leva na
-  visita, para que a inspeção física resolva o máximo e sobre o mínimo para o
-  DET. NÃO
-  estuda os temas por conta própria — dúvida técnica, ementa ou
-  enquadramento é a /aft-consulta. NÃO redige auto nem faz o relato de
-  campo (isso é /aft-inspecao-fisica → /aft-auditoria-geral, depois da visita).
+  Use quando o AFT quiser planejar uma ação fiscal ANTES da visita — já sabe
+  a empresa e tem dados preliminares (denúncia, nº de trabalhadores, temas
+  prováveis), mas ainda não foi ao local. Acione com "/aft-preparacao-acao-
+  fiscal", "vou fiscalizar a empresa X", "estou indo numa empresa", "preciso
+  planejar essa ação fiscal" — e sempre que o AFT anexar um PDF do SFIT-WEB
+  (Demanda ou Ordem de Serviço) dizendo que vai fiscalizar aquela empresa.
+  Anonimiza o denunciante e tokeniza listas nominais de trabalhadores. NÃO
+  acionar com relatos do PASSADO ("cheguei da inspeção", "constatei") — isso
+  é /aft-inspecao-fisica. Dúvida técnica ou ementa é /aft-consulta.
 ---
 
 # preparacao-acao-fiscal — Planejamento pré-visita da ação fiscal

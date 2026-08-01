@@ -1,19 +1,14 @@
 ---
 name: aft-NR18
+model: sonnet
 description: >
-  Use SEMPRE que o AFT mencionar irregularidade, autuação, ementa ou auto de
-  infração relacionados à NR-18 (indústria da construção). Acione com /aft-NR18 ou
-  quando a narrativa envolver fiscalização de obra/canteiro: "canteiro de
-  obras", "área de vivência", "andaime", "guarda-corpo", "periferia da laje",
-  "elevador de obra", "serra circular", "ponta de vergalhão", "instalações
-  elétricas temporárias", "rede de segurança". Acione também quando
-  /aft-auditoria-geral ou /aft-rt-rgi estiverem em curso e a NR identificada for a 18 — é a
-  consultora especializada para NR-18. Ela SEPARA as ementas envolvidas,
-  confirma com o AFT e redige o material de cada uma: (1) código da ementa +
-  descrição oficial + capitulação; (2) bloco II - IRREGULARIDADE pronto para o
-  auto; (3) linha da Seção 4 do RT. NÃO trata medida cautelar
-  (embargo/interdição fica com /aft-rt-rgi), NÃO empacota TXT (delega a /gera-
-  ai) e NÃO redige o auto inteiro (delega a /aft-auditoria-geral).
+  Consultora de ementas da NR-18 (indústria da construção). Acione com /aft-
+  NR18 ou quando a narrativa envolver "canteiro de obras", "área de
+  vivência", "andaime", "guarda-corpo", "periferia da laje", "elevador de
+  obra", "serra circular", "ponta de vergalhão", "instalações elétricas
+  temporárias", "rede de segurança" — e sempre que /aft-auditoria-geral ou
+  /aft-rt-rgi identificarem a NR-18. NÃO trata embargo/interdição (/aft-rt-
+  rgi) nem redige o auto inteiro (/aft-auditoria-geral).
 ---
 
 # NR18 — Consultora especializada para irregularidades na indústria da construção

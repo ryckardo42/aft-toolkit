@@ -1,21 +1,15 @@
 ---
 name: aft-doctor
 model: sonnet
+effort: low
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser checar se o AFT Toolkit
-  esta instalado e funcionando, ou quando algo nao estiver funcionando e for preciso
-  descobrir o que falta. Acione com "/aft-doctor", "verificar instalacao", "esta tudo
-  certo?", "diagnostico", "o toolkit esta funcionando?", "testar instalacao", "checar
-  o toolkit", "nao esta funcionando", "as skills nao aparecem". A skill roda uma
-  verificacao automatica (Python, Git, descoberta das skills, arquivos de config,
-  perfil do auditor, pasta de trabalho, bibliotecas Python, NotebookLM e a saude das
-  skills - frontmatter e modelos pinados, com teste ao vivo) e relata, em
-  linguagem simples, o que esta OK e o que precisa ser resolvido - com a solucao de
-  cada item. Nao instala nem altera arquivos - a UNICA coisa que ele conserta sozinho
-  e a pasta de trabalho (AFT/OS ATIVAS e OS ARQUIVADAS), criada se faltar, no caminho
-  real da pasta Documentos (no Windows ela costuma estar no OneDrive e/ou chamar-se
-  "Documentos").
+  Use quando o AFT quiser checar se o AFT Toolkit está instalado e
+  funcionando, ou descobrir o que falta quando algo não funciona. Acione com
+  "/aft-doctor", "verificar instalacao", "esta tudo certo?", "diagnostico",
+  "o toolkit esta funcionando?", "testar instalacao", "checar o toolkit",
+  "nao esta funcionando", "as skills nao aparecem". Só diagnostica: não
+  instala nem altera arquivos — quem instala é o /aft-atualizar.
 ---
 
 # aft-doctor — Verificacao pos-instalacao do AFT Toolkit

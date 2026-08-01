@@ -1,24 +1,16 @@
 ---
 name: aft-organiza-os
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o AFT jogar/copiar pastas de fiscalização dentro de OS ATIVAS
+  Use quando o AFT jogar/copiar pastas de fiscalização dentro de OS ATIVAS
   (documentos acumulados antes do toolkit: notificações do DET, relação de
-  autos do Sistema Auditor, respostas do empregador, fotos) e quiser colocá-las
-  no padrão do AFT Toolkit. Acione com "/aft-organiza-os", "organiza essa pasta",
-  "joguei uma pasta na OS ATIVAS", "importar uma auditoria antiga", "arruma a
-  pasta da empresa X", "padroniza essa OS", "acabei de copiar os arquivos da
-  fiscalização". A skill varre TODA a pasta OS ATIVAS de uma vez (organiza as
-  pastas novas e atualiza as já organizadas), lê os arquivos (1ª página dos
-  PDFs), classifica cada um, extrai empregador/CNPJ-CPF/códigos e prazos de
-  DET, mostra UM plano consolidado e — com uma única aprovação do AFT —
-  renomeia as pastas para o padrão, cria/atualiza o memory.md e move os
-  arquivos para os lugares que as demais skills esperam. Ao final, encadeia
-  /aft-autos-lavrados (para trazer os autos do Sistema Auditor), abre o painel
-  interativo e garante o vigia de sessões (as sessões por empresa no grupo
-  "OS ATIVAS" são criadas automaticamente no próximo reinício do app). Nunca
-  apaga nada. NÃO cadastra OS do zero (isso é /aft-nova-os) nem baixa nada do DET
-  (isso é det-baixar).
+  autos, respostas do empregador, fotos) e quiser colocá-las no padrão do
+  toolkit. Acione com "/aft-organiza-os", "organiza essa pasta", "joguei uma
+  pasta na OS ATIVAS", "importar uma auditoria antiga", "arruma a pasta da
+  empresa X", "padroniza essa OS", "acabei de copiar os arquivos da
+  fiscalização". Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
+  nada. NÃO cadastra OS do zero (/aft-nova-os) nem baixa do DET.
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS

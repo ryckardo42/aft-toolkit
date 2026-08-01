@@ -1,25 +1,16 @@
 ---
 name: aft-nova-os
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser cadastrar/abrir uma nova
-  auditoria (OS) no AFT Toolkit — registrar uma empresa que vai fiscalizar e, se já
-  houver, a notificação do DET com o prazo. Acione com /aft-nova-os, "nova OS", "cadastrar
-  auditoria", "abrir auditoria", "nova empresa", "começar fiscalização", "registrar
-  empresa", "abrir OS", "criar pasta da empresa" — ou quando o AFT anexar um PDF do
-  SFIT-WEB pedindo para cadastrar: a Demanda ("Detalhar Demanda") e/ou a Ordem de
-  Serviço ("Ordem de Serviço"). A skill lê o(s) PDF(s) e extrai sozinha empresa,
-  CNPJ/CPF, município, telefone, CNAE, endereço, as ementas a fiscalizar e — da Ordem
-  de Serviço — os prazos da fiscalização e a equipe AFT, anonimizando o denunciante da
-  Demanda (nome/contato dele nunca aparecem no chat nem nos arquivos — só no próprio
-  PDF, arquivado na pasta da OS). Sem PDF, pergunta o nome da auditoria
-  (razão social, fantasia ou qualquer nome — CNPJ/CPF é opcional aqui, só vira obrigatório
-  no /aft-gera-ai), município, RI (avisa que sem ele o sync do DET não importa notificações) e
-  (opcional) os dados do primeiro DET (código, ciência, prazo),
-  cria a pasta `<OS_ATIVAS>/<NOME_DA_AUDITORIA>/` e o `memory.md` da OS no
-  esquema padrão do toolkit. É o ponto de entrada do fluxo de fiscalização; depois o AFT
-  usa /aft-inspecao-fisica, /aft-gera-ai, etc. O painel (/aft-painel) lê os memory.md criados aqui
-  para mostrar prazos.
+  Use quando o AFT quiser cadastrar/abrir uma nova auditoria (OS) —
+  registrar a empresa que vai fiscalizar e, se já houver, a notificação do
+  DET com o prazo. Acione com /aft-nova-os, "nova OS", "cadastrar
+  auditoria", "abrir auditoria", "nova empresa", "começar fiscalização",
+  "registrar empresa", "abrir OS", "criar pasta da empresa" — ou ao anexar
+  um PDF do SFIT-WEB (Demanda ou Ordem de Serviço) pedindo o cadastro.
+  Anonimiza o denunciante da Demanda. É o ponto de entrada do fluxo de
+  fiscalização.
 ---
 
 # nova-os — Cadastrar uma auditoria (OS)

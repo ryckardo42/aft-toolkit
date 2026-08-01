@@ -1,17 +1,15 @@
 ---
 name: aft-cipa-nr05-dimensionamento
+model: haiku
 description: >
-  Use este skill SEMPRE que o usuário pedir para dimensionar, calcular, verificar ou
-  conferir a composição da CIPA (Quadro I da NR-05). Acione quando mencionar
-  "dimensionamento da CIPA", "CIPA", "Quadro I da NR-05", "quantos membros da CIPA",
-  "quantos efetivos e suplentes", "composição da comissão", "membros eleitos e
-  designados", ou informar um grau de risco e um número de empregados pedindo o
-  quantitativo de cipeiros — mesmo sem citar "NR-05". Também acione para verificar, em
-  fiscalização, se a CIPA constituída atende ao mínimo legal. Calcula de forma
-  determinística (script Python) os efetivos e suplentes POR REPRESENTAÇÃO e o total
-  paritário (dobro: metade eleita pelos empregados, metade designada pelo empregador),
-  com a regra de grupos de 2.500 acima de 10.000 empregados. NUNCA leia a tabela
-  matricial original do Quadro I nem calcule de memória — use o script deste skill.
+  Use quando o usuário pedir para dimensionar, calcular ou conferir a
+  composição da CIPA (Quadro I da NR-05). Acione com "dimensionamento da
+  CIPA", "CIPA", "Quadro I da NR-05", "quantos membros da CIPA", "quantos
+  efetivos e suplentes", "composição da comissão", "membros eleitos e
+  designados", ou ao informar grau de risco e nº de empregados pedindo o
+  quantitativo de cipeiros — mesmo sem citar "NR-05". Também para verificar,
+  em fiscalização, se a CIPA atende ao mínimo legal. NUNCA calcule de
+  memória: use o script determinístico deste skill.
 ---
 
 # Dimensionamento da CIPA — Quadro I da NR-05

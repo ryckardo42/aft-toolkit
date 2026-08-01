@@ -1,20 +1,14 @@
 ---
 name: aft-aet-auditoria
-model: claude-opus-4-8[1m]
+model: opus
 description: >
-  Use SEMPRE que o AFT pedir para auditar, analisar ou revisar uma Análise
+  Use quando o AFT pedir para auditar, analisar ou revisar uma Análise
   Ergonômica do Trabalho (AET) à luz da NR-17. Acione com "auditar AET",
-  "analisar AET", "análise ergonômica do trabalho", "AET da empresa", "ementa
-  de ergonomia", códigos 117244-1, 117248-4, 117249-2, 117250-6, 117251-4, ou
-  quando anexar PDF de AET/laudo ergonômico — inclusive para lavrar autos por
-  irregularidade na AET. Varre as cinco ementas de AET da NR-17 (conteúdo e
-  etapas 17.3.3, oitiva dos trabalhadores 17.3.8, organização do trabalho
-  17.4.1, sobrecarga muscular 17.4.2, exposição contínua/repetitiva 17.4.3),
-  aponta irregularidades com citação de página/folha e oferece a redação dos
-  autos (formato 3 subtítulos) no formato do /aft-gera-ai, que empacota o TXT com
-  a própria AET anexa a cada AI. NÃO confundir com /aft-PGR-analise (PGR sob a
-  NR-01) nem com /aft-auditoria-geral (achados de campo): esta skill audita o
-  documento AET sob a NR-17.
+  "analisar AET", "análise ergonômica do trabalho", "AET da empresa",
+  "ementa de ergonomia", os códigos 117244-1, 117248-4, 117249-2, 117250-6,
+  117251-4, ou ao anexar PDF de AET/laudo ergonômico. NÃO confundir com
+  /aft-PGR-analise (PGR sob a NR-01) nem com /aft-auditoria-geral (achados
+  de campo).
 ---
 
 # aet-auditoria — Auditoria de AET (NR-17)

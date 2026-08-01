@@ -1,17 +1,15 @@
 ---
 name: aft-cnae-grau-risco-nr04
+model: haiku
 description: >
-  Use este skill SEMPRE que o usuário quiser saber o grau de risco (GR) de uma atividade
-  econômica ou empresa conforme o Anexo I da NR-04. Acione quando mencionar "grau de
-  risco", "enquadramento CNAE", "qual o GR", "Anexo I da NR-04", informar um código CNAE
-  em qualquer formato (01.15-6, 0115-6/00, 1011201) e pedir o risco, ou descrever a
-  atividade ("frigorífico", "construção de rodovias", "cultivo de soja") e perguntar o
-  grau de risco — mesmo sem citar "CNAE" ou "NR-04". Também acione como etapa prévia do
-  dimensionamento do SESMT quando o usuário informar o CNAE mas não o grau de risco.
-  Faz a consulta de forma determinística via script Python sobre base validada com os
-  673 códigos do Anexo I (busca por código, com normalização de formato e redução de
-  subclasse a classe, ou busca textual pela denominação). NUNCA responda o grau de risco
-  de memória — sempre consulte o script deste skill.
+  Use quando o usuário quiser o grau de risco (GR) de uma atividade
+  econômica conforme o Anexo I da NR-04. Acione com "grau de risco",
+  "enquadramento CNAE", "qual o GR", "Anexo I da NR-04", ao informar um
+  código CNAE em qualquer formato (01.15-6, 0115-6/00, 1011201), ou ao
+  descrever a atividade ("frigorífico", "construção de rodovias", "cultivo
+  de soja") — mesmo sem citar "CNAE" ou "NR-04". Também como etapa prévia do
+  dimensionamento do SESMT. NUNCA responda de memória: use o script deste
+  skill.
 ---
 
 # Enquadramento CNAE → Grau de Risco — Anexo I da NR-04

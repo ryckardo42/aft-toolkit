@@ -1,19 +1,16 @@
 ---
 name: aft-sessoes-os
 model: sonnet
+effort: low
 description: >
-  Use este skill quando o Auditor-Fiscal do Trabalho (AFT) quiser conferir, forçar ou
-  desfazer a sincronização das sessões por empresa na barra lateral do app (grupo
-  "OS ATIVAS"). Acione com "/aft-sessoes-os", "verifica as sessões", "cria as sessões das
-  minhas auditorias", "quero as sessões agora", "desfaz as sessões", "instala/remove o
-  vigia de sessões". IMPORTANTE: a criação de sessões é AUTOMÁTICA — o vigia de sessões
-  (sessoes_os.py --vigia, serviço instalado por padrão pelo /aft-setup e /aft-atualizar)
-  aplica sozinho as pendências toda vez que o app do Claude fecha: cada pasta de OS ATIVAS
-  ganha sessão com o nome da empresa no grupo "OS ATIVAS", com vínculo sessao_claude no
-  memory.md. As sessões novas simplesmente aparecem na próxima abertura do app — nenhuma
-  pergunta, nenhum passo manual. Esta skill serve para os casos à margem do automático:
-  conferir o estado (--status), aplicar AGORA sem esperar o próximo fechamento do app
-  (modo pontual), desfazer tudo (--desfazer) e instalar/remover o serviço do vigia.
+  Use quando o AFT quiser conferir, forçar ou desfazer a sincronização das
+  sessões por empresa na barra lateral do app (grupo "OS ATIVAS"). Acione
+  com "/aft-sessoes-os", "verifica as sessões", "cria as sessões das minhas
+  auditorias", "quero as sessões agora", "desfaz as sessões",
+  "instala/remove o vigia de sessões". IMPORTANTE: a criação de sessões é
+  AUTOMÁTICA (vigia de sessões, instalado por padrão) — as sessões novas
+  aparecem sozinhas na próxima abertura do app. Esta skill serve só para os
+  casos à margem do automático.
 ---
 
 # sessoes-os — sessões por auditoria, automáticas, no grupo "OS ATIVAS"

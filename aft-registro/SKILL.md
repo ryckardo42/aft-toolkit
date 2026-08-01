@@ -1,14 +1,15 @@
 ---
 name: aft-registro
 model: sonnet
+effort: medium
 description: >
-  Use quando o AFT quiser lavrar auto de infração por falta de registro de trabalhador
-  (art. 41 CLT) e/ou falta de anotação na CTPS (art. 29 CLT). Acione com /aft-registro,
-  "lavrar registro", "auto de registro", "falta de registro", "trabalhador sem registro",
-  "empregado informal", "sem carteira assinada", "sem registro no eSocial", "trabalhador
-  clandestino", "empregado não registrado". Redige três autos completos (art. 41 CLT +
-  art. 29 CLT + exame médico admissional NR-07) no formato consumido pelo /aft-gera-ai, que
-  faz o empacotamento no TXT do Sistema Auditor.
+  Use quando o AFT quiser lavrar auto de infração por falta de registro de
+  trabalhador (art. 41 CLT) e/ou falta de anotação na CTPS (art. 29 CLT).
+  Acione com /aft-registro, "lavrar registro", "auto de registro", "falta de
+  registro", "trabalhador sem registro", "empregado informal", "sem carteira
+  assinada", "sem registro no eSocial", "trabalhador clandestino",
+  "empregado não registrado". Redige os autos no formato consumido pelo
+  /aft-gera-ai.
 ---
 
 # registro — Autos de Infração: Falta de Registro (art. 41), CTPS (art. 29) e Exame Admissional (NR-07)

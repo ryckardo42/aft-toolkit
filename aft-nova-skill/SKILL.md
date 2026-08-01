@@ -1,18 +1,16 @@
 ---
 name: aft-nova-skill
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser criar uma habilidade
-  (skill) PRÓPRIA no AFT Toolkit — automatizar uma tarefa da realidade dele que
-  as skills oficiais não cobrem. Acione com "/aft-nova-skill", "criar uma skill",
-  "quero uma habilidade nova", "criar minha própria skill", "automatizar uma
-  tarefa minha", "fazer uma skill pra mim". A skill conversa em linguagem de
-  leigo (o AFT não é programador), coleta o objetivo, os gatilhos de ativação e
-  o passo a passo, e grava uma skill nova em ~/.claude/skills/minha-<nome>/
-  SKILL.md com frontmatter válido e o prefixo reservado "minha-", garantindo
-  que ela seja descoberta pelo Claude Code e NUNCA seja perdida numa atualização
-  do toolkit (git pull). NÃO edita nem substitui skills oficiais; só cria/edita
-  as próprias do AFT (prefixo minha-).
+  Use quando o AFT quiser criar uma habilidade (skill) PRÓPRIA no AFT
+  Toolkit — automatizar uma tarefa da realidade dele que as skills oficiais
+  não cobrem. Acione com "/aft-nova-skill", "criar uma skill", "quero uma
+  habilidade nova", "criar minha própria skill", "automatizar uma tarefa
+  minha", "fazer uma skill pra mim". Grava em
+  ~/.claude/skills/minha-<nome>/SKILL.md com o prefixo reservado "minha-",
+  que nenhuma atualização do toolkit desfaz. NÃO edita nem substitui skills
+  oficiais.
 ---
 
 # nova-skill — Criar uma habilidade própria do AFT

@@ -1,18 +1,15 @@
 ---
 name: aft-jornada-auto-afd-aej
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o AFT quiser lavrar auto de infração porque o empregador
-  deixou de gerar/manter o AFD e/ou o AEJ conforme a Portaria MTP nº 671/2021.
-  Acione com "/aft-jornada-auto-afd-aej", "auto do AFD", "auto do AEJ", "autuar
-  AFD/AEJ fora do padrão", "ementa 002279-9", "ementa 002280-2", "art. 81 da
-  671", "art. 83 da 671", "REP não gerou o AFD". Ofereça automaticamente
-  quando /aft-jornada-valida-afd-aej ou /aft-jornada-analise apontarem o AFD ou o AEJ
-  como INVÁLIDO e o AFT quiser autuar. Redige UM auto por arquivo reprovado
-  (002279-9 para o AFD, art. 81 caput; 002280-2 para o AEJ, art. 83, I; ambos
-  c/c art. 74, §2º, da CLT) já no formato estruturado consumido por /aft-gera-ai,
-  adaptando o histórico ao defeito realmente constatado. NÃO valida o arquivo
-  (isso é da /aft-jornada-valida-afd-aej) nem empacota o TXT (delega ao /aft-gera-ai).
+  Use quando o AFT quiser lavrar auto de infração porque o empregador deixou
+  de gerar/manter o AFD e/ou o AEJ (Portaria MTP nº 671/2021). Acione com
+  "/aft-jornada-auto-afd-aej", "auto do AFD", "auto do AEJ", "autuar AFD/AEJ
+  fora do padrão", "ementa 002279-9", "ementa 002280-2", "art. 81 da 671",
+  "art. 83 da 671", "REP não gerou o AFD" — e ofereça quando /aft-jornada-
+  valida-afd-aej ou /aft-jornada-analise apontarem arquivo INVÁLIDO. NÃO
+  valida o arquivo nem empacota o TXT (/aft-gera-ai).
 ---
 
 # jornada-auto-afd-aej — Autos de Infração: AFD (002279-9) e AEJ (002280-2)

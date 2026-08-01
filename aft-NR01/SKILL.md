@@ -1,21 +1,15 @@
 ---
 name: aft-NR01
+model: sonnet
 description: >
-  Use SEMPRE que o AFT mencionar irregularidade, autuação ou ementa
-  relacionados à NR-01 (disposições gerais e gerenciamento de riscos
-  ocupacionais). Acione com /aft-NR01 ou quando a narrativa envolver "PGR
-  inexistente", "sem gerenciamento de riscos", "ordem de serviço de SST",
-  "acesso da fiscalização a documentos", "documentos do PGR sem assinatura",
-  "procedimentos em caso de acidente", "análise de acidente pela empresa",
-  "capacitação prevista em NR", "certificado de treinamento", "retorno ao
-  trabalho em grave e iminente risco". Acione também quando /aft-auditoria-geral
-  estiver em curso e a NR identificada for a 01 — é a consultora
-  especializada para NR-01. Retorna: (1) código da ementa + descrição
-  oficial; (2) bloco II - IRREGULARIDADE pronto para o auto de infração.
-  NÃO produz linha de RT nem fragmento de interdição (a NR-01, isoladamente,
-  nunca fundamenta risco grave e iminente). NÃO analisa conteúdo de PGR
-  apresentado (delega a /aft-PGR-analise), NÃO empacota TXT (delega a /aft-gera-ai)
-  e NÃO redige o auto inteiro (delega a /aft-auditoria-geral).
+  Consultora de ementas da NR-01 (disposições gerais e gerenciamento de
+  riscos ocupacionais). Acione com /aft-NR01 ou quando a narrativa envolver
+  "PGR inexistente", "sem gerenciamento de riscos", "ordem de serviço de
+  SST", "documentos do PGR sem assinatura", "análise de acidente pela
+  empresa", "certificado de treinamento", "retorno ao trabalho em grave e
+  iminente risco" — e sempre que /aft-auditoria-geral identificar a NR-01.
+  NÃO analisa PGR apresentado (/aft-PGR-analise) nem redige o auto inteiro
+  (/aft-auditoria-geral).
 ---
 
 # NR01 — Consultora especializada para irregularidades de disposições gerais e GRO

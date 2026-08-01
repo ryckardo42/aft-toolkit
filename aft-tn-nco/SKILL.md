@@ -1,20 +1,16 @@
 ---
 name: aft-tn-nco
 model: sonnet
+effort: medium
 description: >
-  Use SEMPRE que o AFT quiser redigir uma Notificação para Correção de
+  Use quando o AFT quiser redigir uma Notificação para Correção de
   Irregularidades (TN-NCO) — o texto que vai no DET notificando a empresa a
-  corrigir irregularidades de SST. Dispare com /aft-tn-nco, "cria a notificação
-  para corrigir", "redige a TN de correção", "notifica a empresa para sanar as
-  irregularidades", "monta a notificação dessas irregularidades". Acione
-  também PROATIVAMENTE logo após identificar irregularidade + NR/item + ementa
-  (em /aft-auditoria-geral, /aft-PGR-analise ou narrativa de campo), oferecendo gerar
-  a notificação. Produz: introdução fixa (art. 18 do Decreto 4552/2002) + um
-  item por irregularidade no formato "*Título* - item X da NR-Y: <exigência>
-  [ementa]" (ementa via NotebookLM, só quando existir) + observações fixas,
-  apresentado BLOCO A BLOCO para o AFT copiar no DET e salvo como .md na pasta
-  da OS. NÃO é o auto de infração (isso é /aft-auditoria-geral → /aft-gera-ai) — é só
-  o TEXTO da notificação, pronto para colar.
+  corrigir irregularidades de SST. Dispare com /aft-tn-nco, "cria a
+  notificação para corrigir", "redige a TN de correção", "notifica a empresa
+  para sanar as irregularidades", "monta a notificação dessas
+  irregularidades". Acione também PROATIVAMENTE logo após identificar
+  irregularidade + NR/item + ementa. NÃO é o auto de infração (/aft-
+  auditoria-geral → /aft-gera-ai).
 ---
 
 # tn-nco — Notificação para Correção de Irregularidades

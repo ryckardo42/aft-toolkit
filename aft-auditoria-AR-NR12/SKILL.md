@@ -1,21 +1,16 @@
 ---
 name: aft-auditoria-AR-NR12
-model: claude-opus-4-8[1m]
+model: opus
 description: >
-  Use SEMPRE que o AFT pedir para analisar, julgar, auditar ou criticar um laudo de
-  adequação à NR-12, apreciação de riscos, análise de risco de máquina ou laudo de
-  conformidade apresentado por empresa fiscalizada — em pedido de suspensão/levantamento
-  de interdição ou em resposta a notificação. Acione com "/aft-auditoria-AR-NR12", "auditoria AR", "analisar o laudo", "julgar a
-  apreciação de riscos", "laudo de adequação", "laudo de conformidade NR-12", "HRN",
-  "categoria de segurança", "NBR 14153", "ISO 12100", "a empresa pediu levantamento da
-  interdição e mandou laudo", ou quando anexar PDF de laudo/apreciação de riscos de
-  máquina. Julga o documento contra a ABNT NBR ISO 12100 e a NBR 14153 em 6 blocos
-  obrigatórios (método de estimativa, HRN, categoria de segurança S/F/P → B-1-2-3-4,
-  requisitos NR-12 dependentes da AR, habilitação PLH/ART/TRT, interface de segurança
-  relé/CLP), produz resumo + análise didática + parecer, e oferece texto técnico,
-  notificação de correção (/aft-tn-nco) e RT de manutenção de interdição (/aft-rt-rgi).
-  NÃO confundir com /aft-NR12 (consultora de ementas) nem /aft-PGR-analise (PGR sob NR-01):
-  esta skill julga o DOCUMENTO técnico de risco/adequação de máquinas da empresa.
+  Use quando o AFT pedir para analisar, julgar ou criticar um laudo de
+  adequação à NR-12, apreciação de riscos ou laudo de conformidade
+  apresentado pela empresa fiscalizada — em pedido de suspensão de
+  interdição ou em resposta a notificação. Acione com "/aft-auditoria-AR-
+  NR12", "auditoria AR", "analisar o laudo", "julgar a apreciação de
+  riscos", "laudo de adequação", "HRN", "categoria de segurança", "NBR
+  14153", "ISO 12100", "a empresa pediu levantamento da interdição e mandou
+  laudo", ou ao anexar PDF de laudo de máquina. NÃO confundir com /aft-NR12
+  (consultora de ementas) nem /aft-PGR-analise.
 compatibility: Windows (Git Bash) e macOS. NotebookLM opcional (config do /aft-setup); funciona sem, com aviso.
 ---
 

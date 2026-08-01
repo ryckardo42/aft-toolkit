@@ -1,18 +1,14 @@
 ---
 name: aft-PGR-analise
-model: claude-opus-4-8[1m]
+model: opus
 description: >
-  Use este skill SEMPRE que o Auditor-Fiscal do Trabalho (AFT) pedir para analisar, auditar,
-  revisar ou avaliar um Programa de Gerenciamento de Riscos (PGR) à luz da NR-01. Acione
-  quando o usuário mencionar "analisar PGR", "auditar PGR", "revisar PGR", "PGR da empresa",
-  "PGR apresentado", "Inventário de Riscos", "Plano de Ação do PGR", "ementas do PGR",
-  "1010590", "1010603", "1010611", "1010646", "1010743", "1010794", "1011154", ou anexar PDF
-  de PGR/Inventário/Plano de Ação. Também acione quando o contexto envolver lavratura de
-  autos de infração por irregularidades no PGR. O skill executa varredura sistemática das
-  sete ementas de PGR, identifica irregularidades com citação dos trechos e páginas do
-  documento, e oferece a redação dos autos de infração (formato 3 subtítulos) no formato
-  consumido pelo /aft-gera-ai, que empacota o TXT do Sistema Auditor com o próprio PGR como
-  anexo de cada AI.
+  Use quando o AFT pedir para analisar, auditar ou revisar um Programa de
+  Gerenciamento de Riscos (PGR) à luz da NR-01. Acione com "analisar PGR",
+  "auditar PGR", "revisar PGR", "PGR da empresa", "PGR apresentado",
+  "Inventário de Riscos", "Plano de Ação do PGR", os códigos 1010590,
+  1010603, 1010611, 1010646, 1010743, 1010794, 1011154, ou ao anexar PDF de
+  PGR/Inventário/Plano de Ação. Varre as sete ementas de PGR e oferece a
+  redação dos autos.
 ---
 
 # PGR-analise — Análise de PGR (NR-01)

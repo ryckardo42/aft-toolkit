@@ -3,20 +3,13 @@ name: aft-painel
 model: haiku
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Artifact
 description: >
-  Use SEMPRE que o Auditor-Fiscal do Trabalho (AFT) quiser um panorama das
-  auditorias em andamento e os prazos de DET vencendo. Acione com /aft-painel,
-  "painel", "minhas auditorias", "minhas OS", "o que vence essa semana",
-  "dashboard", "quadro das OS", "painel interativo". Varre os memory.md de
-  OS ATIVAS/, detecta notificações DET não cadastradas e gera um painel.html
-  autocontido: um CARD por OS colorido por urgência e, ao clicar, o detalhe —
-  DETs, TODOS os autos lavrados (nº do AI, ementa, constatação), inspeção
-  física, pendências e atividades. Com --scan, puxa os autos ao vivo do
-  Sistema Auditor. Tem MODO INTERATIVO padrão (servir_painel.py,
-  http://127.0.0.1:8347, 100% local): ações mecânicas nos cards — marcar DET
-  respondida, resolver pendência, registrar atividade, status e
-  embargo/interdição — gravadas no memory.md com backup, e botões que copiam
-  comandos prontos para o Claude Code. Artifact só com consentimento.
-  Aberto pelo arquivo (duplo-clique) continua somente leitura.
+  Use quando o AFT quiser um panorama das auditorias em andamento e os
+  prazos de DET vencendo. Acione com /aft-painel, "painel", "minhas
+  auditorias", "minhas OS", "o que vence essa semana", "dashboard", "quadro
+  das OS", "painel interativo". Varre os memory.md de OS ATIVAS/, detecta
+  notificações DET não cadastradas e gera um painel.html autocontido, com
+  card por OS colorido por urgência e modo interativo 100% local. Com
+  --scan, puxa os autos ao vivo do Sistema Auditor.
 ---
 
 # painel — Dashboard local das auditorias (SISOS-lite)

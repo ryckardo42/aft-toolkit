@@ -1,20 +1,14 @@
 ---
 name: aft-analise-acidente
-model: claude-opus-4-8[1m]
+model: opus
 description: >
-  Use SEMPRE que o AFT quiser analisar um acidente ou doença do trabalho e
-  produzir o Relatório de Análise de Acidente (IN GMTP/MTP nº 2/2022). Acione
-  com "/aft-analise-acidente", "analisar acidente", "relatório de análise de
-  acidente", "acidente fatal", "acidente com óbito", "fatores causais",
-  "árvore de causas", "analisar essa CAT", ou quando o AFT apontar uma pasta
-  com documentos do acidente (CAT, RAI/BO, laudos, PGR, ponto, ASO, contrato).
-  Varre os documentos, redige o relatório em texto contínuo no roteiro fixo de
-  6 seções, propõe os fatores causais com os códigos oficiais do SFIT
-  (famílias 251 a 260) para o AFT confirmar, gera o .docx e, ao final,
-  PERGUNTA se deseja encadear /aft-auditoria-geral (autos) e /aft-gera-ai. NÃO redige
-  os autos sozinha e NÃO inventa fatos, códigos ou ementas. Não confundir com
-  /aft-inspecao-fisica (relato de campo) nem /aft-auditoria-geral (autos): esta skill
-  produz a ANÁLISE do acidente.
+  Use quando o AFT quiser analisar um acidente ou doença do trabalho e
+  produzir o Relatório de Análise de Acidente (IN GMTP/MTP nº 2/2022).
+  Acione com "/aft-analise-acidente", "analisar acidente", "relatório de
+  análise de acidente", "acidente fatal", "acidente com óbito", "fatores
+  causais", "árvore de causas", "analisar essa CAT", ou ao apontar uma pasta
+  com documentos do acidente (CAT, RAI/BO, laudos, ASO). Não confundir com
+  /aft-inspecao-fisica (relato de campo) nem /aft-auditoria-geral (autos).
 ---
 
 # analise-acidente — Análise de Acidente do Trabalho (IN GMTP/MTP nº 2/2022)

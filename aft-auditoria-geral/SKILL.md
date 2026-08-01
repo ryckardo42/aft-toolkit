@@ -1,21 +1,16 @@
 ---
 name: aft-auditoria-geral
+model: sonnet
 description: >
-  Use este skill quando o AFT quiser ENQUADRAR irregularidades trabalhistas e redigir
-  autos de infração — seja a partir da inspeção física (campo) OU da auditoria documental
-  (análise dos documentos da empresa). Acione com: "/aft-auditoria-geral", "faça a auditoria",
-  "faça a análise", "auditoria dos documentos", "emente as irregularidades", "inspeção
-  inicial", "primeira visita", "achados de campo", "auto de infração", "autuação",
-  "ementa", "gerar auto", "lavrar auto", "irregularidade", "fiscalização SST", "constatei
-  irregularidades", "enquadrar as constatações". Cobre TODAS as NRs + legislação
-  trabalhista (CLT). Guia o auditor por 6 fases: contexto da OS → coleta de achados →
-  NR/ementa via NotebookLM → redação dos autos → atualização do memory.md → encadeamento
-  com /aft-gera-ai e /aft-rt-rgi. As DUAS fontes de achados são: o arquivo `inspecao-fisica.md`
-  da pasta da OS (relato de campo da /aft-inspecao-fisica) E a seção `## Anotações da auditoria`
-  do memory.md (constatações lançadas durante a análise documental); na ausência de ambos,
-  aceita a narrativa colada pelo AFT. NÃO empacota o TXT importável — delega ao /aft-gera-ai
-  após redigir. NÃO confundir com /aft-auditoria-AR-NR12 (julga laudo de apreciação de riscos
-  de máquina) nem com /aft-aet-auditoria.
+  Use quando o AFT quiser ENQUADRAR irregularidades trabalhistas e redigir
+  autos de infração — a partir da inspeção física OU da auditoria
+  documental. Acione com "/aft-auditoria-geral", "faça a auditoria", "faça a
+  análise", "auditoria dos documentos", "emente as irregularidades",
+  "achados de campo", "auto de infração", "autuação", "ementa", "gerar
+  auto", "lavrar auto", "irregularidade", "constatei irregularidades",
+  "enquadrar as constatações". Cobre todas as NRs + legislação trabalhista
+  (CLT). NÃO empacota o TXT (delega ao /aft-gera-ai). NÃO confundir com
+  /aft-auditoria-AR-NR12 nem /aft-aet-auditoria.
 ---
 
 # auditoria-geral — Auditoria (campo + documental) com Redação de Autos de Infração

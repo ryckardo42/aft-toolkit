@@ -2,18 +2,14 @@
 name: aft-jornada-analise
 model: sonnet
 description: >
-  Use SEMPRE que o AFT tiver recebido, em resposta a uma notificacao sobre
-  jornada/ponto eletronico, um PACOTE de documentos do empregador (arquivos
-  AFD e AEJ + Atestado(s) Tecnico(s) e Termo(s) de Responsabilidade do
-  REP/PTRP) e quiser analisar TUDO de uma vez. Acione com "/aft-jornada-analise",
-  "analisar documentos de jornada", "auditar o pacote de ponto", "analisar AFD
-  AEJ e atestado", "validar tudo que a empresa mandou sobre ponto". Aceita
-  como argumento uma PASTA (da OS ou da entrega) ou uma lista de arquivos. Faz
-  a TRIAGEM e delega: AFD/AEJ vao para /aft-jornada-valida-afd-aej (integridade
-  tecnica) e cada PDF de atestado para /aft-jornada-atestado (art. 89 da Portaria
-  671/2021), consolidando tudo num unico relatorio. NAO faz analise de jornada
-  propriamente dita (confronto marcacao x horario, horas extras, intervalos) —
-  isso e etapa posterior.
+  Use quando o AFT receber do empregador um PACOTE de documentos de jornada
+  (arquivos AFD e AEJ + Atestados Técnicos e Termos de Responsabilidade do
+  REP/PTRP) e quiser analisar tudo de uma vez. Acione com "/aft-jornada-
+  analise", "analisar documentos de jornada", "auditar o pacote de ponto",
+  "analisar AFD AEJ e atestado", "validar tudo que a empresa mandou sobre
+  ponto". Aceita uma pasta ou lista de arquivos; faz a triagem e delega a
+  /aft-jornada-valida-afd-aej e /aft-jornada-atestado. NÃO faz a análise de
+  jornada propriamente dita.
 ---
 
 # jornada-analise — Orquestrador da análise da entrega de jornada

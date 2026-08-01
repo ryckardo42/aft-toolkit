@@ -1,18 +1,15 @@
 ---
 name: aft-notebooklm-login
 model: sonnet
+effort: low
 description: >
-  Use SEMPRE que for preciso CONECTAR ou RECONECTAR o NotebookLM (o ementário
+  Use quando for preciso CONECTAR ou RECONECTAR o NotebookLM (o ementário
   que as skills consultam) à conta Google do AFT, ou quando ele parar de
-  responder. Acione com "/aft-notebooklm-login", "conectar o notebooklm", "logar
-  no notebooklm", "reconectar o ementário", "o notebooklm parou",
-  "authentication expired", "a consulta de ementa falhou". Conecta com a MENOR
-  intervenção possível e SEM nunca mandar o AFT ao terminal: tenta primeiro os
-  cookies do navegador (zero cliques) e, se preciso, abre uma janela do
-  navegador do sistema (Edge/Chrome) para um único login no Google, salvando a
-  sessão sozinho. NÃO baixa o Chromium próprio nem exige Visual C++. Também
-  detecta sessão já ativa ou expirada. NÃO redige autos nem consulta ementas:
-  só deixa o comando `notebooklm` pronto para as outras skills usarem.
+  responder. Acione com "/aft-notebooklm-login", "conectar o notebooklm",
+  "logar no notebooklm", "reconectar o ementário", "o notebooklm parou",
+  "authentication expired", "a consulta de ementa falhou". Conecta com a
+  menor intervenção possível e sem mandar o AFT ao terminal. Só deixa o
+  comando `notebooklm` pronto — não redige autos nem consulta ementas.
 ---
 
 # notebooklm-login — Conectar o NotebookLM (mínima intervenção, sem terminal)

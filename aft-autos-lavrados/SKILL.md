@@ -1,25 +1,16 @@
 ---
 name: aft-autos-lavrados
 model: sonnet
+effort: medium
 allowed-tools: Read, Glob, Grep, Bash, Write, Edit, AskUserQuestion
 description: >
-  Use SEMPRE que o AFT pedir para checar quais autos de infração já foram
-  efetivamente lavrados (transmitidos no Sistema Auditor) de uma empresa em
-  OS ATIVAS. Dispare com /aft-autos-lavrados, "autos lavrados", "ver o que
-  transmiti", "autos transmitidos", "checar lavratura", "estado de lavratura",
-  "atualizar autos lavrados", "conferir Sistema Auditor", "snapshot dos autos".
-  Aceita 0 ou 1 argumento. Sem argumento varre TODAS as OS ATIVAS e gera
-  relatório por empresa. Com argumento (CNPJ 14 dígitos OU substring do nome)
-  foca em uma OS. A skill lê os PDFs lavrados na pasta PRO do Sistema Auditor
-  (C:\SistemasAFT\Auditor\Docs\AutosDeInfracao\PRO), extrai número do AI,
-  ementa e histórico de cada auto, cruza com os rascunhos da pasta
-  `Autos DD-MM/` (saídas do /aft-gera-ai) para sinalizar pendências de transmissão,
-  gera um `autos-lavrados.md` na pasta da OS e atualiza a seção
-  `## Autos lavrados` do memory.md marcando [x] os lavrados e [ ] os pendentes.
-  Também gera a "Relação de autos lavrados" em .docx (template oficial,
-  cabeçalho SIT/AFT preservado), salvando em `AUTOS/Relacao de autos/` dentro
-  da pasta da OS. Não gera PDF: o .docx é o documento final.
-  Read-only sobre o Sistema Auditor (nunca toca nos PDFs nem na pasta PRO).
+  Use quando o AFT quiser checar quais autos de infração já foram
+  efetivamente transmitidos no Sistema Auditor. Dispare com /aft-autos-
+  lavrados, "autos lavrados", "ver o que transmiti", "autos transmitidos",
+  "checar lavratura", "atualizar autos lavrados", "conferir Sistema
+  Auditor", "snapshot dos autos". Aceita 0 ou 1 argumento (CNPJ ou parte do
+  nome); sem argumento varre todas as OS ATIVAS. Read-only sobre o Sistema
+  Auditor.
 ---
 
 # autos-lavrados — Snapshot do Sistema Auditor

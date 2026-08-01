@@ -1,16 +1,15 @@
 ---
 name: aft-revisa-auto
 model: sonnet
+effort: medium
 description: >
   Revisor de qualidade de autos de infração ANTES do empacotamento pelo
-  /aft-gera-ai. Roda o checklist 5W1H (O Quê, Quando, Onde, Como, Por Quê) sobre
-  cada minuta, em autos de SST garante o parágrafo de dano coletivo (Portaria
-  MTP 667/2021 + OT SIT 2/2022) e divide o bloco II monolítico em parágrafos
-  legíveis (a quebra que o /aft-gera-ai converte em #13#10 no TXT do Sistema
-  Auditor). Acione com: "/aft-revisa-auto", "revisa auto", "revisar auto",
-  "checklist 5w1h", "revisão pré-empacotamento". É chamada automaticamente
-  como gate dentro do /aft-gera-ai, mas pode ser usada isolada sobre um arquivo de
-  autos ou sobre minutas no contexto da conversa.
+  /aft-gera-ai: checklist 5W1H, parágrafo de dano coletivo nos autos de SST
+  (Portaria MTP 667/2021 + OT SIT 2/2022) e quebra do bloco II monolítico em
+  parágrafos legíveis. Acione com "/aft-revisa-auto", "revisa auto",
+  "revisar auto", "checklist 5w1h", "revisão pré-empacotamento". É chamada
+  automaticamente como gate dentro do /aft-gera-ai, mas pode ser usada
+  isolada.
 ---
 
 # revisa-auto — Revisão 5W1H + dano coletivo (gate pré-empacotamento)
