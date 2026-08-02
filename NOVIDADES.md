@@ -36,6 +36,14 @@ um teste com dois casos completos (máquinas e obra). Você não precisa fazer n
 - **Erros de português no modelo oficial corrigidos:** "preoposto" virou "preposto",
   "da empresa aptos" virou "apto" e "das Norma Regulamentadoras" virou "das Normas
   Regulamentadoras". Saíam em todos os relatórios emitidos.
+- **O modelo passou a usar campos `{{nome_do_campo}}`, com um dicionário próprio.**
+  Cada lugar do relatório que recebe texto tem agora um campo identificado, e a skill
+  sabe o que vai em cada um: o que descrever no objeto, o que citar na irregularidade,
+  como fundamentar consequência e probabilidade. A numeração dos itens e das alíneas
+  passou a ser automática do Word — nada de "A)" ou "3." digitados. Um mesmo relatório
+  pode ter vários objetos e vários fatores de risco, cada um com seu bloco.
+  **Atenção a uma mudança de fundo:** os itens 1, 2 e 8 viraram texto fixo, então a
+  data da inspeção agora é escrita dentro da irregularidade, e não mais no item 1.
 - **As irregularidades agora aparecem logo abaixo do título "4. IRREGULARIDADE(S)".**
   Antes iam parar no fim da seção, depois de toda a explicação da metodologia e das
   tabelas — longe de onde se procura por elas. O modelo ganhou marcações com "#"

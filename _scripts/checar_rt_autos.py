@@ -59,29 +59,59 @@ def codes(texto):
     return set(CODE_RE.findall(texto))
 
 
+RE_LEGENDA = re.compile(r"^\s*(fotografia|foto|figura|imagem)\b", re.IGNORECASE)
+
+
+def eh_legenda(texto):
+    """Legenda de foto inserida no corpo do RT nao e irregularidade."""
+    return bool(RE_LEGENDA.match(texto))
+
+
 def ler_secao4_rt(rt_path):
-    """Retorna (itens_de_lista, texto_completo_da_secao4)."""
+    """Retorna (itens_da_secao4, texto_completo_da_secao4).
+
+    Aceita os dois formatos de template:
+      - atual: os titulos usam numeracao AUTOMATICA do Word, entao o texto e so
+        "IRREGULARIDADE(S):" (sem o "4.") e as irregularidades sao paragrafos de
+        prosa ANTES do bloco fixo da metodologia da NR-3;
+      - anterior: titulos com "4." digitado e ementas em lista (numPr) DEPOIS do
+        bloco da metodologia.
+    Em ambos, as tabelas 3.1/3.2/3.3 ficam de fora: doc.paragraphs nao inclui o
+    conteudo de tabelas.
+    """
     import docx
     doc = docx.Document(rt_path)
     paras = doc.paragraphs
-    ini = fim = None
+    ini = fim = metodologia = None
     for i, p in enumerate(paras):
         t = p.text.strip().upper()
-        if ini is None and t.startswith("4.") and "IRREGULARIDADE" in t:
-            ini = i
-        elif ini is not None and t.startswith("5.") and ("FATOR" in t or "RISCO" in t):
+        if not t:
+            continue
+        if ini is None:
+            if "IRREGULARIDADE" in t and len(t) < 40:      # linha de titulo
+                ini = i
+            continue
+        if metodologia is None and t.startswith("METODOLOGIA PRESCRITA"):
+            metodologia = i
+        if ("FATOR" in t or "RISCO" in t) and "RELACIONADO" in t:
             fim = i
             break
     if ini is None:
         return None, None
+
     sec = paras[ini + 1:(fim if fim is not None else len(paras))]
-    itens = []
-    for p in sec:
-        pPr = p._p.pPr
-        eh_lista = pPr is not None and pPr.numPr is not None
-        if eh_lista and p.text.strip():
-            itens.append(p.text.strip())
     texto = "\n".join(p.text for p in sec)
+
+    # formato atual: o que vem entre o titulo e a metodologia
+    if metodologia is not None:
+        antes = [p.text.strip() for p in paras[ini + 1:metodologia]
+                 if p.text.strip() and not eh_legenda(p.text)]
+        if antes:
+            return antes, texto
+
+    # formato anterior: paragrafos de lista em qualquer ponto da secao
+    itens = [p.text.strip() for p in sec
+             if p.text.strip() and p._p.pPr is not None and p._p.pPr.numPr is not None]
     return itens, texto
 
 
