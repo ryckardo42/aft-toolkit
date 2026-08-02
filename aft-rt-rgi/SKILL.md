@@ -300,6 +300,18 @@ alta).
 - Fonte e recuos vêm do template — o script preserva a formatação de cada
   placeholder, inclusive rótulos em negrito.
 
+**Formatação: o script normaliza, não confia no placeholder.** Os placeholders do
+template nem sempre carregam a formatação do corpo (justificação, entrelinha,
+recuo), e o texto gerado saía destoando do resto. O `montar_rt.py` agora força o
+padrão do corpo — **justificado, entrelinha 1,5** — em objetos, irregularidades,
+fatores de risco, medidas e documentos; põe **recuo de primeira linha** no
+contexto da inspeção; transforma as **ementas do item 4 em lista com marcador**
+(criando a lista, que o template não tem); e remove o parágrafo vazio que o
+template deixa antes da alínea fixa do item 6, responsável por uma quebra dupla
+antes do último item. Ao reescrever o `<w:pPr>`, respeita a **ordem exigida pelo
+schema OOXML** (`pStyle → numPr → tabs → adjustRightInd → spacing → ind → jc →
+rPr`): fora de ordem, o Word acusa documento corrompido.
+
 **O que o script resolve sozinho:** placeholder partido entre runs (o Word quebra
 `{{chave}}` em pedaços ao editar); numeração automática das listas, com a alínea
 fixa no fim do item 6 e o item 7 reiniciando em A); e as trocas do **modo
