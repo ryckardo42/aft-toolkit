@@ -36,6 +36,11 @@ um teste com dois casos completos (máquinas e obra). Você não precisa fazer n
 - **Erros de português no modelo oficial corrigidos:** "preoposto" virou "preposto",
   "da empresa aptos" virou "apto" e "das Norma Regulamentadoras" virou "das Normas
   Regulamentadoras". Saíam em todos os relatórios emitidos.
+- **As irregularidades agora aparecem logo abaixo do título "4. IRREGULARIDADE(S)".**
+  Antes iam parar no fim da seção, depois de toda a explicação da metodologia e das
+  tabelas — longe de onde se procura por elas. O modelo ganhou marcações com "#"
+  indicando onde cada bloco de texto entra, e some do documento final a linha de
+  exemplo "OBJETO: 1 – ATIVIDADE", que era só um lembrete de formato.
 
 ## 01/08/2026
 <!-- commit: rt-rgi-precedentes-de-interdicao -->

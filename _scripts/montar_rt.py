@@ -3,15 +3,25 @@
 montar_rt.py - monta o Relatorio Tecnico de Interdicao/Embargo (.docx) a partir
 do template oficial do toolkit e de um arquivo JSON com as partes variaveis.
 
-Substitui a edicao manual do document.xml: o script localiza cada parte variavel
-pelo w14:paraId (identificador estavel do paragrafo no template), troca so o
-conteudo e preserva TODO o texto fixo (cabecalho, citacoes, tabelas da NR-3,
-pedido de suspensao, SEI, assinatura).
+Substitui a edicao manual do document.xml. O script acha cada parte variavel de
+dois jeitos e preserva TODO o texto fixo (cabecalho, citacoes, tabelas da NR-3,
+pedido de suspensao, SEI, assinatura):
+
+  - pelos MARCADORES "#" que o AFT deixou no template ("#objetos" na secao 3,
+    "#irregularidades" na secao 4). Como sao achados pelo texto, o AFT pode
+    mover o marcador de lugar no Word que o script continua encontrando;
+  - pelo w14:paraId, nas partes sem marcador (capa, secoes 5 a 8, rodape).
 
 O que ele resolve sozinho:
   - paraId novo sempre < 0x80000000 (valor maior corrompe o DOCX no Word);
   - ementas da secao 4 saem como paragrafos de LISTA (numPr), formato que o
-    checar_rt_autos.py exige para contar as irregularidades;
+    checar_rt_autos.py exige para contar as irregularidades, e entram LOGO APOS
+    o titulo "4. IRREGULARIDADE(S):" - antes do bloco fixo da metodologia;
+  - remove a linha de exemplo "OBJETO: 1 - ATIVIDADE - Paralisacao: TOTAL", que
+    e so um lembrete de formato no template e nao pode sair no documento real;
+  - nas quatro linhas da secao 5, ACRESCENTA o valor ao rotulo que ja esta no
+    template, em vez de reescrever o rotulo: se o AFT mudar "Descricao:" para
+    outra coisa no Word, o script continua correto;
   - modo "embargo" adapta o texto fixo que fala em interdicao (NR-03, 3.2.2.1:
     embargo e para OBRA; 3.2.2.2: interdicao e para maquina/setor/atividade);
   - move o item "A) Requerimento expresso..." da secao 6 para a secao 7, que e
@@ -32,7 +42,7 @@ viram lixo quando interpolados na linha de comando do Windows). Campos:
   "paragrafo_preposto": "(opcional) reescreve o ultimo paragrafo da secao 2",
   "objetos":     ["OBJETO: 1 - MAQUINA - ... - Paralisacao: TOTAL", ...],
   "ementas":     ["XXXXXX-X - Descricao. Capitulacao: ...", ...],
-  "fator_risco": "Mecanico (contato com partes moveis)",
+  "fator_risco": "(opcional) Mecanico - entra antes do excesso de risco",
   "excesso_risco": "EXTREMO",
   "descricao_risco": "...",
   "risco_atual": "Consequencia SEVERA e probabilidade PROVAVEL. ...",
@@ -82,14 +92,13 @@ P_TITULO       = "254D1643"   # TERMO DE INTERDICAO No XXXXX
 P_EMPREGADOR   = "70FC8FD5"   # EMPREGADOR: XXXX
 P_CNPJ         = "2426C45C"   # CNPJ: XXXXX
 P_OBJETIVO     = "1EE37096"   # texto fixo da secao 1
-P_PREPOSTO     = "7C651B6B"   # ultimo paragrafo da secao 2
+P_PREPOSTO     = "5DF58A29"   # ultimo paragrafo da secao 2
 P_SEC3_HDR     = "250CF13F"   # 3. OBJETO(S) INTERDITADO(S):
-P_OBJETO       = "5D9E20A5"   # OBJETO: 1 - ATIVIDADE - Paralisacao: TOTAL
-P_EMENTAS      = "39A36EBD"   # paragrafo vazio das ementas (secao 4)
-P_FATOR        = "2D76A9D7"   # Fator de Risco : excesso de risco
+P_OBJETO_EX    = "5D9E20A5"   # linha de exemplo "OBJETO: 1 - ATIVIDADE - ..." (removida)
+P_FATOR        = "2D76A9D7"   # Fator de Risco - excesso de risco:
 P_DESCRICAO    = "7A311088"   # Descricao:
 P_RISCO_ATUAL  = "05821EB3"   # Fundamentacao do risco atual:
-P_RISCO_REF    = "6CBD2F6F"   # Fundamentacao do risco de referencia
+P_RISCO_REF    = "6CBD2F6F"   # Fundamentacao do risco de referencia:
 P_REQUERIMENTO = "1F8A24BD"   # A) Requerimento expresso ... suspensao da interdicao
 P_SEC7_HDR     = "3374AF6A"   # 7. DOCUMENTO(S) SOLICITADO(S):
 P_SEC8_HDR     = "0C0AE4AC"   # 8. CONCLUSAO/OBSERVACAO:
@@ -100,11 +109,18 @@ P_REQ_II       = "459C6BAE"   # II - a identificacao da(s) maquina(s) ou setor d
 P_CIDADE_DATA  = "1C5BF08E"   # XXXXX-XX, XX/XX/2026
 P_NOME_AFT     = "06D83714"   # XXXXXXXX
 
+# Marcadores "#" que o AFT deixou no template para sinalizar onde entra o texto
+# gerado. Sao localizados PELO TEXTO (nao por paraId): assim o AFT pode mover o
+# marcador de lugar no Word, e o script continua encontrando.
+MARCADOR_OBJETOS = "#objetos"
+MARCADOR_EMENTAS = "#irregularidades"
+
 OBRIGATORIOS = [
     "modo", "numero_termo", "empregador", "cnpj", "frase_inspecao", "objetos",
-    "ementas", "fator_risco", "excesso_risco", "descricao_risco", "risco_atual",
+    "ementas", "excesso_risco", "descricao_risco", "risco_atual",
     "risco_referencia", "medidas", "documentos", "conclusao", "cidade_data", "nome_aft",
 ]
+# "fator_risco" e "paragrafo_preposto" sao opcionais.
 
 RE_PARAGRAFO = re.compile(r"<w:p\b[^>]*>.*?</w:p>|<w:p\b[^>]*/>", re.S)
 
@@ -129,6 +145,22 @@ def achar_paragrafo(xml, paraid):
             return m
     erro(f"paraId {paraid} nao encontrado - o template mudou? "
          f"Confira {TEMPLATE}", 3)
+
+
+def achar_marcador(xml, marcador):
+    """Localiza o paragrafo que contem um marcador '#...' do template."""
+    for m in RE_PARAGRAFO.finditer(xml):
+        runs = re.findall(r"<w:r\b[^>]*>.*?</w:r>", m.group(0), re.S)
+        t = "".join("".join(re.findall(r"<w:t[^>]*>(.*?)</w:t>", r, re.S)) for r in runs)
+        if marcador in t:
+            return m
+    erro(f"marcador {marcador} nao encontrado no template - ele foi apagado? "
+         f"Confira {TEMPLATE}", 3)
+
+
+def remover_paragrafo(xml, paraid):
+    m = achar_paragrafo(xml, paraid)
+    return xml[:m.start()] + xml[m.end():]
 
 
 def texto_do_paragrafo(p):
@@ -177,6 +209,22 @@ def substituir_por_varios(xml, paraid, textos):
     return xml[:m.start()] + blocos + xml[m.end():]
 
 
+def marcador_por_varios(xml, marcador, textos):
+    """Troca o paragrafo do marcador '#...' por N paragrafos com o mesmo estilo."""
+    m = achar_marcador(xml, marcador)
+    attrs, ppr, rpr = _partes(m.group(0))
+    blocos = "".join(_monta(attrs, ppr, rpr, t) for t in textos)
+    return xml[:m.start()] + blocos + xml[m.end():]
+
+
+def completar_rotulo(xml, paraid, valor):
+    """Acrescenta o valor ao rotulo que ja existe no template.
+    Assim, se o AFT reescrever o rotulo no Word ('Descricao:' -> 'Descricao do
+    risco:'), o script continua correto - ele nunca reescreve o rotulo."""
+    rotulo = texto_do_paragrafo(achar_paragrafo(xml, paraid).group(0)).strip()
+    return substituir_texto(xml, paraid, f"{rotulo} {valor}")
+
+
 def inserir_depois(xml, paraid, textos, modelo_paraid):
     """Insere N paragrafos apos o paragrafo alvo, com a formatacao do modelo."""
     alvo = achar_paragrafo(xml, paraid)
@@ -185,10 +233,12 @@ def inserir_depois(xml, paraid, textos, modelo_paraid):
     return xml[:alvo.end()] + blocos + xml[alvo.end():]
 
 
-def substituir_por_ementas(xml, paraid, ementas):
-    """Ementas da secao 4 como paragrafos de LISTA (numPr ilvl 2 / numId 1).
+def substituir_por_ementas(xml, marcador, ementas):
+    """Ementas da secao 4 como paragrafos de LISTA (numPr ilvl 2 / numId 1),
+    no lugar do marcador '#irregularidades' - ou seja, logo apos o titulo
+    '4. IRREGULARIDADE(S):', antes do bloco fixo da metodologia da NR-3.
     Sem o numPr o checar_rt_autos.py conta zero irregularidades."""
-    m = achar_paragrafo(xml, paraid)
+    m = achar_marcador(xml, marcador)
     blocos = []
     for t in ementas:
         blocos.append(
@@ -250,23 +300,23 @@ def montar(dados, destino):
     if dados.get("paragrafo_preposto"):
         xml = substituir_texto(xml, P_PREPOSTO, dados["paragrafo_preposto"])
 
-    # secao 3 (objetos)
+    # secao 3 (objetos no marcador #objetos; a linha de exemplo do template sai)
     if embargo:
         xml = substituir_texto(xml, P_SEC3_HDR, "3.  OBJETO(S) EMBARGADO(S):")
-    xml = substituir_por_varios(xml, P_OBJETO, dados["objetos"])
+    xml = marcador_por_varios(xml, MARCADOR_OBJETOS, dados["objetos"])
+    xml = remover_paragrafo(xml, P_OBJETO_EX)
 
-    # secao 4 (ementas em lista)
-    xml = substituir_por_ementas(xml, P_EMENTAS, dados["ementas"])
+    # secao 4 (ementas em lista, no marcador #irregularidades)
+    xml = substituir_por_ementas(xml, MARCADOR_EMENTAS, dados["ementas"])
 
-    # secao 5 (fatores de risco)
-    xml = substituir_texto(xml, P_FATOR,
-                           f"Fator de Risco: {dados['fator_risco']} - "
-                           f"excesso de risco: {dados['excesso_risco']}")
-    xml = substituir_texto(xml, P_DESCRICAO, f"Descrição: {dados['descricao_risco']}")
-    xml = substituir_texto(xml, P_RISCO_ATUAL,
-                           f"Fundamentação do risco atual: {dados['risco_atual']}")
-    xml = substituir_texto(xml, P_RISCO_REF,
-                           f"Fundamentação do risco de referência: {dados['risco_referencia']}")
+    # secao 5 (os rotulos vem do template; o script so acrescenta os valores)
+    fator = dados.get("fator_risco")
+    xml = completar_rotulo(xml, P_FATOR,
+                           f"{fator} - {dados['excesso_risco']}" if fator
+                           else dados["excesso_risco"])
+    xml = completar_rotulo(xml, P_DESCRICAO, dados["descricao_risco"])
+    xml = completar_rotulo(xml, P_RISCO_ATUAL, dados["risco_atual"])
+    xml = completar_rotulo(xml, P_RISCO_REF, dados["risco_referencia"])
 
     # secoes 6 e 7: o item "A) Requerimento expresso..." do template esta preso ao
     # fim da secao 6, mas e DOCUMENTO - vai para a primeira posicao da secao 7.

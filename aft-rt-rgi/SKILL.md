@@ -268,7 +268,7 @@ trabalho, desempacotar, editar XML à mão, remontar), que ficam abaixo apenas c
   "paragrafo_preposto": "O percurso da fiscalização foi acompanhado pelo Sr. Fulano, ...",
   "objetos": ["OBJETO: 1 - MÁQUINA - ... - Paralisação: TOTAL"],
   "ementas": ["XXXXXX-X - Descrição. Capitulação: ..."],
-  "fator_risco": "Mecânico (contato com partes móveis em zona de perigo)",
+  "fator_risco": "Mecânico",
   "excesso_risco": "EXTREMO",
   "descricao_risco": "...",
   "risco_atual": "Consequência SEVERA e probabilidade PROVÁVEL. ...",
@@ -287,12 +287,29 @@ trabalho, desempacotar, editar XML à mão, remontar), que ficam abaixo apenas c
 python ~/.claude/skills/_scripts/montar_rt.py "<dados.json>" "<saida.docx>"
 ```
 
+**Como ele acha cada lugar.** O template traz **marcadores `#`** onde entra o
+texto gerado — `#objetos` na seção 3 e `#irregularidades` na seção 4. O script
+procura esses marcadores **pelo texto**, então o AFT pode movê-los de lugar no
+Word que a montagem continua funcionando. O resto (capa, seções 5 a 8, rodapé) é
+localizado pelo `w14:paraId`.
+
 O script resolve sozinho o que costumava dar errado na edição manual: gera
 `paraId` válido (< 0x80000000), põe as ementas como parágrafos de **lista**
-(`numPr`) — sem isso o `checar_rt_autos.py` conta zero irregularidades —, aplica
-todas as trocas do **modo embargo** e move o item "A) Requerimento expresso..."
-da seção 6 para a seção 7. Se um `paraId` não for encontrado, ele **para com
-erro** (exit 3): sinal de que o template mudou, não de que o RT saiu torto.
+(`numPr`) — sem isso o `checar_rt_autos.py` conta zero irregularidades —
+**logo abaixo do título "4. IRREGULARIDADE(S):"**, antes do bloco fixo da
+metodologia da NR-3; **remove a linha de exemplo** "OBJETO: 1 – ATIVIDADE –
+Paralisação: TOTAL" (é lembrete de formato no template, não pode sair no
+documento real); aplica todas as trocas do **modo embargo**; e move o item
+"A) Requerimento expresso..." da seção 6 para a seção 7. Se um marcador ou um
+`paraId` não for encontrado, ele **para com erro** (exit 3): sinal de que o
+template mudou, não de que o RT saiu torto.
+
+**Rótulos da seção 5 vêm do template.** Nas quatro linhas (`Fator de Risco...`,
+`Descrição:`, `Fundamentação do risco atual:`, `... de referência:`) o script
+**acrescenta o valor ao rótulo existente**, nunca reescreve o rótulo — assim,
+se o AFT reformular um rótulo no Word, a montagem continua correta. Por isso
+`fator_risco` deve ser **curto** (ex.: `Mecânico`, `Queda de altura`): o
+detalhamento vai na `descricao_risco`.
 
 **Numeração das listas:** as `medidas` começam em `A)`; os `documentos` começam
 em `B)`, porque o `A)` da seção 7 é o "Requerimento expresso", inserido pelo
@@ -589,3 +606,5 @@ Competência delegada pela Portaria 1719/2014...
 | Irregularidade só em parte da obra/estabelecimento | Paralisação PARCIAL delimitando o escopo (pavimentos, setor, máquinas), pela regra da menor unidade possível (3.2.2.3.1 da NR-03) |
 | AFT quer foto no RT | Passo 4-bis (`inserir_foto_docx.py`); se a imagem só existir colada no chat, pedir ao AFT para salvá-la como arquivo |
 | Ementas da seção 4 saem sem bullet | Devem ser parágrafos de LISTA (`numPr`, ilvl 2 / numId 1). Sem isso o `checar_rt_autos.py` conta zero irregularidades e acusa divergência falsa |
+| Marcador `#objetos`/`#irregularidades` não encontrado | Foi apagado do template. Recolocá-lo no Word (uma linha própria, no ponto onde o texto deve entrar) ou usar o fallback manual |
+| Ementas aparecendo depois das tabelas da NR-3 | Sinal de montagem antiga: elas vão no `#irregularidades`, logo abaixo do título da seção 4 |
