@@ -6,6 +6,37 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 02/08/2026
+<!-- commit: rt-rgi-embargo-fotos-e-montador -->
+
+**O relatório de interdição aprendeu a diferença entre interditar e embargar, passou
+a aceitar fotos e ficou muito menos sujeito a erro na montagem.** Tudo isso saiu de
+um teste com dois casos completos (máquinas e obra). Você não precisa fazer nada.
+
+- **Embargo x interdição.** A NR-03 separa as duas medidas pelo objeto, não pela
+  gravidade: **obra é sempre embargo**; máquina, setor ou atividade é interdição.
+  A skill não sabia disso e produzia um "Termo de Interdição" mesmo para obra, com
+  o texto todo falando em interdição e o campo pedindo "identificação da máquina".
+  Agora ela decide certo e adapta o documento inteiro sozinha. Também passou a
+  restringir a paralisação ao menor escopo possível (só os pavimentos com problema,
+  por exemplo), como a norma manda.
+- **Fotos dentro do RT.** Antes não havia jeito de pôr foto no relatório. Agora a
+  foto entra no corpo do documento, logo abaixo da irregularidade que ela ilustra,
+  já no tamanho certo da página e com legenda. A única exigência é que a foto
+  exista como arquivo: imagem colada no chat não serve, tem que estar salva.
+- **Montagem do documento sem edição manual.** O relatório era montado editando o
+  "código" do Word à mão, um campo de cada vez — lento e fácil de errar. Um script
+  novo preenche tudo de uma vez e confere o resultado. De quebra, ele evita três
+  defeitos que já apareciam: numeração interna inválida que corrompia o arquivo,
+  ementas sem marcador (que faziam o conferidor acusar erro à toa) e o item
+  "Requerimento expresso" aparecendo entre as medidas em vez de entre os documentos.
+- **Conferidor de coerência mais confiável.** Ele acusava "NR-03 sem auto
+  correspondente" em **todo** relatório, porque a NR-3 é a norma da própria medida e
+  aparece no texto fixo. Esse alarme falso acabou.
+- **Erros de português no modelo oficial corrigidos:** "preoposto" virou "preposto",
+  "da empresa aptos" virou "apto" e "das Norma Regulamentadoras" virou "das Normas
+  Regulamentadoras". Saíam em todos os relatórios emitidos.
+
 ## 01/08/2026
 <!-- commit: rt-rgi-precedentes-de-interdicao -->
 

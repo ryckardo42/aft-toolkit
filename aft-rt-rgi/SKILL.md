@@ -49,10 +49,10 @@ com os dados fornecidos pelo AFT.
 ### Modo de entrada (decida primeiro)
 
 - **Modo A — Criar o RT do zero:** o AFT pede o Relatório Técnico de Interdição/Embargo.
-  Siga o fluxo completo: passos 1 a 6 (montam e salvam o `.docx`) e depois o passo 7 (autos).
+  Siga o fluxo completo: passos 0 a 6 (montam e salvam o `.docx`) e depois o passo 7 (autos).
 - **Modo B — RT/Termo de Interdição já ANEXADO + pedido de autos:** o AFT anexa um RT ou um
   Termo de Interdição pronto e pede "gere os autos de infração". **Não refaça o RT** (pule os
-  passos 2 a 6). Resolva a pasta da OS (passo 1, mínimo: empregador/CNPJ/CPF), **extraia as
+  passos 0 a 6). Resolva a pasta da OS (passo 1, mínimo: empregador/CNPJ/CPF), **extraia as
   irregularidades/ementas e os objetos interditados do documento anexado** e vá direto ao
   **passo 7** para redigir os autos. Use o `.docx`/PDF anexado como o RT da OS (copie-o para a
   pasta `interdicao-embargo/` como elemento de convicção, fazendo backup/checagem de arquivo
@@ -249,7 +249,63 @@ Se algum dado não for fornecido, use um placeholder claro como `[PREENCHER]`.
 
 ---
 
-### 2. Preparar a área de trabalho
+### 2. Montar o documento (caminho padrão)
+
+**Use o `montar_rt.py`.** Ele preenche todas as partes variáveis de uma vez, a
+partir de um JSON, e preserva o conteúdo fixo. Substitui os passos 2 a 5 (área de
+trabalho, desempacotar, editar XML à mão, remontar), que ficam abaixo apenas como
+**fallback** para casos que fujam do padrão.
+
+1. Grave o JSON **com a tool Write** (nunca digite acentos na linha de comando):
+
+```json
+{
+  "modo": "interdicao",
+  "numero_termo": "4.123.456-7",
+  "empregador": "RAZÃO SOCIAL LTDA",
+  "cnpj": "00.000.000/0001-00",
+  "frase_inspecao": "A inspeção física foi realizada em 30/07/2026, ... com subsequente análise de documentos necessários para elaboração deste relatório técnico.",
+  "paragrafo_preposto": "O percurso da fiscalização foi acompanhado pelo Sr. Fulano, ...",
+  "objetos": ["OBJETO: 1 - MÁQUINA - ... - Paralisação: TOTAL"],
+  "ementas": ["XXXXXX-X - Descrição. Capitulação: ..."],
+  "fator_risco": "Mecânico (contato com partes móveis em zona de perigo)",
+  "excesso_risco": "EXTREMO",
+  "descricao_risco": "...",
+  "risco_atual": "Consequência SEVERA e probabilidade PROVÁVEL. ...",
+  "risco_referencia": "Consequência SEVERA e probabilidade RARA. ...",
+  "medidas": ["A) ...", "B) ..."],
+  "documentos": ["B) ...", "C) ..."],
+  "conclusao": ["parágrafo 1", "parágrafo 2"],
+  "cidade_data": "Goiânia-GO, 30/07/2026",
+  "nome_aft": "NOME DO AUDITOR"
+}
+```
+
+2. Rode:
+
+```bash
+python ~/.claude/skills/_scripts/montar_rt.py "<dados.json>" "<saida.docx>"
+```
+
+O script resolve sozinho o que costumava dar errado na edição manual: gera
+`paraId` válido (< 0x80000000), põe as ementas como parágrafos de **lista**
+(`numPr`) — sem isso o `checar_rt_autos.py` conta zero irregularidades —, aplica
+todas as trocas do **modo embargo** e move o item "A) Requerimento expresso..."
+da seção 6 para a seção 7. Se um `paraId` não for encontrado, ele **para com
+erro** (exit 3): sinal de que o template mudou, não de que o RT saiu torto.
+
+**Numeração das listas:** as `medidas` começam em `A)`; os `documentos` começam
+em `B)`, porque o `A)` da seção 7 é o "Requerimento expresso", inserido pelo
+próprio script.
+
+Depois de montar, insira as fotos (passo 4-bis) e salve na pasta da OS (passo 6).
+
+---
+
+### 2-alt. Fallback manual — preparar a área de trabalho
+
+> Só use os passos 2-alt a 5 se o `montar_rt.py` não servir (template diferente,
+> seção que ele não cobre). Caso contrário, vá do passo 2 direto ao 4-bis.
 
 ```bash
 mkdir -p /tmp/RT_temp
@@ -296,7 +352,19 @@ Para adicionar múltiplos objetos na seção 3, replique a estrutura de parágra
 Para adicionar múltiplas medidas/documentos nas seções 6 e 7, insira novos parágrafos com a
 mesma formatação (tabulação).
 
-### 4-bis. Inserir fotografias no RT (quando houver)
+### 5. Remontar e validar o documento
+
+```bash
+python ~/.claude/skills/_scripts/docx_pack.py /tmp/RT_temp/unpacked/ /tmp/RT_temp/RT_Interdicao.docx
+```
+
+O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o
+`document.xml` e rode de novo.
+
+### 5-bis. Inserir fotografias no RT (quando houver)
+
+> Vale para os dois caminhos: tanto depois do `montar_rt.py` (passo 2)
+> quanto depois do fallback manual.
 
 Fotos da inspeção entram **no corpo do RT**, logo depois da ementa ou do objeto
 que ilustram — é o elemento de convicção mais direto do grave e iminente risco.
@@ -317,15 +385,6 @@ python ~/.claude/skills/_scripts/inserir_foto_docx.py "<RT.docx>" "<foto.jpg>" "
 - Rode o script **uma vez por foto**, sempre depois de o `.docx` já estar salvo.
 - **A foto precisa existir como arquivo.** Imagem colada no chat não é arquivo:
   peça ao AFT para salvá-la numa pasta (a da OS, de preferência) e use o caminho.
-
-### 5. Remontar e validar o documento
-
-```bash
-python ~/.claude/skills/_scripts/docx_pack.py /tmp/RT_temp/unpacked/ /tmp/RT_temp/RT_Interdicao.docx
-```
-
-O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o
-`document.xml` e rode de novo.
 
 ### 6. Salvar na pasta da OS
 
