@@ -90,7 +90,7 @@ TEMPLATE = AQUI.parent / "aft-rt-rgi" / "template.docx"
 
 RE_PARAGRAFO = re.compile(r"<w:p\b[^>]*>.*?</w:p>|<w:p\b[^>]*/>", re.S)
 RE_TEXTO = re.compile(r"(<w:t\b[^>]*>)(.*?)(</w:t>)", re.S)
-RE_CHAVE = re.compile(r"\{\{\s*([a-z_]+)\s*\}\}")
+RE_CHAVE = re.compile(r"\{\{\s*([A-Za-z0-9_-]+)\s*\}\}")
 
 # Blocos que se repetem: as chaves que os definem, na ordem do template.
 BLOCO_OBJETOS = ("numero_objeto", "tipo_objeto", "tipo_paralisacao", "objetos")
@@ -98,14 +98,16 @@ BLOCO_FATORES = ("fator_de_risco", "descricao",
                  "fundamentacao_risco_atual", "fundamentacao_risco_referencia")
 
 # Campos simples da capa e do fecho.
-SIMPLES = ("numero_termo", "empregador", "cnpj", "cidade", "uf", "data", "auditor_fiscal")
+SIMPLES = ("numero_termo", "empregador", "cnpj", "Contexto-da-inspecao-fisica",
+           "cidade", "uf", "data", "auditor_fiscal")
 
 # Listas reais do Word.
 NUMID_MEDIDAS = "19"    # lista ja existente: a alinea fixa "Requerimento" e o ultimo item
 NUMID_DOCUMENTOS = "20"  # criada por este script, reiniciando em A)
 ABSTRACT_LETRAS = "1"    # abstractNum da lista A) B) C) (upperLetter, "%1)")
 
-OBRIGATORIOS = ("modo", "numero_termo", "empregador", "cnpj", "objetos",
+OBRIGATORIOS = ("modo", "numero_termo", "empregador", "cnpj",
+                "Contexto-da-inspecao-fisica", "objetos",
                 "irregularidades", "fatores_risco", "medidas_protecao",
                 "documentos_solicitados", "cidade", "uf", "data", "auditor_fiscal")
 
@@ -143,6 +145,54 @@ def esc(t):
 
 def texto_do_paragrafo(p):
     return "".join(m.group(2) for m in RE_TEXTO.finditer(p))
+
+
+def fonte_do_corpo(xml):
+    """Descobre a fonte do corpo olhando os placeholders que a declaram.
+
+    O estilo Normal do template e Verdana; o corpo do RT so fica em Tahoma
+    porque cada run traz um <w:rFonts> proprio. Placeholder sem esse override
+    sai na fonte errada - por isso o script detecta a fonte dominante e a
+    aplica nos paragrafos que gera.
+    """
+    fontes = {}
+    for m in RE_PARAGRAFO.finditer(xml):
+        p = m.group(0)
+        if "{{" not in texto_do_paragrafo(p):
+            continue
+        for f in re.findall(r'<w:rFonts[^>]*w:ascii="([^"]+)"', p):
+            fontes[f] = fontes.get(f, 0) + 1
+    return max(fontes, key=fontes.get) if fontes else None
+
+
+def garantir_fonte(paragrafo, fonte):
+    """Poe <w:rFonts> nos runs que nao declaram fonte propria."""
+    if not fonte:
+        return paragrafo
+    rfonts = (f'<w:rFonts w:ascii="{fonte}" w:eastAsia="{fonte}" '
+              f'w:hAnsi="{fonte}" w:cs="{fonte}"/>')
+
+    def conserta(m):
+        run = m.group(0)
+        if "<w:rFonts" in run or "<w:t" not in run:
+            return run
+        if "<w:rPr>" in run:
+            return run.replace("<w:rPr>", "<w:rPr>" + rfonts, 1)
+        return re.sub(r"(<w:r\b[^>]*>)", r"\1<w:rPr>" + rfonts + "</w:rPr>", run, count=1)
+
+    return re.sub(r"<w:r\b[^>]*>.*?</w:r>", conserta, paragrafo, flags=re.S)
+
+
+def remover_desenhos(paragrafo):
+    """Tira do paragrafo os runs que carregam imagem (<w:drawing>/<w:pict>).
+
+    Alguns placeholders do template tem uma imagem ANCORADA no mesmo paragrafo
+    (o Word prende a figura a um paragrafo qualquer e a posiciona na pagina).
+    Ao repetir esse paragrafo para N itens, a imagem seria duplicada N vezes -
+    por isso ela e mantida so na primeira copia.
+    """
+    return re.sub(r"<w:r\b[^>]*>(?:(?!</w:r>).)*?(?:<w:drawing>|<w:pict>).*?</w:r>",
+                  "", paragrafo, flags=re.S)
 
 
 def substituir_no_paragrafo(p, valores):
@@ -231,7 +281,7 @@ def _span_do_bloco(xml, chaves):
     return ini, fim
 
 
-def repetir_bloco(xml, chaves, itens, rotulo):
+def repetir_bloco(xml, chaves, itens, rotulo, fonte=None):
     """Repete o bloco de paragrafos que contem `chaves`, um por item."""
     ini, fim = _span_do_bloco(xml, chaves)
     molde = xml[ini:fim]
@@ -241,6 +291,9 @@ def repetir_bloco(xml, chaves, itens, rotulo):
         if faltando:
             erro(f"{rotulo} #{i}: faltam os campos {', '.join(faltando)}")
         copia = substituir_no_bloco(molde, item)
+        if i > 1:
+            copia = remover_desenhos(copia)
+        copia = garantir_fonte(copia, fonte)
         copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
                        lambda _: f'w14:paraId="{novo_paraid()}"', copia)
         blocos.append(copia)
@@ -257,7 +310,7 @@ def substituir_no_bloco(bloco, valores):
     return "".join(saida)
 
 
-def expandir_paragrafos(xml, chave, textos):
+def expandir_paragrafos(xml, chave, textos, fonte=None):
     """Troca o paragrafo de um placeholder solitario por N paragrafos iguais."""
     achados = paragrafos_com_chave(xml, chave)
     if not achados:
@@ -265,8 +318,11 @@ def expandir_paragrafos(xml, chave, textos):
              f"Confira {TEMPLATE}", 3)
     m = achados[0]
     copias = []
-    for t in textos:
+    for i, t in enumerate(textos):
         copia = substituir_no_paragrafo(m.group(0), {chave: t})
+        if i:                       # imagem ancorada fica so na primeira copia
+            copia = remover_desenhos(copia)
+        copia = garantir_fonte(copia, fonte)
         copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
                        lambda _: f'w14:paraId="{novo_paraid()}"', copia)
         copias.append(copia)
@@ -288,15 +344,18 @@ def virar_lista(paragrafo, numid):
     return p
 
 
-def expandir_lista(xml, chave, textos, numid):
+def expandir_lista(xml, chave, textos, numid, fonte=None):
     achados = paragrafos_com_chave(xml, chave)
     if not achados:
         erro(f"placeholder {{{{{chave}}}}} nao encontrado no template. "
              f"Confira {TEMPLATE}", 3)
     m = achados[0]
     copias = []
-    for t in textos:
+    for i, t in enumerate(textos):
         copia = substituir_no_paragrafo(m.group(0), {chave: t})
+        if i:
+            copia = remover_desenhos(copia)
+        copia = garantir_fonte(copia, fonte)
         copia = virar_lista(copia, numid)
         copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
                        lambda _: f'w14:paraId="{novo_paraid()}"', copia)
@@ -374,23 +433,26 @@ def montar(dados, destino):
     doc = tmp / "unpacked/word/document.xml"
     xml = doc.read_text(encoding="utf-8")
 
+    fonte = fonte_do_corpo(xml)
+
     if dados["modo"] == "embargo":
         xml = aplicar_embargo(xml)
 
     # blocos repetiveis primeiro (o molde ainda tem os placeholders)
-    xml = repetir_bloco(xml, BLOCO_OBJETOS, dados["objetos"], "objeto")
-    xml = repetir_bloco(xml, BLOCO_FATORES, dados["fatores_risco"], "fator de risco")
+    xml = repetir_bloco(xml, BLOCO_OBJETOS, dados["objetos"], "objeto", fonte)
+    xml = repetir_bloco(xml, BLOCO_FATORES, dados["fatores_risco"], "fator de risco", fonte)
 
     # item 4: um paragrafo por irregularidade
     irregs = dados["irregularidades"]
     if isinstance(irregs, str):
         irregs = [irregs]
-    xml = expandir_paragrafos(xml, "irregularidades", irregs)
+    xml = expandir_paragrafos(xml, "irregularidades", irregs, fonte)
 
     # itens 6 e 7: listas reais do Word
-    xml = expandir_lista(xml, "medidas_protecao", dados["medidas_protecao"], NUMID_MEDIDAS)
+    xml = expandir_lista(xml, "medidas_protecao", dados["medidas_protecao"],
+                         NUMID_MEDIDAS, fonte)
     xml = expandir_lista(xml, "documentos_solicitados",
-                         dados["documentos_solicitados"], NUMID_DOCUMENTOS)
+                         dados["documentos_solicitados"], NUMID_DOCUMENTOS, fonte)
 
     # capa e fecho
     xml = substituir_tudo(xml, {c: dados[c] for c in SIMPLES})

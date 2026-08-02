@@ -123,10 +123,9 @@ Os campos são os do **Dicionário de campos do template** (logo abaixo do passo
 Extraia do contexto (`inspecao-fisica.md`, `memory.md`, PDFs anexados, descrição do
 AFT) ou pergunte. `cidade`, `uf` e `auditor_fiscal` vêm do `aft-config.md`.
 
-**A data da inspeção física** não tem campo próprio: os itens 1 e 2 são texto fixo.
-Ela entra na redação das `irregularidades` ("Na inspeção física realizada em
-DD/MM/AAAA, acompanhada por ..., constatou-se que ..."). Se não encontrar a data em
-lugar algum, **pergunte ao AFT antes de continuar**.
+**A data da inspeção física** entra no campo `Contexto-da-inspecao-fisica`, no
+início do item 2 — **nunca** no item 4. Se não encontrar a data em lugar algum,
+**pergunte ao AFT antes de continuar**.
 
 #### 1a. Identificar as irregularidades
 
@@ -140,8 +139,12 @@ Mesmo quando a ementa não aparece explicitamente no RT, resolvê-la é o que su
 a **capitulação** citada na irregularidade e os **autos derivados** do passo 7.
 
 1. **NotebookLM** (se configurado pelo `/aft-setup`): leia
-   `~/.claude/skills/config/notebooks.json`, identifique a key do notebook
-   `ementario-sst` e a key da NR específica do caso (ex: `nr-12`, `nr-18`, `nr-35`).
+   `~/.claude/skills/config/notebooks.json` e consulte **os dois** notebooks —
+   o `ementario-sst` (código, descrição e capitulação) **e o da NR específica**
+   do caso (`nr-12`, `nr-18`, `nr-35`...). O da NR não é opcional: é ele que
+   confere o texto do subitem contra o fato e costuma apontar **ementa aplicável
+   que passou despercebida** (num teste real, a consulta à NR-18 revelou a
+   318265-7, ausente na resolução feita só pelo ementário).
    Para cada irregularidade, pergunte (uma consulta por irregularidade, em paralelo):
    ```bash
    notebooklm ask "Qual é o código da ementa no formato XXXXXX-X, a descrição completa da ementa e a capitulação legal para a seguinte infração: [descrição objetiva da irregularidade]?" --notebook [notebook_id] --json
@@ -180,6 +183,7 @@ preserva o texto fixo. Os passos 2-alt a 5 ficam abaixo só como **fallback**.
   "numero_termo": "0012345-6",
   "empregador": "RAZÃO SOCIAL LTDA",
   "cnpj": "00.000.000/0000-00",
+  "Contexto-da-inspecao-fisica": "A inspeção física foi realizada em DD/MM/AAAA, ..., acompanhada por ...",
 
   "objetos": [
     {"numero_objeto": "1", "tipo_objeto": "OBRA",
@@ -228,10 +232,17 @@ nenhum outro texto:** os itens 1, 2 e 8, a metodologia da NR-3 e as Tabelas
   quando houver, e o que exatamente ficou paralisado. Prosa objetiva, 1 a 3
   parágrafos. **Sem juízo de valor e sem fundamentação legal** (isso é do item 4).
 
-**Item 4 — `irregularidades`.** Uma por parágrafo. Para cada: o fato observado em
-campo (o quê, onde, quem estava exposto) seguido do dispositivo violado (NR e
-subitem, artigo da CLT). Redação impessoal, no pretérito, verificável. **Não
-antecipar as medidas corretivas** (item 6).
+**Item 2 — `Contexto-da-inspecao-fisica`.** É onde entra o **contexto da ação
+fiscal**, no início do item 2. Deve trazer **sempre, no mínimo, a data da
+inspeção física**; e, quando houver, quem acompanhou (nome e cargo do preposto),
+o local percorrido, o que foi examinado e outros dados relevantes — acidente
+anterior no mesmo posto, denúncia que originou a ação, documentos não
+apresentados na hora. **Nada disso vai no item 4**, que é só das irregularidades.
+
+**Item 4 — `irregularidades`.** Uma por parágrafo, contendo **apenas**: código da
+ementa, descrição da irregularidade e capitulação. Nada de narrativa de inspeção
+(data, quem acompanhou, percurso) — isso é do item 2. Redação impessoal, no
+pretérito, verificável. **Não antecipar as medidas corretivas** (item 6).
 
 **Item 5 — `fatores_risco`.** Lista; o bloco de 4 campos se repete por fator:
 - `fator_de_risco` — nome do fator + excesso de risco pela Tabela 3.3. Só cabe
@@ -264,6 +275,22 @@ alta).
   medidas e os documentos como **lista real**.
 - **Coerência obrigatória:** cada irregularidade (item 4) precisa de fator de risco
   (item 5), medida (item 6) e documento comprobatório (item 7) correspondentes.
+- **Nada de medida ou documento sem irregularidade que o sustente.** Não exigir
+  capacitação, PGR, ordem de serviço ou qualquer outro item que não decorra de uma
+  irregularidade do item 4 — o pedido de suspensão só pode cobrar o que foi autuado.
+- **Nunca afirmar fato que não foi constatado.** Modo operatório, serviço em
+  execução, frequência de exposição e número de expostos só entram se estiverem no
+  relato do AFT ou no `inspecao-fisica.md`. Faltando o dado, escreva
+  `[A CONFIRMAR PELO AFT: ...]` — inventar detalhe verossímil é o defeito mais
+  perigoso deste documento, porque passa despercebido na revisão e cai na
+  impugnação.
+- **Declare o número de expostos** na `descricao` do item 5. O texto fixo do
+  template aplica a **Tabela 3.3**, que vale para exposição individual ou reduzido
+  número de vítimas potenciais; se a exposição for coletiva, avise o AFT de que a
+  tabela do template não é a adequada ao caso.
+- **Interdição/embargo não pode inviabilizar a própria correção.** Ao descrever o
+  objeto, ressalve os serviços necessários ao cumprimento das medidas (do
+  contrário, fechar as aberturas embargadas seria descumprir o embargo).
 - **Nenhum campo vazio.** O script aborta se sobrar qualquer `{{...}}` no
   documento final.
 - Fonte e recuos vêm do template — o script preserva a formatação de cada
@@ -564,3 +591,5 @@ Competência delegada pela Portaria 1719/2014...
 | Placeholder `{{chave}}` não encontrado | Foi apagado do template. Recolocá-lo no Word, exatamente com duas chaves e sem espaços internos, ou usar o fallback manual |
 | Sobrou `{{...}}` no documento final | O script aborta antes de gravar: falta o campo no JSON. Conferir o dicionário |
 | Medidas ou documentos com "A)", "B)" digitados | Remover: a numeração das alíneas é automática no Word e o script insere os itens como lista real |
+| Texto gerado sai em fonte diferente do resto | O estilo `Normal` do template é Verdana e o corpo só fica em Tahoma porque cada run declara a fonte. O `montar_rt.py` detecta a fonte dominante e a aplica no que gera — se ainda assim divergir, conferir se o placeholder novo tem `rFonts` |
+| Imagem do template repetida N vezes | Placeholder com figura ancorada no mesmo parágrafo. O script mantém a imagem só na primeira cópia — conferir se a contagem de imagens do RT bate com a do template |
