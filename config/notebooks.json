@@ -57,6 +57,10 @@
       "notebook_id": "c0b0d976-3b59-49c1-83f0-21111939bdc7",
       "title": "Informalidade"
     },
+    "interdicoes": {
+      "notebook_id": "ff4ce617-28db-425b-a318-16cba0f8d167",
+      "title": "Interdições RGI"
+    },
     "jornada": {
       "notebook_id": "6986d52a-a56c-4854-80c5-c203dc3ae829",
       "title": "JORNADA e Khronos"

@@ -8,7 +8,11 @@ description: >
   "montar o RT", "AFT-RT-RGI". Logo após o RT, redige obrigatoriamente os
   autos derivados das ementas da seção 4. Acione TAMBÉM quando o AFT ANEXAR
   um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta skill
-  que os redige, nunca improvisar por fora.
+  que os redige, nunca improvisar por fora. Acione AINDA quando o AFT
+  descrever uma situação encontrada na inspeção e perguntar se cabe
+  interdição/embargo ("isso é grave e iminente?", "devo interditar?"): a
+  skill consulta precedentes reais de interdição e sugere — quem decide é
+  sempre o AFT.
 ---
 
 # aft-rt-rgi — Relatório Técnico para Interdição e Embargo
@@ -32,7 +36,8 @@ description: >
 
 Gerar um **Relatório Técnico para Interdição e/ou Embargo** em formato `.docx`, baseado no
 modelo oficial incluído no toolkit (`~/.claude/skills/aft-rt-rgi/template.docx`,
-modelo da SRTE/GO — adapte cabeçalho/cidade à sua SRTE se necessário). O documento mantém
+modelo **universal**: cabeçalho, cidade/UF e data já vêm como placeholder genérico,
+qualquer AFT de qualquer SRTE pode usar sem adaptação). O documento mantém
 TODO o conteúdo fixo do modelo (cabeçalho, logotipos, textos legais, citações doutrinárias,
 tabelas NR-3, instruções de suspensão, nota sobre SEI) e preenche apenas as partes variáveis
 com os dados fornecidos pelo AFT.
@@ -44,59 +49,102 @@ com os dados fornecidos pelo AFT.
 ### Modo de entrada (decida primeiro)
 
 - **Modo A — Criar o RT do zero:** o AFT pede o Relatório Técnico de Interdição/Embargo.
-  Siga o fluxo completo: passos 1 a 6 (montam e salvam o `.docx`) e depois o passo 7 (autos).
+  Siga o fluxo completo: passos 0 a 6 (montam e salvam o `.docx`) e depois o passo 7 (autos).
 - **Modo B — RT/Termo de Interdição já ANEXADO + pedido de autos:** o AFT anexa um RT ou um
   Termo de Interdição pronto e pede "gere os autos de infração". **Não refaça o RT** (pule os
-  passos 2 a 6). Resolva a pasta da OS (passo 1, mínimo: empregador/CNPJ/CPF), **extraia as
+  passos 0 a 6). Resolva a pasta da OS (passo 1, mínimo: empregador/CNPJ/CPF), **extraia as
   irregularidades/ementas e os objetos interditados do documento anexado** e vá direto ao
   **passo 7** para redigir os autos. Use o `.docx`/PDF anexado como o RT da OS (copie-o para a
   pasta `interdicao-embargo/` como elemento de convicção, fazendo backup/checagem de arquivo
   aberto antes de sobrescrever).
+- **Modo C — Dúvida de enquadramento (cabe interditar?):** o AFT descreve uma situação
+  encontrada na inspeção e ainda **não decidiu** pela interdição — pergunta se configura
+  risco grave e iminente, se "cabe interdição", ou pede sugestão. Rode a
+  **consulta a precedentes** (seção abaixo) e apresente o resultado: precedentes análogos
+  (nº do termo, ementas usadas, redação do fator de risco) e a sua leitura sobre a
+  similaridade com o caso concreto. **Sugira; nunca decida.** Se o AFT decidir interditar,
+  siga para o Modo A reaproveitando tudo o que a consulta trouxe.
 
-> Em ambos os modos, os autos são redigidos AQUI (nesta skill) — nunca improvisados fora dela.
+> Em todos os modos, os autos são redigidos AQUI (nesta skill) — nunca improvisados fora dela.
+
+### Consulta a precedentes de interdição (notebook `interdicoes`)
+
+O toolkit mantém uma base de **precedentes reais**: mais de uma centena de Relatórios
+Técnicos de Interdição/Embargo (máquinas NR-12, obras NR-18/NR-35, e outros), cada um com
+objetos interditados, ementas, fatores de risco, medidas de proteção e documentos
+solicitados. Ela vive no NotebookLM, na key `interdicoes` do
+`~/.claude/skills/config/notebooks.json`.
+
+- **Quando consultar:** sempre no **Modo C**; e no **Modo A** quando o AFT não ditar o
+  conteúdo das seções 5, 6 ou 7 (fatores de risco, medidas de proteção, documentos) — os
+  precedentes viram a minuta proposta, que o AFT revisa.
+- **Como consultar** (uma pergunta objetiva por situação):
+  ```bash
+  notebooklm ask "Situação encontrada: [descrição objetiva]. Há precedentes de interdição para essa situação? Cite os números dos termos, as ementas usadas (código e descrição), como foi redigida a seção de fatores de risco (risco atual x risco de referência, excesso de risco) e quais medidas de proteção e documentos foram exigidos." --notebook [notebook_id de 'interdicoes'] --json
+  ```
+- **Como apresentar:** cite os termos precedentes pelo número (rastreabilidade), mas deixe
+  claro que precedente **não substitui** a avaliação do caso concreto — a decisão de
+  interditar é ato do AFT (art. 161 da CLT).
+- **Se a key `interdicoes` não existir** no `notebooks.json` (ou o NotebookLM não responder
+  mesmo após a reconexão automática), **pule a camada sem alarde**: no Modo C, diga que a
+  base de precedentes não está configurada e siga com a análise pelos critérios da NR-03;
+  nos demais modos, peça os dados ao AFT como sempre.
+- Os precedentes **não dispensam** o sub-fluxo 4b (resolução de ementas): eles servem de
+  cheque cruzado ("em casos análogos usou-se a ementa X"), mas o código/capitulação final
+  continua vindo do ementário.
+
+### 0. Decidir: INTERDIÇÃO ou EMBARGO (antes de qualquer coisa)
+
+A NR-03 separa as duas medidas **pelo objeto**, não pela gravidade:
+
+| Objeto atingido | Medida | Fundamento |
+|---|---|---|
+| **Obra** (construção, montagem, instalação, manutenção, reforma) | **EMBARGO** | subitem 3.2.2.1 da NR-03 |
+| Atividade, **máquina ou equipamento**, setor de serviço ou estabelecimento | **INTERDIÇÃO** | subitem 3.2.2.2 da NR-03 |
+
+Adote sempre a **menor unidade possível** capaz de afastar o risco (subitem
+3.2.2.3.1 da NR-03) — é o que justifica "Paralisação: PARCIAL" restrita a
+pavimentos, setores ou máquinas determinadas, em vez de paralisar tudo.
+
+**Quando for EMBARGO, o template exige adaptações** — ele é redigido para
+interdição. Basta pôr `"modo": "embargo"` no JSON: o `montar_rt.py` troca sozinho
+o título, o cabeçalho do item 3 (`OBJETO(S) EMBARGADO(S):`), as menções do item 1
+e, no item 8, "suspensão da interdição" → "do embargo", "Termo de Interdição" →
+"de Embargo" e "identificação da(s) máquina(s) ou setor de serviço" →
+"identificação da obra ou da frente de trabalho".
+
+> São as **únicas** alterações no texto fixo, e existem porque um embargo de obra
+> não pode sair chamado de interdição (NR-03, 3.2.2.1). Todo o resto dos itens
+> 1, 2 e 8 permanece literal.
 
 ### 1. Coletar os dados necessários
 
-Solicite ao usuário (ou extraia do contexto/PDFs anexados/`inspecao-fisica.md`/`memory.md`
-da OS) as seguintes informações:
+Os campos são os do **Dicionário de campos do template** (logo abaixo do passo 2).
+Extraia do contexto (`inspecao-fisica.md`, `memory.md`, PDFs anexados, descrição do
+AFT) ou pergunte. `cidade`, `uf` e `auditor_fiscal` vêm do `aft-config.md`.
 
-**Identificação (capa):**
-- Número do Termo de Interdição (substitui `XXXXX` no título)
-- Nome do empregador (substitui `XXXX` em EMPREGADOR)
-- CNPJ (substitui `XXXXX` em CNPJ)
+**A data da inspeção física** entra no campo `Contexto-da-inspecao-fisica`, no
+início do item 2 — **nunca** no item 4. Se não encontrar a data em lugar algum,
+**pergunte ao AFT antes de continuar**.
 
-**Seção 1 — OBJETIVO (complemento):**
-- Data exata da inspeção física. Extraia do contexto disponível (`inspecao-fisica.md`,
-  `memory.md`, PDFs anexados). Se não encontrar em lugar algum, **pergunte ao usuário
-  antes de continuar**.
+#### 1a. Identificar as irregularidades
 
-**Seção 2 — DA AÇÃO FISCAL:**
-O texto é fixo (citações da OIT, Portaria MTE 1.719/2014, etc.). O único ajuste necessário é
-adaptar a NR citada ao caso concreto (padrão: NR-12; substituir se for outra). O último
-parágrafo da seção 2 menciona o preposto e a análise — ajuste se necessário.
+A partir do contexto, liste cada irregularidade de forma objetiva e separada. Cada
+uma vira um parágrafo do item 4 e precisa ter, no item 5, um fator de risco
+correspondente; no item 6, uma medida; e no item 7, um documento comprobatório.
 
-**Seção 3 — OBJETOS INTERDITADO:**
-- Número do objeto (ex: 1, 2...)
-- Descrição do objeto (ex: ATIVIDADE — Paralisação: TOTAL | ou MÁQUINA: ..., SETOR: ...)
+#### 1b. Resolver as ementas (3 camadas)
 
-**Seção 4 — IRREGULARIDADES:**
-
-A seção 4 lista as ementas das infrações, uma por linha, no formato:
-
-```
-XXXXXX-X - [Descrição completa da ementa]. Capitulação: [fundamento legal].
-```
-
-Para montar esse conteúdo, siga o sub-fluxo abaixo **antes de editar o XML**:
-
-**4a. Identificar as irregularidades** a partir do contexto (`inspecao-fisica.md`, PDFs
-anexados, descrição do AFT). Liste cada irregularidade de forma objetiva e separada.
-
-**4b. Resolver as ementas (3 camadas):**
+Mesmo quando a ementa não aparece explicitamente no RT, resolvê-la é o que sustenta
+a **capitulação** citada na irregularidade e os **autos derivados** do passo 7.
 
 1. **NotebookLM** (se configurado pelo `/aft-setup`): leia
-   `~/.claude/skills/config/notebooks.json`, identifique a key do notebook
-   `ementario-sst` e a key da NR específica do caso (ex: `nr-12`, `nr-13`, `nr-35`).
+   `~/.claude/skills/config/notebooks.json` e consulte **os dois** notebooks —
+   o `ementario-sst` (código, descrição e capitulação) **e o da NR específica**
+   do caso (`nr-12`, `nr-18`, `nr-35`...). O da NR não é opcional: é ele que
+   confere o texto do subitem contra o fato e costuma apontar **ementa aplicável
+   que passou despercebida** (num teste real, a consulta à NR-18 revelou a
+   318265-7, ausente na resolução feita só pelo ementário).
    Para cada irregularidade, pergunte (uma consulta por irregularidade, em paralelo):
    ```bash
    notebooklm ask "Qual é o código da ementa no formato XXXXXX-X, a descrição completa da ementa e a capitulação legal para a seguinte infração: [descrição objetiva da irregularidade]?" --notebook [notebook_id] --json
@@ -104,82 +152,176 @@ anexados, descrição do AFT). Liste cada irregularidade de forma objetiva e sep
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).
    > Só passe à camada seguinte se ele ainda assim não responder.
+   > **Cheque cruzado obrigatório:** confira a ementa sugerida pelos precedentes contra o
+   > ementário. Precedente indica caminho, não capitulação — máquina parecida pode estar
+   > em anexo diferente da NR (ex.: sopradora **não** é do Anexo IX da NR-12, que só cobre
+   > injetoras).
 2. **Ementário no Google Drive** (manual): oriente o AFT a abrir
    https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
    (pasta `EMENTAS SST` → `ementasNRXX.md`) e colar o trecho da ementa.
 3. **Pedir ao AFT** o código/descrição/capitulação diretamente.
 
-Se nenhuma camada retornar código de ementa para alguma irregularidade, insira
-`[EMENTA A PREENCHER]` naquela linha e informe o AFT ao final da execução.
+Se nenhuma camada retornar a ementa, cite na irregularidade apenas o dispositivo
+violado (NR/subitem + artigo da CLT) e **avise o AFT ao final** que aquela ementa
+ficou pendente — ela é necessária no passo 7.
 
-**4c. Montar o bloco** como **parágrafos `<w:p>` separados com bullet**, um por ementa.
-Cada ementa deve ser um parágrafo independente — NUNCA um único `<w:t>` com `\n\n`.
+> **Itens 5, 6 e 7 sem dados do AFT?** Consulte os precedentes (seção "Consulta a
+> precedentes de interdição") com a descrição da situação e **proponha a minuta**
+> baseada nos casos análogos, marcando-a como proposta para o AFT revisar.
 
-Formato visual final (um bullet por ementa, logo abaixo do cabeçalho "4. IRREGULARIDADES:"):
+### 2. Montar o documento (caminho padrão)
 
+**Use o `montar_rt.py`.** O template traz placeholders `{{chave}}`; o script
+substitui cada um, repete os blocos que se repetem, monta as listas do Word e
+preserva o texto fixo. Os passos 2-alt a 5 ficam abaixo só como **fallback**.
+
+1. Grave o JSON **com a tool Write** (nunca digite acentos na linha de comando):
+
+```json
+{
+  "modo": "embargo",
+  "numero_termo": "0012345-6",
+  "empregador": "RAZÃO SOCIAL LTDA",
+  "cnpj": "00.000.000/0000-00",
+  "Contexto-da-inspecao-fisica": "A inspeção física foi realizada em DD/MM/AAAA, ..., acompanhada por ...",
+
+  "objetos": [
+    {"numero_objeto": "1", "tipo_objeto": "OBRA",
+     "tipo_paralisacao": "PARCIAL", "objetos": "descrição do que ficou paralisado..."}
+  ],
+
+  "irregularidades": ["parágrafo 1", "parágrafo 2"],
+
+  "fatores_risco": [
+    {"fator_de_risco": "Queda de altura - Extremo (E)",
+     "descricao": "...",
+     "fundamentacao_risco_atual": "Consequência MORTE e probabilidade PROVÁVEL. ...",
+     "fundamentacao_risco_referencia": "Consequência MORTE e probabilidade RARA. ..."}
+  ],
+
+  "medidas_protecao": ["medida 1", "medida 2"],
+  "documentos_solicitados": ["documento 1", "documento 2"],
+
+  "cidade": "Goiânia", "uf": "GO", "data": "29/07/2026",
+  "auditor_fiscal": "NOME DO AUDITOR"
+}
 ```
-• XXXXXX-X - [Descrição da ementa]. Capitulação: [fundamento legal].
-• XXXXXX-X - [Descrição da ementa]. Capitulação: [fundamento legal].
+
+2. Rode:
+
+```bash
+python ~/.claude/skills/_scripts/montar_rt.py "<dados.json>" "<saida.docx>"
 ```
 
-**XML correto para cada ementa** (substituir o parágrafo vazio `39A36EBD` por N parágrafos):
+## Dicionário de campos do template
 
-```xml
-<w:p w14:paraId="XXXXXXXX" w14:textId="77777777"
-     w:rsidR="00B0080B" w:rsidRDefault="00B0080B" w:rsidP="00CD6010">
-  <w:pPr>
-    <w:pStyle w:val="Corpodetexto"/>
-    <w:numPr>
-      <w:ilvl w:val="2"/>
-      <w:numId w:val="1"/>
-    </w:numPr>
-    <w:spacing w:line="360" w:lineRule="auto"/>
-    <w:ind w:right="424"/>
-    <w:jc w:val="both"/>
-    <w:rPr>
-      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Tahoma"/>
-      <w:sz w:val="22"/><w:szCs w:val="22"/>
-    </w:rPr>
-  </w:pPr>
-  <w:r>
-    <w:rPr>
-      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Tahoma"/>
-      <w:sz w:val="22"/><w:szCs w:val="22"/>
-    </w:rPr>
-    <w:t xml:space="preserve">XXXXXX-X - [Descrição]. Capitulação: [fundamento].</w:t>
-  </w:r>
-</w:p>
-```
+Formato `{{chave}}`, substituição literal, sem espaços internos. **Não alterar
+nenhum outro texto:** os itens 1, 2 e 8, a metodologia da NR-3 e as Tabelas
+3.1/3.2/3.3 são texto fixo e juridicamente vinculado.
 
-**Restrições críticas para `w14:paraId`:**
-- Deve ser um hex de 8 dígitos com valor **< 0x80000000** (ex: `03091C72`)
-- Nunca usar UUID completo — gerar com `random.randint(1, 0x7FFFFFFE)` formatado como `{n:08X}`
-- Valor ≥ 0x80000000 causa falha de validação do DOCX
+**Cabeçalho** — `numero_termo` (só dígitos/formato oficial, sem "nº"),
+`empregador` (razão social como no CNPJ, sem endereço), `cnpj` (formatado
+`00.000.000/0000-00`).
 
-**Seção 5 — FATORES DE RISCO E/OU RISCOS RELACIONADOS:**
-- Fator de Risco e excesso de risco (ex: Extremo/Significativo)
-- Descrição do risco
-- Fundamentação do risco atual (situação encontrada)
-- Fundamentação do risco de referência (situação objetivo)
+**Item 3 — objetos.** Lista de objetos; o bloco inteiro se repete para cada um:
+- `numero_objeto` — ordinal no Termo (1, 2...);
+- `tipo_objeto` — caixa alta: ATIVIDADE | MÁQUINA | EQUIPAMENTO | SETOR | SERVIÇO
+  (e OBRA, no embargo);
+- `tipo_paralisacao` — caixa alta: TOTAL | PARCIAL;
+- `objetos` — descrição: identificação física, localização, nº de série/patrimônio
+  quando houver, e o que exatamente ficou paralisado. Prosa objetiva, 1 a 3
+  parágrafos. **Sem juízo de valor e sem fundamentação legal** (isso é do item 4).
 
-**Seção 6 — MEDIDAS DE PROTEÇÃO A ADOTAR:**
-- Lista das medidas (uma por parágrafo de tabulação)
+**Item 2 — `Contexto-da-inspecao-fisica`.** É onde entra o **contexto da ação
+fiscal**, no início do item 2. Deve trazer **sempre, no mínimo, a data da
+inspeção física**; e, quando houver, quem acompanhou (nome e cargo do preposto),
+o local percorrido, o que foi examinado e outros dados relevantes — acidente
+anterior no mesmo posto, denúncia que originou a ação, documentos não
+apresentados na hora. **Nada disso vai no item 4**, que é só das irregularidades.
 
-**Seção 7 — DOCUMENTOS SOLICITADOS:**
-- Lista dos documentos (um por parágrafo de tabulação)
+**Item 4 — `irregularidades`.** Uma por parágrafo, contendo **apenas**: código da
+ementa, descrição da irregularidade e capitulação. Nada de narrativa de inspeção
+(data, quem acompanhou, percurso) — isso é do item 2. Redação impessoal, no
+pretérito, verificável. **Não antecipar as medidas corretivas** (item 6).
 
-**Seção 8 — CONCLUSÃO/OBSERVAÇÃO:**
-- Texto de conclusão (breve, objetivo)
+**Item 5 — `fatores_risco`.** Lista; o bloco de 4 campos se repete por fator:
+- `fator_de_risco` — nome do fator + excesso de risco pela Tabela 3.3. Só cabe
+  interdição/embargo com excesso **Extremo (E)** ou **Substancial (S)**. O rótulo
+  do template já diz "excesso de risco:" — não repita a expressão no valor;
+- `descricao` — como o trabalhador interage com o fator: modo operatório,
+  tempo/frequência de exposição, nº de expostos, condições do ambiente;
+- `fundamentacao_risco_atual` — justificativa da CONSEQUÊNCIA (Tabela 3.1) e da
+  PROBABILIDADE (Tabela 3.2) na situação encontrada, **nomeando as categorias**;
+- `fundamentacao_risco_referencia` — a mesma dupla na situação objetivo, após as
+  medidas. A distância entre as duas é o excesso de risco declarado acima.
 
-**Rodapé:**
-- Cidade e data (substitui `XXXXX-GO, XX/XX/2026` — use o município/UF do `aft-config.md`)
-- Nome do AFT (substitui `XXXXXXXX` — use `nome_auditor` do `aft-config.md`)
+**Item 6 — `medidas_protecao`.** Uma medida por item, no infinitivo, cada uma
+vinculada à irregularidade e ao dispositivo correspondentes, verificáveis
+documentalmente. A alínea fixa "Requerimento expresso..." do template permanece
+como **último item** da lista — o script cuida disso.
 
-Se algum dado não for fornecido, use um placeholder claro como `[PREENCHER]`.
+**Item 7 — `documentos_solicitados`.** Os documentos que comprovarão as medidas do
+item 6: ART/laudos, projetos, manuais, ordens de serviço, PGR/PCMSO, certificados
+de treinamento, registros fotográficos, notas fiscais. Um por item. **Manter os
+nomes idênticos aos citados no item 6** (o inciso III do item 8 os referencia).
 
----
+**Fecho** — `cidade`, `uf` (sigla), `data`, `auditor_fiscal` (nome completo, caixa
+alta).
 
-### 2. Preparar a área de trabalho
+### Regras de preenchimento (valem para o JSON inteiro)
+
+- **Não digite numeração nem marcador** — nada de "3.", "A)", "-", "•", "1.": a
+  numeração dos itens e das alíneas é automática no Word, e o script insere as
+  medidas e os documentos como **lista real**.
+- **Coerência obrigatória:** cada irregularidade (item 4) precisa de fator de risco
+  (item 5), medida (item 6) e documento comprobatório (item 7) correspondentes.
+- **Nada de medida ou documento sem irregularidade que o sustente.** Não exigir
+  capacitação, PGR, ordem de serviço ou qualquer outro item que não decorra de uma
+  irregularidade do item 4 — o pedido de suspensão só pode cobrar o que foi autuado.
+- **Nunca afirmar fato que não foi constatado.** Modo operatório, serviço em
+  execução, frequência de exposição e número de expostos só entram se estiverem no
+  relato do AFT ou no `inspecao-fisica.md`. Faltando o dado, escreva
+  `[A CONFIRMAR PELO AFT: ...]` — inventar detalhe verossímil é o defeito mais
+  perigoso deste documento, porque passa despercebido na revisão e cai na
+  impugnação.
+- **Declare o número de expostos** na `descricao` do item 5 — é exigência do
+  dicionário.
+- **Ao citar a matriz de excesso de risco, escreva "pela tabela da NR-03"**, sem
+  numerar. O trecho do template que menciona a Tabela 3.3 começa com "Como
+  exemplo": é ilustração de enquadramento, não a matriz do caso concreto. Citar
+  "Tabela 3.3" no texto gerado amarra o RT a uma hipótese específica de exposição
+  e cria brecha de impugnação sem necessidade. As Tabelas 3.1 (consequência) e
+  3.2 (probabilidade) podem ser citadas nominalmente — essas são definitórias.
+- **Interdição/embargo não pode inviabilizar a própria correção.** Ao descrever o
+  objeto, ressalve os serviços necessários ao cumprimento das medidas (do
+  contrário, fechar as aberturas embargadas seria descumprir o embargo).
+- **Nenhum campo vazio.** O script aborta se sobrar qualquer `{{...}}` no
+  documento final.
+- Fonte e recuos vêm do template — o script preserva a formatação de cada
+  placeholder, inclusive rótulos em negrito.
+
+**Formatação: o script normaliza, não confia no placeholder.** Os placeholders do
+template nem sempre carregam a formatação do corpo (justificação, entrelinha,
+recuo), e o texto gerado saía destoando do resto. O `montar_rt.py` agora força o
+padrão do corpo — **justificado, entrelinha 1,5** — em objetos, irregularidades,
+fatores de risco, medidas e documentos; põe **recuo de primeira linha** no
+contexto da inspeção; transforma as **ementas do item 4 em lista com marcador**
+(criando a lista, que o template não tem); e remove o parágrafo vazio que o
+template deixa antes da alínea fixa do item 6, responsável por uma quebra dupla
+antes do último item. Ao reescrever o `<w:pPr>`, respeita a **ordem exigida pelo
+schema OOXML** (`pStyle → numPr → tabs → adjustRightInd → spacing → ind → jc →
+rPr`): fora de ordem, o Word acusa documento corrompido.
+
+**O que o script resolve sozinho:** placeholder partido entre runs (o Word quebra
+`{{chave}}` em pedaços ao editar); numeração automática das listas, com a alínea
+fixa no fim do item 6 e o item 7 reiniciando em A); e as trocas do **modo
+embargo** no texto fixo. Se um placeholder sumir do template, ele **para com erro**
+(exit 3) — sinal de template alterado, não de RT torto.
+
+### 2-alt. Fallback manual — preparar a área de trabalho
+
+> Só use os passos 2-alt a 5 se o `montar_rt.py` não servir (template diferente,
+> seção que ele não cobre). Caso contrário, vá do passo 2 direto ao 4-bis.
 
 ```bash
 mkdir -p /tmp/RT_temp
@@ -211,6 +353,7 @@ seguintes placeholders pelo conteúdo fornecido pelo usuário:
 | `Descrição:` (linha em branco após) | Descrição do risco |
 | `Fundamentação do risco atual:` (linha em branco) | Fundamentação do risco atual |
 | `Fundamentação do risco de referência` (linha em branco) | Fundamentação do risco de referência |
+| Parágrafo `A) Requerimento expresso...` (fim da seção 6) | **Mover para o início da seção 7** — é documento a apresentar, não medida de proteção; o template o deixa preso à seção 6. As medidas então ocupam a seção 6 numeradas a partir de `A)`, e os documentos seguem a partir de `B)` |
 | Parágrafos vazios de tabulação em seção 6 | Medidas de proteção |
 | Parágrafos vazios de tabulação em seção 7 | Documentos solicitados |
 | Parágrafo vazio após "8. CONCLUSÃO/OBSERVAÇÃO:" | Texto de conclusão |
@@ -233,6 +376,31 @@ python ~/.claude/skills/_scripts/docx_pack.py /tmp/RT_temp/unpacked/ /tmp/RT_tem
 
 O `docx_pack.py` valida o XML antes de empacotar — se acusar erro, corrija o
 `document.xml` e rode de novo.
+
+### 5-bis. Inserir fotografias no RT (quando houver)
+
+> Vale para os dois caminhos: tanto depois do `montar_rt.py` (passo 2)
+> quanto depois do fallback manual.
+
+Fotos da inspeção entram **no corpo do RT**, logo depois da ementa ou do objeto
+que ilustram — é o elemento de convicção mais direto do grave e iminente risco.
+Não edite o XML da imagem à mão: use o script, que embute o arquivo em
+`word/media/`, cria a relação e monta o `<w:drawing>` já dimensionado para a
+mancha do texto (máx. 15,5 cm de largura, proporção preservada):
+
+```bash
+python ~/.claude/skills/_scripts/inserir_foto_docx.py "<RT.docx>" "<foto.jpg>" "<trecho do parágrafo âncora>" "<legenda>"
+```
+
+- O **parágrafo âncora** é um trecho de texto que já existe no documento (ex.: o
+  começo da ementa `318264-9 - Utilizar escada portátil`); a foto entra logo
+  depois dele. Se o trecho aparecer mais de uma vez, o script usa a última
+  ocorrência.
+- A **legenda** deve dizer o que se vê, onde e quando (ex.: `Fotografia 1 -
+  Pavimento 19: abertura no piso sem fechamento. Inspeção de 29/07/2026.`).
+- Rode o script **uma vez por foto**, sempre depois de o `.docx` já estar salvo.
+- **A foto precisa existir como arquivo.** Imagem colada no chat não é arquivo:
+  peça ao AFT para salvá-la numa pasta (a da OS, de preferência) e use o caminho.
 
 ### 6. Salvar na pasta da OS
 
@@ -428,6 +596,16 @@ Competência delegada pela Portaria 1719/2014...
 | Múltiplas irregularidades | Consultar NotebookLM em paralelo, uma pergunta por irregularidade |
 | Mesma ementa atinge múltiplos objetos | 1 único auto na Fase 7, listando todos os objetos na parte 2 (não duplicar) |
 | Ementa ficou como `[EMENTA A PREENCHER]` no RT | Pular esta ementa na Fase 7 e avisar o AFT no fechamento |
+| AFT em dúvida se a situação justifica interdição | Modo C: consultar o notebook `interdicoes` e apresentar precedentes análogos — sugerir, nunca decidir |
+| Key `interdicoes` ausente no notebooks.json | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
-| AFT de outra SRTE (não GO) | Avisar que o template é da SRTE/GO; preencher cidade/UF do aft-config.md e sugerir ajustar o cabeçalho no Word após gerar |
+| AFT de outra SRTE | Template é universal, nenhum ajuste necessário |
+| Medida recai sobre **obra** | É EMBARGO, não interdição (subitem 3.2.2.1 da NR-03) — aplicar as trocas do passo 0 |
+| Irregularidade só em parte da obra/estabelecimento | Paralisação PARCIAL delimitando o escopo (pavimentos, setor, máquinas), pela regra da menor unidade possível (3.2.2.3.1 da NR-03) |
+| AFT quer foto no RT | Passo 4-bis (`inserir_foto_docx.py`); se a imagem só existir colada no chat, pedir ao AFT para salvá-la como arquivo |
+| Placeholder `{{chave}}` não encontrado | Foi apagado do template. Recolocá-lo no Word, exatamente com duas chaves e sem espaços internos, ou usar o fallback manual |
+| Sobrou `{{...}}` no documento final | O script aborta antes de gravar: falta o campo no JSON. Conferir o dicionário |
+| Medidas ou documentos com "A)", "B)" digitados | Remover: a numeração das alíneas é automática no Word e o script insere os itens como lista real |
+| Texto gerado sai em fonte diferente do resto | O estilo `Normal` do template é Verdana e o corpo só fica em Tahoma porque cada run declara a fonte. O `montar_rt.py` detecta a fonte dominante e a aplica no que gera — se ainda assim divergir, conferir se o placeholder novo tem `rFonts` |
+| Imagem do template repetida N vezes | Placeholder com figura ancorada no mesmo parágrafo. O script mantém a imagem só na primeira cópia — conferir se a contagem de imagens do RT bate com a do template |

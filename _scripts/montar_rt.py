@@ -1,0 +1,609 @@
+#!/usr/bin/env python3
+"""
+montar_rt.py - monta o Relatorio Tecnico de Interdicao/Embargo (.docx) a partir
+do template oficial do toolkit e de um arquivo JSON com os campos.
+
+O template traz placeholders no formato {{chave}} (ver "Dicionario de campos" na
+skill /aft-rt-rgi). O script substitui cada chave pelo valor, repete os blocos
+que se repetem (objetos e fatores de risco), monta as listas reais do Word
+(medidas e documentos) e preserva TODO o texto fixo - itens 1, 2 e 8, a
+metodologia da NR-3 e as Tabelas 3.1/3.2/3.3 sao juridicamente vinculados.
+
+Pontos que ele resolve sozinho:
+  - placeholder partido entre runs (o Word quebra {{chave}} em varios pedacos ao
+    editar): a substituicao e feita no nivel dos runs, preservando a formatacao;
+  - numeracao automatica: medidas e documentos entram como itens de LISTA do
+    Word, sem "A)"/"B)" digitados. A alinea fixa "Requerimento expresso..."
+    continua sendo o ultimo item do item 6;
+  - o item 7 recebe uma lista propria, que reinicia em A);
+  - modo "embargo": troca o texto fixo que fala em interdicao (NR-03, 3.2.2.1:
+    embargo e para OBRA; 3.2.2.2: interdicao e para maquina/setor/atividade);
+  - valida ao final que nenhum {{...}} sobrou no documento.
+
+Uso:
+    python montar_rt.py "<dados.json>" "<saida.docx>"
+
+O JSON deve ser gravado com a tool Write (nunca digitado no comando: acentos
+viram lixo quando interpolados na linha de comando do Windows). Formato:
+
+{
+  "modo": "interdicao" | "embargo",
+  "numero_termo": "0012345-6",
+  "empregador": "RAZAO SOCIAL LTDA",
+  "cnpj": "00.000.000/0000-00",
+
+  "objetos": [
+    {"numero_objeto": "1", "tipo_objeto": "MAQUINA",
+     "tipo_paralisacao": "TOTAL", "objetos": "descricao do objeto..."}
+  ],
+
+  "irregularidades": ["paragrafo 1", "paragrafo 2"],
+
+  "fatores_risco": [
+    {"fator_de_risco": "Queda de altura - excesso de risco: Extremo (E)",
+     "descricao": "...",
+     "fundamentacao_risco_atual": "...",
+     "fundamentacao_risco_referencia": "..."}
+  ],
+
+  "medidas_protecao": ["medida 1", "medida 2"],
+  "documentos_solicitados": ["documento 1", "documento 2"],
+
+  "cidade": "Goiania", "uf": "GO", "data": "29/07/2026",
+  "auditor_fiscal": "NOME DO AUDITOR"
+}
+
+Nao digite "A)", "B)", "3." nem marcadores (-, *) nos textos: a numeracao e
+automatica no Word. Depois de montar, use o inserir_foto_docx.py para as fotos.
+
+Exit 0 = documento gerado; 2 = erro de uso/dados; 3 = template incompativel.
+"""
+
+try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
+    import sys as _sys
+    from pathlib import Path as _Path
+    _aqui = _Path(__file__).resolve()
+    for _p in (_aqui.parent, *(_a / "_scripts" for _a in _aqui.parents)):
+        if (_p / "erro_ticket.py").is_file():
+            _sys.path.insert(0, str(_p))
+            from erro_ticket import ativar as _ativar_ticket
+            _ativar_ticket(__file__)
+            break
+except Exception:
+    pass
+
+import json
+import random
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
+AQUI = Path(__file__).resolve().parent
+TEMPLATE = AQUI.parent / "aft-rt-rgi" / "template.docx"
+
+RE_PARAGRAFO = re.compile(r"<w:p\b[^>]*>.*?</w:p>|<w:p\b[^>]*/>", re.S)
+RE_TEXTO = re.compile(r"(<w:t\b[^>]*>)(.*?)(</w:t>)", re.S)
+RE_CHAVE = re.compile(r"\{\{\s*([A-Za-z0-9_-]+)\s*\}\}")
+
+# Blocos que se repetem: as chaves que os definem, na ordem do template.
+BLOCO_OBJETOS = ("numero_objeto", "tipo_objeto", "tipo_paralisacao", "objetos")
+BLOCO_FATORES = ("fator_de_risco", "descricao",
+                 "fundamentacao_risco_atual", "fundamentacao_risco_referencia")
+
+# Campos simples da capa e do fecho.
+SIMPLES = ("numero_termo", "empregador", "cnpj", "Contexto-da-inspecao-fisica",
+           "cidade", "uf", "data", "auditor_fiscal")
+
+# Listas reais do Word.
+NUMID_MEDIDAS = "19"    # lista ja existente: a alinea fixa "Requerimento" e o ultimo item
+NUMID_DOCUMENTOS = "20"  # criada por este script, reiniciando em A)
+NUMID_BULLET = "21"      # criada por este script: marcadores das ementas do item 4
+ABSTRACT_BULLET = "19"   # abstractNum do marcador (criado junto com o numId 21)
+
+# Padrao do corpo do RT, copiado dos paragrafos fixos do template.
+ESPACAMENTO_CORPO = '<w:spacing w:line="360" w:lineRule="auto"/>'
+RECUO_CORPO = '<w:ind w:left="112" w:firstLine="708"/>'
+
+# Ordem em que os filhos de <w:pPr> devem aparecer (exigencia do schema OOXML:
+# fora de ordem, o Word acusa documento corrompido).
+ORDEM_PPR = ("pStyle", "numPr", "tabs", "adjustRightInd", "spacing", "ind", "jc", "rPr")
+ABSTRACT_LETRAS = "1"    # abstractNum da lista A) B) C) (upperLetter, "%1)")
+
+OBRIGATORIOS = ("modo", "numero_termo", "empregador", "cnpj",
+                "Contexto-da-inspecao-fisica", "objetos",
+                "irregularidades", "fatores_risco", "medidas_protecao",
+                "documentos_solicitados", "cidade", "uf", "data", "auditor_fiscal")
+
+# Trocas do modo embargo: o template e redigido para interdicao.
+TROCAS_EMBARGO = (
+    ("TERMO DE INTERDIÇÃO", "TERMO DE EMBARGO"),
+    ("OBJETO(S) INTERDITADO(S):", "OBJETO(S) EMBARGADO(S):"),
+    ("objetos interditados citados no Termo de Interdição anexo",
+     "objetos embargados citados no Termo de Embargo anexo"),
+    ("DO PEDIDO DE SUSPENSÃO DA INTERDIÇÃO", "DO PEDIDO DE SUSPENSÃO DO EMBARGO"),
+    ("suspensão da interdição", "suspensão do embargo"),
+    ("I - o número do Termo de Interdição;", "I - o número do Termo de Embargo;"),
+    ("II - a identificação da(s) máquina(s) ou setor de serviço;",
+     "II - a identificação da obra ou da frente de trabalho;"),
+)
+
+
+def erro(msg, codigo=2):
+    print(f"ERRO: {msg}", file=sys.stderr)
+    sys.exit(codigo)
+
+
+def novo_paraid():
+    """paraId valido: hex de 8 digitos < 0x80000000 (valor maior quebra o DOCX)."""
+    return f"{random.randint(1, 0x7FFFFFFE):08X}"
+
+
+def esc(t):
+    return str(t).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+# --------------------------------------------------------------------------
+# Substituicao de {{chave}} respeitando os runs
+# --------------------------------------------------------------------------
+
+def texto_do_paragrafo(p):
+    return "".join(m.group(2) for m in RE_TEXTO.finditer(p))
+
+
+def fonte_do_corpo(xml):
+    """Descobre a fonte do corpo olhando os placeholders que a declaram.
+
+    O estilo Normal do template e Verdana; o corpo do RT so fica em Tahoma
+    porque cada run traz um <w:rFonts> proprio. Placeholder sem esse override
+    sai na fonte errada - por isso o script detecta a fonte dominante e a
+    aplica nos paragrafos que gera.
+    """
+    fontes = {}
+    for m in RE_PARAGRAFO.finditer(xml):
+        p = m.group(0)
+        if "{{" not in texto_do_paragrafo(p):
+            continue
+        for f in re.findall(r'<w:rFonts[^>]*w:ascii="([^"]+)"', p):
+            fontes[f] = fontes.get(f, 0) + 1
+    return max(fontes, key=fontes.get) if fontes else None
+
+
+def garantir_fonte(paragrafo, fonte):
+    """Poe <w:rFonts> nos runs que nao declaram fonte propria."""
+    if not fonte:
+        return paragrafo
+    rfonts = (f'<w:rFonts w:ascii="{fonte}" w:eastAsia="{fonte}" '
+              f'w:hAnsi="{fonte}" w:cs="{fonte}"/>')
+
+    def conserta(m):
+        run = m.group(0)
+        if "<w:rFonts" in run or "<w:t" not in run:
+            return run
+        if "<w:rPr>" in run:
+            return run.replace("<w:rPr>", "<w:rPr>" + rfonts, 1)
+        return re.sub(r"(<w:r\b[^>]*>)", r"\1<w:rPr>" + rfonts + "</w:rPr>", run, count=1)
+
+    return re.sub(r"<w:r\b[^>]*>.*?</w:r>", conserta, paragrafo, flags=re.S)
+
+
+def remover_desenhos(paragrafo):
+    """Tira do paragrafo os runs que carregam imagem (<w:drawing>/<w:pict>).
+
+    Alguns placeholders do template tem uma imagem ANCORADA no mesmo paragrafo
+    (o Word prende a figura a um paragrafo qualquer e a posiciona na pagina).
+    Ao repetir esse paragrafo para N itens, a imagem seria duplicada N vezes -
+    por isso ela e mantida so na primeira copia.
+    """
+    return re.sub(r"<w:r\b[^>]*>(?:(?!</w:r>).)*?(?:<w:drawing>|<w:pict>).*?</w:r>",
+                  "", paragrafo, flags=re.S)
+
+
+def ajustar_ppr(paragrafo, jc=None, spacing=None, ind=None, numpr=None,
+                sem_ind=False, sem_numpr=False):
+    """Reescreve o <w:pPr> do paragrafo mantendo a ordem exigida pelo schema."""
+    m = re.search(r"<w:pPr>(.*?)</w:pPr>", paragrafo, re.S)
+    conteudo = m.group(1) if m else ""
+
+    def pega(tag):
+        mm = re.search(r"<w:%s\b[^>]*(?:/>|>.*?</w:%s>)" % (tag, tag), conteudo, re.S)
+        return mm.group(0) if mm else None
+
+    atual = {t: pega(t) for t in ORDEM_PPR}
+    if jc is not None:
+        atual["jc"] = '<w:jc w:val="%s"/>' % jc
+    if spacing is not None:
+        atual["spacing"] = spacing
+    if ind is not None:
+        atual["ind"] = ind
+    if sem_ind:
+        atual["ind"] = None
+    if numpr is not None:
+        atual["numPr"] = numpr
+    if sem_numpr:
+        atual["numPr"] = None
+
+    novo = "<w:pPr>" + "".join(atual[t] for t in ORDEM_PPR if atual[t]) + "</w:pPr>"
+    if m:
+        return paragrafo[:m.start()] + novo + paragrafo[m.end():]
+    return re.sub(r"(<w:p\b[^>]*>)", lambda x: x.group(1) + novo, paragrafo, count=1)
+
+
+def por_paragrafo(bloco, fn):
+    """Aplica `fn` a cada <w:p> do bloco (ajustar_ppr so enxerga o primeiro)."""
+    saida, ultimo = [], 0
+    for m in RE_PARAGRAFO.finditer(bloco):
+        saida.append(bloco[ultimo:m.start()])
+        saida.append(fn(m.group(0)))
+        ultimo = m.end()
+    saida.append(bloco[ultimo:])
+    return "".join(saida)
+
+
+def como_corpo(paragrafo, recuo=False):
+    """Deixa o paragrafo no padrao do corpo do RT: justificado e entrelinha 1,5."""
+    return ajustar_ppr(paragrafo, jc="both", spacing=ESPACAMENTO_CORPO,
+                       ind=RECUO_CORPO if recuo else None)
+
+
+def substituir_no_paragrafo(p, valores):
+    """Troca {{chave}} pelos valores dentro de UM paragrafo.
+
+    O Word costuma partir "{{chave}}" em varios <w:t>. A substituicao percorre os
+    runs, monta o texto completo, localiza a chave e devolve o valor ao run onde
+    ela COMECA - assim o valor herda a formatacao do proprio placeholder e o
+    resto do paragrafo (rotulos em negrito, por exemplo) fica intacto.
+    """
+    runs = list(RE_TEXTO.finditer(p))
+    if not runs:
+        return p
+    textos = [m.group(2) for m in runs]
+    # posicao inicial de cada run no texto concatenado
+    inicios, acc = [], 0
+    for t in textos:
+        inicios.append(acc)
+        acc += len(t)
+    inteiro = "".join(textos)
+
+    ocorrencias = list(RE_CHAVE.finditer(inteiro))
+    if not ocorrencias:
+        return p
+
+    novos = list(textos)
+    for oc in reversed(ocorrencias):          # de tras para frente: indices estaveis
+        chave = oc.group(1)
+        if chave not in valores:
+            continue
+        ini, fim = oc.start(), oc.end()
+        valor = esc(str(valores[chave]))
+        for i, t in enumerate(textos):
+            r_ini, r_fim = inicios[i], inicios[i] + len(t)
+            if r_fim <= ini or r_ini >= fim:
+                continue                       # run fora da chave
+            corta_ini = max(ini, r_ini) - r_ini
+            corta_fim = min(fim, r_fim) - r_ini
+            reposicao = valor if r_ini <= ini < r_fim else ""
+            novos[i] = novos[i][:corta_ini] + reposicao + novos[i][corta_fim:]
+
+    partes, ultimo = [], 0
+    for m, texto in zip(runs, novos):
+        abre = m.group(1)
+        if 'xml:space' not in abre:
+            abre = abre[:-1] + ' xml:space="preserve">'
+        partes.append(p[ultimo:m.start()] + abre + texto + m.group(3))
+        ultimo = m.end()
+    partes.append(p[ultimo:])
+    return "".join(partes)
+
+
+def substituir_tudo(xml, valores):
+    saida, ultimo = [], 0
+    for m in RE_PARAGRAFO.finditer(xml):
+        saida.append(xml[ultimo:m.start()])
+        saida.append(substituir_no_paragrafo(m.group(0), valores))
+        ultimo = m.end()
+    saida.append(xml[ultimo:])
+    return "".join(saida)
+
+
+# --------------------------------------------------------------------------
+# Localizacao e repeticao de blocos
+# --------------------------------------------------------------------------
+
+def paragrafos_com_chave(xml, chave):
+    alvo = "{{%s}}" % chave
+    achados = []
+    for m in RE_PARAGRAFO.finditer(xml):
+        if alvo in re.sub(r"<[^>]+>", "", m.group(0)) or alvo in texto_do_paragrafo(m.group(0)):
+            achados.append(m)
+    return achados
+
+
+def _span_do_bloco(xml, chaves):
+    ini = fim = None
+    for chave in chaves:
+        achados = paragrafos_com_chave(xml, chave)
+        if not achados:
+            erro(f"placeholder {{{{{chave}}}}} nao encontrado no template. "
+                 f"Confira {TEMPLATE}", 3)
+        for m in achados:
+            ini = m.start() if ini is None else min(ini, m.start())
+            fim = m.end() if fim is None else max(fim, m.end())
+    return ini, fim
+
+
+def repetir_bloco(xml, chaves, itens, rotulo, fonte=None, formatar=None):
+    """Repete o bloco de paragrafos que contem `chaves`, um por item."""
+    ini, fim = _span_do_bloco(xml, chaves)
+    molde = xml[ini:fim]
+    blocos = []
+    for i, item in enumerate(itens, 1):
+        faltando = [c for c in chaves if c not in item]
+        if faltando:
+            erro(f"{rotulo} #{i}: faltam os campos {', '.join(faltando)}")
+        copia = substituir_no_bloco(molde, item)
+        if i > 1:
+            copia = remover_desenhos(copia)
+        if formatar:
+            copia = por_paragrafo(copia, formatar)
+        copia = garantir_fonte(copia, fonte)
+        copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
+                       lambda _: f'w14:paraId="{novo_paraid()}"', copia)
+        blocos.append(copia)
+    return xml[:ini] + "".join(blocos) + xml[fim:]
+
+
+def substituir_no_bloco(bloco, valores):
+    saida, ultimo = [], 0
+    for m in RE_PARAGRAFO.finditer(bloco):
+        saida.append(bloco[ultimo:m.start()])
+        saida.append(substituir_no_paragrafo(m.group(0), valores))
+        ultimo = m.end()
+    saida.append(bloco[ultimo:])
+    return "".join(saida)
+
+
+def expandir_paragrafos(xml, chave, textos, fonte=None, formatar=None):
+    """Troca o paragrafo de um placeholder solitario por N paragrafos iguais."""
+    achados = paragrafos_com_chave(xml, chave)
+    if not achados:
+        erro(f"placeholder {{{{{chave}}}}} nao encontrado no template. "
+             f"Confira {TEMPLATE}", 3)
+    m = achados[0]
+    copias = []
+    for i, t in enumerate(textos):
+        copia = substituir_no_paragrafo(m.group(0), {chave: t})
+        if i:                       # imagem ancorada fica so na primeira copia
+            copia = remover_desenhos(copia)
+        if formatar:
+            copia = formatar(copia)
+        copia = garantir_fonte(copia, fonte)
+        copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
+                       lambda _: f'w14:paraId="{novo_paraid()}"', copia)
+        copias.append(copia)
+    return xml[:m.start()] + "".join(copias) + xml[m.end():]
+
+
+def virar_lista(paragrafo, numid):
+    """Devolve o paragrafo como item de lista real do Word (numeracao automatica),
+    ja no padrao do corpo: justificado e entrelinha 1,5. O recuo vem da lista."""
+    numpr = '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="%s"/></w:numPr>' % numid
+    return ajustar_ppr(paragrafo, jc="both", spacing=ESPACAMENTO_CORPO,
+                       numpr=numpr, sem_ind=True)
+
+
+def expandir_lista(xml, chave, textos, numid, fonte=None):
+    achados = paragrafos_com_chave(xml, chave)
+    if not achados:
+        erro(f"placeholder {{{{{chave}}}}} nao encontrado no template. "
+             f"Confira {TEMPLATE}", 3)
+    m = achados[0]
+    copias = []
+    for i, t in enumerate(textos):
+        copia = substituir_no_paragrafo(m.group(0), {chave: t})
+        if i:
+            copia = remover_desenhos(copia)
+        copia = garantir_fonte(copia, fonte)
+        copia = virar_lista(copia, numid)
+        copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
+                       lambda _: f'w14:paraId="{novo_paraid()}"', copia)
+        copias.append(copia)
+    return xml[:m.start()] + "".join(copias) + xml[m.end():]
+
+
+def garantir_lista_documentos(numbering_xml):
+    """Cria o numId do item 7 reaproveitando a lista A) B) C), reiniciando em A)."""
+    if f'<w:num w:numId="{NUMID_DOCUMENTOS}"' in numbering_xml:
+        return numbering_xml
+    novo = (f'<w:num w:numId="{NUMID_DOCUMENTOS}">'
+            f'<w:abstractNumId w:val="{ABSTRACT_LETRAS}"/>'
+            f'<w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride>'
+            f'</w:num>')
+    return numbering_xml.replace("</w:numbering>", novo + "</w:numbering>")
+
+
+def aplicar_embargo(xml):
+    """Troca, no texto fixo, o que fala especificamente em interdicao."""
+    for velho, novo in TROCAS_EMBARGO:
+        saida, ultimo = [], 0
+        for m in RE_PARAGRAFO.finditer(xml):
+            p = m.group(0)
+            if velho in texto_do_paragrafo(p):
+                runs = list(RE_TEXTO.finditer(p))
+                inteiro = "".join(r.group(2) for r in runs)
+                trocado = inteiro.replace(velho, novo)
+                # o paragrafo inteiro passa a caber no primeiro run
+                partes, primeiro = [], True
+                pos = 0
+                for r in runs:
+                    abre = r.group(1)
+                    if 'xml:space' not in abre:
+                        abre = abre[:-1] + ' xml:space="preserve">'
+                    conteudo = trocado if primeiro else ""
+                    partes.append(p[pos:r.start()] + abre + conteudo + r.group(3))
+                    pos = r.end()
+                    primeiro = False
+                partes.append(p[pos:])
+                p = "".join(partes)
+            saida.append(xml[ultimo:m.start()])
+            saida.append(p)
+            ultimo = m.end()
+        saida.append(xml[ultimo:])
+        xml = "".join(saida)
+    return xml
+
+
+# --------------------------------------------------------------------------
+
+def garantir_lista_bullet(numbering_xml):
+    """Cria a lista de MARCADORES usada nas ementas do item 4 (o template nao tem)."""
+    if '<w:num w:numId="%s"' % NUMID_BULLET in numbering_xml:
+        return numbering_xml
+    abstract = (
+        '<w:abstractNum w:abstractNumId="%s">'
+        '<w:multiLevelType w:val="hybridMultilevel"/>'
+        '<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/>'
+        '<w:lvlText w:val="&#xF0B7;"/><w:lvlJc w:val="left"/>'
+        '<w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr>'
+        '<w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol" w:hint="default"/></w:rPr>'
+        '</w:lvl></w:abstractNum>' % ABSTRACT_BULLET)
+    num = ('<w:num w:numId="%s"><w:abstractNumId w:val="%s"/></w:num>'
+           % (NUMID_BULLET, ABSTRACT_BULLET))
+    # o abstractNum precisa vir antes dos <w:num>
+    primeiro_num = numbering_xml.find("<w:num ")
+    if primeiro_num == -1:
+        numbering_xml = numbering_xml.replace("</w:numbering>", abstract + "</w:numbering>")
+    else:
+        numbering_xml = numbering_xml[:primeiro_num] + abstract + numbering_xml[primeiro_num:]
+    return numbering_xml.replace("</w:numbering>", num + "</w:numbering>")
+
+
+def remover_vazio_apos(xml, chave):
+    """Tira o paragrafo VAZIO que o template deixa logo depois de um placeholder.
+
+    No item 6 esse paragrafo fica entre as medidas e a alinea fixa
+    'Requerimento expresso...', e imprime uma quebra dupla antes do ultimo item.
+    """
+    achados = paragrafos_com_chave(xml, chave)
+    if not achados:
+        return xml
+    fim = achados[-1].end()
+    m = RE_PARAGRAFO.match(xml, fim) or RE_PARAGRAFO.search(xml, fim)
+    if not m or m.start() != fim:
+        return xml
+    if texto_do_paragrafo(m.group(0)).strip() or "<w:drawing>" in m.group(0):
+        return xml                      # so remove se estiver realmente vazio
+    return xml[:m.start()] + xml[m.end():]
+
+
+def montar(dados, destino):
+    faltando = [c for c in OBRIGATORIOS if c not in dados]
+    if faltando:
+        erro("campos ausentes no JSON: " + ", ".join(faltando))
+    if dados["modo"] not in ("interdicao", "embargo"):
+        erro('campo "modo" deve ser "interdicao" ou "embargo"')
+    for campo in ("objetos", "fatores_risco", "medidas_protecao", "documentos_solicitados"):
+        if not isinstance(dados[campo], list) or not dados[campo]:
+            erro(f'campo "{campo}" deve ser uma lista nao vazia')
+    if not TEMPLATE.is_file():
+        erro(f"template nao encontrado: {TEMPLATE}", 3)
+
+    tmp = Path("/tmp/RT_montagem")
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    tmp.mkdir(parents=True)
+    shutil.copy(TEMPLATE, tmp / "template.docx")
+    r = subprocess.run([sys.executable, str(AQUI / "docx_unpack.py"),
+                        str(tmp / "template.docx"), str(tmp / "unpacked")],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        erro(f"falha ao desempacotar o template: {r.stderr.strip()}", 3)
+
+    doc = tmp / "unpacked/word/document.xml"
+    xml = doc.read_text(encoding="utf-8")
+
+    fonte = fonte_do_corpo(xml)
+
+    if dados["modo"] == "embargo":
+        xml = aplicar_embargo(xml)
+
+    # blocos repetiveis primeiro (o molde ainda tem os placeholders)
+    xml = repetir_bloco(xml, BLOCO_OBJETOS, dados["objetos"], "objeto", fonte,
+                        formatar=como_corpo)
+    xml = repetir_bloco(xml, BLOCO_FATORES, dados["fatores_risco"], "fator de risco",
+                        fonte, formatar=como_corpo)
+
+    # item 4: um paragrafo por irregularidade
+    irregs = dados["irregularidades"]
+    if isinstance(irregs, str):
+        irregs = [irregs]
+    xml = expandir_paragrafos(
+        xml, "irregularidades", irregs, fonte,
+        formatar=lambda pg: virar_lista(pg, NUMID_BULLET))
+
+    # itens 6 e 7: listas reais do Word
+    xml = remover_vazio_apos(xml, "medidas_protecao")
+    xml = expandir_lista(xml, "medidas_protecao", dados["medidas_protecao"],
+                         NUMID_MEDIDAS, fonte)
+    xml = expandir_lista(xml, "documentos_solicitados",
+                         dados["documentos_solicitados"], NUMID_DOCUMENTOS, fonte)
+
+    # item 2: contexto da inspecao no padrao do corpo (justificado, com recuo)
+    xml = expandir_paragrafos(xml, "Contexto-da-inspecao-fisica",
+                              [dados["Contexto-da-inspecao-fisica"]], fonte,
+                              formatar=lambda pg: como_corpo(pg, recuo=True))
+
+    # capa e fecho
+    xml = substituir_tudo(xml, {c: dados[c] for c in SIMPLES
+                                if c != "Contexto-da-inspecao-fisica"})
+
+    sobraram = sorted(set(RE_CHAVE.findall(re.sub(r"<[^>]+>", "", xml))))
+    if sobraram:
+        erro("placeholders sem valor no documento final: "
+             + ", ".join("{{%s}}" % s for s in sobraram))
+
+    doc.write_text(xml, encoding="utf-8")
+
+    numbering = tmp / "unpacked/word/numbering.xml"
+    if numbering.is_file():
+        nb = garantir_lista_documentos(numbering.read_text(encoding="utf-8"))
+        numbering.write_text(garantir_lista_bullet(nb), encoding="utf-8")
+
+    destino = Path(destino)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run([sys.executable, str(AQUI / "docx_pack.py"),
+                        str(tmp / "unpacked"), str(destino)],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        erro(f"falha ao empacotar o DOCX: {r.stdout.strip()} {r.stderr.strip()}", 3)
+
+    print(f"OK: {destino}")
+    print(f"     modo {dados['modo']} | {len(dados['objetos'])} objeto(s), "
+          f"{len(irregs)} irregularidade(s), {len(dados['fatores_risco'])} fator(es), "
+          f"{len(dados['medidas_protecao'])} medida(s), "
+          f"{len(dados['documentos_solicitados'])} documento(s)")
+    return destino
+
+
+def main():
+    if len(sys.argv) != 3:
+        print(__doc__)
+        sys.exit(2)
+    origem = Path(sys.argv[1])
+    if not origem.is_file():
+        erro(f"arquivo JSON nao encontrado: {origem}")
+    try:
+        dados = json.loads(origem.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        erro(f"JSON invalido ({e})")
+    montar(dados, sys.argv[2])
+
+
+if __name__ == "__main__":
+    main()
