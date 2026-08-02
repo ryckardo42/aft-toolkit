@@ -284,10 +284,14 @@ alta).
   `[A CONFIRMAR PELO AFT: ...]` — inventar detalhe verossímil é o defeito mais
   perigoso deste documento, porque passa despercebido na revisão e cai na
   impugnação.
-- **Declare o número de expostos** na `descricao` do item 5. O texto fixo do
-  template aplica a **Tabela 3.3**, que vale para exposição individual ou reduzido
-  número de vítimas potenciais; se a exposição for coletiva, avise o AFT de que a
-  tabela do template não é a adequada ao caso.
+- **Declare o número de expostos** na `descricao` do item 5 — é exigência do
+  dicionário.
+- **Ao citar a matriz de excesso de risco, escreva "pela tabela da NR-03"**, sem
+  numerar. O trecho do template que menciona a Tabela 3.3 começa com "Como
+  exemplo": é ilustração de enquadramento, não a matriz do caso concreto. Citar
+  "Tabela 3.3" no texto gerado amarra o RT a uma hipótese específica de exposição
+  e cria brecha de impugnação sem necessidade. As Tabelas 3.1 (consequência) e
+  3.2 (probabilidade) podem ser citadas nominalmente — essas são definitórias.
 - **Interdição/embargo não pode inviabilizar a própria correção.** Ao descrever o
   objeto, ressalve os serviços necessários ao cumprimento das medidas (do
   contrário, fechar as aberturas embargadas seria descumprir o embargo).
