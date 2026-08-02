@@ -133,12 +133,37 @@ A partir do contexto, liste cada irregularidade de forma objetiva e separada. Ca
 uma vira um parágrafo do item 4 e precisa ter, no item 5, um fator de risco
 correspondente; no item 6, uma medida; e no item 7, um documento comprobatório.
 
-#### 1b. Resolver as ementas (3 camadas)
+#### 1b. Resolver as ementas (4 camadas)
 
 Mesmo quando a ementa não aparece explicitamente no RT, resolvê-la é o que sustenta
 a **capitulação** citada na irregularidade e os **autos derivados** do passo 7.
 
-1. **NotebookLM** (se configurado pelo `/aft-setup`): leia
+1. **Catálogos das skills de NR (fonte primária, local, sem rede).** As skills
+   `/aft-NR12` e `/aft-NR18` mantêm catálogos curados a partir de autos reais, em
+   `~/.claude/skills/aft-NR12/references/ementas-comuns.md` e
+   `~/.claude/skills/aft-NR18/references/ementas-comuns.md`. Leia o da NR do caso e
+   varra os **"Gatilhos"** de cada bloco contra a narrativa do AFT: é o que eles
+   fazem melhor que o NotebookLM — mapear a frase que o AFT escreveu ("sem proteção
+   na zona de perigo", "abertura no piso") para a ementa certa. Cada bloco traz
+   código, descrição oficial, subitem violado, capitulação e texto-base.
+   - **Casando mais de um bloco**, escolha o mais específico e mantenha os outros
+     como candidatos — em obra é comum vários fatos distintos coexistirem.
+   - **Atenção à notação:** a NR-18 grafa o código com **7 dígitos e sem hífen**
+     (`3182746`) e o ementário grafa `318274-6`. É o mesmo código — normalize antes
+     de comparar, ou o casamento falha em silêncio.
+   - **Atenção à estrutura:** os dois catálogos não são iguais. No da NR-12 cada
+     ementa é um bloco `##`; no da NR-18, `##` é a seção da norma (18.4, 18.9...) e
+     cada ementa é um `###` dentro dela. Ler só os `##` no da NR-18 devolve uma
+     ementa por seção e perde o resto.
+   - **Cobertura esperada:** os 45 códigos dos dois catálogos resolvem cerca de
+     **36% das ementas** que aparecem em RTs reais, e apenas ~13% dos RTs ficam
+     inteiramente cobertos. O catálogo é a primeira camada, **não substitui** o
+     NotebookLM — conte com a camada 2 na maioria dos casos.
+   - O catálogo da NR-12 traz o campo **"Aplicabilidade a Termo de Interdição"**; o
+     da NR-18 **não classifica** a dimensão cautelar, por decisão de projeto — essa
+     leitura é desta skill (passo 0 e item 5).
+   - **Se o gatilho não casar com nada**, não force: vá à camada 2.
+2. **NotebookLM** (se configurado pelo `/aft-setup`): leia
    `~/.claude/skills/config/notebooks.json` e consulte **os dois** notebooks —
    o `ementario-sst` (código, descrição e capitulação) **e o da NR específica**
    do caso (`nr-12`, `nr-18`, `nr-35`...). O da NR não é opcional: é ele que
@@ -156,10 +181,10 @@ a **capitulação** citada na irregularidade e os **autos derivados** do passo 7
    > ementário. Precedente indica caminho, não capitulação — máquina parecida pode estar
    > em anexo diferente da NR (ex.: sopradora **não** é do Anexo IX da NR-12, que só cobre
    > injetoras).
-2. **Ementário no Google Drive** (manual): oriente o AFT a abrir
+3. **Ementário no Google Drive** (manual): oriente o AFT a abrir
    https://drive.google.com/drive/folders/1bktX9TkDIoix4iQuca3Yr5aWCfv97GSg?usp=sharing
    (pasta `EMENTAS SST` → `ementasNRXX.md`) e colar o trecho da ementa.
-3. **Pedir ao AFT** o código/descrição/capitulação diretamente.
+4. **Pedir ao AFT** o código/descrição/capitulação diretamente.
 
 Se nenhuma camada retornar a ementa, cite na irregularidade apenas o dispositivo
 violado (NR/subitem + artigo da CLT) e **avise o AFT ao final** que aquela ementa
