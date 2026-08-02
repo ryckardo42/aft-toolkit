@@ -45,9 +45,14 @@ except Exception:
 CODE_RE = re.compile(r"\d{6}-\d")
 NR_RE = re.compile(r"NR[-\s]?0*(\d{1,2})", re.IGNORECASE)
 
+# A NR-3 e a norma da PROPRIA medida (metodologia de caracterizacao do grave e
+# iminente risco). Ela aparece no texto fixo da Secao 4 de todo RT, mas nunca e
+# a ementa de um auto - por isso fica fora da comparacao de NRs.
+NRS_IGNORADAS = {3}
+
 
 def nrs(texto):
-    return {int(n) for n in NR_RE.findall(texto)}
+    return {int(n) for n in NR_RE.findall(texto)} - NRS_IGNORADAS
 
 
 def codes(texto):

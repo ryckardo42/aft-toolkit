@@ -93,6 +93,32 @@ solicitados. Ela vive no NotebookLM, na key `interdicoes` do
   cheque cruzado ("em casos análogos usou-se a ementa X"), mas o código/capitulação final
   continua vindo do ementário.
 
+### 0. Decidir: INTERDIÇÃO ou EMBARGO (antes de qualquer coisa)
+
+A NR-03 separa as duas medidas **pelo objeto**, não pela gravidade:
+
+| Objeto atingido | Medida | Fundamento |
+|---|---|---|
+| **Obra** (construção, montagem, instalação, manutenção, reforma) | **EMBARGO** | subitem 3.2.2.1 da NR-03 |
+| Atividade, **máquina ou equipamento**, setor de serviço ou estabelecimento | **INTERDIÇÃO** | subitem 3.2.2.2 da NR-03 |
+
+Adote sempre a **menor unidade possível** capaz de afastar o risco (subitem
+3.2.2.3.1 da NR-03) — é o que justifica "Paralisação: PARCIAL" restrita a
+pavimentos, setores ou máquinas determinadas, em vez de paralisar tudo.
+
+**Quando for EMBARGO, o template exige adaptações** (ele é redigido para
+interdição). Troque, além do título:
+
+- `3. OBJETO(S) INTERDITADO(S):` → `3. OBJETO(S) EMBARGADO(S):`
+- Seção 1: "objetos interditados ... Termo de Interdição" → "objetos embargados
+  ... Termo de Embargo"
+- `DO PEDIDO DE SUSPENSÃO DA INTERDIÇÃO` → `... DO EMBARGO`
+- "suspensão da interdição" → "suspensão do embargo" (nos dois lugares: no item
+  "A) Requerimento expresso..." e no parágrafo "Sanadas as irregularidades...")
+- `I - o número do Termo de Interdição;` → `... Termo de Embargo;`
+- `II - a identificação da(s) máquina(s) ou setor de serviço;` → `II - a
+  identificação da obra ou da frente de trabalho;`
+
 ### 1. Coletar os dados necessários
 
 Solicite ao usuário (ou extraia do contexto/PDFs anexados/`inspecao-fisica.md`/`memory.md`
@@ -255,6 +281,7 @@ seguintes placeholders pelo conteúdo fornecido pelo usuário:
 | `Descrição:` (linha em branco após) | Descrição do risco |
 | `Fundamentação do risco atual:` (linha em branco) | Fundamentação do risco atual |
 | `Fundamentação do risco de referência` (linha em branco) | Fundamentação do risco de referência |
+| Parágrafo `A) Requerimento expresso...` (fim da seção 6) | **Mover para o início da seção 7** — é documento a apresentar, não medida de proteção; o template o deixa preso à seção 6. As medidas então ocupam a seção 6 numeradas a partir de `A)`, e os documentos seguem a partir de `B)` |
 | Parágrafos vazios de tabulação em seção 6 | Medidas de proteção |
 | Parágrafos vazios de tabulação em seção 7 | Documentos solicitados |
 | Parágrafo vazio após "8. CONCLUSÃO/OBSERVAÇÃO:" | Texto de conclusão |
@@ -268,6 +295,28 @@ alteradas.
 Para adicionar múltiplos objetos na seção 3, replique a estrutura de parágrafo existente.
 Para adicionar múltiplas medidas/documentos nas seções 6 e 7, insira novos parágrafos com a
 mesma formatação (tabulação).
+
+### 4-bis. Inserir fotografias no RT (quando houver)
+
+Fotos da inspeção entram **no corpo do RT**, logo depois da ementa ou do objeto
+que ilustram — é o elemento de convicção mais direto do grave e iminente risco.
+Não edite o XML da imagem à mão: use o script, que embute o arquivo em
+`word/media/`, cria a relação e monta o `<w:drawing>` já dimensionado para a
+mancha do texto (máx. 15,5 cm de largura, proporção preservada):
+
+```bash
+python ~/.claude/skills/_scripts/inserir_foto_docx.py "<RT.docx>" "<foto.jpg>" "<trecho do parágrafo âncora>" "<legenda>"
+```
+
+- O **parágrafo âncora** é um trecho de texto que já existe no documento (ex.: o
+  começo da ementa `318264-9 - Utilizar escada portátil`); a foto entra logo
+  depois dele. Se o trecho aparecer mais de uma vez, o script usa a última
+  ocorrência.
+- A **legenda** deve dizer o que se vê, onde e quando (ex.: `Fotografia 1 -
+  Pavimento 19: abertura no piso sem fechamento. Inspeção de 29/07/2026.`).
+- Rode o script **uma vez por foto**, sempre depois de o `.docx` já estar salvo.
+- **A foto precisa existir como arquivo.** Imagem colada no chat não é arquivo:
+  peça ao AFT para salvá-la numa pasta (a da OS, de preferência) e use o caminho.
 
 ### 5. Remontar e validar o documento
 
@@ -477,3 +526,7 @@ Competência delegada pela Portaria 1719/2014...
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
 | AFT de outra SRTE | Template é universal, nenhum ajuste necessário |
+| Medida recai sobre **obra** | É EMBARGO, não interdição (subitem 3.2.2.1 da NR-03) — aplicar as trocas do passo 0 |
+| Irregularidade só em parte da obra/estabelecimento | Paralisação PARCIAL delimitando o escopo (pavimentos, setor, máquinas), pela regra da menor unidade possível (3.2.2.3.1 da NR-03) |
+| AFT quer foto no RT | Passo 4-bis (`inserir_foto_docx.py`); se a imagem só existir colada no chat, pedir ao AFT para salvá-la como arquivo |
+| Ementas da seção 4 saem sem bullet | Devem ser parágrafos de LISTA (`numPr`, ilvl 2 / numId 1). Sem isso o `checar_rt_autos.py` conta zero irregularidades e acusa divergência falsa |
