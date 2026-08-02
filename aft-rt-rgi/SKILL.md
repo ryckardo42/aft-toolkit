@@ -476,4 +476,4 @@ Competência delegada pela Portaria 1719/2014...
 | Key `interdicoes` ausente no notebooks.json | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
-| AFT de outra SRTE | Template é universal, nenhum ajuste de cabeçalho necessário; a única exceção é a frase fixa de "Observação 2" (protocolo em caso de indisponibilidade do SEI), que ainda cita literalmente "SRTE-GO" — avisar o AFT de outra UF para ajustar essa frase manualmente no Word antes de usar |
+| AFT de outra SRTE | Template é universal, nenhum ajuste necessário |
