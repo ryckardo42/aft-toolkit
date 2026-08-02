@@ -36,7 +36,8 @@ description: >
 
 Gerar um **Relatório Técnico para Interdição e/ou Embargo** em formato `.docx`, baseado no
 modelo oficial incluído no toolkit (`~/.claude/skills/aft-rt-rgi/template.docx`,
-modelo da SRTE/GO — adapte cabeçalho/cidade à sua SRTE se necessário). O documento mantém
+modelo **universal**: cabeçalho, cidade/UF e data já vêm como placeholder genérico,
+qualquer AFT de qualquer SRTE pode usar sem adaptação). O documento mantém
 TODO o conteúdo fixo do modelo (cabeçalho, logotipos, textos legais, citações doutrinárias,
 tabelas NR-3, instruções de suspensão, nota sobre SEI) e preenche apenas as partes variáveis
 com os dados fornecidos pelo AFT.
@@ -475,4 +476,4 @@ Competência delegada pela Portaria 1719/2014...
 | Key `interdicoes` ausente no notebooks.json | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
-| AFT de outra SRTE (não GO) | Avisar que o template é da SRTE/GO; preencher cidade/UF do aft-config.md e sugerir ajustar o cabeçalho no Word após gerar |
+| AFT de outra SRTE | Template é universal, nenhum ajuste de cabeçalho necessário; a única exceção é a frase fixa de "Observação 2" (protocolo em caso de indisponibilidade do SEI), que ainda cita literalmente "SRTE-GO" — avisar o AFT de outra UF para ajustar essa frase manualmente no Word antes de usar |
