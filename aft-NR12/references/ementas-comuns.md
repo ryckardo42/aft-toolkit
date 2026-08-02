@@ -10,6 +10,11 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 - **Aplicabilidade a Termo de Interdição** — quando o texto também serve para fundamentar TI/TE
 - **Gatilhos de matching** — palavras/expressões da narrativa do AFT que apontam para esta ementa
 
+> **Capitulações conferidas** uma a uma no notebook da NR-12 em 02/08/2026: cada uma cita o
+> **subitem específico** e a redação da **Portaria 916/2019**. Não use faixa de itens
+> ("12.5 a 12.5.17") na capitulação — capitular dezoito subitens quando o fato viola um só
+> enfraquece o enquadramento.
+
 > **Como usar:** dada uma narrativa do AFT, varra os "Gatilhos" abaixo para localizar a ementa. Se mais de uma bater, escolha a mais específica. Se nenhuma bater, vá ao fallback NotebookLM.
 
 ---
@@ -18,8 +23,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312358-8`
 - **Descrição:** Deixar de instalar sistemas de segurança em zonas de perigo de máquinas e/ou equipamentos.
-- **Itens NR-12 violados:** 12.5 a 12.5.17
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.5 a 12.5.17 da NR-12, e NBR ISO 23125:2013.
+- **Itens NR-12 violados:** 12.5.1
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.5.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM — zona de perigo desprotegida em máquina em operação caracteriza risco grave e iminente (NR-3).
 - **Gatilhos:** "sem proteção", "zona de perigo", "área de risco", "ponto de operação exposto", "esmagamento", "agarramento", "projeção de partículas", "ferramenta exposta", "operador exposto", "parte do corpo pode atingir".
 - **Texto-base:**
@@ -32,8 +37,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312377-4`
 - **Descrição:** Deixar de instalar proteções fixas ou móveis com dispositivos de intertravamento em transmissões de força e seus componentes móveis, quando acessíveis ou expostos, ou adotar proteção em transmissões de força e seus componentes móveis que não impeça o acesso por todos os lados, e/ou deixar de instalar dispositivos de intertravamento com bloqueio em proteções móveis utilizadas para enclausurar transmissões de força que possuam inércia.
-- **Itens NR-12 violados:** 12.5.4, 12.5.5, 12.5.6 (transmissão de força)
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.5.4, 12.5.5 e 12.5.6 da NR-12.
+- **Itens NR-12 violados:** 12.5.9 e 12.5.9.1
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.5.9 e 12.5.9.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM — transmissão de força exposta gera risco grave e iminente.
 - **Gatilhos:** "polia exposta", "correia exposta", "engrenagem aparente", "eixo girando", "transmissão de força sem proteção", "cardã exposto", "acoplamento aparente", "volante girante".
 - **Texto-base:**
@@ -46,8 +51,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312387-1`
 - **Descrição:** Deixar de equipar máquinas com um ou mais dispositivos de parada de emergência, por meio dos quais possam ser evitadas situações de perigo latentes e existentes.
-- **Itens NR-12 violados:** 12.6.1, 12.6.2, 12.6.3
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.6.1, 12.6.2 e 12.6.3 da NR-12.
+- **Itens NR-12 violados:** 12.6.1
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.6.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM — ausência de parada de emergência em máquina em operação caracteriza risco grave e iminente.
 - **Gatilhos:** "sem botão de emergência", "sem parada de emergência", "cogumelo ausente", "botoeira de emergência inexistente", "não há como parar a máquina rapidamente".
 - **Texto-base:**
@@ -58,10 +63,11 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 ## 4. Interface de Segurança (falta de CLP ou relé de segurança)
 
-- **Código:** `312360-0`
-- **Descrição:** Selecionar e/ou instalar sistemas de segurança com categoria em desacordo com a apreciação de riscos prevista nas normas técnicas oficiais.
-- **Itens NR-12 violados:** 12.5.2 alíneas "a", "b" e "e"
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.5.2, alíneas "a", "b" e "e", da NR-12.
+- **Código:** `312364-2`
+- **Descrição:** Selecionar e/ou instalar sistemas de segurança que não estejam sob monitoramento automático, de acordo com a categoria de segurança requerida.
+- **Itens NR-12 violados:** 12.5.2, alínea "e"
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.5.2, alínea "e", da NR-12, com redação da Portaria 916/2019.
+- **Não confundir com `312360-0`** (item 12.5.2, alínea "a"): aquela é para quando o sistema TEM monitoramento, mas a categoria instalada é inferior à exigida pela apreciação de riscos. Quando não há relé nem CLP de segurança monitorando, a ementa é esta (312364-2).
 - **Aplicabilidade a Termo de Interdição:** SIM (quando associado a Categoria 2, 3 ou 4 da apreciação de riscos).
 - **Gatilhos:** "sem CLP de segurança", "sem relé de segurança", "categoria de segurança", "monitoramento de função de segurança", "apreciação de riscos ausente", "ART do sistema de segurança", "projeto de execução do sistema de segurança não apresentado".
 - **Texto-base:**
@@ -74,8 +80,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312475-4`
 - **Descrição:** Permitir a operação, manutenção, inspeção e demais intervenções em máquinas e equipamentos por trabalhadores não habilitados ou não qualificados ou não capacitados, e/ou não autorizados para este fim.
-- **Itens NR-12 violados:** 12.16.1, 12.16.2, 12.16.3 e Anexo II
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.16.1, 12.16.2, 12.16.3 e Anexo II da NR-12.
+- **Itens NR-12 violados:** 12.16.1
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.16.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** Indireto — falta de capacitação não interdita por si, mas reforça gravidade quando associada a outras ementas.
 - **Gatilhos:** "sem capacitação", "trabalhador desconhece o risco", "sem certificado", "sem treinamento", "operador não treinado", "manutenção por leigo", "operador novo sem orientação", "lista de presença inexistente", "material didático ausente".
 - **Texto-base:**
@@ -88,8 +94,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312467-3`
 - **Descrição:** Deixar de elaborar procedimentos de trabalho e segurança para máquinas e equipamentos, específicos e padronizados, a partir da apreciação de riscos.
-- **Itens NR-12 violados:** 12.14.1 e subitens
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.14.1 e subitens da NR-12.
+- **Itens NR-12 violados:** 12.14.1
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.14.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** Não isoladamente.
 - **Gatilhos:** "sem procedimento", "sem POP", "sem padrão escrito", "não há instrução de trabalho", "operador não sabe o passo a passo", "procedimento não padronizado".
 - **Texto-base:**
@@ -102,8 +108,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312463-0`
 - **Descrição:** Manter máquinas e equipamentos que não possuam manual de instruções fornecido pelo fabricante ou importador, com informações relativas à segurança em todas as fases de utilização, ou manter máquinas e equipamentos com manual que não atenda aos requisitos estabelecidos no item 12.13.2 da NR 12, ou, em caso de máquinas e equipamentos, nacionais ou importados, fabricadas a partir da vigência do item 12.13.3 da NR 12, manter manual que não siga as normas técnicas oficiais ou internacionais aplicáveis.
-- **Itens NR-12 violados:** 12.13.1 a 12.13.5.2
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.13.1 a 12.13.5.2 da NR-12.
+- **Itens NR-12 violados:** 12.13.1, 12.13.2, alíneas "a", "b", "c" e "d", e 12.13.3
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.13.1, 12.13.2, alíneas "a", "b", "c" e "d", e 12.13.3 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** Não isoladamente.
 - **Gatilhos:** "sem manual", "manual ausente", "manual extraviado", "manual incompleto", "manual em idioma estrangeiro", "sem manual do fabricante".
 - **Texto-base:**
@@ -116,8 +122,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312432-0`
 - **Descrição:** Deixar de registrar as manutenções das máquinas e equipamentos em livro próprio, ficha ou sistema informatizado interno da empresa, ou registrar as manutenções em desacordo com os dados estabelecidos no item 12.11.2 da NR-12.
-- **Itens NR-12 violados:** 12.11.2
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.11.2 da NR-12.
+- **Itens NR-12 violados:** 12.11.2, alíneas "a" a "g"
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.11.2, alíneas "a", "b", "c", "d", "e", "f" e "g", da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** Não isoladamente.
 - **Gatilhos:** "sem registro de manutenção", "livro de manutenção ausente", "ficha não preenchida", "manutenção informal", "histórico de manutenção inexistente".
 - **Texto-base:**
@@ -130,8 +136,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312452-5`
 - **Descrição:** Deixar de sinalizar máquina e/ou equipamento e/ou suas instalações para advertir trabalhadores e terceiros sobre os riscos e/ou sobre as instruções de operação e/ou manutenção e/ou sobre outras informações necessárias para garantir a integridade física e a saúde dos trabalhadores.
-- **Itens NR-12 violados:** 12.12.1.3 e 12.12.2
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.12.1.3 e 12.12.2 da NR-12.
+- **Itens NR-12 violados:** 12.12.1
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.12.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** Não isoladamente.
 - **Gatilhos:** "sem sinalização", "sem placa", "sem aviso", "sem identificação de risco", "máquina não identificada", "ausência de pictograma".
 - **Texto-base:**
@@ -144,8 +150,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312315-4`
 - **Descrição:** Deixar de projetar e/ou dimensionar e/ou manter áreas de circulação, e/ou armazenamento de materiais e/ou espaços em torno de máquinas, de forma que trabalhadores e/ou transportadores de materiais mecanizados e/ou manuais, movimentem-se com segurança.
-- **Itens NR-12 violados:** 12.2.1, 12.2.1.2, 12.2.2, 12.2.3
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.2.1, 12.2.1.2, 12.2.2 e 12.2.3 da NR-12.
+- **Itens NR-12 violados:** 12.2.3
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.2.3 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** Indireto — quando obstrução compromete fuga em emergência.
 - **Gatilhos:** "sem demarcação", "área de circulação obstruída", "máquinas muito próximas", "sem espaço para circular", "tropeçamento", "armazenamento irregular", "corredor bloqueado".
 - **Texto-base:**
@@ -159,7 +165,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 - **Código:** `312323-5`
 - **Descrição:** Deixar de aterrar, ou aterrar em desacordo às normas técnicas oficiais, as instalações, carcaças, invólucros, blindagens ou outras partes condutoras de máquinas e equipamentos que não integrem circuitos elétricos, mas possam ficar sob tensão.
 - **Itens NR-12 violados:** 12.3.2
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.3.2 da NR-12.
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.3.2 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM em situações de risco de choque elétrico.
 - **Gatilhos:** "sem aterramento", "carcaça energizada", "fuga de corrente", "sem equipotencialização", "ART de aterramento ausente", "relatório de medição de aterramento inexistente".
 - **Texto-base:**
@@ -172,8 +178,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312356-1`
 - **Descrição:** Deixar de atender aos requisitos de segurança estabelecidos no item 12.4.14 da NR-12, para o circuito elétrico da chave de partida de motores de máquinas e equipamentos, quando indicada pela apreciação de riscos a necessidade de redundância dos dispositivos responsáveis pela prevenção de partida inesperada ou pela função de parada relacionada à segurança, conforme a categoria de segurança requerida.
-- **Itens NR-12 violados:** 12.4.14, 12.13.4 alínea "f"
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.4.14 e 12.13.4, alínea "f", da NR-12.
+- **Itens NR-12 violados:** 12.4.14, alíneas "a", "b" e "c"
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.14, alíneas "a", "b" e "c", da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM em Categorias 3 e 4 da apreciação de riscos.
 - **Gatilhos:** "sem redundância", "circuito não redundante", "partida inesperada", "diagrama elétrico ausente", "função de parada de segurança sem redundância", "chave de partida única".
 - **Texto-base:**
@@ -187,7 +193,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 - **Código:** `312341-3`
 - **Descrição:** Manter comandos de partida ou acionamento de máquinas sem dispositivos que impeçam seu funcionamento automático ao serem energizadas.
 - **Itens NR-12 violados:** 12.4.2
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.2 da NR-12.
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.2 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM — partida inesperada após queda de energia caracteriza risco grave e iminente.
 - **Gatilhos:** "parte sozinha", "liga sozinha ao energizar", "religação automática", "sem dispositivo contra partida automática", "rearme automático na energização".
 - **Texto-base:**
@@ -200,7 +206,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312367-7`
 - **Descrição:** Deixar de instalar rearme (reset) manual em sistema de segurança quando a apreciação de riscos indicar sua instalação, ou permitir que a condição de parada, após seu início, não seja mantida pelo sistema de segurança até que existam condições seguras para o rearme.
-- **Itens NR-12 violados:** 12.5.3, 12.5.3.1
+- **Itens NR-12 violados:** 12.5.3 e 12.5.3.1
 - **Capitulação:** Art. 157, inciso I, da CLT, c/c itens 12.5.3 e 12.5.3.1 da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM quando ausente em sistema de segurança ativo.
 - **Gatilhos:** "sem rearme manual", "sem reset manual", "rearme automático", "máquina volta sozinha após parada de segurança", "reset não visualiza zona protegida".
@@ -214,8 +220,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312354-5`
 - **Descrição:** Utilizar máquinas e equipamentos, fabricados a partir de 24 de março de 2012, cujos componentes de partida, parada, acionamento e controles não possibilitem a instalação e funcionamento de sistema de parada de emergência, quando aplicável, conforme itens e subitens do capítulo sobre dispositivos de parada de emergência da NR-12, e/ou que não operem em extrabaixa tensão de até 25 VCA (vinte e cinco volts em corrente alternada) ou de até 60 VCC (sessenta volts em corrente contínua).
-- **Itens NR-12 violados:** 12.4.13.1, alínea "b"
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.13.1, alínea "b", da NR-12.
+- **Itens NR-12 violados:** 12.4.13, alíneas "a" e "b"
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.13, alíneas "a" e "b", da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM em risco de choque elétrico em comando.
 - **Gatilhos:** "máquina pós-2012", "fabricada depois de 2012", "comando não opera em extrabaixa tensão", "127V no comando", "220V no botão", "sem transformador para 24V no comando".
 - **Texto-base:**
@@ -228,8 +234,8 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 16 ementas mais utilizada
 
 - **Código:** `312355-3`
 - **Descrição:** Utilizar máquinas e equipamentos, fabricados até 24 de março de 2012, cujos componentes de partida, parada, acionamento e controles não possibilitem a instalação e funcionamento de sistema de parada de emergência, quando aplicável, conforme itens e subitens do capítulo sobre dispositivos de parada de emergência da NR-12, e/ou que não operem em extrabaixa tensão de até 25 VCA (vinte e cinco volts em corrente alternada) ou de até 60 VCC (sessenta volts em corrente contínua), quando a apreciação de risco indicar a necessidade de proteções contra choques elétricos.
-- **Itens NR-12 violados:** 12.4.13.1, alínea "b"
-- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.13.1, alínea "b", da NR-12, quando a apreciação de risco indicar necessidade de proteção contra choque elétrico.
+- **Itens NR-12 violados:** 12.4.13.1, alíneas "a" e "b"
+- **Capitulação:** Art. 157, inciso I, da CLT, c/c item 12.4.13.1, alíneas "a" e "b", da NR-12, com redação da Portaria 916/2019.
 - **Aplicabilidade a Termo de Interdição:** SIM em risco de choque elétrico em comando.
 - **Gatilhos:** "máquina pré-2012", "máquina antiga", "fabricada antes de 2012", "comando em alta tensão em máquina antiga", "apreciação de risco indica necessidade de extrabaixa tensão".
 - **Texto-base:**
