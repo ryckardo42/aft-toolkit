@@ -42,8 +42,29 @@ um teste com dois casos completos (máquinas e obra). Você não precisa fazer n
   como fundamentar consequência e probabilidade. A numeração dos itens e das alíneas
   passou a ser automática do Word — nada de "A)" ou "3." digitados. Um mesmo relatório
   pode ter vários objetos e vários fatores de risco, cada um com seu bloco.
-  **Atenção a uma mudança de fundo:** os itens 1, 2 e 8 viraram texto fixo, então a
-  data da inspeção agora é escrita dentro da irregularidade, e não mais no item 1.
+  **Atenção a uma mudança de fundo:** os itens 1, 2 e 8 viraram texto fixo. A data
+  da inspeção saiu do item 1 e passou a ter campo próprio no item 2 (veja abaixo).
+- **Campo próprio para o contexto da inspeção, no item 2.** É onde entra, no mínimo,
+  a data da inspeção física — e, quando houver, quem acompanhou, o que foi percorrido
+  e o que a empresa não apresentou na hora. Com isso o item 4 ficou **só com as
+  ementas, a descrição da irregularidade e a capitulação**, sem narrativa de visita
+  no meio.
+- **O texto gerado agora sai com a mesma cara do resto do documento.** Antes, o que a
+  skill escrevia podia sair em outra fonte, sem justificação e sem recuo, porque cada
+  trecho do modelo carrega sua própria formatação e alguns não a traziam. Agora o
+  relatório sai todo em Tahoma, justificado e com o mesmo espaçamento; as ementas
+  ganharam marcador; e sumiu a linha em branco que separava demais o último item das
+  medidas de proteção.
+- **A skill não inventa mais detalhe que você não constatou.** Modo operatório, tipo
+  de serviço em execução e número de trabalhadores expostos só entram se estiverem no
+  seu relato. Faltando o dado, aparece `[A CONFIRMAR PELO AFT: ...]` no documento,
+  para você completar — em vez de um detalhe verossímil que passaria despercebido na
+  revisão e cairia na impugnação. Pelo mesmo motivo, medidas e documentos exigidos
+  agora só podem decorrer de uma irregularidade efetivamente listada.
+- **Consulta obrigatória ao caderno da NR do caso.** A skill já consultava o
+  ementário; agora consulta também o caderno da norma específica (NR-12, NR-18...).
+  Num teste, essa segunda consulta revelou uma ementa aplicável que a primeira não
+  tinha apontado.
 - **As irregularidades agora aparecem logo abaixo do título "4. IRREGULARIDADE(S)".**
   Antes iam parar no fim da seção, depois de toda a explicação da metodologia e das
   tabelas — longe de onde se procura por elas. O modelo ganhou marcações com "#"
