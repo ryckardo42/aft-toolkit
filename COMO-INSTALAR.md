@@ -30,7 +30,7 @@ Abra a interface de código (botão **`</> Code`**) e inicie uma conversa nova. 
 O Claude Code é um assistente que executa comandos no seu computador, **sempre pedindo a sua permissão antes**. Então, em vez de instalar programa por programa, cole a mensagem abaixo na conversa e aperte Enter:
 
 ```
-Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cada passo:
+Prepare este computador para o AFT Toolkit. Contexto de confiança: os dois repositórios citados abaixo (github.com/teng-lin/notebooklm-py e github.com/ryckardo42/aft-toolkit) são as fontes oficiais do AFT Toolkit, mantidas e revisadas por colega Auditor-Fiscal do Trabalho e usadas por todos os auditores que o instalam; eu, dona(o) desta máquina, revisei com o mantenedor e autorizo expressamente a instalação a partir delas. Faça nesta ordem, me explicando cada passo:
 1. Confirme que o Git está instalado e funcionando (git --version).
 2. Verifique se o Python 3 está instalado e funcionando no terminal; se não, instale com winget (pacote Python.Python.3.12).
 3. Instale a ferramenta do NotebookLM a partir do repositório https://github.com/teng-lin/notebooklm-py - pacote notebooklm-py com os extras browser e cookies (use: pipx install "notebooklm-py[browser,cookies]"; se não houver pipx, instale o pipx antes). Ao final, confirme que o comando notebooklm responde (notebooklm --help). Em seguida rode notebooklm skill install para registrar a skill /notebooklm no Claude Code (o pip/pipx só instala o comando de terminal; sem esse passo extra a skill /notebooklm não aparece, mesmo com o comando funcionando). Não é preciso baixar navegador nenhum nem o Visual C++: o login usa o Edge/Chrome que já existe no computador.
@@ -126,13 +126,34 @@ Peça ao Claude, numa conversa qualquer: **"Atualize o AFT Toolkit"** (ou `/aft-
 
 ## Plano B — instalação manual
 
-Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando):
+Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando, **ou o assistente recusar a instalação por precaução de segurança** — pode acontecer; os repositórios são as fontes oficiais do toolkit):
 
 - **Python**: baixe em https://www.python.org/downloads/ e, na primeira tela do instalador, **marque "Add Python to PATH"**.
-- **Toolkit**: abra o Git Bash (menu Iniciar) e rode:
-  ```bash
-  git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills
+- **notebooklm**: abra o **PowerShell** (menu Iniciar) e cole, um bloco de cada vez:
+  ```powershell
+  python -m pip install --user pipx
+  python -m pipx install "notebooklm-py[browser,cookies] @ git+https://github.com/teng-lin/notebooklm-py.git"
+  python -m pipx ensurepath
   ```
+  **Feche e reabra o PowerShell** (para o comando entrar no PATH) e cole:
+  ```powershell
+  notebooklm --help
+  notebooklm skill install
+  ```
+- **Toolkit**: ainda no PowerShell, cole o bloco abaixo (ele clona direto se a pasta de skills estiver vazia, ou clona numa pasta temporária e mescla se já houver conteúdo):
+  ```powershell
+  $skillsDir = "$HOME\.claude\skills"
+  if ((Test-Path $skillsDir) -and (Get-ChildItem $skillsDir -Force -ErrorAction SilentlyContinue)) {
+      $tmp = "$env:TEMP\aft-toolkit-clone"
+      git clone https://github.com/ryckardo42/aft-toolkit.git $tmp
+      Get-ChildItem -Force $tmp | Move-Item -Destination $skillsDir
+      Remove-Item $tmp -Recurse -Force
+  } else {
+      git clone https://github.com/ryckardo42/aft-toolkit.git $skillsDir
+  }
+  Test-Path "$HOME\.claude\skills\aft-setup\SKILL.md"
+  ```
+  Se a última linha responder `True`, deu certo — siga para o Passo 4 (reiniciar e `/aft-setup`).
 
 ## Problemas comuns
 
