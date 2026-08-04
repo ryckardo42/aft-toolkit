@@ -178,6 +178,39 @@ Com o endereço do estabelecimento (da demanda ou informado pelo AFT):
 
 ---
 
+## FASE 4.5 — Histórico de acidentes (CATs)
+
+Ir a campo já sabendo **onde a empresa machuca gente** muda a visita: aponta o
+setor, a máquina e o tipo de risco a olhar primeiro. Se o **CNPJ é conhecido**
+(FASE 0/1), gere o histórico de CATs **chamando a `/aft-relatorio-acidentes`**
+(Modo B) — não duplique a lógica dela aqui:
+
+1. Confira a base estadual:
+   `python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --mostrar-base`
+   - Se voltar `PASTA_CATS_NAO_DEFINIDA`, pergunte ao AFT se ele tem a pasta
+     das planilhas de CAT do estado (uma `.xlsx` por ano). Tem → grave com
+     `--definir-base "<pasta>"` e siga. Não tem → **pule a fase** e registre no
+     `preparacao.md`: "Histórico de CATs não consultado (base estadual não
+     configurada)". A preparação nunca trava por isso.
+2. Gere o relatório:
+   `... relatorio_acidentes.py --cnpj <CNPJ> --saida "$PASTA_OS/Acidentes"`
+   (se o AFT anexou um CSV `CatsCNPJ_*.csv` do Portal AFT, use `--csv` no lugar
+   de `--cnpj`). `NENHUMA_CAT` → registre "sem CAT na base consultada" — também
+   é informação de preparação.
+3. Use **somente o resumo agregado** que o script imprime (totais, óbitos,
+   período, tipos, principais agentes causadores e partes do corpo) para
+   preencher a seção `## Histórico de acidentes (CATs)` do `preparacao.md` —
+   **nunca abra o relatório para o chat**: ele contém nome de trabalhador
+   (regra dura da `/aft-relatorio-acidentes`).
+4. Alimente os `## Pontos de atenção para a visita` com o que os agregados
+   gritarem: óbito (destaque sempre), concentração de um agente causador
+   (ex.: máquina → NR-12), reincidência num mesmo período.
+
+Sem CNPJ, pule a fase e registre no `preparacao.md` que o histórico fica
+pendente até o CNPJ ser informado.
+
+---
+
 ## FASE 5 — Checklist de documentos a solicitar
 
 A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
@@ -220,6 +253,14 @@ Google Maps: <link montado na FASE 4> · <link exato do lugar, se houve busca at
 
 ## Quadro de trabalhadores
 <quantitativo e perfil, SEM nomes/CPFs reais — ex.: "32 trabalhadores, produção e logística">
+
+## Histórico de acidentes (CATs)
+<SÓ os agregados do resumo da /aft-relatorio-acidentes (FASE 4.5) — ex.:
+"14 CATs de dd/mm/aaaa a dd/mm/aaaa · óbitos: 1 · Típico: 12, Trajeto: 2 ·
+principais agentes: <agente> (5), <agente> (3) · partes mais atingidas: ...
+Relatório completo: Acidentes/Relatorio-Acidentes-<cnpj>.md (+ .docx)".
+Sem consulta: o motivo ("sem CAT na base", "base não configurada" ou "CNPJ
+pendente"). NUNCA nome de trabalhador aqui>
 
 ## Temas a verificar
 - <tema 1>
@@ -321,6 +362,7 @@ Apresente o resumo final:
 
 Documentos no checklist: M   ·   NAD gerada: sim/não
 Ementas da OS: K no memory.md   ·   🗺️ Maps: link no preparacao.md
+🚑 CATs: N (óbitos: X, <período>) — relatório em Acidentes/   (só se a FASE 4.5 rodou)
 ⏱️ Fiscalização: iniciar até <dd/mm/aaaa> · terminar até <dd/mm/aaaa>   (só se a OS foi lida)
 🗂️ Sessão no menu lateral: automática (aparece no próximo reinício do app)
 
@@ -338,6 +380,7 @@ Próximos passos:
 ## Encadeamento
 
 - Chama `/aft-nova-os` (FASE 1) para resolver/criar a OS — não duplica essa lógica.
+- Chama `/aft-relatorio-acidentes` (FASE 4.5) para o histórico de CATs do CNPJ — o script dela processa tudo localmente e grava em `Acidentes/`; a preparação usa só os agregados.
 - Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho oficial AFT/SIT.
 - Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
 - Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).
