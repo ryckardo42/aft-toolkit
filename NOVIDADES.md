@@ -31,6 +31,15 @@ e óbitos em destaque, mais um resumo estatístico no topo.
   substituídas por retificação e anota reaberturas e comunicações de óbito.
 - **Divisão de trabalho.** Esta skill levanta o histórico; a análise
   aprofundada de um acidente (IN 2/2022) continua com a `/aft-analise-acidente`.
+- **Integrada à preparação da ação fiscal.** A `/aft-preparacao-acao-fiscal`
+  ganhou a FASE 4.5: quando o CNPJ é conhecido, ela chama a
+  `/aft-relatorio-acidentes` e leva o histórico de CATs para o planejamento —
+  o `preparacao.md` ganha a seção "Histórico de acidentes (CATs)" com os
+  agregados (totais, óbitos, período, principais agentes causadores e partes
+  do corpo mais atingidas), e os pontos de atenção da visita passam a apontar
+  o setor e o tipo de risco onde a empresa mais se acidenta. O relatório
+  completo fica na pasta `Acidentes/` da OS; no chat e no `preparacao.md`
+  entram só os números.
 
 ---
 

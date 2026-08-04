@@ -446,7 +446,8 @@ def _estatisticas(registros):
     e["periodo"] = (f"{min(datas).strftime('%d/%m/%Y')} a "
                     f"{max(datas).strftime('%d/%m/%Y')}") if datas else NAO_INFORMADO
     for chave, campo in (("tipos", "tipo_acidente"), ("cats", "tipo_cat"),
-                         ("anos", "ano_base")):
+                         ("anos", "ano_base"), ("causas", "causa"),
+                         ("partes", "parte")):
         cont = {}
         for r in registros:
             v = r.get(campo)
@@ -456,6 +457,15 @@ def _estatisticas(registros):
     if set(e["cats"]) <= {"Inicial"}:  # so vale a pena mostrar se ha reabertura etc.
         e["cats"] = {}
     return e
+
+
+def _top(contagem, n=5):
+    """Os n itens mais frequentes, como 'Nome (12) · Nome (8) · ...'.
+    Rotulos do eSocial podem ser paragrafos inteiros: corta no resumo
+    (a descricao completa continua na listagem por acidente)."""
+    itens = sorted(contagem.items(), key=lambda kv: (-kv[1], kv[0]))[:n]
+    return " · ".join(f"{k[:57] + '...' if len(k) > 60 else k} ({v})"
+                      for k, v in itens)
 
 
 def gerar_md(caminho, empresa, cnpj14, registros, fonte, est):
@@ -478,6 +488,10 @@ def gerar_md(caminho, empresa, cnpj14, registros, fonte, est):
     if est["anos"]:
         L.append("- Por planilha (ano-base): " + " · ".join(
             f"{k}: {v}" for k, v in sorted(est["anos"].items())))
+    if est["causas"]:
+        L.append("- Principais agentes causadores: " + _top(est["causas"]))
+    if est["partes"]:
+        L.append("- Partes do corpo mais atingidas: " + _top(est["partes"]))
     L += ["", "## Acidentes", ""]
     for i, r in enumerate(registros, 1):
         L.append(f"* **{_rotulo(i, r)}**")
@@ -514,6 +528,10 @@ def gerar_docx(caminho, empresa, cnpj14, registros, fonte, est):
     if est["anos"]:
         linhas.append(("Por planilha (ano-base)", " · ".join(
             f"{k}: {v}" for k, v in sorted(est["anos"].items()))))
+    if est["causas"]:
+        linhas.append(("Principais agentes causadores", _top(est["causas"])))
+    if est["partes"]:
+        linhas.append(("Partes do corpo mais atingidas", _top(est["partes"])))
     linhas.append(("Fonte", fonte))
     m.tabela_rotulo_valor(doc, linhas)
 
@@ -622,6 +640,10 @@ def main():
         print("  Por tipo: " + " · ".join(f"{k}: {v}" for k, v in sorted(est["tipos"].items())))
     if est["anos"]:
         print("  Por planilha: " + " · ".join(f"{k}: {v}" for k, v in sorted(est["anos"].items())))
+    if est["causas"]:
+        print("  Principais agentes causadores: " + _top(est["causas"], 3))
+    if est["partes"]:
+        print("  Partes do corpo mais atingidas: " + _top(est["partes"], 3))
     if descartados:
         print(f"  CATs retificadas descartadas (substituídas pela retificação): {descartados}")
     print(f"  MD:   {md_path}")

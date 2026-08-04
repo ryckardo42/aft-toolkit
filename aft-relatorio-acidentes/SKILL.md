@@ -128,6 +128,14 @@ período A-B (Acidentes/Relatorio-Acidentes-<cnpj>.md) | relatorio-acidentes |`)
 - Planilha ignorada com aviso → o arquivo não tem a coluna de inscrição do
   estabelecimento; confirme com o AFT se aquele `.xlsx` é mesmo da base de CATs.
 
+## Encadeamento
+
+- A `/aft-preparacao-acao-fiscal` chama esta skill (FASE 4.5 dela) para levar o
+  histórico de CATs ao planejamento pré-visita — mesma mecânica, mesma pasta
+  `Acidentes/`, e só os agregados vão para o `preparacao.md`.
+- Havendo óbito ou acidente que mereça mérito, o passo seguinte é a
+  `/aft-analise-acidente`.
+
 ## Limites
 
 - A skill **lista e resume**; não classifica infração, não emente, não decide.
