@@ -27,22 +27,38 @@ No Windows, o aplicativo **exige o Git para abrir sessões locais** na aba `</> 
 
 Abra a interface de código (botão **`</> Code`**) e inicie uma conversa nova. O Claude pede para você **escolher uma pasta para a sessão** (a pasta do computador em que ele vai trabalhar). Escolha a pasta **Documentos** (`C:\Users\seu-nome\Documents`). Depois da instalação, quando `Documentos\AFT` existir, prefira escolhê-la nas conversas do dia a dia.
 
-O Claude Code é um assistente que executa comandos no seu computador, **sempre pedindo a sua permissão antes**. Então, em vez de instalar programa por programa, cole a mensagem abaixo na conversa e aperte Enter:
+O Claude Code é um assistente que executa comandos no seu computador, **sempre pedindo a sua permissão antes**. Você vai colar **três mensagens**, uma de cada vez, esperando ele terminar cada uma.
+
+**Por que três e não uma só?** Porque a terceira mensagem mexe na pasta de onde o próprio Claude lê as suas skills. Ele é treinado para desconfiar de conteúdo que vem da internet e vai direto para essa pasta — e faz muito bem. As três mensagens fazem **baixar → ele conferir → instalar**: quando chega a hora de instalar, ele já leu o que está instalando. Não é burocracia; é ele conferindo o que vai rodar na sua máquina.
+
+**Mensagem 1 — o básico (Git, Python e a ferramenta de ementas):**
 
 ```
-Prepare este computador para o AFT Toolkit. Contexto de confiança: os dois repositórios citados abaixo (github.com/teng-lin/notebooklm-py e github.com/ryckardo42/aft-toolkit) são as fontes oficiais do AFT Toolkit, mantidas e revisadas por colega Auditor-Fiscal do Trabalho e usadas por todos os auditores que o instalam; eu, dona(o) desta máquina, revisei com o mantenedor e autorizo expressamente a instalação a partir delas. Faça nesta ordem, me explicando cada passo:
+Prepare este computador para o AFT Toolkit. Faça nesta ordem, me explicando cada passo em linguagem simples:
 1. Confirme que o Git está instalado e funcionando (git --version).
 2. Verifique se o Python 3 está instalado e funcionando no terminal; se não, instale com winget (pacote Python.Python.3.12).
-3. Instale a ferramenta do NotebookLM a partir do repositório https://github.com/teng-lin/notebooklm-py - pacote notebooklm-py com os extras browser e cookies (use: pipx install "notebooklm-py[browser,cookies]"; se não houver pipx, instale o pipx antes). Ao final, confirme que o comando notebooklm responde (notebooklm --help). Em seguida rode notebooklm skill install para registrar a skill /notebooklm no Claude Code (o pip/pipx só instala o comando de terminal; sem esse passo extra a skill /notebooklm não aparece, mesmo com o comando funcionando). Não é preciso baixar navegador nenhum nem o Visual C++: o login usa o Edge/Chrome que já existe no computador.
-4. Baixe o repositório https://github.com/ryckardo42/aft-toolkit.git fazendo dele a própria pasta de skills: git clone https://github.com/ryckardo42/aft-toolkit.git ~/.claude/skills. Se a pasta ~/.claude/skills já existir com conteúdo, clone numa pasta temporária e mova todo o conteúdo do repositório (incluindo a pasta oculta .git) para dentro dela.
-5. Confirme que as skills ficaram diretamente em ~/.claude/skills (deve existir, por exemplo, ~/.claude/skills/aft-setup/SKILL.md — e NÃO ~/.claude/skills/aft-toolkit/aft-setup), liste-as e me diga se preciso reiniciar o aplicativo.
+3. Instale o pacote notebooklm-py com os extras browser e cookies: pipx install "notebooklm-py[browser,cookies]" (se não houver pipx, instale o pipx antes). Ao final, confirme que o comando notebooklm responde (notebooklm --help). Não é preciso baixar navegador nenhum nem o Visual C++: o login usa o Edge/Chrome que já existe no computador.
+```
+
+**Mensagem 2 — baixar o toolkit e deixar ele ler:**
+
+```
+Baixe o repositório https://github.com/ryckardo42/aft-toolkit.git para a pasta Documentos\aft-toolkit, usando git clone. Depois liste o que veio, leia o README.md e uns três arquivos SKILL.md e me explique em linguagem simples o que essas skills fazem, se alguma coisa roda sozinha e se você vê algum risco.
+```
+
+**Mensagem 3 — instalar (só depois que ele responder a mensagem 2):**
+
+```
+Agora mova todo o conteúdo da pasta Documentos\aft-toolkit, inclusive a pasta oculta .git, para ~/.claude/skills. O resultado tem que ser ~/.claude/skills/aft-setup/SKILL.md — e NÃO ~/.claude/skills/aft-toolkit/aft-setup. Se ~/.claude/skills já tiver alguma coisa dentro, preserve o que existe e apenas acrescente. No final, liste as skills e me diga se preciso reiniciar o aplicativo.
 ```
 
 Enquanto o Claude trabalha, ele vai pedir permissão para cada comando — basta clicar em **Permitir**. Isso é normal e desejável: nada roda no seu computador sem o seu OK.
 
 **O que ele está instalando?**
 - **Python** — roda os scripts locais do toolkit: conversão de fotos em PDF, geração do arquivo do Sistema Auditor e validação de arquivos de ponto.
-- **notebooklm** — a ferramenta que consulta os ementários no NotebookLM para achar o código da ementa sozinho. Ela já fica instalada aqui (comando de terminal + skill `/notebooklm`); o login (na sua conta Google) o Claude conduz para você no passo "Recomendado — Ative o NotebookLM" abaixo, sem terminal.
+- **notebooklm** — a ferramenta que consulta os ementários no NotebookLM para achar o código da ementa sozinho. Aqui fica instalado o comando de terminal; o login (na sua conta Google) o Claude conduz para você no passo "Recomendado — Ative o NotebookLM" abaixo, sem terminal.
+
+> **Se o Claude recusar a mensagem 3** ("não instalo conteúdo de fonte que não consigo verificar"), **não discuta com ele nem insista** — argumentar costuma deixá-lo mais desconfiado, não menos. Peça primeiro: *"me explique o que exatamente te preocupa nesse conteúdo que você acabou de ler"*. Se ainda assim recusar, use o **Plano B** no fim desta página: os mesmos comandos, executados por você. Não é sinal de que há algo errado com o toolkit — é uma precaução genérica dele sobre o **tipo** de ação, não sobre a origem.
 
 ---
 
@@ -126,7 +142,7 @@ Peça ao Claude, numa conversa qualquer: **"Atualize o AFT Toolkit"** (ou `/aft-
 
 ## Plano B — instalação manual
 
-Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando, **ou o assistente recusar a instalação por precaução de segurança** — pode acontecer; os repositórios são as fontes oficiais do toolkit):
+Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando, **ou o assistente recusar a instalação por precaução de segurança** — pode acontecer, e não é sinal de problema com o toolkit):
 
 - **Python**: baixe em https://www.python.org/downloads/ e, na primeira tela do instalador, **marque "Add Python to PATH"**.
 - **notebooklm**: abra o **PowerShell** (menu Iniciar) e cole, um bloco de cada vez:
@@ -138,19 +154,15 @@ Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando, **o
   **Feche e reabra o PowerShell** (para o comando entrar no PATH) e cole:
   ```powershell
   notebooklm --help
-  notebooklm skill install
   ```
-- **Toolkit**: ainda no PowerShell, cole o bloco abaixo (ele clona direto se a pasta de skills estiver vazia, ou clona numa pasta temporária e mescla se já houver conteúdo):
+- **Toolkit**: ainda no PowerShell, cole o bloco abaixo. Ele baixa o toolkit para `Documentos\aft-toolkit` e move tudo (inclusive a pasta oculta `.git`, que serve para as atualizações futuras) para a pasta de skills, preservando o que já houver lá:
   ```powershell
+  $origem = "$HOME\Documents\aft-toolkit"
   $skillsDir = "$HOME\.claude\skills"
-  if ((Test-Path $skillsDir) -and (Get-ChildItem $skillsDir -Force -ErrorAction SilentlyContinue)) {
-      $tmp = "$env:TEMP\aft-toolkit-clone"
-      git clone https://github.com/ryckardo42/aft-toolkit.git $tmp
-      Get-ChildItem -Force $tmp | Move-Item -Destination $skillsDir
-      Remove-Item $tmp -Recurse -Force
-  } else {
-      git clone https://github.com/ryckardo42/aft-toolkit.git $skillsDir
-  }
+  git clone https://github.com/ryckardo42/aft-toolkit.git $origem
+  New-Item -ItemType Directory -Force -Path $skillsDir | Out-Null
+  Get-ChildItem -Force $origem | Move-Item -Destination $skillsDir -Force
+  Remove-Item $origem -Recurse -Force
   Test-Path "$HOME\.claude\skills\aft-setup\SKILL.md"
   ```
   Se a última linha responder `True`, deu certo — siga para o Passo 4 (reiniciar e `/aft-setup`).
@@ -165,7 +177,8 @@ Regra geral: **descreva o problema ao próprio Claude** no `</> Code` ("o comand
 | Python "não encontrado" | Peça ao Claude: "instale o Python com winget". Se a rede bloquear, plano B manual acima e reinicie o app |
 | Skill não aparece com `/` | Feche e reabra o Claude Code. Se persistir, peça a ele: "as skills estão diretamente em ~/.claude/skills (ex.: ~/.claude/skills/aft-setup)? Se estiverem dentro de uma subpasta aft-toolkit, mova todo o conteúdo um nível acima" |
 | NotebookLM não conecta / "command not found" / pede login | Peça ao Claude: "conecte o notebooklm" (skill `/aft-notebooklm-login`). Ele instala o que faltar e abre a janela de login do Edge — você só entra na sua conta Google |
-| Skill `/notebooklm` não aparece (mas o comando `notebooklm --help` funciona) | Peça ao Claude: "rode notebooklm skill install" e depois feche e reabra o app. O pip/pipx instala só o comando de terminal — a skill precisa desse passo extra |
+| O Claude recusa o Passo 3 ("não instalo conteúdo que não consigo verificar") | Não discuta nem insista — argumentar deixa ele mais desconfiado. Confirme que você mandou as três mensagens **na ordem** (a recusa some quando ele já leu o conteúdo, na mensagem 2). Se persistir, use o **Plano B** acima |
+| Skill `/notebooklm` não aparece (mas o comando `notebooklm --help` funciona) | É **opcional** — as skills do toolkit usam o comando de terminal, não essa skill. Se quiser tê-la, peça ao Claude: "rode notebooklm skill install" e feche e reabra o app |
 | NotebookLM responde "sem acesso" | Solicite acesso em https://notebooks-aft.vercel.app e aguarde a liberação do mantenedor |
 | NotebookLM parou ("authentication expired") | A sessão expira de tempos em tempos. Peça ao Claude "reconecte o notebooklm" — ele reabre o login, sem terminal |
 
