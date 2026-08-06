@@ -66,7 +66,14 @@ só arquivo, do auto mais antigo ao mais novo, cada um seguido do próprio anexo
   final é salvo na pasta da OS, em `AUTOS/Autos reunidos/`.
 - **Anexo do relatório final.** O `/aft-sfitweb-rel` agora avisa, ao montar o
   relatório, que este dossiê também será gerado — e o entrega junto, como
-  anexo do relatório.
+  anexo do relatório. Nesse fluxo, o `autos-reunidos.pdf` é salvo na própria
+  pasta `Relatórios de Fiscalização/`, ao lado do relatório.
+- **Página "ANEXOS - Autos de Infração" no relatório.** O `relatorio-final.docx`
+  ganha uma página final apresentando o dossiê, com as observações que
+  importam: no modo Econômico, que os anexos foram limitados a 10 páginas e
+  que o inteiro teor pode ser solicitado ao Núcleo de Multas; sempre, que
+  anexos repetidos aparecem uma única vez; e o total de páginas dos arquivos
+  originais que ficaram de fora. Regerar não duplica a página, só a atualiza.
 
 É diferente do `/aft-autos-lavrados`: aquele interpreta os autos e gera o
 snapshot e a Relação em `.docx`; este só junta os PDFs num dossiê único.

@@ -92,6 +92,11 @@ Padrão: `<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.pdf` (em OS sem a caixa
 avise no chat. Se a empresa **não tem pasta de OS** em `<OS_ATIVAS>`, pergunte ao
 AFT onde salvar (sugira a Área de Trabalho).
 
+> **Encadeada pelo `/aft-sfitweb-rel` (Passo 6 de lá):** o destino muda para
+> `<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.pdf`, com o JSON gravado
+> ao lado (`autos-reunidos.json`) — ele alimenta a página "ANEXOS - Autos de
+> Infração" do `relatorio-final.docx`.
+
 ### Passo 2.5 — Oferecer o modo (obrigatório, antes de processar)
 
 Use `AskUserQuestion` explicando os dois modos em linguagem simples:
