@@ -12,15 +12,18 @@ rever tudo, basta abrir este arquivo.
 **Nova skill `/aft-autos-pdf-reunidos`: todos os autos da empresa em um único
 PDF.** Você pede, ela varre a pasta da empresa no Sistema Auditor e entrega um
 só arquivo, do auto mais antigo ao mais novo, cada um seguido do próprio anexo
-(as fotos e documentos da pasta `AX_` daquele auto).
+**completo** (as fotos e documentos da pasta `AX_` daquele auto).
 
-- **Anexo tem teto de 4 páginas por auto.** Um PGR de 400 páginas anexado a um
-  auto entra só com as 4 primeiras — o relatório final lista, auto por auto, o
-  que foi cortado, para você saber exatamente o que ficou de fora.
+- **Autos de jornada vão para o fim.** Os autos de excesso de jornada,
+  intervalos e AFD/AEJ carregam centenas de páginas de relatórios de ponto; a
+  skill lê a ementa de cada auto e desloca esses para o final do arquivo, para
+  não afogar os demais no meio do dossiê.
 - **Fácil de navegar:** o PDF sai com índice lateral (um marcador por auto, com
   os anexos aninhados) e já comprimido.
 - **Nada muda no Sistema Auditor:** a skill só lê os PDFs de lá; o arquivo
   final é salvo na pasta da OS, em `AUTOS/Autos reunidos/`.
+- Se quiser um dossiê enxuto, dá para pedir um limite de páginas por anexo
+  (ex.: "reúna os autos limitando o anexo a 4 páginas").
 
 É diferente do `/aft-autos-lavrados`: aquele interpreta os autos e gera o
 snapshot e a Relação em `.docx`; este só junta os PDFs num dossiê único.

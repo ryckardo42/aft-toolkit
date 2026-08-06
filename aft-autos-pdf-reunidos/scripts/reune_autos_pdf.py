@@ -15,13 +15,15 @@ Uso:
   --pasta-pro: pasta "PRO" do Sistema Auditor, se a instalação for fora do
   padrão. Sem ela, usa SISTEMA_AUDITOR_PRO, depois procura o disco do Parallels
   em /Volumes/*/SistemasAFT/... (Mac) e por fim o padrão do Windows.
-  --paginas-anexo: máximo de páginas do anexo de CADA auto (padrão 4). O que
-  passar disso é cortado; o corte fica registrado no JSON de saída.
+  --paginas-anexo: se maior que zero, limita o anexo de CADA auto a N páginas
+  (o corte fica registrado no JSON). Padrão 0 = anexo entra inteiro.
 
 Montagem: AI + anexo, AI + anexo... do auto mais antigo ao mais novo (a
-numeração do AI é crescente no tempo). Dentro do anexo, os PDFs entram em
-ordem alfabética. Ao final o arquivo é comprimido (Ghostscript /ebook se
-houver; senão pikepdf) e a versão menor é mantida.
+numeração do AI é crescente no tempo). Exceção: autos de JORNADA (ementas de
+excesso de jornada, intervalos, AFD/AEJ e atestado do REP — anexos volumosos)
+vão para o FIM do arquivo, na ordem cronológica entre si. Dentro do anexo, os
+PDFs entram em ordem alfabética. Ao final o arquivo é comprimido (Ghostscript
+/ebook se houver; senão pikepdf) e a versão menor é mantida.
 
 Read-only sobre o Sistema Auditor: nada é gravado nem alterado na pasta PRO.
 Saída: JSON em stdout com o resumo da montagem.
@@ -54,6 +56,19 @@ from pathlib import Path
 
 PADRAO_PRO_WINDOWS = r"C:\SistemasAFT\Auditor\Docs\AutosDeInfracao\PRO"
 RE_AI_NOME = re.compile(r"AI_(\d{9})")
+RE_EMENTA_ROTULO = re.compile(r"Ementa:\s*(\d{7})")
+RE_EMENTA_NUM = re.compile(r"(\d{6}-\d)")
+
+# Ementas de JORNADA — autos que costumam carregar anexos volumosos (relatórios
+# de ponto por empregado) e por isso vão para o fim do PDF reunido:
+#   000017-5 excesso de jornada semanal · 000018-3 excesso de jornada diária ·
+#   000035-3 intervalo interjornada · 000044-2 intervalo intrajornada ·
+#   001008-1 intervalo do art. 384/71 · 002277-2 e 002278-0 atestado REP ·
+#   002279-9 AFD (art. 81 Port. 671) · 002280-2 AEJ (art. 83, I Port. 671).
+EMENTAS_JORNADA = {
+    "000017-5", "000018-3", "000035-3", "000044-2", "001008-1",
+    "002277-2", "002278-0", "002279-9", "002280-2",
+}
 
 
 def numero_ai_formatado(digitos9: str) -> str:
@@ -161,6 +176,26 @@ def list_pdf_anexos(pasta_ax: Path) -> list[Path]:
     return sorted(files, key=lambda p: p.name.lower())
 
 
+def extrair_ementa(reader) -> str | None:
+    """Número da ementa do auto, no formato NNNNNN-N. Procura o rótulo
+    'Ementa: NNNNNNN' (padrão do Sistema Auditor); em falta, o primeiro
+    NNNNNN-N logo após 'EMENTA (Nº/Descrição):'. None se ilegível."""
+    try:
+        texto = "\n".join((p.extract_text() or "") for p in reader.pages)
+    except Exception:
+        return None
+    m = RE_EMENTA_ROTULO.search(texto)
+    if m:
+        d = m.group(1)
+        return f"{d[:6]}-{d[6]}"
+    i = texto.find("EMENTA (Nº/Descrição):")
+    if i >= 0:
+        m = RE_EMENTA_NUM.search(texto[i:i + 400])
+        if m:
+            return m.group(1)
+    return None
+
+
 def abrir_pdf(caminho: Path):
     """Abre o PDF com pypdf; devolve (reader, None) ou (None, motivo)."""
     from pypdf import PdfReader
@@ -224,7 +259,7 @@ def main() -> int:
     ap.add_argument("identificador")
     ap.add_argument("saida")
     ap.add_argument("--pasta-pro", default=None)
-    ap.add_argument("--paginas-anexo", type=int, default=4)
+    ap.add_argument("--paginas-anexo", type=int, default=0)
     try:
         args = ap.parse_args()
     except SystemExit:
@@ -244,8 +279,9 @@ def main() -> int:
         "match_estrategia": "nao_encontrado",
         "candidatos_alternativos": [],
         "saida": str(saida),
-        "paginas_anexo_limite": args.paginas_anexo,
+        "paginas_anexo_limite": args.paginas_anexo if args.paginas_anexo > 0 else None,
         "autos": [],
+        "autos_jornada_no_fim": [],
         "anexos_orfaos": [],
         "total_autos": 0,
         "total_paginas": 0,
@@ -291,12 +327,30 @@ def main() -> int:
     pagina_atual = 0
     numeros_ai = set()
 
+    # 1º passe: abre cada auto, lê a ementa e separa os de jornada (anexos
+    # volumosos), que vão para o fim — cronológicos entre si.
+    comuns, jornada = [], []
     for pdf in pdfs:
         m = RE_AI_NOME.search(pdf.name)
         digitos = m.group(1) if m else None
+        reader, erro = abrir_pdf(pdf)
+        ementa = extrair_ementa(reader) if reader is not None else None
+        item = (pdf, digitos, reader, erro, ementa)
+        if ementa in EMENTAS_JORNADA:
+            jornada.append(item)
+        else:
+            comuns.append(item)
+
+    result["autos_jornada_no_fim"] = [
+        numero_ai_formatado(d) if d else p.name for p, d, *_ in jornada]
+
+    # 2º passe: monta o PDF na ordem final.
+    for pdf, digitos, reader, erro, ementa in comuns + jornada:
         info: dict = {
             "arquivo": pdf.name,
             "numero_ai": numero_ai_formatado(digitos) if digitos else None,
+            "ementa_num": ementa,
+            "jornada": ementa in EMENTAS_JORNADA,
             "paginas_auto": 0,
             "anexos": [],
             "anexo_cortado": False,
@@ -304,7 +358,6 @@ def main() -> int:
         }
         result["autos"].append(info)
 
-        reader, erro = abrir_pdf(pdf)
         if reader is None:
             info["warnings"].append(f"auto pulado: {erro}")
             continue
@@ -321,6 +374,7 @@ def main() -> int:
         pasta_ax = pasta / f"AX_{digitos}"
         if not pasta_ax.is_dir():
             continue
+        sem_limite = args.paginas_anexo <= 0
         restante = args.paginas_anexo
         for anexo in list_pdf_anexos(pasta_ax):
             ax_info = {"arquivo": anexo.name, "paginas_total": None,
@@ -331,16 +385,17 @@ def main() -> int:
                 info["warnings"].append(f"anexo {anexo.name} pulado: {erro2}")
                 continue
             ax_info["paginas_total"] = len(r2.pages)
-            if restante <= 0:
+            if not sem_limite and restante <= 0:
                 info["anexo_cortado"] = True
                 continue
-            incluir = min(len(r2.pages), restante)
+            incluir = len(r2.pages) if sem_limite else min(len(r2.pages), restante)
             writer.append(r2, pages=(0, incluir), import_outline=False)
             writer.add_outline_item(f"Anexo: {anexo.name}", pagina_atual,
                                     parent=marcador)
             ax_info["paginas_incluidas"] = incluir
             pagina_atual += incluir
-            restante -= incluir
+            if not sem_limite:
+                restante -= incluir
             if incluir < len(r2.pages):
                 info["anexo_cortado"] = True
 

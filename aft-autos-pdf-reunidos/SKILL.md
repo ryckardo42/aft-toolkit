@@ -34,15 +34,18 @@ Varre a pasta da empresa no Sistema Auditor (a mesma que o `/aft-autos-lavrados`
 usa) e monta **um único PDF** na ordem cronológica de lavratura:
 
 ```
-AI mais antigo → anexo dele → próximo AI → anexo dele → ... → AI mais novo
+AI mais antigo → anexo dele → próximo AI → anexo dele → ... → autos de JORNADA por último
 ```
 
 - **Auto:** cada `AI_<9 dígitos>.PDF` da raiz entra **completo**. A ordem é o
   número do AI (crescente no tempo).
-- **Anexo:** se existir a pasta `AX_<mesmos 9 dígitos>`, os PDFs dela entram logo
-  após o auto, em ordem alfabética — limitados a **4 páginas por auto** (total da
-  pasta AX). O que passar disso é cortado, e o corte é registrado no relatório.
-  Um PGR de 425 páginas, por exemplo, entra só com as 4 primeiras.
+- **Anexo:** se existir a pasta `AX_<mesmos 9 dígitos>`, os PDFs dela entram
+  **inteiros** logo após o auto, em ordem alfabética. (Se o AFT pedir para
+  limitar, existe a opção `--paginas-anexo N`.)
+- **Jornada por último:** autos cuja ementa é de jornada (excesso diário/semanal,
+  interjornada, intrajornada, AFD/AEJ, atestado do REP — a lista exata está no
+  script) carregam anexos volumosos de ponto e vão para o **fim** do PDF, na
+  ordem cronológica entre si. O script lê a ementa do próprio PDF do auto.
 - **Navegação:** o PDF final tem marcadores (índice lateral do leitor de PDF) —
   um por auto, com os anexos aninhados.
 - **Compressão:** o arquivo é comprimido ao final (Ghostscript, se instalado;
@@ -89,8 +92,8 @@ AFT onde salvar (sugira a Área de Trabalho).
 python ~/.claude/skills/aft-autos-pdf-reunidos/scripts/reune_autos_pdf.py "<EMPRESA>" "<CNPJ_OU_8DIGITOS>" "<SAIDA.pdf>"
 ```
 
-Opções: `--pasta-pro "<PRO alternativa>"` · `--paginas-anexo N` (padrão 4; use
-outro valor **só se o AFT pedir**).
+Opções: `--pasta-pro "<PRO alternativa>"` · `--paginas-anexo N` (padrão 0 =
+anexo inteiro; só limite as páginas **se o AFT pedir**).
 
 Capture o JSON do stdout. Campos que importam:
 
@@ -98,8 +101,10 @@ Capture o JSON do stdout. Campos que importam:
   `null` com `candidatos_alternativos`, pergunte qual é (`AskUserQuestion`) e
   rode de novo com os 8 dígitos certos. Se `nome_prefixo`, diga ao AFT que o
   match foi pelo nome (conferência parcial).
-- `autos[]` — por auto: `numero_ai`, `paginas_auto`, `anexos[]` (com
-  `paginas_total` × `paginas_incluidas`), `anexo_cortado`, `warnings`.
+- `autos[]` — por auto (já na ordem final do PDF): `numero_ai`, `ementa_num`,
+  `jornada`, `paginas_auto`, `anexos[]` (com `paginas_total` ×
+  `paginas_incluidas`), `anexo_cortado`, `warnings`.
+- `autos_jornada_no_fim` — os AIs de jornada deslocados para o fim.
 - `anexos_orfaos` — pastas `AX_` sem auto correspondente (não entram no PDF).
 - `total_autos`, `total_paginas`, `tamanho_mb`, `compressao`.
 - `errors` — reporte e pare.
@@ -112,13 +117,11 @@ Capture o JSON do stdout. Campos que importam:
 📄 Arquivo: <caminho do PDF>  (<total_paginas> páginas, <tamanho_mb> MB)
 🗂️  Fonte: <basename pasta_auditor> (<total_autos> autos, match: <estrategia>)
 
-Anexos cortados no limite de 4 páginas:
-  AI <numero_ai> — <arquivo> (<paginas_total> pág. → 4)
-  ...
+Autos de jornada deslocados para o fim: <lista de AIs, ou "nenhum">
 ```
 
-- Liste **todos** os cortes (transparência: o AFT precisa saber o que ficou de
-  fora). Sem cortes, diga "nenhum anexo precisou ser cortado".
+- Se o AFT usou `--paginas-anexo`, liste **todos** os cortes (`anexo_cortado`):
+  `AI <numero_ai> — <arquivo> (<paginas_total> pág. → <paginas_incluidas>)`.
 - Se houver `warnings` (PDF ilegível pulado) ou `anexos_orfaos`, relate.
 - Lembre em uma linha: os PDFs originais continuam intactos no Sistema Auditor.
 
@@ -138,7 +141,11 @@ Anexos cortados no limite de 4 páginas:
 - **Read-only no Sistema Auditor.** O PDF final nunca é gravado na pasta `PRO`.
 - **Nenhum auto fica de fora.** Todos os `AI_*.PDF` da pasta entram — inclusive
   eventuais autos cancelados/re-lavrados (quem julga validade é o
-  `/aft-autos-lavrados`). Só o anexo é cortado, nunca o auto.
+  `/aft-autos-lavrados`). Auto com ementa ilegível não vira jornada: fica na
+  posição cronológica normal.
+- **Nunca invente ementa de jornada.** A lista `EMENTAS_JORNADA` do script é a
+  única fonte da classificação; para incluir outra ementa, o AFT pede e o
+  mantenedor atualiza o script.
 - Não ecoar no chat nome/CPF de trabalhador que apareça em nome de arquivo de
   anexo — cite só o AI e a contagem de páginas nesses casos.
 - Nunca enviar o PDF (nem os autos) a serviço externo — compressão é sempre
