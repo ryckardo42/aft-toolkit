@@ -309,18 +309,30 @@ que aquela máquina precisa ter, e é contra ele que o AFT vai julgar o pedido d
 suspensão. Sem essa amarração, o empregador junta laudo genérico e o exame vira
 discussão sobre o que deveria ter sido pedido.
 
-Anexos confirmados no ementário para os casos mais comuns de supermercado/açougue:
+**Resolva o anexo pela tabela de correlação**, em
+`~/.claude/skills/aft-rt-rgi/references/anexos-nr12.md` — leia esse arquivo sempre que
+o RT interditar máquina. Ele traz o escopo dos 12 anexos, a tabela máquina → anexo →
+item a citar (itens conferidos no notebook da NR-12) e, no fim, as **dispensas
+expressas** de cada anexo, que limitam o que se pode exigir no item 7. Exemplos:
 
 | Máquina | Anexo da NR-12 | Item a citar |
 |---|---|---|
-| Moedor de carne (picador) | Anexo VII (Máquinas para Açougue, Mercearia, Bares e Restaurantes) | todo o item 4 (4. Moedor de carne - Picador) |
-| Prensa enfardadeira vertical | Anexo VIII (Prensas e similares) | item 8 (8. Prensa Enfardadeira Vertical) |
+| Moedor de carne (picador) | Anexo VII (Açougue, Mercearia, Bares e Restaurantes) | item 4 (4. Moedor de carne - Picador) |
+| Cilindro sovador | Anexo VI (Panificação e Confeitaria) | item 4 (4. Cilindro Sovador) |
+| Prensa enfardadeira vertical | Anexo VIII (Prensas e Similares) | item 8 (8. Prensa Enfardadeira Vertical) |
 
-Para as demais máquinas, **resolva o anexo pelo notebook da NR** antes de escrever o
-item 7 (mesma consulta do sub-fluxo 1b) — não presuma o anexo pela semelhança física
-da máquina, é o erro que a própria skill já adverte no cheque cruzado (sopradora
-**não** é do Anexo IX). Máquina sem anexo próprio segue pela parte geral da NR-12:
-peça ART e laudo do sistema de segurança citando os itens gerais violados.
+Máquina que **não** estiver na tabela: resolva pelo notebook da NR antes de escrever o
+item 7 (mesma consulta do sub-fluxo 1b). Não presuma o anexo pela semelhança física da
+máquina, é o erro que a própria skill já adverte no cheque cruzado (sopradora **não** é
+do Anexo IX). E a maioria das máquinas **não tem anexo próprio**: nesse caso o item 7
+pede ART e laudo do sistema de segurança citando os itens gerais violados, sem inventar
+anexo. Um mesmo supermercado costuma ter máquinas do Anexo VI (padaria), do VII
+(açougue), do VIII (prensa enfardadeira) e várias sem anexo nenhum.
+
+**Cheque as dispensas antes de exigir.** Cada anexo tem dispensas expressas (extrabaixa
+tensão para moedor de carne e amaciador de bife, arranjo físico para ME/EPP,
+certificação INMETRO na panificação). Cobrar no item 7 algo que o anexo dispensa entrega
+ao empregador um argumento pronto contra o RT. A lista está no arquivo de referência.
 
 **Fórmulas prontas** (adapte máquina, objeto e anexo; mantenha o resto literal):
 
@@ -337,9 +349,14 @@ peça ART e laudo do sistema de segurança citando os itens gerais violados.
 > link de acesso à nuvem com vídeos do funcionamento das proteções. Laudo deve ser
 > assinado por Profissional legalmente habilitado (Engenheiro).
 
-Use a **primeira** quando a máquina exigir interface de segurança (relé/CLP) e
-categoria de segurança declarada; a **segunda** quando a adequação for de proteção
-mecânica/geometria, sem categoria a comprovar.
+**Qual fórmula usar** — decida pelo item 4 do próprio RT, não por impressão: se entre
+as irregularidades daquela máquina houver **alguma ementa de interface de segurança,
+categoria de segurança, monitoramento ou redundância** (312364-2, 312360-0, 312356-1,
+312367-7 e afins), use a **primeira** fórmula, porque há categoria a comprovar. Se as
+ementas forem só de proteção mecânica, geometria ou enclausuramento (312358-8, 312377-4,
+312603-0, 312604-8 e afins), use a **segunda**. Na dúvida, a primeira: pedir a descrição
+da categoria atingida não prejudica ninguém, e a falta dela é o que mais trava o exame
+do pedido de suspensão.
 
 **Um laudo por máquina (ou por grupo de máquinas do mesmo anexo), não um por
 ementa.** Várias ementas da mesma máquina se provam com um único laudo conclusivo
@@ -697,7 +714,9 @@ Competência delegada pela Portaria 1719/2014...
 | Irregularidade só em parte da obra/estabelecimento | Paralisação PARCIAL delimitando o escopo (pavimentos, setor, máquinas), pela regra da menor unidade possível (3.2.2.3.1 da NR-03) |
 | AFT quer foto no RT | Passo 4-bis (`inserir_foto_docx.py`); se a imagem só existir colada no chat, pedir ao AFT para salvá-la como arquivo |
 | Máquina interditada tem anexo próprio na NR-12 | Item 7 deve exigir laudo **conclusivo pela adequação ao anexo**, citando anexo e item (ver "Como pedir laudo de máquina") |
-| Anexo da máquina desconhecido | Resolver pelo notebook da NR antes de escrever o item 7 — nunca presumir pela semelhança física da máquina |
+| Anexo da máquina desconhecido | Consultar `references/anexos-nr12.md`; se a máquina não estiver lá, resolver pelo notebook da NR — nunca presumir pela semelhança física |
+| Máquina sem anexo próprio (maioria dos casos) | Item 7 pede ART e laudo do sistema de segurança citando os itens gerais violados, sem inventar anexo |
+| Anexo dispensa o que se ia exigir | Conferir a seção "Armadilhas" de `references/anexos-nr12.md` antes de fechar o item 7 |
 | Várias ementas da mesma máquina | Um único laudo conclusivo pelo anexo cobre todas; não desmembrar o item 7 em um documento por ementa |
 | Placeholder `{{chave}}` não encontrado | Foi apagado do template. Recolocá-lo no Word, exatamente com duas chaves e sem espaços internos, ou usar o fallback manual |
 | Sobrou `{{...}}` no documento final | O script aborta antes de gravar: falta o campo no JSON. Conferir o dicionário |
