@@ -285,6 +285,28 @@ python ~/.claude/skills/_scripts/instalar_agentes.py
 - Falhou → **não é bloqueante** (as skills degradam para o modo inline); registre no
   resumo.
 
+## Passo 2h — Notebooks novos no ementário (só se o mapa mudou)
+
+Quando o toolkit ganha um notebook novo (uma NR que passou a ter ementário próprio), ele
+entra no mapa `config/notebooks.json` — mas o Google **não** o coloca na coleção do AFT
+sozinho: cada pessoa precisa abri-lo uma vez. Confira se o `git pull` do Passo 1 mexeu
+no mapa:
+
+```bash
+cd ~/.claude/skills && git diff --name-only HEAD@{1} HEAD -- config/notebooks.json
+```
+
+- **Nada** → pule este passo (não gaste tempo sondando o que já funcionava).
+- **Apareceu o arquivo** → rode a conferência de acesso:
+  ```bash
+  python "<python_path>" ~/.claude/skills/_scripts/notebooklm_acesso.py
+  ```
+  Se vier algo em `indisponiveis`, dê o recado do **Passo 5 da `/aft-notebooklm-login`**
+  (link clicável de cada um + "abra e escreva oi na caixa de chat"), mencionando que são
+  os notebooks novos desta atualização. Se `estado` for `cli-ausente` ou
+  `sessao-expirada`, apenas registre no resumo e sugira `/aft-notebooklm-login` — não é
+  bloqueante.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve

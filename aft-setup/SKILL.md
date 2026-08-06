@@ -386,13 +386,20 @@ mandar o AFT ao terminal** — o fluxo detalhado, com fallbacks, está na skill
    do dia a dia.) Sem o sandbox desabilitado dá `spawn UNKNOWN` (limitação do sandbox,
    não do PC — nunca mande o AFT ao terminal por isso). Fallbacks: o outro navegador
    (`chrome` <-> `msedge`), depois `notebooklm login` (Chromium próprio, baixado sozinho).
-6. **Pedir acesso e testar:** se a lista vier vazia ou "sem acesso", o AFT solicita
-   acesso em https://notebooks-aft.vercel.app (conta Google); o mantenedor (Ricardo,
-   SRTE/GO) libera os notebooks. Confirme com:
+6. **Conferir o que o AFT realmente consulta** (e não o `notebooklm list`):
    ```bash
-   notebooklm --quiet list
+   python "<python_path>" ~/.claude/skills/_scripts/notebooklm_acesso.py
    ```
-   Se aparecer a lista de notebooks, está pronto.
+   Percorre os notebooks do ementário um por um e devolve `disponiveis` /
+   `indisponiveis` / `erros`. **Não use `notebooklm list` como prova de sucesso**: ele
+   lista só os notebooks vistos recentemente, então vem vazio mesmo com tudo certo.
+
+   O que vier em `indisponiveis` precisa de **um primeiro acesso feito pelo AFT** — o
+   Google só põe um notebook compartilhado na coleção da conta depois que a pessoa o
+   abre uma vez, e nenhum comando faz isso por ela. Dê o recado do **Passo 5 da
+   `/aft-notebooklm-login`** (links clicáveis + "escreva oi na caixa de chat" + o portal
+   https://notebooks-aft.vercel.app para quem ainda não tem acesso). Deixe claro que é
+   uma vez por notebook, para sempre, e que ele só precisa abrir os temas que fiscaliza.
 7. **Reconexão automática (recomendado):** grave a variável `NOTEBOOKLM_REFRESH_CMD` para o
    `notebooklm ask` se reautenticar sozinho quando a sessão expirar — vale para TODAS as
    skills, sem wrapper. O valor é o script **silencioso** do toolkit (renova sem abrir
@@ -519,7 +526,8 @@ Apresente:
                        do Sistema Auditor) / falhou — skills seguem no modo inline]
 🛡️ Proteção:          ~/.claude/settings.json [deny-list de segurança aplicada]
 🐍 Python:            [versão] · pillow/pikepdf instalados
-📚 NotebookLM:        [autenticado / pulado — rode /aft-setup depois para ativar]
+📚 NotebookLM:        [autenticado · N de M notebooks já consultáveis (M-N esperando o
+                       seu primeiro "oi") / pulado — rode /aft-setup depois para ativar]
 📊 Painel diário:      [instalado, roda às HH:MM / não instalado — peça a qualquer hora]
 🖥️ Painel interativo:  sempre ligado (sobe sozinho no login; só na sua máquina — peça
                        "remover o painel sempre ligado" se não quiser)
