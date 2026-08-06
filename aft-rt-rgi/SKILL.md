@@ -290,6 +290,66 @@ item 6: ART/laudos, projetos, manuais, ordens de serviço, PGR/PCMSO, certificad
 de treinamento, registros fotográficos, notas fiscais. Um por item. **Manter os
 nomes idênticos aos citados no item 6** (o inciso III do item 8 os referencia).
 
+#### Como pedir laudo de máquina (regra dura)
+
+O documento que o empregador vai juntar no pedido de suspensão precisa **provar a
+adequação de forma verificável**, não apenas afirmar que consertou. Por isso, todo
+laudo de máquina pedido no item 7 deve carregar, **sempre**, estes três elementos:
+
+1. **Fotos** da máquina com as proteções instaladas;
+2. **Link de acesso à nuvem com vídeos do funcionamento das proteções** — o vídeo é
+   o que distingue proteção que funciona de proteção que só está parafusada;
+3. **Assinatura de profissional legalmente habilitado (Engenheiro).**
+
+**Máquina com anexo próprio na NR: exigir laudo CONCLUSIVO por aquele anexo.**
+Quando a máquina interditada tem anexo específico na NR-12, não basta pedir "laudo
+do sistema de segurança": o laudo tem de **concluir pela adequação da máquina ao
+anexo próprio**, com citação expressa do anexo e do item. É o anexo que define o
+que aquela máquina precisa ter, e é contra ele que o AFT vai julgar o pedido de
+suspensão. Sem essa amarração, o empregador junta laudo genérico e o exame vira
+discussão sobre o que deveria ter sido pedido.
+
+Anexos confirmados no ementário para os casos mais comuns de supermercado/açougue:
+
+| Máquina | Anexo da NR-12 | Item a citar |
+|---|---|---|
+| Moedor de carne (picador) | Anexo VII (Máquinas para Açougue, Mercearia, Bares e Restaurantes) | todo o item 4 (4. Moedor de carne - Picador) |
+| Prensa enfardadeira vertical | Anexo VIII (Prensas e similares) | item 8 (8. Prensa Enfardadeira Vertical) |
+
+Para as demais máquinas, **resolva o anexo pelo notebook da NR** antes de escrever o
+item 7 (mesma consulta do sub-fluxo 1b) — não presuma o anexo pela semelhança física
+da máquina, é o erro que a própria skill já adverte no cheque cruzado (sopradora
+**não** é do Anexo IX). Máquina sem anexo próprio segue pela parte geral da NR-12:
+peça ART e laudo do sistema de segurança citando os itens gerais violados.
+
+**Fórmulas prontas** (adapte máquina, objeto e anexo; mantenha o resto literal):
+
+> Anotação de Responsabilidade Técnica (ART) e laudo técnico do sistema de segurança
+> instalado na [MÁQUINA] (Objeto N), com comprovação da categoria de segurança [X] e
+> laudo conclusivo que a máquina atende o anexo [NUMERAL] da NR-12 ([ITEM DO ANEXO]),
+> assinado por Profissional legalmente habilitado (Engenheiro), com fotos, link de
+> acesso à nuvem com vídeos do funcionamento das proteções e interface de segurança
+> (relés/CLP de segurança) instalados, com descrição da categoria de segurança
+> atingida
+
+> Laudo de adequação [DA/DAS MÁQUINA(S)] concluindo pela adequação [DA/DAS
+> MÁQUINA(S)] de acordo com o anexo [NUMERAL] da NR-12 ([ITEM DO ANEXO]), com fotos,
+> link de acesso à nuvem com vídeos do funcionamento das proteções. Laudo deve ser
+> assinado por Profissional legalmente habilitado (Engenheiro).
+
+Use a **primeira** quando a máquina exigir interface de segurança (relé/CLP) e
+categoria de segurança declarada; a **segunda** quando a adequação for de proteção
+mecânica/geometria, sem categoria a comprovar.
+
+**Um laudo por máquina (ou por grupo de máquinas do mesmo anexo), não um por
+ementa.** Várias ementas da mesma máquina se provam com um único laudo conclusivo
+pelo anexo — desmembrar em um documento por ementa produz item 7 inflado e repetitivo,
+e o empregador acaba juntando o mesmo laudo N vezes. Máquinas distintas do mesmo anexo
+(ex.: os dois moedores de carne) podem ir num laudo só, desde que ele conclua pela
+adequação **de cada uma** delas. O que **não** se agrupa: documento que não é laudo
+(procedimento de segurança, certificado de capacitação, ordem de serviço) vai em item
+próprio.
+
 **Fecho** — `cidade`, `uf` (sigla), `data`, `auditor_fiscal` (nome completo, caixa
 alta).
 
@@ -299,7 +359,10 @@ alta).
   numeração dos itens e das alíneas é automática no Word, e o script insere as
   medidas e os documentos como **lista real**.
 - **Coerência obrigatória:** cada irregularidade (item 4) precisa de fator de risco
-  (item 5), medida (item 6) e documento comprobatório (item 7) correspondentes.
+  (item 5), medida (item 6) e documento comprobatório (item 7) correspondentes. A
+  correspondência do item 7 **não é um-para-um**: um único laudo conclusivo pelo anexo
+  da máquina cobre todas as ementas daquela máquina (ver "Como pedir laudo de
+  máquina"). O que não pode é sobrar irregularidade sem nenhum documento que a prove.
 - **Nada de medida ou documento sem irregularidade que o sustente.** Não exigir
   capacitação, PGR, ordem de serviço ou qualquer outro item que não decorra de uma
   irregularidade do item 4 — o pedido de suspensão só pode cobrar o que foi autuado.
@@ -629,6 +692,9 @@ Competência delegada pela Portaria 1719/2014...
 | Medida recai sobre **obra** | É EMBARGO, não interdição (subitem 3.2.2.1 da NR-03) — aplicar as trocas do passo 0 |
 | Irregularidade só em parte da obra/estabelecimento | Paralisação PARCIAL delimitando o escopo (pavimentos, setor, máquinas), pela regra da menor unidade possível (3.2.2.3.1 da NR-03) |
 | AFT quer foto no RT | Passo 4-bis (`inserir_foto_docx.py`); se a imagem só existir colada no chat, pedir ao AFT para salvá-la como arquivo |
+| Máquina interditada tem anexo próprio na NR-12 | Item 7 deve exigir laudo **conclusivo pela adequação ao anexo**, citando anexo e item (ver "Como pedir laudo de máquina") |
+| Anexo da máquina desconhecido | Resolver pelo notebook da NR antes de escrever o item 7 — nunca presumir pela semelhança física da máquina |
+| Várias ementas da mesma máquina | Um único laudo conclusivo pelo anexo cobre todas; não desmembrar o item 7 em um documento por ementa |
 | Placeholder `{{chave}}` não encontrado | Foi apagado do template. Recolocá-lo no Word, exatamente com duas chaves e sem espaços internos, ou usar o fallback manual |
 | Sobrou `{{...}}` no documento final | O script aborta antes de gravar: falta o campo no JSON. Conferir o dicionário |
 | Medidas ou documentos com "A)", "B)" digitados | Remover: a numeração das alíneas é automática no Word e o script insere os itens como lista real |
