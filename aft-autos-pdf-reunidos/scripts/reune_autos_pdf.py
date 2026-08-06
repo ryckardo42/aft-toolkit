@@ -405,10 +405,12 @@ def main() -> int:
                                         f"leitura falhou ({type(e).__name__})")
                 continue
             if h in anexos_vistos:
-                ax_info["repetido_de"] = anexos_vistos[h]
+                visto = anexos_vistos[h]
+                ax_info["repetido_de"] = visto["rotulo"]
+                ax_info["paginas_total"] = visto["paginas"]
                 result["anexos_repetidos_omitidos"].append(
                     f"AI {info['numero_ai']} — {anexo.name} "
-                    f"(já incluído em {anexos_vistos[h]})")
+                    f"(já incluído em {visto['rotulo']})")
                 continue
             r2, erro2 = abrir_pdf(anexo)
             if r2 is None:
@@ -423,7 +425,8 @@ def main() -> int:
             pagina_atual += incluir
             if incluir < len(r2.pages):
                 info["anexo_cortado"] = True
-            anexos_vistos[h] = f"AI {info['numero_ai']} ({anexo.name})"
+            anexos_vistos[h] = {"rotulo": f"AI {info['numero_ai']} ({anexo.name})",
+                                "paginas": len(r2.pages)}
 
     # Pastas AX_ sem AI correspondente (informativo, nao entram no PDF).
     try:
@@ -446,6 +449,14 @@ def main() -> int:
     result["total_autos"] = sum(1 for a in result["autos"] if a["paginas_auto"] > 0)
     result["total_paginas"] = pagina_atual
     result["tamanho_mb"] = round(saida.stat().st_size / (1024 * 1024), 2)
+    # Totais de páginas dos arquivos originais que ficaram de fora (a página
+    # "ANEXOS" do relatório final usa estes números).
+    todos_ax = [x for a in result["autos"] for x in a["anexos"]]
+    result["paginas_cortadas"] = sum(
+        x["paginas_total"] - x["paginas_incluidas"] for x in todos_ax
+        if "repetido_de" not in x and x["paginas_total"])
+    result["paginas_repetidas_omitidas"] = sum(
+        x["paginas_total"] or 0 for x in todos_ax if "repetido_de" in x)
 
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0

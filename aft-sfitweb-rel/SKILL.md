@@ -156,12 +156,35 @@ Ao final, registre a atividade no `## Registro de atividades` do memory.md
 
 Depois de entregar o relatório, gere o dossiê que o acompanha como anexo: siga a skill
 **`/aft-autos-pdf-reunidos`** a partir do Passo 2.5 dela (a OS já está resolvida) — ela
-pergunta o modo (Completo ou Econômico), reúne todos os `AI_*.PDF` do Sistema Auditor com
-os anexos de cada auto e salva em `<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.pdf`.
-Informe o caminho ao AFT junto com o do relatório.
+pergunta o modo (Completo ou Econômico) e reúne todos os `AI_*.PDF` do Sistema Auditor
+com os anexos de cada auto. **Neste fluxo, o destino é a pasta do relatório** (não o
+padrão `AUTOS/` da skill), e o JSON do script vai para arquivo, porque o passo seguinte
+o consome:
 
-- **Sem nenhum auto transmitido** (Seção 4 vazia), pule este passo — não há o que reunir.
+```bash
+python ~/.claude/skills/aft-autos-pdf-reunidos/scripts/reune_autos_pdf.py "<EMPRESA>" "<CNPJ_OU_8DIGITOS>" "<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.pdf" > "<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.json"
+```
+
+(No modo Econômico, acrescente `--paginas-anexo 10`.)
+
+Em seguida, acrescente ao `relatorio-final.docx` a página final **"ANEXOS - Autos de
+Infração"**, que apresenta o dossiê (com as observações de limite de páginas, Núcleo de
+Multas, anexos repetidos e o total de páginas não incluídas — o script monta tudo a
+partir do JSON). Antes, confira que o Word não está com o arquivo aberto
+(`_scripts/checar_arquivo_aberto.py`) e faça backup (`_scripts/backup_arquivo.py`):
+
+```bash
+python ~/.claude/skills/aft-sfitweb-rel/scripts/anexa_pagina_anexos.py "<pasta-OS>/Relatórios de Fiscalização/relatorio-final.docx" "<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.json"
+```
+
+O script é idempotente (regravar substitui a página, não duplica). Informe ao AFT os dois
+caminhos: o `relatorio-final.docx` (agora com a página de anexos) e o `autos-reunidos.pdf`.
+
+- **Sem nenhum auto transmitido** (Seção 4 vazia), pule este passo inteiro — não há o que
+  reunir nem página de anexos a acrescentar.
 - Se o AFT disser que não quer o anexo, siga sem ele, sem insistir.
+- Relate ao AFT o resumo do dossiê (autos, páginas, MB, jornada no fim, repetidos,
+  cortes) como manda o Passo 4 da `/aft-autos-pdf-reunidos`.
 
 ---
 
