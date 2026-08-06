@@ -1,10 +1,6 @@
 {
   "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso aos notebooks e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst). O campo 'essencial' (1..N) marca os notebooks do dia a dia: sao os que o AFT deve abrir primeiro para dar o primeiro acesso (ver /aft-notebooklm-login, Passo 5).",
   "notebooks": {
-    "apreciacao-risco": {
-      "notebook_id": "52f611b7-2e45-4653-9755-fe04f147728c",
-      "title": "Apreciação de risco"
-    },
     "aprendizagem": {
       "notebook_id": "a9444ee8-ee98-460b-8c28-9e55c5989e8d",
       "title": "Aprendizagem Profissional"

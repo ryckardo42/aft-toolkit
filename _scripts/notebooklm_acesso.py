@@ -135,7 +135,10 @@ def sondar(cli: str, chave: str, info: dict) -> dict:
     base = {"chave": chave, "titulo": info.get("title", chave),
             "essencial": info.get("essencial", 0)}
     if codigo == 0 and '"error"' not in saida:
-        return {**base, "situacao": "disponivel"}
+        # Responde sem nunca ter sido aberto pelo AFT: o compartilhamento por si
+        # ja basta. E o dado que distingue "precisa do primeiro acesso" de
+        # "precisa de liberacao" - registre para nao voltarmos a supor.
+        return {**base, "situacao": "disponivel", "via": "sondagem"}
     if _e_sessao(saida):
         return {**base, "situacao": "sessao"}
     if _e_sem_acesso(saida):
@@ -175,7 +178,7 @@ def main() -> int:
         if info.get("notebook_id") in ja_na_colecao:
             saida["disponiveis"].append({
                 "chave": chave, "titulo": info.get("title", chave),
-                "essencial": info.get("essencial", 0)})
+                "essencial": info.get("essencial", 0), "via": "colecao"})
     pendentes = {k: v for k, v in notebooks.items()
                  if v.get("notebook_id") not in ja_na_colecao}
 
@@ -204,6 +207,11 @@ def main() -> int:
     saida["indisponiveis"].sort(key=lambda x: (*_ordem(x), x["titulo"].lower()))
     saida["essenciais_faltando"] = [
         x["titulo"] for x in saida["indisponiveis"] if x.get("essencial")]
+    # Diagnostico de mecanismo (nao vai para a tela do AFT): quantos responderam
+    # sem estar na colecao. Se for > 0, compartilhar basta e o "primeiro acesso"
+    # nao e requisito - medido numa instalacao Windows em 06/08/2026.
+    saida["por_sondagem"] = sum(
+        1 for x in saida["disponiveis"] if x.get("via") == "sondagem")
     print(json.dumps(saida, ensure_ascii=False))
     return 0
 

@@ -14,13 +14,16 @@ consegue consultar — e o que fazer com os que faltam.** Era uma armadilha sile
 colegas com o acesso liberado viam a consulta de ementa falhar do nada, em uma NR
 específica, sem entender por quê.
 
-- **O motivo.** O Google só coloca um notebook compartilhado na sua coleção depois que
-  **você** o abre uma vez. Até lá, ele responde "não encontrado" a qualquer consulta — e
-  não existe comando que resolva isso por fora, nem no toolkit nem em lugar nenhum.
+- **O motivo era o próprio catálogo.** O mapa de notebooks do toolkit apontava para
+  quatro que ninguém conseguia abrir: três já apagados e um que nunca foi compartilhado.
+  A skill mandava consultar, o Google respondia "não encontrado" e a consulta morria ali.
+  Foram removidos.
 - **O que muda.** No `/aft-setup` e sempre que você pedir *"confere meus notebooks"* (ou
-  reconectar o NotebookLM), o Claude percorre os notebooks um por um e mostra: quantos já
-  estão prontos e, dos que faltam, o **link direto de cada um**. Você abre os temas que
-  fiscaliza, escreve **oi** na caixa de chat e fecha. Uma vez por notebook, para sempre.
+  reconectar o NotebookLM), o Claude percorre os notebooks um por um e mostra quantos
+  estão prontos — e, se faltar algum, o **link direto de cada um**. Duas coisas podem
+  fazer um notebook faltar: a liberação de acesso ainda não veio (solicite no portal), ou
+  o Google ainda não o pôs na sua coleção. Nos dois casos vale abrir o link, escrever um
+  **oi** na caixa de chat e fechar — resolve de uma vez, para sempre.
 - **Não precisa abrir todos** — e o Claude te diz por onde começar. A lista vem em dois
   blocos: primeiro os **13 do dia a dia** (Ementário SST, Ementário Legislação, NR-12,
   NR-01, NR-03, NR-18, NR-10, NR-04, NR-05, NR-24, Informalidade, NR-35 e NR-13), que
@@ -32,10 +35,10 @@ específica, sem entender por quê.
   vinha vazia mesmo com tudo funcionando. Agora a conferência é notebook por notebook.
 - **Notebook novo numa atualização?** O `/aft-atualizar` percebe e já avisa quais abrir.
 
-Também limpei do mapa quatro notebooks que não deviam estar lá: três que não existem mais
-(`Acidentes`, `Especialista em NR-31`, `NHO 11`) e um que não é compartilhado
-(`Refrigeração em frigoríficos`). Eles apareciam como "faltando" e mandavam você clicar
-num link que nunca ia funcionar.
+Os cinco notebooks retirados do mapa: `Acidentes`, `Especialista em NR-31` e `NHO 11`
+(não existem mais) e `Refrigeração em frigoríficos` e `Apreciação de risco` (particulares
+do mantenedor, nunca compartilhados). Nenhuma skill fica sem fonte — a análise de laudo de
+máquina da `/aft-auditoria-AR-NR12` sempre consultou o notebook da NR-12.
 
 ---
 
