@@ -330,13 +330,14 @@ setor, a máquina e o tipo de risco a olhar primeiro. Se o **CNPJ é conhecido**
 (FASE 0/1), gere o histórico de CATs **chamando a `/aft-relatorio-acidentes`**
 (Modo B) — não duplique a lógica dela aqui:
 
-1. Confira a base estadual:
+1. Confira a base estadual (por convenção, as planilhas ficam em `<PASTA_AFT>/CATs`):
    `python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --mostrar-base`
-   - Se voltar `PASTA_CATS_NAO_DEFINIDA`, pergunte ao AFT se ele tem a pasta
-     das planilhas de CAT do estado (uma `.xlsx` por ano). Tem → grave com
-     `--definir-base "<pasta>"` e siga. Não tem → **pule a fase** e registre no
-     `preparacao.md`: "Histórico de CATs não consultado (base estadual não
-     configurada)". A preparação nunca trava por isso.
+   - Se voltar `PASTA_CATS_NAO_DEFINIDA`, o script já imprime como montar a base
+     (baixar as planilhas da UF na área do ENIT, que exige conta institucional, e
+     pô-las em `<PASTA_AFT>/CATs`). Repasse ao AFT com o caminho real dele e
+     **pule a fase**, registrando no `preparacao.md`: "Histórico de CATs não
+     consultado (base estadual ainda não montada)". A preparação nunca trava por
+     isso — e a base, uma vez montada, serve para todas as fiscalizações.
 2. Gere o relatório:
    `... relatorio_acidentes.py --cnpj <CNPJ> --saida "$PASTA_OS/Acidentes"`
    (se o AFT anexou um CSV `CatsCNPJ_*.csv` do Portal AFT, use `--csv` no lugar

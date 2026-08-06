@@ -141,6 +141,31 @@ vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização), u
 > para `OS ARQUIVADAS` (mesmo nível, ao lado de `OS ATIVAS`). Tudo fica **no seu
 > computador** — nada é enviado para fora.
 
+### Passo 2a — A pasta `CATs` (opcional, mas vale a pena)
+
+Ao lado de `OS ATIVAS`, o toolkit procura uma pasta **`CATs`** com as planilhas de
+Comunicação de Acidente do estado do AFT (uma `.xlsx` por ano, fonte eSocial). Com
+ela montada, a `/aft-relatorio-acidentes` levanta o histórico de acidentes de
+qualquer CNPJ, e a `/aft-preparacao-acao-fiscal` leva esse histórico para a visita.
+Sem ela, as duas seguem funcionando — só sem essa parte.
+
+Crie a pasta agora (dentro de `<PASTA_AFT>`) e dê o recado, com o caminho real dele:
+
+> 📥 **Para ver o histórico de acidentes das empresas, ponha as planilhas de CAT do
+> seu estado em `Documentos\AFT\CATs`.**
+>
+> 1. Abra a área do ENIT no SharePoint do MTE, pasta **"CATs eSocial por UF"**:
+>    <https://mtegovbr-my.sharepoint.com/shared?listurl=https%3A%2F%2Fmtegovbr%2Dmy%2Esharepoint%2Ecom%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments&id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF&shareLink=1&ga=1>
+> 2. O link **só abre com a sua conta institucional (Microsoft) logada** — é
+>    conteúdo interno do Ministério, e eu não tenho como entrar por você.
+> 3. Baixe **todas as planilhas da sua UF** (uma por ano; quanto mais anos, mais
+>    fundo vai o histórico) e jogue os arquivos nessa pasta.
+>
+> Não precisa configurar nada depois: o toolkit acha a pasta sozinho.
+
+É um passo que o AFT faz no navegador, na hora que quiser — não trave o setup
+esperando por ele.
+
 ## Passo 2b — Instalar os agentes do toolkit
 
 Além das skills, o toolkit traz **agentes** — ajudantes que trabalham numa conversa

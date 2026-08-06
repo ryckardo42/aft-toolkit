@@ -15,12 +15,15 @@ Dois modos de origem dos dados:
 
   MODO B - Base estadual de CATs (planilhas .xlsx, uma por ano, fonte eSocial):
       python relatorio_acidentes.py --cnpj 00.000.000/0000-00 --saida "<pasta>"
-      A pasta das planilhas vem do campo `pasta_cats:` do aft-config.md
-      (gravado no primeiro uso com --definir-base) ou do argumento --base.
+      A pasta das planilhas e, por convencao do toolkit, <PASTA_AFT>/CATs -
+      ao lado de "OS ATIVAS". Nao precisa configurar nada: basta baixar as
+      planilhas do estado (ENIT) e por ali. Quem mantem a base em outro lugar
+      usa --base, ou grava o caminho uma vez com --definir-base (campo
+      `pasta_cats:` do aft-config.md), que entao prevalece.
 
   Utilitarios:
       --definir-base "<pasta>"   grava `pasta_cats:` no aft-config.md e sai
-      --mostrar-base             mostra a pasta configurada e sai
+      --mostrar-base             mostra a pasta em uso e sai
 
 Saida: Relatorio-Acidentes-<cnpj>.md e .docx na pasta indicada em --saida.
 Se os arquivos ja existirem, uma copia .bak-<data-hora> e feita antes.
@@ -89,9 +92,19 @@ def _config_path():
 
 
 # ---------------------------------------------------------------------------
-# Configuracao da base estadual (campo pasta_cats: do aft-config.md)
+# Onde ficam as planilhas estaduais
+#
+# Convencao do toolkit: <PASTA_AFT>/CATs, ao lado de "OS ATIVAS" - assim a base
+# acompanha a pasta de trabalho do AFT (que ele pode mover) e ninguem precisa
+# configurar caminho nenhum. O campo `pasta_cats:` do aft-config.md continua
+# valendo para quem guarda a base em outro lugar, e prevalece quando aponta
+# para uma pasta que existe (caminho velho e stale nao derruba a convencao).
 # ---------------------------------------------------------------------------
-def base_configurada():
+NOMES_PASTA_CATS = ("CATs", "CAT")
+
+
+def base_no_config():
+    """Caminho gravado em `pasta_cats:`, exista ele ou nao (None se ausente)."""
     cfg = _config_path()
     if not (cfg and cfg.is_file()):
         return None
@@ -100,6 +113,56 @@ def base_configurada():
         if m and m.group(1).strip():
             return Path(m.group(1).strip()).expanduser()
     return None
+
+
+def base_padrao():
+    """<PASTA_AFT>/CATs, se existir (aceita tambem a variante 'CAT')."""
+    pa = _importar_modulo("_scripts", "pasta_aft")
+    if pa is None:
+        return None
+    try:
+        raiz = Path(pa.pasta_aft())
+    except Exception:
+        return None
+    for nome in NOMES_PASTA_CATS:
+        if (raiz / nome).is_dir():
+            return raiz / nome
+    return None
+
+
+def base_configurada():
+    """Pasta em uso: o `pasta_cats:` quando aponta para pasta existente; senao
+    a convencao <PASTA_AFT>/CATs."""
+    cfg = base_no_config()
+    if cfg and cfg.is_dir():
+        return cfg
+    return base_padrao()
+
+
+# Area do ENIT no SharePoint do MTE com as planilhas de CAT do eSocial por UF.
+# So abre com a conta institucional (Microsoft) do auditor ja logada.
+LINK_ENIT_CATS = (
+    "https://mtegovbr-my.sharepoint.com/shared?listurl=https%3A%2F%2Fmtegovbr%2Dmy"
+    "%2Esharepoint%2Ecom%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments"
+    "&id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs"
+    "%20eSocial%20por%20UF&shareLink=1&ga=1")
+
+
+def instrucao_montar_base():
+    """Texto unico de 'como montar a base' - o script fala, a skill so repassa."""
+    pa = _importar_modulo("_scripts", "pasta_aft")
+    try:
+        alvo = str(Path(pa.pasta_aft()) / "CATs") if pa else "<pasta AFT>/CATs"
+    except Exception:
+        alvo = "<pasta AFT>/CATs"
+    return (
+        f"Crie a pasta  {alvo}  (ao lado de \"OS ATIVAS\") e coloque nela as\n"
+        "planilhas .xlsx de CAT do seu estado - uma por ano, todas as que houver.\n"
+        "Elas ficam na area do ENIT no SharePoint do MTE, em \"CATs eSocial por UF\":\n"
+        f"{LINK_ENIT_CATS}\n"
+        "O link so abre com a sua conta institucional (Microsoft) ja logada; baixe as\n"
+        "planilhas da SUA UF. Feito isso, nada mais precisa ser configurado.\n"
+        "Se preferir manter a base em outro lugar, rode: --definir-base \"<pasta>\"")
 
 
 def definir_base(pasta):
@@ -581,8 +644,18 @@ def main():
         sys.exit(0 if r["ok"] else 1)
 
     if args.mostrar_base:
-        base = base_configurada()
-        print(f"pasta_cats: {base}" if base else "PASTA_CATS_NAO_DEFINIDA")
+        base, cfg = base_configurada(), base_no_config()
+        if base:
+            origem = "aft-config.md" if cfg and cfg.is_dir() else "convenção <PASTA_AFT>/CATs"
+            print(f"pasta_cats: {base}   [{origem}]")
+            print(f"planilhas: {len(list(base.glob('*.xlsx')))} .xlsx")
+            if cfg and not cfg.is_dir():
+                print(f"AVISO: o aft-config.md aponta para uma pasta que não existe "
+                      f"({cfg}) — ignorada em favor da convenção. Apague a linha "
+                      "pasta_cats: do aft-config.md para não confundir.")
+        else:
+            print("PASTA_CATS_NAO_DEFINIDA")
+            print(instrucao_montar_base())
         sys.exit(0)
 
     if not args.saida:
@@ -600,8 +673,8 @@ def main():
             ap.error("informe --csv (Modo A) ou --cnpj (Modo B)")
         base = Path(args.base).expanduser() if args.base else base_configurada()
         if not base:
-            print("PASTA_CATS_NAO_DEFINIDA: a pasta das planilhas estaduais ainda não "
-                  "foi configurada. Rode com --definir-base \"<pasta>\" primeiro.")
+            print("PASTA_CATS_NAO_DEFINIDA: não encontrei a base estadual de CATs.")
+            print(instrucao_montar_base())
             sys.exit(2)
         if not base.is_dir():
             raise SystemExit(f"ERRO: a pasta configurada não existe: {base}")

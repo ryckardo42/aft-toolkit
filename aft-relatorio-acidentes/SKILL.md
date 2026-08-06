@@ -57,7 +57,7 @@ chat.
 | Modo | Fonte | Quando usar |
 |---|---|---|
 | **A** | CSV `CatsCNPJ_<cnpj>.csv` exportado do **Portal AFT** | O AFT anexou/indicou o arquivo CSV |
-| **B** | **Base estadual de CATs**: pasta com planilhas `.xlsx` do eSocial, uma por ano | O AFT deu só o CNPJ (ou o nome da empresa) |
+| **B** | **Base estadual de CATs**: as planilhas `.xlsx` do eSocial (uma por ano) em `<PASTA_AFT>/CATs` | O AFT deu só o CNPJ (ou o nome da empresa) |
 
 O Modo B filtra pela coluna *"Número de inscrição do estabelecimento onde o
 trabalhador exerce atividades"* e junta os resultados de todos os anos. CATs
@@ -75,21 +75,40 @@ o AFT indicar.
 
 **2. Escolher o modo.** CSV informado → Modo A. Só CNPJ → Modo B.
 
-**3. Modo B — primeiro uso.** Confira a configuração:
+**3. Modo B — conferir a base estadual.** A pasta das planilhas é, por convenção
+do toolkit, **`<PASTA_AFT>/CATs`** — ao lado de `OS ATIVAS`. Nada a configurar:
 
 ```bash
 python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --mostrar-base
 ```
 
-Se voltar `PASTA_CATS_NAO_DEFINIDA`, **pergunte ao AFT onde estão as planilhas
-de CAT do estado dele** (uma pasta com um `.xlsx` por ano) e grave:
+- **Devolveu a pasta e o nº de planilhas** → siga para o passo 4.
+- **`PASTA_CATS_NAO_DEFINIDA`** → o próprio script imprime o passo a passo para
+  montar a base (ver quadro abaixo). Repasse ao AFT com o **caminho real** dele,
+  e **não invente outro lugar** para a pasta.
+- **Avisou que o `aft-config.md` aponta para pasta inexistente** → é resquício de
+  configuração antiga; diga ao AFT que a linha `pasta_cats:` pode ser apagada, e
+  siga normalmente (a convenção já assumiu).
+
+### Como o AFT monta a base estadual (uma vez só)
+
+> 📥 **Baixe as planilhas de CAT do seu estado e ponha em `<PASTA_AFT>/CATs`.**
+>
+> 1. Abra a área do ENIT no SharePoint do MTE, pasta **"CATs eSocial por UF"**:
+>    <https://mtegovbr-my.sharepoint.com/shared?listurl=https%3A%2F%2Fmtegovbr%2Dmy%2Esharepoint%2Ecom%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments&id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF&shareLink=1&ga=1>
+> 2. O link **só abre com a conta institucional (Microsoft) logada** — se pedir
+>    login, é isso. Não há como o assistente entrar por você.
+> 3. Baixe **todas as planilhas da sua UF** (uma por ano — quanto mais anos,
+>    mais fundo vai o histórico).
+> 4. Crie a pasta `CATs` dentro da sua pasta AFT (a mesma que contém `OS ATIVAS`)
+>    e jogue os `.xlsx` lá dentro. Pronto — nenhuma configuração é necessária.
+
+O AFT que preferir manter a base em outro lugar (HD externo, pasta compartilhada)
+grava o caminho uma vez, e ele passa a prevalecer sobre a convenção:
 
 ```bash
 python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --definir-base "<pasta indicada>"
 ```
-
-Fica salvo no campo `pasta_cats:` do `aft-config.md` — nas próximas vezes não
-se pergunta mais.
 
 **4. Gerar o relatório.**
 
