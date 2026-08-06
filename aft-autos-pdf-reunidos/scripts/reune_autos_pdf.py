@@ -54,6 +54,15 @@ import tempfile
 import unicodedata
 from pathlib import Path
 
+# Console do Windows e cp1252: forca a saida em UTF-8 para os nomes acentuados
+# de arquivos de anexo nao derrubarem o print do JSON.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 PADRAO_PRO_WINDOWS = r"C:\SistemasAFT\Auditor\Docs\AutosDeInfracao\PRO"
 RE_AI_NOME = re.compile(r"AI_(\d{9})")
 RE_EMENTA_ROTULO = re.compile(r"Ementa:\s*(\d{7})")
