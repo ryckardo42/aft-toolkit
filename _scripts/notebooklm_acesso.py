@@ -132,7 +132,8 @@ def sondar(cli: str, chave: str, info: dict) -> dict:
     """Testa um notebook: uma chamada de metadados (1 RPC, sem custo de chat)."""
     nid = info.get("notebook_id", "")
     codigo, saida = _rodar(cli, "metadata", "-n", nid, "--json")
-    base = {"chave": chave, "titulo": info.get("title", chave)}
+    base = {"chave": chave, "titulo": info.get("title", chave),
+            "essencial": info.get("essencial", 0)}
     if codigo == 0 and '"error"' not in saida:
         return {**base, "situacao": "disponivel"}
     if _e_sessao(saida):
@@ -172,7 +173,9 @@ def main() -> int:
     # Quem ja esta na colecao nao precisa de sondagem: economiza ~1 s cada.
     for chave, info in notebooks.items():
         if info.get("notebook_id") in ja_na_colecao:
-            saida["disponiveis"].append({"chave": chave, "titulo": info.get("title", chave)})
+            saida["disponiveis"].append({
+                "chave": chave, "titulo": info.get("title", chave),
+                "essencial": info.get("essencial", 0)})
     pendentes = {k: v for k, v in notebooks.items()
                  if v.get("notebook_id") not in ja_na_colecao}
 
@@ -191,8 +194,16 @@ def main() -> int:
             else:
                 saida["erros"].append(r)
 
-    saida["disponiveis"].sort(key=lambda x: x["titulo"].lower())
-    saida["indisponiveis"].sort(key=lambda x: x["titulo"].lower())
+    # Essenciais primeiro, na ordem do mapa: e essa a fila de cliques que o AFT
+    # precisa ver antes de tudo. O resto vem depois, por titulo.
+    def _ordem(x: dict) -> tuple:
+        e = x.get("essencial") or 0
+        return (0, e) if e else (1, 0)
+
+    saida["disponiveis"].sort(key=lambda x: (*_ordem(x), x["titulo"].lower()))
+    saida["indisponiveis"].sort(key=lambda x: (*_ordem(x), x["titulo"].lower()))
+    saida["essenciais_faltando"] = [
+        x["titulo"] for x in saida["indisponiveis"] if x.get("essencial")]
     print(json.dumps(saida, ensure_ascii=False))
     return 0
 

@@ -21,16 +21,21 @@ específica, sem entender por quê.
   reconectar o NotebookLM), o Claude percorre os notebooks um por um e mostra: quantos já
   estão prontos e, dos que faltam, o **link direto de cada um**. Você abre os temas que
   fiscaliza, escreve **oi** na caixa de chat e fecha. Uma vez por notebook, para sempre.
-- **Não precisa abrir todos.** Só os assuntos que aparecem no seu trabalho. Se algum
-  pedir acesso, é porque a liberação ainda não veio: solicite em
+- **Não precisa abrir todos** — e o Claude te diz por onde começar. A lista vem em dois
+  blocos: primeiro os **13 do dia a dia** (Ementário SST, Ementário Legislação, NR-12,
+  NR-01, NR-03, NR-18, NR-10, NR-04, NR-05, NR-24, Informalidade, NR-35 e NR-13), que
+  cobrem a maior parte da fiscalização; depois os temáticos, só se você fiscalizar
+  aquele assunto. Se algum pedir acesso, é porque a liberação ainda não veio: solicite em
   https://notebooks-aft.vercel.app com a sua conta Google.
 - **Fim de um teste que enganava.** A instalação dizia "se a lista de notebooks aparecer,
   está pronto" — mas aquela lista mostra só os notebooks **abertos recentemente**, então
   vinha vazia mesmo com tudo funcionando. Agora a conferência é notebook por notebook.
 - **Notebook novo numa atualização?** O `/aft-atualizar` percebe e já avisa quais abrir.
 
-Também limpei três notebooks que não existem mais (`Acidentes`, `Especialista em NR-31`,
-`NHO 11`): estavam no mapa do toolkit e faziam a consulta falhar sem motivo.
+Também limpei do mapa quatro notebooks que não deviam estar lá: três que não existem mais
+(`Acidentes`, `Especialista em NR-31`, `NHO 11`) e um que não é compartilhado
+(`Refrigeração em frigoríficos`). Eles apareciam como "faltando" e mandavam você clicar
+num link que nunca ia funcionar.
 
 ---
 

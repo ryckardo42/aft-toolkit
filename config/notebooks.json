@@ -1,5 +1,5 @@
 {
-  "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso aos notebooks e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst).",
+  "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso aos notebooks e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst). O campo 'essencial' (1..N) marca os notebooks do dia a dia: sao os que o AFT deve abrir primeiro para dar o primeiro acesso (ver /aft-notebooklm-login, Passo 5).",
   "notebooks": {
     "apreciacao-risco": {
       "notebook_id": "52f611b7-2e45-4653-9755-fe04f147728c",
@@ -27,11 +27,13 @@
     },
     "ementario-legis": {
       "notebook_id": "aeae6464-eb1b-4e06-86c2-49936058755a",
-      "title": "Ementário Legislação"
+      "title": "Ementário Legislação",
+      "essencial": 2
     },
     "ementario-sst": {
       "notebook_id": "8a5af173-06c5-46c1-9031-1b10a7b6b7a3",
-      "title": "Ementário SST"
+      "title": "Ementário SST",
+      "essencial": 1
     },
     "esocial": {
       "notebook_id": "a7f16f6a-8333-4f3d-91df-d7aca3e53d6d",
@@ -47,7 +49,8 @@
     },
     "informalidade": {
       "notebook_id": "c0b0d976-3b59-49c1-83f0-21111939bdc7",
-      "title": "Informalidade"
+      "title": "Informalidade",
+      "essencial": 11
     },
     "interdicoes": {
       "notebook_id": "ff4ce617-28db-425b-a318-16cba0f8d167",
@@ -71,19 +74,23 @@
     },
     "nr-01": {
       "notebook_id": "3b17b41a-3152-4c72-9b45-d57060434ae8",
-      "title": "NR-01 PGR"
+      "title": "NR-01 PGR",
+      "essencial": 4
     },
     "nr-03": {
       "notebook_id": "721b73ea-a96c-4a40-8f2a-bb22bd57becb",
-      "title": "NR-03"
+      "title": "NR-03",
+      "essencial": 5
     },
     "nr-04": {
       "notebook_id": "c529b09a-61b1-4611-beed-3c73f9ad7396",
-      "title": "NR-04 SESMT"
+      "title": "NR-04 SESMT",
+      "essencial": 8
     },
     "nr-05": {
       "notebook_id": "3e6bd601-c5c7-48c8-8dd7-a49e6240b332",
-      "title": "NR-05 CIPA"
+      "title": "NR-05 CIPA",
+      "essencial": 9
     },
     "nr-06": {
       "notebook_id": "21664a25-ed94-4c3e-9bab-dd619294095e",
@@ -99,7 +106,8 @@
     },
     "nr-10": {
       "notebook_id": "20b2a283-2a25-403d-bcb2-58e41bb9b40d",
-      "title": "NR-10"
+      "title": "NR-10",
+      "essencial": 7
     },
     "nr-11": {
       "notebook_id": "8e934d2d-b2a1-48da-bf90-3d7317dcf9a5",
@@ -107,11 +115,13 @@
     },
     "nr-12": {
       "notebook_id": "90bf6539-b105-4bef-b1af-973f102a0187",
-      "title": "NR-12"
+      "title": "NR-12",
+      "essencial": 3
     },
     "nr-13": {
       "notebook_id": "a9723b57-78fc-4f2a-b499-097d7b26977a",
-      "title": "NR-13"
+      "title": "NR-13",
+      "essencial": 13
     },
     "nr-15": {
       "notebook_id": "750c2ef8-4701-4839-bc10-560d44fd2711",
@@ -123,7 +133,8 @@
     },
     "nr-18": {
       "notebook_id": "6b9f1fbb-4d99-478c-9f6b-64b7a5f98808",
-      "title": "NR-18"
+      "title": "NR-18",
+      "essencial": 6
     },
     "nr-20": {
       "notebook_id": "09ff79d5-5dce-4398-951b-e459c442cb6b",
@@ -135,7 +146,8 @@
     },
     "nr-24": {
       "notebook_id": "af01f7e7-3216-4467-a226-c1870ad298de",
-      "title": "NR-24"
+      "title": "NR-24",
+      "essencial": 10
     },
     "nr-31": {
       "notebook_id": "3339f269-ddc6-4496-98d6-4858f83bfab8",
@@ -151,7 +163,8 @@
     },
     "nr-35": {
       "notebook_id": "12435239-9d3d-44b5-b473-a9deddc382f9",
-      "title": "NR 35: Trabalho em Altura"
+      "title": "NR 35: Trabalho em Altura",
+      "essencial": 12
     },
     "nr-36": {
       "notebook_id": "e9fb4dbd-7732-4f40-9b71-fd13859cd232",
@@ -168,10 +181,6 @@
     "protocolos-seguranca-inspecao": {
       "notebook_id": "92636d02-a6b3-482a-ae26-2bdcdcef1bcf",
       "title": "Protocolos de Segurança na Inspeção do Trabalho"
-    },
-    "refrigeracao-frigorificos": {
-      "notebook_id": "73f98c56-4905-46cc-afa7-36a411113422",
-      "title": "Refrigeração em frigoríficos"
     },
     "riscos-psicossociais": {
       "notebook_id": "5622870e-4688-47d3-a390-b2d64dd798c3",

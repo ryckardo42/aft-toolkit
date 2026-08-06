@@ -216,6 +216,9 @@ JSON:
 - `estado: "cli-ausente"` -> Passo 0.
 - `disponiveis` -> as skills já consultam esses. Diga o **número**, não a lista inteira.
 - `indisponiveis` -> o recado do Passo 5 (com o link pronto de cada um).
+- `essenciais_faltando` -> **olhe aqui primeiro**: são os notebooks do dia a dia que
+  ainda faltam. Se essa lista estiver vazia, o AFT está pronto para trabalhar mesmo que
+  sobrem outros em `indisponiveis`.
 - `erros` -> falha de rede ou do CLI, **não** de acesso: ofereça tentar de novo depois.
 
 > **Nunca use `notebooklm list` como prova de que está tudo certo.** Ele mostra só os
@@ -239,19 +242,24 @@ do ementário."* Se vier com itens, mande este recado (com os links do JSON):
 > **você** o abre uma vez - até lá, a consulta a esses temas falha. É rápido: abra o
 > notebook, escreva **oi** na caixa de chat e feche. Uma vez só, para sempre.
 >
-> - [Título do notebook](url do JSON)
-> - ...
+> **Comece por estes - são os do dia a dia:**
+> - [Ementário SST](url) · [Ementário Legislação](url) · ...
 >
-> **Não precisa abrir todos** - só os temas que você fiscaliza. Se algum pedir acesso,
-> solicite em **https://notebooks-aft.vercel.app** com a sua conta Google (o mantenedor
-> libera; nesse caso o "oi" vem depois da liberação).
+> **Os outros, só se você fiscalizar o tema:**
+> - [Título](url) · ...
+>
+> Se algum pedir acesso, solicite em **https://notebooks-aft.vercel.app** com a sua conta
+> Google (o mantenedor libera; nesse caso o "oi" vem depois da liberação).
 >
 > Quando terminar, me diga **"confere meus notebooks"** que eu confirmo o que entrou.
 
 Regras do recado:
-- Liste os indisponíveis com **link clicável** (o campo `url`), em ordem de título.
-  Se passarem de 15, mostre os mais usados no dia a dia (ementários SST e Legislação,
-  RIT, as NRs) e diga que os demais estão no portal.
+- **Dois blocos, nesta ordem.** Primeiro os que vierem com `essencial` no JSON (o script
+  já os devolve na ordem certa: ementários, NR-12, NR-01, NR-03, NR-18, NR-10, NR-04,
+  NR-05, NR-24, Informalidade, NR-35, NR-13) - são 13 no máximo e cobrem a maior parte da
+  fiscalização. Depois, os demais, deixando claro que são opcionais.
+- Link clicável sempre (o campo `url`). Se o segundo bloco passar de 15 itens, resuma-o
+  ("os outros N estão no portal") em vez de despejar a lista inteira.
 - **Não afirme que falta liberação** de acesso: "not found" é a mesma resposta para
   "tem acesso e nunca abriu" e para "não tem acesso". O recado acima cobre os dois.
 - Não ofereça abrir os notebooks você mesmo: quem tem a conta Google no navegador é o
