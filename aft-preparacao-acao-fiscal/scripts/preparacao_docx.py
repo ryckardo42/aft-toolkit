@@ -11,13 +11,21 @@ Divisão de trabalho (padrão do toolkit): o modelo REDIGE o conteúdo da triage
 o passa num JSON; este script RENDERIZA. Os códigos e as descrições das ementas
 nunca vêm do JSON — são lidos literalmente da seção "## Ementas da OS" do
 memory.md, agrupados na ordem em que aparecem. Assim nenhuma ementa é
-esquecida, inventada ou parafraseada.
+esquecida, inventada ou parafraseada. Pela mesma razão, o grau de risco e o
+dimensionamento da CIPA também não vêm do JSON: são calculados aqui, chamando os
+scripts determinísticos de /aft-cnae-grau-risco-nr04 e /aft-cipa-nr05-
+dimensionamento com o CNAE e o nº de trabalhadores do memory.md.
 
 Uso:
     python preparacao_docx.py "<pasta da OS>" <conteudo.json> [saida.docx]
 
 O JSON tem a forma:
     {
+      "empresa": {
+        "resumo": ["o que a empresa produz/faz, porte, unidades — um parágrafo
+                    por item, redigido a partir da busca da FASE 1.2", "..."],
+        "fontes": ["site oficial (empresa.com.br)", "notícia — veículo, data"]
+      },
       "frentes": {
         "NR-12": {
           "titulo":    "NR-12 — Máquinas e equipamentos",   (opcional)
@@ -52,7 +60,9 @@ except Exception:
     pass
 
 import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -116,13 +126,14 @@ def le_memory(pasta: Path):
         fail("nenhuma ementa encontrada na seção '## Ementas da OS' do memory.md — "
              "o preparacao.docx é o resumo das ementas da OS e não faz sentido sem elas")
 
+    # "**OS (SFIT):** 123456 · **Demanda:** 789" -> só o nº da OS.
+    os_sfit = campo_corpo(corpo, "OS (SFIT)").split("·")[0].strip()
+
     dados = {
         "empregador": campo_fm(fm, "empregador") or pasta.name,
         "cnpj": campo_corpo(corpo, "CNPJ"),
         "endereco": campo_corpo(corpo, "Endereço"),
-        "os": campo_corpo(corpo, "OS (SFIT)"),
-        "prazos": campo_corpo(corpo, "Prazo da fiscalização"),
-        "equipe": campo_corpo(corpo, "Equipe AFT"),
+        "os": os_sfit,
         "trabalhadores": campo_fm(fm, "trabalhadores"),
         "cnae": campo_fm(fm, "cnae"),
         "grau": campo_fm(fm, "grau_risco"),
@@ -131,69 +142,170 @@ def le_memory(pasta: Path):
     return dados, frentes
 
 
-def caminho_config() -> Path:
-    """aft-config.md dentro da pasta de trabalho do AFT — que pode ter sido
-    movida (HD externo, nuvem). Resolve pelo pasta_aft.py; só cai no caminho
-    canônico se ele não estiver disponível."""
+# ------------------------------------------------- grau de risco e CIPA
+def script_de_skill(rel: str):
+    """Caminho de um script de outra skill do toolkit — na instalação
+    (~/.claude/skills) ou no repositório, quando rodado de lá. None se faltar."""
+    for base in (Path(__file__).resolve().parents[2], Path.home() / ".claude/skills"):
+        alvo = base / rel
+        if alvo.is_file():
+            return alvo
+    return None
+
+
+def roda_json(script: Path, args):
+    """Roda um script irmão com --json e devolve o dicionário (None se falhar).
+    PYTHONIOENCODING garante UTF-8 no cano também no Windows (console cp1252)."""
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
     try:
-        sys.path.insert(0, str(Path.home() / ".claude/skills/_scripts"))
-        from pasta_aft import pasta_aft  # type: ignore
-        return Path(pasta_aft()) / "aft-config.md"
-    except Exception:
-        return Path.home() / "Documents/AFT/aft-config.md"
+        saida = subprocess.run([sys.executable, str(script), *args, "--json"],
+                               capture_output=True, text=True, encoding="utf-8",
+                               env=env, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if saida.returncode != 0:
+        return None
+    try:
+        return json.loads(saida.stdout)
+    except json.JSONDecodeError:
+        return None
 
 
-def le_config():
-    """Nome e CIF do auditor, do aft-config.md (silencioso se faltar)."""
-    cfg = caminho_config()
-    if not cfg.exists():
-        return "", ""
-    txt = cfg.read_text(encoding="utf-8", errors="replace")
-    nome = re.search(r'^nome_auditor:\s*"?([^"\n]+)"?', txt, re.M)
-    cif = re.search(r'^cif:\s*"?([^"\n]+)"?', txt, re.M)
-    return (nome.group(1).strip() if nome else "",
-            cif.group(1).strip() if cif else "")
+def perfil_risco(dados):
+    """(grau, cnae_info, cipa) calculados pelos scripts oficiais das duas skills.
+
+    O grau de risco vem sempre do Anexo I da NR-04 pelo CNAE; o grau_risco do
+    front-matter só é usado quando não há CNAE. Nada aqui é estimado."""
+    cnae_info, grau = None, None
+    if dados["cnae"]:
+        s = script_de_skill("aft-cnae-grau-risco-nr04/scripts/enquadrar_cnae.py")
+        if s:
+            r = roda_json(s, [dados["cnae"]])
+            if r and not r.get("erro"):
+                cnae_info, grau = r, r.get("grau_de_risco")
+    if grau is None and dados["grau"].strip().isdigit():
+        grau = int(dados["grau"].strip())
+
+    cipa = None
+    n = dados["trabalhadores"].strip()
+    if grau in (1, 2, 3, 4) and n.isdigit():
+        s = script_de_skill("aft-cipa-nr05-dimensionamento/scripts/dimensionar_cipa.py")
+        if s:
+            cipa = roda_json(s, [str(grau), n])
+    return grau, cnae_info, cipa
 
 
 # --------------------------------------------------------------- montagem
-def linha_os(dados):
+def linha_os(dados, grau):
     linhas = [("Empregador", f"{dados['empregador']}"
                              + (f" — CNPJ {dados['cnpj']}" if dados["cnpj"] else ""))]
     if dados["os"]:
         linhas.append(("Ordem de Serviço", dados["os"]))
     if dados["endereco"]:
         linhas.append(("Local da fiscalização", dados["endereco"]))
-    if dados["prazos"]:
-        linhas.append(("Prazo da fiscalização", dados["prazos"]))
     perfil = " · ".join(x for x in [
         f"{dados['trabalhadores']} trabalhadores" if dados["trabalhadores"] else "",
         f"CNAE {dados['cnae']}" if dados["cnae"] else "",
-        f"grau de risco {dados['grau']}" if dados["grau"] else "",
+        f"grau de risco {grau}" if grau else "",
     ] if x)
     if perfil:
         linhas.append(("Estabelecimento", perfil))
-    if dados["equipe"]:
-        linhas.append(("Equipe AFT", dados["equipe"]))
     return linhas
+
+
+def secao_empresa(doc, n, empresa):
+    """Seção 1 — o que se sabe da empresa antes de bater na porta."""
+    m.titulo_secao(doc, f"{n}. A empresa")
+    resumo = (empresa or {}).get("resumo") or []
+    if not resumo:
+        m.paragrafo(doc, "(a preencher)")
+    for par in resumo:
+        m.paragrafo(doc, par)
+    fontes = (empresa or {}).get("fontes") or []
+    if fontes:
+        m.paragrafo(doc, "Fontes: " + " · ".join(fontes),
+                    italico=True, cor=m.CINZA_CAPA2)
+    m.paragrafo(doc,
+                "Levantamento prévio em fontes abertas, para orientar a visita: é "
+                "indício do que procurar, não prova de nada. O que vale é o "
+                "constatado no local.", italico=True)
+
+
+def secao_risco_cipa(doc, n, dados, grau, cnae_info, cipa):
+    """Seção 2 — grau de risco (NR-04) e CIPA devida (Quadro I da NR-05)."""
+    m.titulo_secao(doc, f"{n}. Grau de risco e CIPA devida")
+    if cnae_info:
+        m.paragrafo(doc,
+                    f"CNAE {cnae_info['classe_cnae']} — {cnae_info['denominacao']}. "
+                    f"Grau de risco {cnae_info['grau_de_risco']}, pelo Anexo I da NR-04.")
+    else:
+        # Por que não se conferiu no Anexo I: faltou o CNAE ou ele não foi
+        # localizado lá (código errado). São problemas diferentes.
+        motivo = (f"o CNAE {dados['cnae']} não foi localizado nesse anexo — "
+                  "confira o código" if dados["cnae"]
+                  else "não há CNAE registrado no memory.md")
+        if grau:
+            m.paragrafo(doc, f"Grau de risco {grau}, informado no memory.md e não "
+                             f"conferido no Anexo I da NR-04: {motivo}.")
+        else:
+            m.paragrafo(doc, "Grau de risco não apurado no Anexo I da NR-04: "
+                             f"{motivo}.")
+
+    if not cipa:
+        m.paragrafo(doc,
+                    "Dimensionamento da CIPA não calculado — falta o nº de "
+                    "trabalhadores do estabelecimento ou o grau de risco. "
+                    "Levante o efetivo na visita e rode /aft-cipa-nr05-"
+                    "dimensionamento.")
+        return
+
+    q = cipa["quadro_i_por_bancada"]
+    t = cipa["composicao_paritaria_total"]
+    m.paragrafo(doc,
+                f"Para {cipa['num_empregados']} trabalhadores e grau de risco "
+                f"{cipa['grau_de_risco']} (faixa {cipa['faixa']} do Quadro I da "
+                "NR-05), a CIPA devida é:")
+    tab = m.nova_tabela(doc, ["", "Efetivos", "Suplentes"],
+                        larguras_cm=(7.3, 4.6, 4.6))
+    m.linha_dados(tab, ["Quadro I — por representação",
+                        [str(q["efetivos"])], [str(q["suplentes"])]])
+    m.linha_dados(tab, ["Eleitos pelos empregados",
+                        [str(t["efetivos_eleitos_pelos_empregados"])],
+                        [str(t["suplentes_eleitos_pelos_empregados"])]])
+    m.linha_dados(tab, ["Designados pelo empregador",
+                        [str(t["efetivos_designados_pelo_empregador"])],
+                        [str(t["suplentes_designados_pelo_empregador"])]])
+    m.linha_dados(tab, ["TOTAL (comissão paritária)",
+                        [str(t["efetivos_total"])], [str(t["suplentes_total"])]])
+    for linha in cipa.get("memoria_de_calculo") or []:
+        m.paragrafo(doc, linha, italico=True, depois=4)
+    m.paragrafo(doc,
+                "O nº de trabalhadores é o informado antes da visita — confirme o "
+                "efetivo real no local e reveja o dimensionamento se ele mudar de "
+                "faixa. Compare estes números com a ata de eleição e a composição "
+                "em exercício, apontando o déficit em cada representação.")
 
 
 def gera(pasta: Path, conteudo: dict, saida: Path):
     dados, frentes = le_memory(pasta)
     cfg_frentes = conteudo.get("frentes") or {}
-    nome_aft, cif_aft = le_config()
+    grau, cnae_info, cipa = perfil_risco(dados)
 
     doc = m.novo_documento()
     m.capa(doc, "TRIAGEM DA AÇÃO FISCAL",
            subtitulo="O que constatar no local e o que, só em último caso, notificar",
            unidade=(f"{dados['empregador']}"
                     + (f" — CNPJ {dados['cnpj']}" if dados["cnpj"] else "")))
-    m.tabela_rotulo_valor(doc, linha_os(dados))
+    m.tabela_rotulo_valor(doc, linha_os(dados, grau))
     m.caixa_destaque(doc, "Regra de decisão", [TESE],
                      cor_titulo=m.AZUL_ESCURO, fundo="EBF3FB", borda="9DC3E6")
 
-    # ---- 1. Quadro de triagem
+    secao_empresa(doc, 1, conteudo.get("empresa"))
+    secao_risco_cipa(doc, 2, dados, grau, cnae_info, cipa)
+
+    # ---- 3. Quadro de triagem
     total = sum(len(v) for v in frentes.values())
-    m.titulo_secao(doc, "1. Quadro de triagem")
+    m.titulo_secao(doc, "3. Quadro de triagem")
     m.paragrafo(doc,
                 f"A OS relaciona {total} ementas a fiscalizar, em {len(frentes)} "
                 "frentes. A coluna do meio é onde a ação fiscal se resolve.")
@@ -208,12 +320,12 @@ def gera(pasta: Path, conteudo: dict, saida: Path):
             cfg.get("so_det") or ["(a preencher)"],
         ])
 
-    # ---- 2. Documentos a exigir ainda na visita
+    # ---- 4. Documentos a exigir ainda na visita
     docs = [(d, cfg_frentes.get(f, {}).get("titulo") or f)
             for f in frentes
             for d in (cfg_frentes.get(f, {}).get("na_hora") or [])]
     if docs:
-        m.titulo_secao(doc, "2. Documentos a exigir ainda na visita")
+        m.titulo_secao(doc, "4. Documentos a exigir ainda na visita")
         m.paragrafo(doc,
                     "Peça estes documentos assim que chegar, antes de percorrer o "
                     "estabelecimento: costumam existir no local e, em mãos, permitem "
@@ -225,8 +337,8 @@ def gera(pasta: Path, conteudo: dict, saida: Path):
         for texto, frente in docs:
             m.linha_dados(td, ["", texto, frente])
 
-    # ---- 3. O que só então vai para o DET
-    m.titulo_secao(doc, "3. O que só então vai para o DET")
+    # ---- 5. O que só então vai para o DET
+    m.titulo_secao(doc, "5. O que só então vai para o DET")
     m.paragrafo(doc,
                 "Encerrada a visita, notifique apenas o que efetivamente não foi "
                 "possível obter ou verificar no local. A lista abaixo é o teto, "
@@ -238,12 +350,8 @@ def gera(pasta: Path, conteudo: dict, saida: Path):
                 "corretos. Tudo o que foi constatado em campo segue para "
                 "/aft-inspecao-fisica e /aft-auditoria-geral.")
 
-    if nome_aft:
-        m.assinatura(doc, nome_aft,
-                     f"Auditor-Fiscal do Trabalho — CIF {cif_aft}" if cif_aft
-                     else "Auditor-Fiscal do Trabalho", fecho="")
     doc.save(str(saida))
-    return saida, total, len(frentes)
+    return saida, total, len(frentes), grau, cipa
 
 
 def main():
@@ -260,11 +368,25 @@ def main():
         fail(f"não consegui ler o JSON de conteúdo: {e}")
     saida = Path(args[2]) if len(args) == 3 else pasta / "preparacao.docx"
 
-    arq, total, nfrentes = gera(pasta, conteudo, saida)
+    arq, total, nfrentes, grau, cipa = gera(pasta, conteudo, saida)
     faltando = [f for f in le_memory(pasta)[1]
                 if f not in (conteudo.get("frentes") or {})]
     print(f"gravado: {arq}")
     print(f"ementas: {total} · frentes: {nfrentes}")
+    if cipa:
+        q = cipa["quadro_i_por_bancada"]
+        t = cipa["composicao_paritaria_total"]
+        print(f"grau de risco: {grau} · CIPA ({cipa['num_empregados']} "
+              f"trabalhadores, faixa {cipa['faixa']}): Quadro I "
+              f"{q['efetivos']} efetivos / {q['suplentes']} suplentes por "
+              f"bancada — total paritário {t['efetivos_total']} efetivos e "
+              f"{t['suplentes_total']} suplentes")
+    else:
+        print(f"grau de risco: {grau or 'não apurado (falta CNAE no memory.md)'} · "
+              "CIPA: não calculada (falta nº de trabalhadores ou grau de risco)")
+    if not ((conteudo.get("empresa") or {}).get("resumo")):
+        print("AVISO: sem 'empresa.resumo' no JSON — a seção 1 saiu com "
+              "'(a preencher)'. Faça a busca da FASE 1.2 antes de gerar.")
     if faltando:
         print("AVISO: frentes sem conteúdo de triagem no JSON (saíram com "
               f"'(a preencher)'): {', '.join(faltando)}")

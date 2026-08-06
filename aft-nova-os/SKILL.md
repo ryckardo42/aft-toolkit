@@ -57,9 +57,9 @@ e pergunte só o que faltar:
   denúncia, os dados do demandante (⚠️ regra dura abaixo) e o histórico com RI(s).
 - **Ordem de Serviço** (arquivo tipo `OrdemServico*.pdf`; cabeçalho "Ordem de Serviço",
   seções "1. Dados da OS" / "2. Dados da empresa" / "3. Local da fiscalização" /
-  "4. Ementas a Fiscalizar" / "6. Equipe AFT"): traz também os **prazos da fiscalização**
-  (início e término), tipo/situação da OS e a **equipe de AFTs** (CIF + nome). Não traz
-  denunciante nem denúncia.
+  "4. Ementas a Fiscalizar" / "6. Equipe AFT"): traz também o prazo limite para término
+  da fiscalização (o **vencimento da OS**), tipo/situação da OS e a equipe de AFTs
+  (CIF + nome). Não traz denunciante nem denúncia.
 
 De ambos saem: razão social (proposta de nome da auditoria — o AFT confirma ou troca),
 CNPJ/CPF, município, telefone, CNAE (derive o grau de risco), endereço completo (com CEP
@@ -81,7 +81,8 @@ na dúvida, deixe vazio.
 
 **Equipe AFT (só na OS):** se o `aft-config.md` tiver o CIF do auditor, confira se ele
 está na "6. Equipe AFT" — se não estiver, avise (pode ser OS de outro colega) e pergunte
-se segue mesmo assim.
+se segue mesmo assim. Essa conferência é só no chat: a lista da equipe não vai para o
+`memory.md`.
 
 Depois de criar a pasta (Passo 2), **copie o(s) PDF(s)** para a raiz dela: a Demanda como
 `OS <nº da OS> - Demanda <nº da demanda>.pdf` e a Ordem de Serviço como `OS <nº da OS>.pdf`.
@@ -160,8 +161,7 @@ status: em_andamento
 **Endereço:** <endereço completo com CEP e ponto de referência — só se conhecido>
 **Telefone:** <telefone da empresa — só se conhecido>
 **OS (SFIT):** <nº da OS> · **Demanda:** <nº da demanda>   <!-- só quando lidos de um PDF do SFIT -->
-**Prazo da fiscalização:** início até <dd/mm/aaaa> · término até <dd/mm/aaaa>   <!-- só quando a OS foi lida -->
-**Equipe AFT:** <CIF — nome; CIF — nome; ...>   <!-- só quando a OS foi lida -->
+**Vencimento da OS:** <dd/mm/aaaa>   <!-- prazo limite para término; só quando a OS foi lida -->
 
 ## Notificações DET
 - [ ] <CÓDIGO> — ciência <dd/mm/aaaa>, prazo <dd/mm/aaaa>
@@ -185,7 +185,7 @@ _(vazio)_
 | <dd/mm/aaaa> | OS cadastrada | via /aft-nova-os |
 ```
 
-> **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor. As linhas `**Endereço:**`, `**Telefone:**`, `**OS (SFIT):**`/`**Demanda:**`, `**Prazo da fiscalização:**` e `**Equipe AFT:**` também são opcionais — só entram quando conhecidas (tipicamente lidas dos PDFs do SFIT, Passo 0; prazo e equipe existem só na Ordem de Serviço); omita a linha inteira quando não houver o dado. Os prazos da fiscalização ficam FORA da seção `## Notificações DET` — assim o painel não os confunde com prazo de DET.
+> **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor. As linhas `**Endereço:**`, `**Telefone:**`, `**OS (SFIT):**`/`**Demanda:**` e `**Vencimento da OS:**` também são opcionais — só entram quando conhecidas (tipicamente lidas dos PDFs do SFIT, Passo 0; o vencimento existe só na Ordem de Serviço); omita a linha inteira quando não houver o dado. O vencimento da OS fica FORA da seção `## Notificações DET` — assim o painel não o confunde com prazo de DET.
 >
 > **`## Ementas da OS`**: só existe quando um PDF do SFIT foi lido (Passo 0). Código e descrição **literais** do PDF — ementa nunca se resume nem se parafraseia. As caixas `- [ ]` servem para o AFT marcar, ao longo da fiscalização, o que já foi verificado/autuado; a `/aft-auditoria-geral` e o relatório final (`/aft-sfitweb-rel`) podem se apoiar nesta seção. Sem PDF, não crie a seção.
 >
