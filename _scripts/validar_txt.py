@@ -52,6 +52,37 @@ def only_digits(v):
     return re.sub(r"\D", "", v or "")
 
 
+def anexo_no_disco(anexo):
+    """O TXT carrega o path Windows absoluto (exigencia do Sistema Auditor). Em
+    macOS/Linux esse path nunca existe literalmente: traduz o prefixo
+    `path_windows` do aft-config.md para a pasta AFT local antes de checar."""
+    if os.path.isfile(anexo):
+        return True
+    if os.name == "nt":
+        return False
+    try:
+        from pasta_aft import pasta_aft, pasta_os_ativas
+        base = str(pasta_aft())
+        pw = None
+        with open(os.path.join(base, "aft-config.md"), encoding="utf-8") as f:
+            for linha in f:
+                m = re.match(r'\s*path_windows:\s*"?([^"#]+?)"?\s*(#.*)?$', linha)
+                if m:
+                    pw = m.group(1).strip().replace("\\\\", "\\")
+                    break
+        if not pw or not anexo.lower().startswith(pw.lower()):
+            return False
+        resto = anexo[len(pw):].replace("\\", "/")
+        if os.path.isfile(base + resto):
+            return True
+        # `pasta_os:` pode redirecionar OS ATIVAS para fora da pasta AFT
+        if resto.lower().startswith("/os ativas/"):
+            return os.path.isfile(str(pasta_os_ativas()) + resto[len("/OS ATIVAS"):])
+    except Exception:
+        return False
+    return False
+
+
 def main():
     if len(sys.argv) != 2:
         print("uso: python validar_txt.py <arquivo.txt>", file=sys.stderr)
@@ -131,7 +162,7 @@ def main():
                              f"({len(campos)} campos, esperado 3).")
             else:
                 anexo = campos[1]
-                if not TOKEN.search(anexo) and not os.path.isfile(anexo):
+                if not TOKEN.search(anexo) and not anexo_no_disco(anexo):
                     erros.append(f"{rotulo} -> Erro: anexo nao encontrado no disco: {anexo}")
                 if not anexo.upper().endswith(".PDF"):
                     avisos.append(f"{rotulo} -> anexo nao termina em .PDF maiusculo: {anexo}")

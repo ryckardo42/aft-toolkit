@@ -143,23 +143,27 @@ Só prossiga após confirmação.
 
 ### 1.6 Coletar dados administrativos
 
-**Tente extrair primeiro do `memory.md`** da empresa (se existir em `<OS_ATIVAS>/[PASTA_EMPRESA]/memory.md`):
+**Tente extrair primeiro do `memory.md`** da empresa (se existir em `<OS_ATIVAS>/[PASTA_EMPRESA]/memory.md`). Desde que o `/aft-preparacao-acao-fiscal` passou a ler o PDF da Ordem de Serviço, a ficha da OS costuma trazer os dados cadastrais reais da fiscalizada — use-os no TXT em vez dos placeholders genéricos:
 - CNPJ (linha `**CNPJ:** ...` → extrair só dígitos)
+- Endereço completo (linha `**Endereço:** ...`) → separe nos componentes da linha tipo 1. O formato padrão da ficha é `Logradouro, Número, Complemento, Bairro, Município/UF, CEP XXXXX-XXX` (ex.: `Avenida Anhanguera, 8743, Quadra 97 Lote 04/06, Setor Campinas, Goiânia/GO, CEP 74503-111` → logradouro `Avenida Anhanguera`, número `8743`, complemento `Quadra 97 Lote 04/06`, bairro `Setor Campinas`, município `Goiânia`, UF `GO`, CEP `74503111`). Componente ausente na linha cai no placeholder da tabela abaixo.
+- CNAE (front-matter `cnae:`) → usado como `cod_1` na FASE 1.7.
 
-Pergunte ao auditor apenas o que faltar (use placeholders se não fornecidos — o auditor ajusta no Sistema Auditor via lupa):
+Se o `memory.md` não tiver a linha `**Endereço:**`, procure a seção `## Endereço e acesso` do `preparacao.md` (mesma pasta). Pergunte ao auditor apenas o que faltar nas duas fontes (use placeholders se não fornecidos — o auditor ajusta no Sistema Auditor via lupa):
 
-| Campo | Obrigatório | Default/Placeholder |
-|-------|-------------|---------------------|
-| CIF do auditor (6 dígitos) | **Sim** | `cif` do aft-config.md (não re-pergunte) |
-| Identificador: CNPJ (14 díg.) **ou** CPF/CAEPF (11 díg.), só números | **Sim** | extrair do memory.md (`**CNPJ:**` ou `**CPF:**`) se disponível |
-| Logradouro | Não | `Ja conferiu a UORG?` |
-| Número | Não | `SN` |
-| Complemento | Não | `QUADRA` |
-| Bairro | Não | `BAIRRO` |
-| CEP | **Sim (nunca vazio)** | `cep_uorg` do aft-config.md |
-| UF | Não | `uf` do aft-config.md |
-| Município | Não | `municipio` do aft-config.md |
-| Trabalhadores prejudicados | Não | (sem linhas tipo 4) |
+| Campo | Obrigatório | Fonte real (memory.md) | Placeholder se faltar |
+|-------|-------------|------------------------|-----------------------|
+| CIF do auditor (6 dígitos) | **Sim** | — | `cif` do aft-config.md (não re-pergunte) |
+| Identificador: CNPJ (14 díg.) **ou** CPF/CAEPF (11 díg.), só números | **Sim** | `**CNPJ:**` ou `**CPF:**` | perguntar ao auditor |
+| Logradouro | Não | 1º componente do `**Endereço:**` | `Ja conferiu a UORG?` |
+| Número | Não | componente numérico após o logradouro | `SN` |
+| Complemento | Não | componente entre o número e o bairro | `QUADRA` |
+| Bairro | Não | componente antes de `Município/UF` | `BAIRRO` |
+| CEP | **Sim (nunca vazio)** | `CEP XXXXX-XXX` → só dígitos (8) | `cep_uorg` do aft-config.md |
+| UF | Não | sigla após a barra de `Município/UF` | `uf` do aft-config.md |
+| Município | Não | `Município/UF` | `municipio` do aft-config.md |
+| Trabalhadores prejudicados | Não | — | (sem linhas tipo 4) |
+
+> Limites do Sistema Auditor (layout oficial de importação): logradouro 55, número 10, complemento 50, bairro 40, município 35 caracteres. Se um componente extraído passar do limite, encurte-o com bom senso (nunca corte no meio de palavra que mude o sentido).
 
 > **CEP é obrigatório no Sistema Auditor** — se o campo CEP da linha tipo 1 vier vazio, a importação é RECUSADA com o aviso "CEP não informado! AI RECUSADO". Por isso o CEP **nunca** pode sair em branco: se o auditor não informar o CEP do estabelecimento e ele não estiver no contexto (memory.md/RT/auto), preencha automaticamente com `cep_uorg` do aft-config.md (placeholder que o auditor corrige na lupa). Nunca pergunte de novo nem deixe vazio — caia no `cep_uorg`.
 
@@ -171,11 +175,11 @@ Atualize `[PASTA_EMPRESA]` para o novo nome e use-o em todos os passos seguintes
 
 **Trabalhadores**: para cada, peça nome completo + **data de admissão**. **Nunca peça CPF** — não é necessário para a lavratura do AI; o campo CPF da linha tipo 4 fica sempre vazio. A data de admissão é **SEMPRE** normalizada para `dd/mm/aaaa` (ex.: "10 de maio de 2026" → `10/05/2026`) e gravada na linha tipo 4 (ver FASE 3). Se já vier de uma skill anterior na sessão (ex.: `/aft-registro`), reaproveite sem perguntar de novo. Assim que recebido, registre o nome no mapa de-para (FASE 2.5) e **a partir daí refira-se a ele só pelo token** `[[TRAB_NN]]` (a data de admissão não é tokenizada).
 
-### 1.7 Dados fiscais fixos (não pergunte ao auditor — vêm do aft-config.md)
+### 1.7 Dados fiscais fixos (não pergunte ao auditor)
 
 | Campo | Valor |
 |-------|-------|
-| `cod_1` (CNAE) | `cod_1` do config (padrão `8211300`) |
+| `cod_1` (CNAE) | **CNAE real da OS**: front-matter `cnae:` do memory.md, só dígitos (7). Ex.: `4691-5/00` → `4691500`. Se a ficha não tiver CNAE, use o `cod_1` do config (placeholder `8211300` — o auditor corrige na lupa) |
 | `cod_2` (tipo ação) | `cod_2` do config (padrão `1008`) |
 | `cod_3` | código da ementa sem hífen (por auto) |
 | `cod_4` (UORG) | `uorg` do config |
@@ -270,7 +274,7 @@ Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
 | Nome do trabalhador | **Sim** | `[[TRAB_NN]]` (NN = 2 dígitos, zero-pad: `01`, `02`, …) |
 | CPF do trabalhador | **Nunca coletado** — campo fica sempre vazio no TXT | — |
 | **CNPJ ou CPF/CAEPF** (identificador do autuado) | **NÃO — sempre real** | (chave do sistema: pasta, anexos, `memory.md`) |
-| Endereço | Não | (placeholders; o Sistema Auditor puxa pelo CNPJ) |
+| Endereço | Não | (real, extraído da OS via memory.md; endereço de estabelecimento não é tokenizado) |
 
 > Tokens são ASCII com terminador `]]` — seguros dentro de campos TAB, da codificação `#13#10` e do latin-1, e à prova de colisão de prefixo entre nomes (`[[TRAB_01]]` ≠ início de `[[TRAB_10]]`).
 >
@@ -451,7 +455,8 @@ Para importar no Sistema Auditor:
      (caminho Windows: [path_windows]\OS ATIVAS\[PASTA_EMPRESA]\[PASTA_LAVRATURA]\).
   3. O Sistema Auditor criará todos os autos e vinculará os PDFs como anexos
      (resolvidos pelo path absoluto contido nas linhas tipo 5).
-  4. Confira os dados da empresa clicando na lupa (razão social e endereço).
+  4. Os dados cadastrais (endereço, CEP, CNAE) já vão preenchidos com o que consta
+     da OS. Confira na lupa apenas se algum campo saiu com placeholder (aviso no chat).
 ```
 
 ---
