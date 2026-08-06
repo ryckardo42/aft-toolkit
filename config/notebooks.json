@@ -1,10 +1,6 @@
 {
   "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso aos notebooks e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst).",
   "notebooks": {
-    "acidentes": {
-      "notebook_id": "4d96ebf0-f37c-40f2-b873-05123ad8dd74",
-      "title": "Acidentes"
-    },
     "apreciacao-risco": {
       "notebook_id": "52f611b7-2e45-4653-9755-fe04f147728c",
       "title": "Apreciação de risco"
@@ -41,10 +37,6 @@
       "notebook_id": "a7f16f6a-8333-4f3d-91df-d7aca3e53d6d",
       "title": "ESocial"
     },
-    "especialista-nr31": {
-      "notebook_id": "96e8722f-086d-4c09-8f33-baf4dcbff19e",
-      "title": "Especialista em NR-31"
-    },
     "fgts-digital": {
       "notebook_id": "e78c73aa-ede5-4e24-9884-4b984adcfa73",
       "title": "FGTS Digital"
@@ -72,10 +64,6 @@
     "motorista-profissional": {
       "notebook_id": "24be4caf-120b-424a-b56a-76b445053f55",
       "title": "Motorista profissional"
-    },
-    "nho-11": {
-      "notebook_id": "bc2b1412-630d-4b42-b2a4-5e3e5f9009c9",
-      "title": "NHO 11"
     },
     "notas-tecnicas-sit": {
       "notebook_id": "e5d22a2d-9d65-43f4-87c5-e8d7c62c0069",

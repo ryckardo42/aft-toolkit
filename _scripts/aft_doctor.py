@@ -380,8 +380,15 @@ else:
         # CLI responde, mas nao foi possivel ler a sessao - reporta so presenca.
         add("NotebookLM (CLI)", "ok", "comando 'notebooklm' disponivel")
     elif estado.get("status") == "ok" or chk.get("sid_cookie"):
+        # Login OK nao garante que os notebooks respondem: um notebook
+        # compartilhado so entra na colecao da conta depois que o AFT o abre uma
+        # vez. Esta checagem e LOCAL (sem rede), por isso so aponta o caminho.
         add("NotebookLM (CLI)", "ok",
-            "comando disponivel e sessao salva (login local OK)")
+            "comando disponivel e sessao salva (login local OK)",
+            "Login e uma coisa, alcancar os notebooks e outra. Para saber quais o Claude "
+            "consulta de verdade, peca 'confere meus notebooks' (skill "
+            "/aft-notebooklm-login) - os que faltarem precisam que voce os abra uma vez "
+            "e escreva um 'oi' no chat.")
     elif not chk.get("storage_exists"):
         add("NotebookLM (CLI)", "aviso", "instalado, mas ainda nao conectado (sem login)",
             "Peca ao Claude 'conecte o notebooklm' (skill /aft-notebooklm-login) - ele abre "

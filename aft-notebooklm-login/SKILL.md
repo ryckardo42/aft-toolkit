@@ -7,9 +7,12 @@ description: >
   que as skills consultam) à conta Google do AFT, ou quando ele parar de
   responder. Acione com "/aft-notebooklm-login", "conectar o notebooklm",
   "logar no notebooklm", "reconectar o ementário", "o notebooklm parou",
-  "authentication expired", "a consulta de ementa falhou". Conecta com a
-  menor intervenção possível e sem mandar o AFT ao terminal. Só deixa o
-  comando `notebooklm` pronto — não redige autos nem consulta ementas.
+  "authentication expired", "a consulta de ementa falhou". Use TAMBÉM para
+  conferir quais notebooks a conta do AFT alcança: "quais notebooks eu
+  consulto", "confere meus notebooks", "o Claude não achou a NR-XX no
+  ementário". Conecta com a menor intervenção possível e sem mandar o AFT ao
+  terminal. Só deixa o comando `notebooklm` pronto — não redige autos nem
+  consulta ementas.
 ---
 
 # notebooklm-login — Conectar o NotebookLM (mínima intervenção, sem terminal)
@@ -87,8 +90,9 @@ avise que será preciso reabrir o app e siga.
 notebooklm auth check --test --json
 ```
 
-- `status: ok` (ou `token_fetch: true`) -> **já conectado.** Confirme com
-  `notebooklm --quiet list` e encerre dizendo que o NotebookLM está ativo.
+- `status: ok` (ou `token_fetch: true`) -> **já conectado.** Não encerre aqui: pule para
+  o **Passo 4** (a conferência notebook por notebook) — é ela que diz se o AFT realmente
+  consulta o ementário.
 - `token_fetch: false` / `status: error` -> a sessão **expirou**; siga para o Passo 2.
 - Sem internet -> rode só `notebooklm auth check --json` (validação local). Se houver
   sessão local, assuma conectado e avise que a confirmação online ficou para quando
@@ -196,25 +200,62 @@ cacheada.
 > insista em mais tentativas de login - atualize o pacote (Passo 0) e rode o login
 > de novo.
 
-## Passo 4 - Conferir
+## Passo 4 - Conferir o que o AFT realmente consulta
 
 ```bash
 notebooklm auth check --test
-notebooklm --quiet list
+python "<python_path>" ~/.claude/skills/_scripts/notebooklm_acesso.py
 ```
 
-Se a **lista de notebooks aparecer**, está pronto - avise o AFT que o NotebookLM
-está conectado e as skills já encontram a ementa sozinhas.
+O `auth check` diz se o login está de pé. O segundo comando é o que importa para o
+trabalho: percorre um por um os notebooks do mapa (`config/notebooks.json`) e diz
+quais a conta do AFT alcança **de verdade**. Leva alguns segundos e devolve uma linha
+JSON:
 
-## Passo 5 - Lista vazia ou "sem acesso"?
+- `estado: "sessao-expirada"` -> o login não está valendo; volte ao Passo 2/3.
+- `estado: "cli-ausente"` -> Passo 0.
+- `disponiveis` -> as skills já consultam esses. Diga o **número**, não a lista inteira.
+- `indisponiveis` -> o recado do Passo 5 (com o link pronto de cada um).
+- `erros` -> falha de rede ou do CLI, **não** de acesso: ofereça tentar de novo depois.
 
-Se autenticou mas `list` vem vazio ou diz que não há acesso, falta **liberação dos
-notebooks compartilhados** (não é problema de login):
+> **Nunca use `notebooklm list` como prova de que está tudo certo.** Ele mostra só os
+> notebooks **vistos recentemente** (o RPC é `ListRecentlyViewedProjects`), então vem
+> vazio ou incompleto mesmo com o login perfeito e o acesso já concedido. Foi essa
+> checagem enganosa que fez colegas acharem que o toolkit estava quebrado.
 
-1. Peça ao AFT para entrar em **https://notebooks-aft.vercel.app** com a conta Google
-   e solicitar acesso.
-2. O mantenedor (Ricardo, SRTE/GO) libera os notebooks de ementas e NRs.
-3. Depois da liberação, rode `notebooklm --quiet list` de novo para confirmar.
+## Passo 5 - Notebooks que precisam do primeiro acesso (o "oi")
+
+O Google só coloca um notebook compartilhado na coleção da conta depois que **a pessoa
+o abre uma vez**. Antes disso ele responde "not found" a qualquer consulta - e não há
+como o toolkit resolver isso por fora: o `ask` também falha, porque consulta o notebook
+antes de chegar ao chat. É **um clique por notebook, uma vez na vida**.
+
+Se `indisponiveis` vier vazio, apenas confirme: *"O Claude consulta todos os N notebooks
+do ementário."* Se vier com itens, mande este recado (com os links do JSON):
+
+> ✅ **O Claude já consulta N notebooks** do ementário.
+>
+> ⚠️ **Faltam M.** O Google só põe um notebook compartilhado na sua coleção depois que
+> **você** o abre uma vez - até lá, a consulta a esses temas falha. É rápido: abra o
+> notebook, escreva **oi** na caixa de chat e feche. Uma vez só, para sempre.
+>
+> - [Título do notebook](url do JSON)
+> - ...
+>
+> **Não precisa abrir todos** - só os temas que você fiscaliza. Se algum pedir acesso,
+> solicite em **https://notebooks-aft.vercel.app** com a sua conta Google (o mantenedor
+> libera; nesse caso o "oi" vem depois da liberação).
+>
+> Quando terminar, me diga **"confere meus notebooks"** que eu confirmo o que entrou.
+
+Regras do recado:
+- Liste os indisponíveis com **link clicável** (o campo `url`), em ordem de título.
+  Se passarem de 15, mostre os mais usados no dia a dia (ementários SST e Legislação,
+  RIT, as NRs) e diga que os demais estão no portal.
+- **Não afirme que falta liberação** de acesso: "not found" é a mesma resposta para
+  "tem acesso e nunca abriu" e para "não tem acesso". O recado acima cobre os dois.
+- Não ofereça abrir os notebooks você mesmo: quem tem a conta Google no navegador é o
+  AFT, e o registro do primeiro acesso só vale feito por ele.
 
 ## Passo 6 - Se nada funcionar (ambiente sem tela)
 

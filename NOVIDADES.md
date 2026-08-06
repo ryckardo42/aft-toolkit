@@ -7,6 +7,34 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 06/08/2026
+<!-- commit: notebooklm-primeiro-acesso -->
+
+**Agora o Claude te diz, antes de você precisar, quais notebooks do ementário ele
+consegue consultar — e o que fazer com os que faltam.** Era uma armadilha silenciosa:
+colegas com o acesso liberado viam a consulta de ementa falhar do nada, em uma NR
+específica, sem entender por quê.
+
+- **O motivo.** O Google só coloca um notebook compartilhado na sua coleção depois que
+  **você** o abre uma vez. Até lá, ele responde "não encontrado" a qualquer consulta — e
+  não existe comando que resolva isso por fora, nem no toolkit nem em lugar nenhum.
+- **O que muda.** No `/aft-setup` e sempre que você pedir *"confere meus notebooks"* (ou
+  reconectar o NotebookLM), o Claude percorre os notebooks um por um e mostra: quantos já
+  estão prontos e, dos que faltam, o **link direto de cada um**. Você abre os temas que
+  fiscaliza, escreve **oi** na caixa de chat e fecha. Uma vez por notebook, para sempre.
+- **Não precisa abrir todos.** Só os assuntos que aparecem no seu trabalho. Se algum
+  pedir acesso, é porque a liberação ainda não veio: solicite em
+  https://notebooks-aft.vercel.app com a sua conta Google.
+- **Fim de um teste que enganava.** A instalação dizia "se a lista de notebooks aparecer,
+  está pronto" — mas aquela lista mostra só os notebooks **abertos recentemente**, então
+  vinha vazia mesmo com tudo funcionando. Agora a conferência é notebook por notebook.
+- **Notebook novo numa atualização?** O `/aft-atualizar` percebe e já avisa quais abrir.
+
+Também limpei três notebooks que não existem mais (`Acidentes`, `Especialista em NR-31`,
+`NHO 11`): estavam no mapa do toolkit e faziam a consulta falhar sem motivo.
+
+---
+
+## 06/08/2026
 <!-- commit: skill-email -->
 
 **Nova skill `/aft-email`: o e-mail que acompanha a notificação, o Termo ou a análise —
