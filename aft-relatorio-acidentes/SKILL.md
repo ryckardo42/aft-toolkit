@@ -95,13 +95,17 @@ python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py -
 > 📥 **Baixe as planilhas de CAT do seu estado e ponha em `<PASTA_AFT>/CATs`.**
 >
 > 1. Abra a área do ENIT no SharePoint do MTE, pasta **"CATs eSocial por UF"**:
->    <https://mtegovbr-my.sharepoint.com/shared?listurl=https%3A%2F%2Fmtegovbr%2Dmy%2Esharepoint%2Ecom%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments&id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF&shareLink=1&ga=1>
+>    <https://mtegovbr-my.sharepoint.com/shared?id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF&listurl=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments&viewid=68794266%2Df39f%2D4837%2D9e12%2Ddd5cbd44066e&ga=1>
 > 2. O link **só abre com a conta institucional (Microsoft) logada** — se pedir
 >    login, é isso. Não há como o assistente entrar por você.
-> 3. Baixe **todas as planilhas da sua UF** (uma por ano — quanto mais anos,
->    mais fundo vai o histórico).
+> 3. Entre na pasta da **sua UF** e baixe **todas as planilhas** que houver (uma
+>    por ano — quanto mais anos, mais fundo vai o histórico).
 > 4. Crie a pasta `CATs` dentro da sua pasta AFT (a mesma que contém `OS ATIVAS`)
 >    e jogue os `.xlsx` lá dentro. Pronto — nenhuma configuração é necessária.
+>
+> ⚠️ Sem essas planilhas não há onde procurar: o relatório de acidentes não sai, e a
+> `/aft-preparacao-acao-fiscal` monta o dossiê da visita sem os últimos acidentes da
+> empresa.
 
 O AFT que preferir manter a base em outro lugar (HD externo, pasta compartilhada)
 grava o caminho uma vez, e ele passa a prevalecer sobre a convenção:

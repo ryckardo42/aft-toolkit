@@ -142,10 +142,10 @@ def base_configurada():
 # Area do ENIT no SharePoint do MTE com as planilhas de CAT do eSocial por UF.
 # So abre com a conta institucional (Microsoft) do auditor ja logada.
 LINK_ENIT_CATS = (
-    "https://mtegovbr-my.sharepoint.com/shared?listurl=https%3A%2F%2Fmtegovbr%2Dmy"
-    "%2Esharepoint%2Ecom%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments"
-    "&id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs"
-    "%20eSocial%20por%20UF&shareLink=1&ga=1")
+    "https://mtegovbr-my.sharepoint.com/shared?id=%2Fpersonal%2Fjoao%5Freis"
+    "%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF"
+    "&listurl=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments"
+    "&viewid=68794266%2Df39f%2D4837%2D9e12%2Ddd5cbd44066e&ga=1")
 
 
 def instrucao_montar_base():
@@ -160,8 +160,11 @@ def instrucao_montar_base():
         "planilhas .xlsx de CAT do seu estado - uma por ano, todas as que houver.\n"
         "Elas ficam na area do ENIT no SharePoint do MTE, em \"CATs eSocial por UF\":\n"
         f"{LINK_ENIT_CATS}\n"
-        "O link so abre com a sua conta institucional (Microsoft) ja logada; baixe as\n"
-        "planilhas da SUA UF. Feito isso, nada mais precisa ser configurado.\n"
+        "O link so abre com a sua conta institucional (Microsoft) ja logada; entre na\n"
+        "pasta da SUA UF e baixe todas as planilhas. Feito isso, nada mais precisa ser\n"
+        "configurado.\n"
+        "Sem elas nao ha onde procurar: o relatorio de acidentes nao sai, e a preparacao\n"
+        "da acao fiscal monta o dossie sem os ultimos acidentes da empresa.\n"
         "Se preferir manter a base em outro lugar, rode: --definir-base \"<pasta>\"")
 
 
