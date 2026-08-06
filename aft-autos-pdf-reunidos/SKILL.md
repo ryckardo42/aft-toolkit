@@ -9,9 +9,10 @@ description: >
   Dispare com /aft-autos-pdf-reunidos, "reunir os autos em um PDF", "juntar
   os PDFs dos autos", "PDF unico dos autos", "mesclar autos e anexos",
   "dossie dos autos em PDF", "um PDF so com todos os autos". Aceita 0 ou 1
-  argumento (CNPJ ou parte do nome da empresa). Read-only sobre o Sistema
-  Auditor; o PDF final vai para a pasta da OS. NAO confundir com
-  /aft-autos-lavrados (snapshot e Relacao de autos em .docx).
+  argumento (CNPJ ou parte do nome da empresa). Antes de processar, oferece
+  o modo Completo (anexos inteiros) ou Economico (10 paginas por anexo).
+  Read-only sobre o Sistema Auditor; o PDF final vai para a pasta da OS. NAO
+  confundir com /aft-autos-lavrados (snapshot e Relacao de autos em .docx).
 ---
 
 # autos-pdf-reunidos — Um PDF único com todos os autos + anexos
@@ -40,8 +41,13 @@ AI mais antigo → anexo dele → próximo AI → anexo dele → ... → autos d
 - **Auto:** cada `AI_<9 dígitos>.PDF` da raiz entra **completo**. A ordem é o
   número do AI (crescente no tempo).
 - **Anexo:** se existir a pasta `AX_<mesmos 9 dígitos>`, os PDFs dela entram
-  **inteiros** logo após o auto, em ordem alfabética. (Se o AFT pedir para
-  limitar, existe a opção `--paginas-anexo N`.)
+  logo após o auto, em ordem alfabética — inteiros no modo **Completo**,
+  limitados a 10 páginas cada no modo **Econômico** (Passo 2.5).
+- **Anexo repetido entra uma vez só:** o mesmo documento anexado a vários
+  autos (PGR, AET, laudo...) é incluído apenas no **primeiro** auto da ordem
+  final; nos demais, o relatório registra "já incluído em AI X". A comparação
+  é pelo **conteúdo** do arquivo (hash), então pega o documento igual mesmo
+  salvo com nomes diferentes em pastas `AX_` distintas.
 - **Jornada por último:** autos cuja ementa é de jornada (excesso diário/semanal,
   interjornada, intrajornada, AFD/AEJ, atestado do REP — a lista exata está no
   script) carregam anexos volumosos de ponto e vão para o **fim** do PDF, na
@@ -86,14 +92,29 @@ Padrão: `<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.pdf` (em OS sem a caixa
 avise no chat. Se a empresa **não tem pasta de OS** em `<OS_ATIVAS>`, pergunte ao
 AFT onde salvar (sugira a Área de Trabalho).
 
+### Passo 2.5 — Oferecer o modo (obrigatório, antes de processar)
+
+Use `AskUserQuestion` explicando os dois modos em linguagem simples:
+
+- **Completo** — cada auto seguido do anexo **inteiro**. Fiel ao que está no
+  Sistema Auditor; arquivo maior (um PGR de centenas de páginas entra todo).
+- **Econômico** — cada arquivo de anexo entra com **até 10 páginas**; o resto é
+  cortado e listado no relatório. Dossiê muito menor, bom para leitura rápida
+  ou envio.
+
+Diga também que, nos dois modos, anexo repetido entra só na primeira menção e
+os autos de jornada vão para o fim. Se o AFT pedir outro limite de páginas
+(via "Other"), use o número que ele der em `--paginas-anexo`.
+
 ### Passo 3 — Rodar o script
 
 ```bash
 python ~/.claude/skills/aft-autos-pdf-reunidos/scripts/reune_autos_pdf.py "<EMPRESA>" "<CNPJ_OU_8DIGITOS>" "<SAIDA.pdf>"
 ```
 
-Opções: `--pasta-pro "<PRO alternativa>"` · `--paginas-anexo N` (padrão 0 =
-anexo inteiro; só limite as páginas **se o AFT pedir**).
+Modo **Completo** → sem `--paginas-anexo`. Modo **Econômico** →
+`--paginas-anexo 10` (ou o limite que o AFT escolheu). Instalação fora do
+padrão → `--pasta-pro "<PRO alternativa>"`.
 
 Capture o JSON do stdout. Campos que importam:
 
@@ -103,8 +124,10 @@ Capture o JSON do stdout. Campos que importam:
   match foi pelo nome (conferência parcial).
 - `autos[]` — por auto (já na ordem final do PDF): `numero_ai`, `ementa_num`,
   `jornada`, `paginas_auto`, `anexos[]` (com `paginas_total` ×
-  `paginas_incluidas`), `anexo_cortado`, `warnings`.
+  `paginas_incluidas`, e `repetido_de` quando omitido por repetição),
+  `anexo_cortado`, `warnings`.
 - `autos_jornada_no_fim` — os AIs de jornada deslocados para o fim.
+- `anexos_repetidos_omitidos` — anexos que entraram só na primeira menção.
 - `anexos_orfaos` — pastas `AX_` sem auto correspondente (não entram no PDF).
 - `total_autos`, `total_paginas`, `tamanho_mb`, `compressao`.
 - `errors` — reporte e pare.
@@ -114,13 +137,14 @@ Capture o JSON do stdout. Campos que importam:
 ```
 ✅ Autos reunidos em um só PDF — <empresa>
 
-📄 Arquivo: <caminho do PDF>  (<total_paginas> páginas, <tamanho_mb> MB)
+📄 Arquivo: <caminho do PDF>  (<total_paginas> páginas, <tamanho_mb> MB, modo <Completo|Econômico>)
 🗂️  Fonte: <basename pasta_auditor> (<total_autos> autos, match: <estrategia>)
 
 Autos de jornada deslocados para o fim: <lista de AIs, ou "nenhum">
+Anexos repetidos incluídos só na primeira menção: <N> (<resumo: "PGR em 5 autos → só no AI X", ...>)
 ```
 
-- Se o AFT usou `--paginas-anexo`, liste **todos** os cortes (`anexo_cortado`):
+- No modo **Econômico**, liste **todos** os cortes (`anexo_cortado`):
   `AI <numero_ai> — <arquivo> (<paginas_total> pág. → <paginas_incluidas>)`.
 - Se houver `warnings` (PDF ilegível pulado) ou `anexos_orfaos`, relate.
 - Lembre em uma linha: os PDFs originais continuam intactos no Sistema Auditor.

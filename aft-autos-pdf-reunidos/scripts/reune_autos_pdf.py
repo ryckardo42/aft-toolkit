@@ -15,15 +15,21 @@ Uso:
   --pasta-pro: pasta "PRO" do Sistema Auditor, se a instalação for fora do
   padrão. Sem ela, usa SISTEMA_AUDITOR_PRO, depois procura o disco do Parallels
   em /Volumes/*/SistemasAFT/... (Mac) e por fim o padrão do Windows.
-  --paginas-anexo: se maior que zero, limita o anexo de CADA auto a N páginas
-  (o corte fica registrado no JSON). Padrão 0 = anexo entra inteiro.
+  --paginas-anexo: se maior que zero, limita CADA arquivo de anexo a N páginas
+  (o corte fica registrado no JSON). Padrão 0 = anexo entra inteiro. O modo
+  "econômico" da skill usa 10.
 
 Montagem: AI + anexo, AI + anexo... do auto mais antigo ao mais novo (a
 numeração do AI é crescente no tempo). Exceção: autos de JORNADA (ementas de
 excesso de jornada, intervalos, AFD/AEJ e atestado do REP — anexos volumosos)
 vão para o FIM do arquivo, na ordem cronológica entre si. Dentro do anexo, os
-PDFs entram em ordem alfabética. Ao final o arquivo é comprimido (Ghostscript
-/ebook se houver; senão pikepdf) e a versão menor é mantida.
+PDFs entram em ordem alfabética.
+
+Anexo repetido entra UMA vez só: o mesmo arquivo anexado a vários autos (mesmo
+conteúdo, ainda que com outro nome — ex.: o PGR anexado a 5 autos) é incluído
+apenas no primeiro auto da ordem final; nos demais fica só o registro no JSON
+(campo "repetido_de"). Ao final o arquivo é comprimido (Ghostscript /ebook se
+houver; senão pikepdf) e a versão menor é mantida.
 
 Read-only sobre o Sistema Auditor: nada é gravado nem alterado na pasta PRO.
 Saída: JSON em stdout com o resumo da montagem.
@@ -44,6 +50,7 @@ except Exception:
     pass
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -291,6 +298,7 @@ def main() -> int:
         "paginas_anexo_limite": args.paginas_anexo if args.paginas_anexo > 0 else None,
         "autos": [],
         "autos_jornada_no_fim": [],
+        "anexos_repetidos_omitidos": [],
         "anexos_orfaos": [],
         "total_autos": 0,
         "total_paginas": 0,
@@ -353,7 +361,9 @@ def main() -> int:
     result["autos_jornada_no_fim"] = [
         numero_ai_formatado(d) if d else p.name for p, d, *_ in jornada]
 
-    # 2º passe: monta o PDF na ordem final.
+    # 2º passe: monta o PDF na ordem final. Anexo com o mesmo conteúdo (hash)
+    # já incluído em auto anterior não entra de novo.
+    anexos_vistos: dict = {}  # sha256 do arquivo -> "AI <nº> (arquivo)"
     for pdf, digitos, reader, erro, ementa in comuns + jornada:
         info: dict = {
             "arquivo": pdf.name,
@@ -383,30 +393,37 @@ def main() -> int:
         pasta_ax = pasta / f"AX_{digitos}"
         if not pasta_ax.is_dir():
             continue
-        sem_limite = args.paginas_anexo <= 0
-        restante = args.paginas_anexo
+        limite = args.paginas_anexo
         for anexo in list_pdf_anexos(pasta_ax):
             ax_info = {"arquivo": anexo.name, "paginas_total": None,
                        "paginas_incluidas": 0}
             info["anexos"].append(ax_info)
+            try:
+                h = hashlib.sha256(anexo.read_bytes()).hexdigest()
+            except OSError as e:
+                info["warnings"].append(f"anexo {anexo.name} pulado: "
+                                        f"leitura falhou ({type(e).__name__})")
+                continue
+            if h in anexos_vistos:
+                ax_info["repetido_de"] = anexos_vistos[h]
+                result["anexos_repetidos_omitidos"].append(
+                    f"AI {info['numero_ai']} — {anexo.name} "
+                    f"(já incluído em {anexos_vistos[h]})")
+                continue
             r2, erro2 = abrir_pdf(anexo)
             if r2 is None:
                 info["warnings"].append(f"anexo {anexo.name} pulado: {erro2}")
                 continue
             ax_info["paginas_total"] = len(r2.pages)
-            if not sem_limite and restante <= 0:
-                info["anexo_cortado"] = True
-                continue
-            incluir = len(r2.pages) if sem_limite else min(len(r2.pages), restante)
+            incluir = len(r2.pages) if limite <= 0 else min(len(r2.pages), limite)
             writer.append(r2, pages=(0, incluir), import_outline=False)
             writer.add_outline_item(f"Anexo: {anexo.name}", pagina_atual,
                                     parent=marcador)
             ax_info["paginas_incluidas"] = incluir
             pagina_atual += incluir
-            if not sem_limite:
-                restante -= incluir
             if incluir < len(r2.pages):
                 info["anexo_cortado"] = True
+            anexos_vistos[h] = f"AI {info['numero_ai']} ({anexo.name})"
 
     # Pastas AX_ sem AI correspondente (informativo, nao entram no PDF).
     try:

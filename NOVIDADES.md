@@ -14,6 +14,14 @@ PDF.** Você pede, ela varre a pasta da empresa no Sistema Auditor e entrega um
 só arquivo, do auto mais antigo ao mais novo, cada um seguido do próprio anexo
 **completo** (as fotos e documentos da pasta `AX_` daquele auto).
 
+- **Dois modos, e ela pergunta antes:** **Completo** (anexos inteiros) ou
+  **Econômico** (cada anexo entra com até 10 páginas — dossiê bem menor, bom
+  para leitura rápida ou envio). Os cortes do modo Econômico são listados no
+  relatório, auto por auto.
+- **Anexo repetido entra uma vez só.** O mesmo PGR ou AET anexado a vários
+  autos é incluído apenas no primeiro; nos demais o relatório indica onde ele
+  já está. A comparação é pelo conteúdo do arquivo, então funciona mesmo
+  quando o documento foi salvo com nomes diferentes.
 - **Autos de jornada vão para o fim.** Os autos de excesso de jornada,
   intervalos e AFD/AEJ carregam centenas de páginas de relatórios de ponto; a
   skill lê a ementa de cada auto e desloca esses para o final do arquivo, para
@@ -22,8 +30,6 @@ só arquivo, do auto mais antigo ao mais novo, cada um seguido do próprio anexo
   os anexos aninhados) e já comprimido.
 - **Nada muda no Sistema Auditor:** a skill só lê os PDFs de lá; o arquivo
   final é salvo na pasta da OS, em `AUTOS/Autos reunidos/`.
-- Se quiser um dossiê enxuto, dá para pedir um limite de páginas por anexo
-  (ex.: "reúna os autos limitando o anexo a 4 páginas").
 
 É diferente do `/aft-autos-lavrados`: aquele interpreta os autos e gera o
 snapshot e a Relação em `.docx`; este só junta os PDFs num dossiê único.
