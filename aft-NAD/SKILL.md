@@ -205,6 +205,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Origem natural:** ao final de `/aft-preparacao-acao-fiscal`, quando o checklist de documentos a solicitar for aprovado pelo AFT.
 - **Também standalone**, a qualquer momento: quando o AFT quer pedir mais documentos durante uma fiscalização já em andamento.
 - Depois de gerar, o AFT cola os blocos manualmente no DET (o toolkit não automatiza o preenchimento do DET).
+- **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 - Não confundir com `/aft-tn-nco` (verbo "Corrigir", para irregularidade já constatada).
 
 ---

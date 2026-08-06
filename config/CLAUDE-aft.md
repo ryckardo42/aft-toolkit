@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v10 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v11 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Carregado em toda conversa: diz ao Claude
@@ -86,6 +86,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Pasta bagunçada jogada em OS ATIVAS (docs de antes do toolkit) → `/aft-organiza-os`
 - Planejar a ação fiscal ANTES da visita → `/aft-preparacao-acao-fiscal`
 - Pedir documentos pelo DET → `/aft-NAD` · notificar para corrigir → `/aft-tn-nco`
+- Avisar a empresa/advogado por e-mail (notificação, Termo, adequação) → `/aft-email`
 - Narrar a visita → `/aft-inspecao-fisica`
 - Dúvida técnica, ementa, capitulação → `/aft-consulta`
 - Redigir autos (campo E/OU documental) → `/aft-auditoria-geral` (consultoras: `/aft-NR01`, `/aft-NR12`, `/aft-NR18`)
@@ -200,7 +201,7 @@ toolkit (`/aft-modelo-docx`). Exceção: documentos com template oficial própri
 interdição/embargo, Relação de autos).
 
 Isso não muda as skills oficiais: `/aft-NAD` e `/aft-tn-nco` continuam entregando texto
-puro para eu colar no DET. Textos que eu vou copiar para outro lugar aparecem no chat sem
+puro para eu colar no DET, e `/aft-email` texto puro para eu colar no cliente de e-mail. Textos que eu vou copiar para outro lugar aparecem no chat sem
 negrito nem cabeçalho de markdown, para copiar direto sem sobra de `**`/`#`.
 
 ## Sessões por auditoria (grupo "OS ATIVAS")

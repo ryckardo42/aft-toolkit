@@ -222,6 +222,11 @@
           "tech": "limite 1000 char/campo · model: sonnet"
         },
         {
+          "nome": "/aft-email",
+          "role": "E-mail formal que acompanha o ato da fiscalização (notificação lavrada no DET, Termo de Interdição/Embargo, adequação de documento analisado): resume o ato, prazos explícitos, consequência do descumprimento e canal oficial (blocos fixos DET e SEI, dupla visita só quando o AFT disser). Sempre duas versões (direta p/ empresário, técnica p/ jurídico) + feedback do texto; com o OK do AFT grava no email.md da OS, que o /aft-painel mostra com botão de copiar. Não envia nada e nunca cita empresa, CNPJ ou trabalhador.",
+          "tech": "email.md acumulativo · cartão de e-mails no painel (só versão local) · model: haiku"
+        },
+        {
           "nome": "/aft-rt-rgi",
           "role": "Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).",
           "tech": "template.docx SRTE/GO · herda o modelo da sessão"

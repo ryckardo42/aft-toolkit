@@ -206,6 +206,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 
 - **Origem natural:** logo após `/aft-auditoria-geral` ou `/aft-PGR-analise` identificarem irregularidades + ementas, ofereça rodar `/aft-tn-nco` para a empresa corrigir (especialmente em dupla visita / ME-EPP, onde a correção precede a autuação).
 - Depois de gerar, o AFT cola os blocos manualmente no DET (o toolkit não automatiza o preenchimento do DET).
+- **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 
 ---
 

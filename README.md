@@ -61,6 +61,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/aft-aet-auditoria` | Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e AET anexada a cada auto |
 | `/aft-det-630` | Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT) |
 | `/aft-tn-nco` | Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item) |
+| `/aft-email` | Redige o **e-mail** que acompanha o ato da fiscalização (notificação lavrada no DET, Termo de Interdição/Embargo encaminhado, adequação de documento analisado): resume o ato, deixa os prazos explícitos, avisa a consequência do descumprimento e empurra o destinatário para o canal oficial (DET / SEI). Entrega sempre **duas versões** — uma direta, para empresário sem jurídico, e uma técnica, para advogado/departamento jurídico — e, com o seu OK, grava no `email.md` da OS, que aparece no painel com botão de copiar. Nunca cita nome da empresa nem CNPJ, e **não envia nada**: quem envia é você |
 | `/aft-rt-rgi` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
 | `/aft-auditoria-AR-NR12` | Julga o laudo de adequação à NR-12 / apreciação de riscos de máquinas (NBR ISO 12100, NBR 14153) apresentado pela empresa — em pedido de suspensão de interdição ou resposta a notificação — em 6 blocos de verificação, com parecer |
 | `/aft-rt-manutencao` | Relatório Técnico de MANUTENÇÃO de interdição/embargo em .docx: analisa o requerimento de suspensão do empregador e conclui pela manutenção da medida (encadeia após `/aft-auditoria-AR-NR12` com parecer insuficiente) |
@@ -189,7 +190,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel, servir_painel, det_sync, instalar_rotina_painel, instalar_servidor_painel)
 ├── aft-setup/ · aft-doctor/ · aft-atualizar/ · aft-nova-skill/ · aft-notebooklm-login/ · aft-nova-os/ · aft-organiza-os/ · aft-painel/ · aft-agenda-det/ · aft-gera-ai/ · aft-inspecao-fisica/ · aft-auditoria-geral/
 ├── aft-preparacao-acao-fiscal/ · aft-NAD/   (planejamento pré-visita e notificação de documentos)
-├── aft-consulta/ · aft-registro/ · aft-det-630/ · aft-tn-nco/ · aft-sfitweb-rel/ · aft-PGR-analise/ · aft-aet-auditoria/ · aft-rt-rgi/ · aft-auditoria-AR-NR12/ · aft-rt-manutencao/ · aft-analise-acidente/ · aft-autos-lavrados/ · aft-revisa-auto/ · aft-modelo-docx/ · aft-sessoes-os/
+├── aft-consulta/ · aft-registro/ · aft-det-630/ · aft-tn-nco/ · aft-email/ · aft-sfitweb-rel/ · aft-PGR-analise/ · aft-aet-auditoria/ · aft-rt-rgi/ · aft-auditoria-AR-NR12/ · aft-rt-manutencao/ · aft-analise-acidente/ · aft-autos-lavrados/ · aft-revisa-auto/ · aft-modelo-docx/ · aft-sessoes-os/
 ├── aft-NR01/ · aft-NR12/ · aft-NR18/   (consultoras por NR, com references/ementas-comuns.md)
 ├── aft-cnae-grau-risco-nr04/ · aft-dimensionamento-sesmt-nr04/ · aft-cipa-nr05-dimensionamento/   (enquadramento CNAE→GR, SESMT da NR-04 e CIPA da NR-05, por script determinístico)
 ├── aft-jornada-analise/ · aft-jornada-valida-afd-aej/ · aft-jornada-atestado/ · aft-jornada-auto-afd-aej/

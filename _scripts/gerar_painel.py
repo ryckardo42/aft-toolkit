@@ -396,13 +396,42 @@ def listar_docs(pasta: Path) -> list[str]:
     """Relatórios .md na raiz da pasta da OS (analise-preliminar-*.md,
     autos-lavrados.md...), para o modal linkar na rota /doc/ do modo
     interativo. Ficam de fora os .md que o modal já exibe por inteiro:
-    memory.md (o card é a ficha) e inspecao-fisica.md (seção própria)."""
+    memory.md (o card é a ficha), inspecao-fisica.md (seção própria) e
+    email.md (cartão próprio, com botão de copiar)."""
     try:
         return sorted(p.name for p in pasta.glob("*.md")
                       if p.is_file()
-                      and p.name not in ("memory.md", "inspecao-fisica.md"))
+                      and p.name not in ("memory.md", "inspecao-fisica.md",
+                                         "email.md"))
     except OSError:
         return []
+
+
+def parse_emails(pasta: Path) -> list[dict]:
+    """Lê o email.md da OS (e-mails redigidos pela /aft-email) e devolve
+    [{titulo, assunto, corpo}], do mais recente para o mais antigo — cada
+    e-mail é um bloco '## <título>' com o corpo dentro de uma cerca ```.
+    O painel mostra cada um com botão de copiar, para o AFT colar no cliente
+    de e-mail. Só entra na versão LOCAL do painel (ver montar_json_os)."""
+    arq = pasta / "email.md"
+    if not arq.exists():
+        return []
+    try:
+        texto = arq.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    out = []
+    for bloco in re.split(r"^##\s+", texto, flags=re.M)[1:]:
+        linhas = bloco.splitlines()
+        titulo = linhas[0].strip() if linhas else ""
+        corpo = re.search(r"^```[^\n]*\n(.*?)^```", bloco, re.M | re.S)
+        if not (titulo and corpo):
+            continue
+        assunto = re.search(r"\*\*Assunto:\*\*\s*(.+)", bloco)
+        out.append({"titulo": titulo,
+                    "assunto": assunto.group(1).strip() if assunto else "",
+                    "corpo": corpo.group(1).rstrip()})
+    return out[:8]
 
 
 def parse_inspecao_fisica(pasta: Path) -> dict:
@@ -693,6 +722,17 @@ cursor:pointer;color:var(--t3);text-decoration:underline;text-underline-offset:2
 .pasta-btn:hover{color:var(--coral-deep)}
 .doc-link{color:var(--coral-deep);text-decoration:underline;text-underline-offset:2px}
 .doc-link:hover{color:var(--coral)}
+/* E-mails redigidos pela /aft-email: texto pronto para copiar e colar. */
+.email-item{border-top:1px solid var(--bds);padding:10px 0 4px}
+.email-item:first-of-type{border-top:none;padding-top:2px}
+.email-tit{font-size:13.5px;font-weight:600;line-height:1.3}
+.email-ass{font-size:12.5px;color:var(--t2);margin-top:2px}
+.email-item details{margin:6px 0}
+.email-item summary{font-size:12px;color:var(--t3);cursor:pointer}
+.email-corpo{white-space:pre-wrap;font:12.5px/1.5 var(--serif);background:var(--cream);
+border:1px solid var(--bds);border-radius:8px;padding:10px 12px;margin:6px 0 0;
+max-height:280px;overflow-y:auto}
+.email-item .mini{margin:6px 6px 0 0}
 footer{margin-top:34px;color:var(--t3);font-size:12px}
 /* Modo interativo (servidor local) + botões de copiar comando */
 .chip.emb{background:#F5E4E0;color:var(--coral-deep)}
@@ -896,6 +936,14 @@ const CMDS=[
  ['/aft-sfitweb-rel','Relatório Final Simplificado consolidando autos, termos e notificações.']];
 function copiaCmd(i,k){copia(CMDS[k][0]+' — OS '+DATA.os[i].empregador)}
 function copiaCaminho(i){copia(DATA.os[i].caminho)}
+// E-mail redigido pela /aft-email: copia o corpo cru, pronto para colar no
+// cliente de e-mail (aviso diferente do de comando — nada de "cole no Claude").
+function copiaEmail(i,k,so){const e=DATA.os[i].emails[k];
+ const t=so==='assunto'?e.assunto:e.corpo;
+ const fim=()=>aviso(so==='assunto'?'Assunto copiado':'E-mail copiado — cole no seu e-mail');
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(t).then(fim).catch(()=>copiaVelho(t,fim));
+ }else copiaVelho(t,fim)}
 // "Agendar no Google Calendar": URL de template pré-preenchida (evento de dia
 // inteiro na data do prazo) — sem login e sem API; o AFT só confirma o Salvar.
 function agCal(j){const v=DATA.venc[j];
@@ -1041,6 +1089,16 @@ function cartaoComandosPorFase(o,i){
   FASES.map(f=>'<div class="fase"><span class="frot">'+esc(f[0])+'</span><div class="cmds">'+
   f[1].map(k=>'<button data-tip="'+esc(CMDS[k][1])+'" onclick="copiaCmd('+i+','+k+')">'+
   esc(CMDS[k][0])+'</button>').join('')+'</div></div>').join('')+'</div>'}
+// E-MAILS — redigidos pela /aft-email, com botão de copiar e prévia expansível.
+function cartaoEmails(o,i){
+ const es=o.emails||[];if(!es.length)return '';
+ return '<div class="cartao"><h3>E-mails <span class="cont">'+es.length+'</span></h3>'+
+  es.map((e,k)=>'<div class="email-item"><div class="email-tit">'+esc(e.titulo)+'</div>'+
+   (e.assunto?'<div class="email-ass">Assunto: '+esc(e.assunto)+'</div>':'')+
+   '<details><summary>ver o texto</summary><pre class="email-corpo">'+esc(e.corpo)+'</pre></details>'+
+   '<button class="mini" onclick="copiaEmail('+i+','+k+')">copiar e-mail</button>'+
+   (e.assunto?'<button class="mini" onclick="copiaEmail('+i+','+k+',\\'assunto\\')">copiar assunto</button>':'')+
+   '</div>').join('')+'</div>'}
 function cartaoRelatorios(o){
  if(!(o.docs&&o.docs.length))return '';
  return '<div class="cartao"><h3>Relatórios da OS <span class="cont">'+o.docs.length+
@@ -1109,6 +1167,7 @@ function abre(i){
  h+='</div><div>';
  h+=cartaoAcoes(o,i);
  h+=cartaoComandosPorFase(o,i);
+ h+=cartaoEmails(o,i);
  h+=cartaoRelatorios(o);
  h+='</div></div>';
  h+=secaoAutos(o,i);
@@ -1263,6 +1322,9 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "inspecao": (o.get("inspecao_fisica") or {}) if com_pasta else {},
             # Relatórios .md também podem conter PII: idem, só na versão local.
             "docs": (o.get("docs") or []) if com_pasta else [],
+            # E-mails redigidos (email.md): texto que o AFT vai mandar para
+            # fora — idem, nunca no Artifact publicado.
+            "emails": (o.get("emails") or []) if com_pasta else [],
             "dets": [{"codigo": d["codigo"], "feito": d["feito"],
                       "linha": datas_para_br(d["linha"]),
                       "rotulo": d.get("rotulo") or "",
@@ -1439,6 +1501,8 @@ def main() -> int:
         os_["inspecao_fisica"] = parse_inspecao_fisica(Path(os_["caminho"]))
         # Relatórios .md da pasta (idem: só na versão local).
         os_["docs"] = listar_docs(Path(os_["caminho"]))
+        # E-mails redigidos pela /aft-email (idem: só na versão local).
+        os_["emails"] = parse_emails(Path(os_["caminho"]))
         # Autos lavrados: autos-lavrados.md + scan ao vivo (opcional).
         os_["autos_lavrados_md"] = parse_autos_lavrados_md(Path(os_["caminho"]))
         vivo = scan_ao_vivo(os_) if scan else None
