@@ -30,6 +30,9 @@ só arquivo, do auto mais antigo ao mais novo, cada um seguido do próprio anexo
   os anexos aninhados) e já comprimido.
 - **Nada muda no Sistema Auditor:** a skill só lê os PDFs de lá; o arquivo
   final é salvo na pasta da OS, em `AUTOS/Autos reunidos/`.
+- **Anexo do relatório final.** O `/aft-sfitweb-rel` agora avisa, ao montar o
+  relatório, que este dossiê também será gerado — e o entrega junto, como
+  anexo do relatório.
 
 É diferente do `/aft-autos-lavrados`: aquele interpreta os autos e gera o
 snapshot e a Relação em `.docx`; este só junta os PDFs num dossiê único.

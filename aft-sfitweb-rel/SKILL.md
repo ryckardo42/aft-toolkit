@@ -117,6 +117,9 @@ autos e interdições lavrados. Dê exemplos concretos para orientar a resposta:
 > inclua mais alguma coisa relevante da fiscalização? Por exemplo: empregados que continuaram
 > sem registro após a NCRE (Notificação para Comprovação do Registro de Empregados), itens que
 > não foram regularizados, ou outras ocorrências relevantes durante a ação fiscal.
+>
+> Junto com o relatório, vou gerar também um anexo em PDF único com todos os autos de
+> infração lavrados e os anexos de cada um (skill /aft-autos-pdf-reunidos).
 
 Aguarde a resposta. Se o AFT indicar informações, incorpore-as no campo `outras_ocorrencias`
 (vira a seção "Outras Ocorrências Relevantes da Fiscalização"), redigidas em linguagem técnica e
@@ -148,6 +151,17 @@ Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:
 
 Ao final, registre a atividade no `## Registro de atividades` do memory.md
 (`| dd/mm/aaaa | Relatório final simplificado gerado (.md + .docx) | /aft-sfitweb-rel |`).
+
+### 6. Gerar o anexo: todos os autos + anexos em um PDF único
+
+Depois de entregar o relatório, gere o dossiê que o acompanha como anexo: siga a skill
+**`/aft-autos-pdf-reunidos`** a partir do Passo 2.5 dela (a OS já está resolvida) — ela
+pergunta o modo (Completo ou Econômico), reúne todos os `AI_*.PDF` do Sistema Auditor com
+os anexos de cada auto e salva em `<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.pdf`.
+Informe o caminho ao AFT junto com o do relatório.
+
+- **Sem nenhum auto transmitido** (Seção 4 vazia), pule este passo — não há o que reunir.
+- Se o AFT disser que não quer o anexo, siga sem ele, sem insistir.
 
 ---
 
