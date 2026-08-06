@@ -180,7 +180,7 @@ Atualize `[PASTA_EMPRESA]` para o novo nome e use-o em todos os passos seguintes
 | Campo | Valor |
 |-------|-------|
 | `cod_1` (CNAE) | **CNAE real da OS**: front-matter `cnae:` do memory.md, só dígitos (7). Ex.: `4691-5/00` → `4691500`. Se a ficha não tiver CNAE, use o `cod_1` do config (placeholder `8211300` — o auditor corrige na lupa) |
-| `cod_2` (tipo ação) | `cod_2` do config (padrão `1008`) |
+| `cod_2` (nº de empregados) | **`0` fixo.** No layout oficial de importação este campo é o "Número total e atual de trabalhadores da empresa" (rotulado por engano de "tipo de ação" até 08/2026, quando ia `1008`). `0` = não informado; ignore o `cod_2` de aft-config.md antigo se ainda trouxer `1008` |
 | `cod_3` | código da ementa sem hífen (por auto) |
 | `cod_4` (UORG) | `uorg` do config |
 | `cod_5` | (vazio) |

@@ -244,7 +244,7 @@ python_path: "C:\\Users\\joao\\AppData\\Local\\Programs\\Python\\Python312\\pyth
 notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /aft-notebooklm-login
 # Dados fixos do TXT (não alterar sem orientação):
 cod_1: "8211300"           # CNAE placeholder — o Sistema Auditor corrige pela lupa
-cod_2: "1008"              # tipo de ação fiscal
+cod_2: "0"                 # nº de empregados da empresa no TXT (0 = não informado)
 ---
 ````
 

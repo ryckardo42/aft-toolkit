@@ -29,6 +29,11 @@ sistema completar os dados.
   termo, laudo) mesmo com o arquivo no lugar certo — ele procurava o anexo pelo
   caminho do Windows, que não existe no Mac. Agora ele converte o caminho e confere
   o arquivo de verdade.
+- **Fim de um engano antigo:** um campo fixo do TXT rotulado de "tipo de ação
+  fiscal" (valor `1008`) era, no layout oficial do Sistema Auditor, o **número
+  total de trabalhadores da empresa** — todo auto saía dizendo que a empresa tem
+  1008 empregados. Agora vai `0` (não informado). Quem instalou antes não precisa
+  fazer nada: a skill ignora o valor antigo do config.
 
 ## 06/08/2026
 <!-- commit: notebooklm-primeiro-acesso -->
