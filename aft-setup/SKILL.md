@@ -141,30 +141,31 @@ vai voltar a ela toda vez que quiser achar os arquivos de uma fiscalização), u
 > para `OS ARQUIVADAS` (mesmo nível, ao lado de `OS ATIVAS`). Tudo fica **no seu
 > computador** — nada é enviado para fora.
 
-### Passo 2a — A pasta `CATs` (opcional, mas vale a pena)
+### Passo 2a — A pasta `CATs` (histórico de acidentes)
 
 Ao lado de `OS ATIVAS`, o toolkit procura uma pasta **`CATs`** com as planilhas de
-Comunicação de Acidente do estado do AFT (uma `.xlsx` por ano, fonte eSocial). Com
-ela montada, a `/aft-relatorio-acidentes` levanta o histórico de acidentes de
-qualquer CNPJ, e a `/aft-preparacao-acao-fiscal` leva esse histórico para a visita.
-Sem ela, as duas seguem funcionando — só sem essa parte.
+Comunicação de Acidente do estado do AFT (uma `.xlsx` por ano, fonte eSocial). É
+delas que sai o histórico de acidentes de qualquer empresa fiscalizada.
 
-Crie a pasta agora (dentro de `<PASTA_AFT>`) e dê o recado, com o caminho real dele:
+Crie a pasta agora, dentro de `<PASTA_AFT>`, e dê o recado abaixo com o **caminho
+real** dele. Não trave o setup esperando: baixar as planilhas é coisa que o AFT faz
+no navegador quando quiser, e o resto do toolkit funciona sem elas.
 
-> 📥 **Para ver o histórico de acidentes das empresas, ponha as planilhas de CAT do
-> seu estado em `Documentos\AFT\CATs`.**
+> 📥 **Ponha as planilhas de CAT do seu estado em `Documentos\AFT\CATs`.**
 >
 > 1. Abra a área do ENIT no SharePoint do MTE, pasta **"CATs eSocial por UF"**:
->    <https://mtegovbr-my.sharepoint.com/shared?listurl=https%3A%2F%2Fmtegovbr%2Dmy%2Esharepoint%2Ecom%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments&id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF&shareLink=1&ga=1>
+>    <https://mtegovbr-my.sharepoint.com/shared?id=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments%2FDados%2FCATs%20eSocial%20por%20UF&listurl=%2Fpersonal%2Fjoao%5Freis%5Ftrabalho%5Fgov%5Fbr%2FDocuments&viewid=68794266%2Df39f%2D4837%2D9e12%2Ddd5cbd44066e&ga=1>
 > 2. O link **só abre com a sua conta institucional (Microsoft) logada** — é
 >    conteúdo interno do Ministério, e eu não tenho como entrar por você.
-> 3. Baixe **todas as planilhas da sua UF** (uma por ano; quanto mais anos, mais
->    fundo vai o histórico) e jogue os arquivos nessa pasta.
+> 3. Entre na pasta da **sua UF** e baixe **todas as planilhas** que houver (uma por
+>    ano; quanto mais anos, mais fundo vai o histórico).
+> 4. Jogue os arquivos em `Documentos\AFT\CATs`. Não precisa configurar mais nada —
+>    o toolkit acha a pasta sozinho.
 >
-> Não precisa configurar nada depois: o toolkit acha a pasta sozinho.
-
-É um passo que o AFT faz no navegador, na hora que quiser — não trave o setup
-esperando por ele.
+> ⚠️ **Sem essas planilhas**, a `/aft-relatorio-acidentes` não tem onde procurar e a
+> `/aft-preparacao-acao-fiscal` monta o dossiê da visita **sem os últimos acidentes
+> da empresa** — você chega ao estabelecimento sem saber onde ela já machucou gente.
+> Nenhuma das duas quebra por isso; elas só avisam que a base não foi encontrada.
 
 ## Passo 2b — Instalar os agentes do toolkit
 
