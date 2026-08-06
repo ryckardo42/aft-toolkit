@@ -34,6 +34,10 @@ sistema completar os dados.
   total de trabalhadores da empresa** — todo auto saía dizendo que a empresa tem
   1008 empregados. Agora vai `0` (não informado). Quem instalou antes não precisa
   fazer nada: a skill ignora o valor antigo do config.
+- **"Grupo que desenvolveu a ação fiscal" já vai respondido.** Cada auto do TXT
+  agora leva essa informação preenchida com "Nenhum" — uma pergunta a menos na
+  tela do Sistema Auditor. Se a ação for de grupo móvel (trabalho escravo,
+  portuário), avise o Claude na hora de gerar o TXT para ajustar.
 
 ## 06/08/2026
 <!-- commit: notebooklm-primeiro-acesso -->

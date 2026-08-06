@@ -154,6 +154,14 @@ def main():
                     erros.append(f"{rotulo} -> Erro: codigo de ementa '{cod3}' invalido "
                                  f"(esperado 7 digitos, ementa sem hifen).")
 
+        elif tipo == "2":
+            rotulo = (f"AI CNPJ/CPF:{bloco_atual[0]} Ementa:{bloco_atual[1]}"
+                      if bloco_atual else f"linha {ln}")
+            # Layout oficial: se a linha tipo 2 existir, os 3 campos sao obrigatorios.
+            if len(campos) != 3 or not campos[1].strip() or not campos[2].strip():
+                erros.append(f"{rotulo} -> linha tipo 2 (informacao complementar) "
+                             f"malformada (esperado 2[TAB]codigo[TAB]valor).")
+
         elif tipo == "5":
             rotulo = (f"AI CNPJ/CPF:{bloco_atual[0]} Ementa:{bloco_atual[1]}"
                       if bloco_atual else f"linha {ln}")

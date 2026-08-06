@@ -331,12 +331,19 @@ Linhas separadas por `\n`.
 > `[texto_autuacao]` = texto **tokenizado** (`[[AUTUADA]]`, `[[TRAB_NN]]`), conforme FASE 2.5.
 > **`[cep]` (campo 8) JAMAIS pode ser vazio** — o Sistema Auditor recusa o auto inteiro ("CEP não informado! AI RECUSADO"). Se não houver CEP do estabelecimento, preencha com `cep_uorg` do aft-config.md. Antes de gravar o TXT, valide que TODAS as linhas tipo 1 têm o campo 8 preenchido; se alguma estiver vazia, substitua por `cep_uorg` e só então gere o arquivo.
 
+**Linha tipo 2** — informações complementares (uma por auto, imediatamente após a linha tipo 1):
+```
+2[TAB]2[TAB]1
+```
+
+> Formato do layout oficial: `2[TAB][código da informação][TAB][valor]`. O toolkit grava sempre a informação de código `2` — "Grupo que desenvolveu a ação fiscal" — com valor `1` (= Nenhum). Se o auditor avisar que a ação é de grupo móvel, troque o valor (`2` = Móvel Trab. Escravo; `3` = Móvel Portuário; `9` = Outro); fora isso, não pergunte.
+
 **Linhas tipo 5** — anexos (uma por PDF, se houver):
 ```
 5[TAB][path_windows_completo][TAB]Registro Fotografico
 ```
 
-> **Posicionamento**: linhas tipo 5 vêm imediatamente após a linha tipo 1 do auto correspondente, **antes** das linhas tipo 4.
+> **Posicionamento**: linhas tipo 5 vêm após a linha tipo 2 do auto correspondente, **antes** das linhas tipo 4.
 >
 > **Path Windows** — monte com o `path_windows` do aft-config.md:
 > ```
@@ -396,10 +403,12 @@ Linhas separadas por `\n`.
 ```
 [bloco auto 1]
   linha 1
+  linha 2 (grupo da ação fiscal — sempre `2[TAB]2[TAB]1`)
   linhas 5 (anexos do auto 1, se houver)
   linhas 4 (trabalhadores do auto 1, se houver)
 [bloco auto 2]
   linha 1
+  linha 2
   linhas 5
   linhas 4
 ...
