@@ -625,6 +625,10 @@ python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[ca
     confirmar, chame a skill `/aft-gera-ai`** apontando para o `autos.md` desta pasta (anexando o
     RT/Termo aos autos). Se ele pedir ajustes, corrija e mostre de novo antes do `/aft-gera-ai`.
 
+- **E-mail de encaminhamento (nos dois modos):** ao fechar, ofereça `/aft-email` para redigir o
+  e-mail que encaminha o Termo à empresa/advogado — ele já traz o bloco fixo de como pedir a
+  suspensão pelo SEI. Só ofereça; quem envia é o AFT.
+
 ---
 
 ## Estrutura do documento (referência)

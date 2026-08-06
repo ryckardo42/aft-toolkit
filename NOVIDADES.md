@@ -7,6 +7,40 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 06/08/2026
+<!-- commit: skill-email -->
+
+**Nova skill `/aft-email`: o e-mail que acompanha a notificação, o Termo ou a análise —
+em duas versões.** Depois de lavrar uma notificação no DET, entregar um Termo de
+Interdição ou analisar um PGR, quase sempre vem um e-mail avisando a empresa (ou o
+advogado dela). Agora é só pedir: *"faz um e-mail para essa notificação do DET"*.
+
+- **Sempre duas versões do mesmo e-mail.** Uma **direta**, para o empresário ou o RH que
+  não conhece a legislação — frases curtas, cada exigência explicada em português comum.
+  E uma **técnica**, para empresa com departamento jurídico ou advogado — base normativa
+  precisa e o peso da autoridade da inspeção do trabalho. Você escolhe qual usar.
+- **Ela lê o documento e resume.** Anexe o PDF da notificação (com o código único) ou do
+  Termo de Interdição: o e-mail sai com o resumo do que foi pedido, os prazos em
+  dd/mm/aaaa e o aviso, firme e educativo, do que acontece se não cumprir.
+- **Os blocos que você sempre usa vêm prontos e literais**: como entrar no DET e enviar os
+  documentos (com o aviso de que prorrogação só se pede pelo DET), como pedir a suspensão
+  da interdição pelo SEI, a citação da dupla visita (só quando você disser que se aplica)
+  e o fechamento sobre dúvidas.
+- **Também melhora texto seu.** Cole o seu rascunho e ela devolve as duas versões
+  reescritas **e** o retorno sobre o original: ortografia, gramática e estrutura, com o
+  porquê de cada mudança.
+- **Nome da empresa e CNPJ nunca entram no e-mail** — ela escreve "a empresa", "esse
+  estabelecimento". Nem nome de trabalhador, nem denúncia.
+- **O e-mail aprovado fica guardado e à mão.** Com o seu OK, ele vai para o `email.md` da
+  pasta da OS e aparece no **painel**, no card da auditoria, na seção **E-mails**: dá para
+  ver o texto e copiar com um clique (o assunto também).
+
+Ela **não envia nada**. Quem manda o e-mail, do e-mail institucional, é sempre você.
+As skills `/aft-NAD`, `/aft-tn-nco` e `/aft-rt-rgi` passam a oferecer o e-mail no fim do
+trabalho delas.
+
+---
+
+## 06/08/2026
 <!-- commit: aft-autos-pdf-reunidos -->
 
 **Nova skill `/aft-autos-pdf-reunidos`: todos os autos da empresa em um único
