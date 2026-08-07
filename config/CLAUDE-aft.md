@@ -92,7 +92,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Redigir autos (campo E/OU documental) → `/aft-auditoria-geral` (consultoras: `/aft-NR01`, `/aft-NR12`, `/aft-NR18`)
 - Trabalhador sem registro → `/aft-registro` · empregador não entregou DET → `/aft-det-630`
 - Analisar PGR → `/aft-PGR-analise` · AET → `/aft-aet-auditoria` · acidente → `/aft-analise-acidente`
-- Grau de risco/CNAE → `/aft-cnae-grau-risco-nr04` · SESMT → `/aft-dimensionamento-sesmt-nr04` · CIPA → `/aft-cipa-nr05-dimensionamento`
+- Grau de risco/CNAE → `/aft-cnae-grau-risco-nr04` · SESMT → `/aft-dimensionamento-sesmt-nr04` · CIPA → `/aft-cipa-nr05-dimensionamento` · banheiros, mictórios, vestiário e bebedouros → `/aft-nr24-dimensionamento`
 - Interdição/embargo → `/aft-rt-rgi` · empresa mandou laudo → `/aft-auditoria-AR-NR12` · manter a medida → `/aft-rt-manutencao`
 - Pacote de ponto (AFD/AEJ/atestado) → `/aft-jornada-analise`
 - Revisar minutas (5W1H) → `/aft-revisa-auto` · gerar o TXT → `/aft-gera-ai` · conferir transmitidos → `/aft-autos-lavrados`

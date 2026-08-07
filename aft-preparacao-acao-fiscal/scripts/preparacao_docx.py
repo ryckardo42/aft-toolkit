@@ -202,6 +202,45 @@ def dimensiona(grau, efetivo, saude=False):
     return cipa, sesmt
 
 
+def e_canteiro_de_obras(dados):
+    """(é obra?, motivo) — a NR-18 é setorial e muda o dimensionamento inteiro.
+
+    Dois sinais objetivos, ambos do memory.md: o CNAE da seção F (divisões 41,
+    42 e 43 — construção, que é o campo de aplicação do item 18.2.1 da NR-18) e
+    a sigla SPE (Sociedade de Propósito Específico) no nome do empregador, que na
+    prática só aparece em sociedade constituída para tocar uma obra. O sinal é
+    forte, mas é sinal: o documento diz em que se baseou, para o AFT corrigir."""
+    cnae = re.sub(r"\D", "", dados.get("cnae") or "")
+    if cnae[:2] in ("41", "42", "43"):
+        return True, f"CNAE {dados['cnae']} — seção F (construção), campo de " \
+                     "aplicação da NR-18 (item 18.2.1)"
+    if re.search(r"\bSPE\b", (dados.get("empregador") or "").upper()):
+        return True, "a sigla SPE (Sociedade de Propósito Específico) no nome do " \
+                     "empregador, que em regra designa sociedade constituída para " \
+                     "uma obra"
+    return False, ""
+
+
+def dimensiona_nr24(vinc, obra=False):
+    """Dimensionamento pelo script de /aft-nr24-dimensionamento.
+
+    Depende da divisão por sexo, que só a Relação de Vínculos dá — sem ela não
+    há como separar as instalações por sexo. Roda SEM os flags de exposição de
+    propósito: antes da visita ninguém sabe se há poeira, agente químico ou troca
+    de uniforme, e o script devolve, além do cenário base, o que cada hipótese
+    mudaria. Sendo canteiro de obras, `--obra` troca a NR-24 pela NR-18."""
+    if not vinc:
+        return None
+    c = vinc["composicao"]
+    if not (c["homens"] or c["mulheres"]):
+        return None
+    s = script_de_skill("aft-nr24-dimensionamento/scripts/dimensionar_nr24.py")
+    if not s:
+        return None
+    args = ["--homens", str(c["homens"]), "--mulheres", str(c["mulheres"])]
+    return roda_json(s, args + (["--obra"] if obra else []))
+
+
 def le_vinculos(caminho):
     """Relação de Empregados do Estabelecimento (SFIT), tratada localmente pelo
     vinculos_ativos.py — mesmo diretório deste script."""
@@ -391,6 +430,228 @@ def secao_risco_cipa(doc, n, dados, grau, cnae_info, cipa, sesmt, vinc):
                 "em exercício, apontando o déficit em cada representação.")
 
 
+def m2(x):
+    """Área no padrão brasileiro (vírgula decimal)."""
+    return f"{x:.2f}".replace(".", ",")
+
+
+def bloco_vestiario(doc, vest, sempre_exigido=False):
+    """Vestiário e armários — o que o AFT confere com a trena na mão.
+
+    Não é dimensionamento (a área e a quantidade já saíram na tabela acima): é a
+    lista do item 24.4 que se esquece em campo — trancamento, uso rotativo, medidas
+    mínimas e as três dispensas (24.4.5.1, 24.4.7 e 24.4.8)."""
+    m.subtitulo(doc, "Vestiário e armários — o que conferir")
+    if sempre_exigido:
+        m.paragrafo(doc,
+                    "Vestiário obrigatório no canteiro (item 18.5.1 \"b\"), com "
+                    f"{vest['armarios']['feminino']} e {vest['armarios']['masculino']} "
+                    "armários individuais (feminino e masculino).")
+    else:
+        m.paragrafo(doc,
+                    "O vestiário é devido quando a atividade exigir vestimenta de "
+                    "trabalho ou uniforme trocado no próprio local, OU quando o "
+                    "estabelecimento tiver de disponibilizar chuveiro (item 24.4.1) — "
+                    "as duas hipóteses se confirmam em campo. Sendo devido: "
+                    f"{vest['armarios']['feminino']} e {vest['armarios']['masculino']} "
+                    "armários individuais (feminino e masculino).")
+
+    t = m.nova_tabela(doc, ["Armário", "Dimensões mínimas", "Item"],
+                      larguras_cm=(4.2, 9.3, 3.0))
+    for nome, medida, item in vest["dimensoes_minimas"]:
+        m.linha_dados(t, [nome, medida, item])
+
+    for chk in vest["verificacoes"]:
+        m.marcador(doc, chk)
+
+    m.paragrafo(doc,
+                "Três dispensas que a empresa costuma invocar — e o que exigir de cada "
+                "uma: higienização diária das vestimentas ou vestimenta descartável "
+                "dispensa o armário DUPLO, mas não o simples (24.4.5.1); serviço de "
+                "guarda-volumes dispensa os armários (24.4.7); e estabelecimento "
+                "desobrigado de vestiário ainda deve garantir escaninho, gaveta com "
+                "tranca ou similar (24.4.8). Nenhuma delas se prova por declaração "
+                "verbal.")
+
+
+def secao_nr18(doc, n, nr18, vinc, motivo):
+    """Canteiro de obras — a NR-18 (setorial) no lugar da NR-24."""
+    e = nr18["entrada"]
+    cs, chu = nr18["conjuntos_sanitarios"], nr18["chuveiros"]
+    lav, mic, vest = nr18["lavatorios"], nr18["mictorios"], nr18["vestiario"]
+
+    m.titulo_secao(doc, f"{n}. NR-18 — áreas de vivência do canteiro")
+    m.paragrafo(doc,
+                f"Esta fiscalização foi tratada como canteiro de obras por {motivo}. "
+                "Se não for obra, este quadro não se aplica — o dimensionamento volta a "
+                "ser o da NR-24.", italico=True)
+    m.paragrafo(doc,
+                f"Para {e['homens']} homens e {e['mulheres']} mulheres, o item 18.5 da "
+                "NR-18 exige o quadro abaixo. A NR-18 é norma setorial e prevalece sobre "
+                "a NR-24 no que dispõe: chuveiro 1:10 (contra 1:20) e bebedouro 1:25 "
+                "(contra 1:50). No que ela não dispõe, a NR-24 se aplica por remissão "
+                "expressa do item 18.5.2.")
+
+    t = m.nova_tabela(doc, ["Instalação", "Feminino", "Masculino", "Item"],
+                      larguras_cm=(6.4, 3.0, 3.0, 4.1))
+    m.linha_dados(t, ["Bacias sanitárias sifonadas, com assento e tampo",
+                      [str(cs["feminino"])], [str(cs["masculino"])], "18.5.3"])
+    m.linha_dados(t, ["Lavatórios", [str(lav["feminino"])], [str(lav["masculino"])],
+                      "18.5.3"])
+    m.linha_dados(t, ["Mictórios", ["0"], [str(mic["exigidos"])], "18.5.3"])
+    m.linha_dados(t, ["Chuveiros", [str(chu["feminino"])], [str(chu["masculino"])],
+                      "18.5.3"])
+    m.linha_dados(t, ["Bebedouros (total do turno)",
+                      [str(nr18["bebedouros"]["quantidade"])], [""], "18.5.6"])
+    for linha in cs["memoria"]:
+        m.paragrafo(doc, linha, italico=True, depois=4)
+    m.paragrafo(doc,
+                "O conjunto sanitário masculino é bacia sifonada com assento e tampo + "
+                "lavatório + mictório; o feminino, bacia e lavatório (o mictório é da "
+                "instalação masculina). A separação por sexo vem do item 24.2.2 da "
+                "NR-24, aplicável por remissão do item 18.5.2.")
+
+    m.subtitulo(doc, "Vestiário e local para refeições")
+    m.paragrafo(doc,
+                "No canteiro, vestiário e local para refeição são SEMPRE obrigatórios "
+                "(item 18.5.1, alíneas \"b\" e \"c\") — diferente da NR-24, não dependem "
+                "de haver uniforme nem chuveiro.")
+    m.paragrafo(doc,
+                "Área mínima do vestiário: "
+                f"{m2(vest['area_minima_m2']['feminino'])} m² (feminino) e "
+                f"{m2(vest['area_minima_m2']['masculino'])} m² (masculino) — itens "
+                "24.4.2 e 24.4.2.1 da NR-24, por remissão do 18.5.2.")
+    m.paragrafo(doc, f"Local para refeições: {nr18['local_refeicoes']['regime']}.")
+
+    bloco_vestiario(doc, vest, sempre_exigido=True)
+
+    m.subtitulo(doc, "A conferir no percurso pelo canteiro")
+    for chk in nr18["verificacoes"]:
+        m.marcador(doc, chk)
+
+    origem = ("da Relação de Vínculos"
+              + (f", emitida em {vinc['data_emissao']}," if (vinc or {}).get("data_emissao")
+                 else ""))
+    m.caixa_destaque(doc, "Antes de concluir por irregularidade", [
+        f"O número de homens e mulheres vem {origem} e é o EFETIVO TOTAL. O "
+        "dimensionamento tem como base o turno com maior contingente: havendo mais de um "
+        "turno, o quadro acima é teto, não a exigência exata. Numa obra, o efetivo "
+        "também varia com a etapa — confirme o contingente do dia.",
+        "A NR-18 de 2022 NÃO exige água quente nos chuveiros do canteiro: essa exigência "
+        "era da redação anterior (item 18.4.2.7.1), revogada. Não a leve para o auto sem "
+        "outra base.",
+        "Frente de trabalho tem regra própria e mais enxuta (item 18.5.7): bacia e "
+        "lavatório 1:20, sem mictório e sem chuveiro, com banheiro químico admitido. "
+        "Havendo frentes, rode /aft-nr24-dimensionamento com --frente-trabalho.",
+        "Havendo trabalhador alojado, o alojamento é obrigatório (item 18.5.4) e os "
+        "dormitórios se dimensionam pelo item 24.7 da NR-24 — rode a skill com "
+        "--alojados-h e --alojados-m.",
+    ])
+
+
+def secao_nr24(doc, n, nr24, vinc):
+    """NR-24 devida — a régua para contar bacias, mictórios e bebedouros no
+    percurso pelo estabelecimento. Só sai quando há Relação de Vínculos: o
+    cálculo é separado por sexo (item 24.2.2)."""
+    e = nr24["entrada"]
+    ins, lav, mic = (nr24["instalacoes_sanitarias"], nr24["lavatorios"],
+                     nr24["mictorios"])
+    chu, vest = nr24["chuveiros"], nr24["vestiario"]
+
+    m.titulo_secao(doc, f"{n}. NR-24 — instalações sanitárias e conforto")
+    m.paragrafo(doc,
+                f"Para {e['homens']} homens e {e['mulheres']} mulheres, e supondo "
+                "estabelecimento construído a partir de 24/09/2019, a NR-24 exige o "
+                "quadro abaixo. Conte no percurso pelo estabelecimento e anote a "
+                "diferença.")
+
+    t = m.nova_tabela(doc, ["Instalação", "Feminino", "Masculino", "Item"],
+                      larguras_cm=(6.4, 3.0, 3.0, 4.1))
+    m.linha_dados(t, ["Bacias sanitárias sifonadas, com assento e tampo",
+                      [str(ins["feminino"])], [str(ins["masculino"])], "24.2.1 e 24.2.2"])
+    m.linha_dados(t, ["Lavatórios", [str(lav["feminino"])], [str(lav["masculino"])],
+                      "24.2.1"])
+    mic_txt = (str(mic["exigidos"]) if mic["exigidos"] is not None
+               else "deve existir")
+    m.linha_dados(t, ["Mictórios", ["—"], [mic_txt], "24.2.1.1"])
+    m.linha_dados(t, ["Bebedouros (total do turno)",
+                      [str(nr24["bebedouros"]["quantidade"])], [""], "24.9.1.1"])
+    for linha in ins["memoria"] + mic["memoria"]:
+        m.paragrafo(doc, linha, italico=True, depois=4)
+
+    m.paragrafo(doc,
+                "Ao contar o que existe, converta as calhas coletivas: cada 0,60 m de "
+                "mictório com anteparo (0,80 m sem anteparo) e cada 0,60 m de lavatório "
+                "tipo calha ou tampo com várias cubas valem 1 unidade (itens 24.3.2.1, "
+                "24.3.2.2 e 24.3.3).")
+
+    cen = nr24.get("cenarios")
+    if cen:
+        m.subtitulo(doc, "Se houver exposição — o que muda")
+        m.paragrafo(doc,
+                    "As proporções acima são o piso, sem exposição. Confirmado em campo "
+                    "qualquer dos cenários abaixo, o número sobe:")
+        tc = m.nova_tabela(doc, ["Se houver", "Lavatórios", "Chuveiros", "Armários"],
+                           larguras_cm=(6.4, 3.0, 3.0, 4.1))
+        rotulos = {
+            "exposicao_agentes": "Material infectante, substância tóxica, irritante "
+                                 "ou aerodispersóide que impregne pele e roupas",
+            "deposicao_de_poeiras": "Poeiras que impregnem pele e roupas",
+            "esforco_fisico_ou_calor_intenso": "Esforço físico ou calor intenso",
+        }
+        for chave, rotulo in rotulos.items():
+            d = cen[chave]
+            lv = d["lavatorios"]
+            lv_txt = (f"{lv['feminino']}F / {lv['masculino']}M"
+                      if isinstance(lv, dict) else "sem alteração")
+            cv = d["chuveiros"]
+            arm = ("duplos" if "dupl" in str(d["armarios"]) else "sem alteração")
+            m.linha_dados(tc, [rotulo, [lv_txt],
+                               [f"{cv['feminino']}F / {cv['masculino']}M"], [arm]])
+        v = cen["vestiario"]
+        m.paragrafo(doc,
+                    "Vestiário (item 24.4.1): obrigatório se houver troca de vestimenta "
+                    "ou uniforme trocado no local, ou se o estabelecimento tiver de "
+                    "disponibilizar chuveiro. Nesse caso, área mínima de "
+                    f"{m2(v['area_minima_m2']['feminino'])} m² (feminino) e "
+                    f"{m2(v['area_minima_m2']['masculino'])} m² (masculino).")
+    else:
+        m.paragrafo(doc,
+                    f"Chuveiros: {chu['feminino']} (feminino) e {chu['masculino']} "
+                    f"(masculino) — {chu['regra']}.")
+        if vest["exigido"]:
+            m.paragrafo(doc,
+                        "Vestiário exigido — área mínima de "
+                        f"{m2(vest['area_minima_m2']['feminino'])} m² (feminino) e "
+                        f"{m2(vest['area_minima_m2']['masculino'])} m² (masculino).")
+
+    m.paragrafo(doc, f"Local para refeições: {nr24['local_refeicoes']['regime']}. "
+                     f"{nr24['local_refeicoes']['observacao']}")
+
+    bloco_vestiario(doc, vest)
+
+    origem = ("da Relação de Vínculos"
+              + (f", emitida em {vinc['data_emissao']}," if (vinc or {}).get("data_emissao")
+                 else ""))
+    alertas = [
+        f"O número de homens e mulheres vem {origem} e é o EFETIVO TOTAL do "
+        "estabelecimento. A NR-24 dimensiona pelo turno com maior contingente "
+        "(item 24.1.1): havendo mais de um turno, o quadro acima é teto, não a "
+        "exigência exata. Confirme o maior turno no local.",
+        "Data de construção: o quadro supõe estabelecimento construído a partir de "
+        "24/09/2019. Se for anterior, a linha dos mictórios não vale — a alínea \"a\" "
+        "do item 24.2.1.1 remete à NR-24 de 1978, que não fixa proporção por "
+        "trabalhador: ali se exige a EXISTÊNCIA de mictório na instalação sanitária "
+        "masculina coletiva, e é a ausência que se autua, não a insuficiência.",
+        "Verifique se incide algum Anexo da NR-24 (I: shopping center; II: trabalho "
+        "externo; III: transporte público rodoviário) — têm proporções próprias.",
+        "Havendo alojamento, o item 24.7 tem dimensionamento próprio (quartos, "
+        "sanitários com chuveiro, área e pé-direito): rode a skill com --alojados-h "
+        "e --alojados-m.",
+    ]
+    m.caixa_destaque(doc, "Antes de concluir por irregularidade", alertas)
+
+
 def gera(pasta: Path, conteudo: dict, saida: Path, vinculos=None, saude=False):
     dados, frentes = le_memory(pasta)
     cfg_frentes = conteudo.get("frentes") or {}
@@ -403,6 +664,8 @@ def gera(pasta: Path, conteudo: dict, saida: Path, vinculos=None, saude=False):
         efetivo = int(dados["trabalhadores"].strip())
     grau, cnae_info = grau_de_risco(dados)
     cipa, sesmt = dimensiona(grau, efetivo, saude)
+    obra, motivo_obra = e_canteiro_de_obras(dados)
+    nr24 = dimensiona_nr24(vinc, obra=obra)
 
     doc = m.novo_documento()
     m.capa(doc, "TRIAGEM DA AÇÃO FISCAL",
@@ -420,6 +683,12 @@ def gera(pasta: Path, conteudo: dict, saida: Path, vinculos=None, saude=False):
         secao_pessoal(doc, n, vinc)
     n += 1
     secao_risco_cipa(doc, n, dados, grau, cnae_info, cipa, sesmt, vinc)
+    if nr24:
+        n += 1
+        if nr24.get("modo") == "canteiro-de-obras":
+            secao_nr18(doc, n, nr24, vinc, motivo_obra)
+        else:
+            secao_nr24(doc, n, nr24, vinc)
 
     # ---- Quadro de triagem
     total = sum(len(v) for v in frentes.values())
@@ -474,7 +743,7 @@ def gera(pasta: Path, conteudo: dict, saida: Path, vinculos=None, saude=False):
     doc.save(str(saida))
     return {"arquivo": saida, "ementas": total, "frentes": len(frentes),
             "grau": grau, "efetivo": efetivo, "cipa": cipa, "sesmt": sesmt,
-            "vinculos": vinc}
+            "vinculos": vinc, "nr24": nr24, "motivo_obra": motivo_obra}
 
 
 def main():
@@ -537,6 +806,26 @@ def main():
                   "Atualize o memory.md.")
         for obs in vinc["observacoes"]:
             print(f"AVISO: {obs}")
+    if r["nr24"]:
+        d = r["nr24"]
+        mic = d["mictorios"]
+        mic_txt = (str(mic["exigidos"]) if mic["exigidos"] is not None
+                   else "sem proporção (só a existência é exigível)")
+        if d.get("modo") == "canteiro-de-obras":
+            cs, chu = d["conjuntos_sanitarios"], d["chuveiros"]
+            print(f"NR-18 (canteiro de obras — {r['motivo_obra']}): conjuntos "
+                  f"sanitários {cs['masculino']}M/{cs['feminino']}F · mictórios "
+                  f"{mic_txt} · chuveiros {chu['masculino']}M/{chu['feminino']}F · "
+                  f"bebedouros {d['bebedouros']['quantidade']}")
+        else:
+            ins = d["instalacoes_sanitarias"]
+            print(f"NR-24 (sem exposição, construção pós-24/09/2019): instalações "
+                  f"sanitárias {ins['masculino']}M/{ins['feminino']}F · mictórios "
+                  f"{mic_txt} · bebedouros {d['bebedouros']['quantidade']}")
+    elif r["vinculos"]:
+        print("AVISO: NR-24 não dimensionada — o script "
+              "aft-nr24-dimensionamento/scripts/dimensionar_nr24.py não foi "
+              "encontrado ou falhou.")
     if not ((conteudo.get("empresa") or {}).get("resumo")):
         print("AVISO: sem 'empresa.resumo' no JSON — a seção 1 saiu com "
               "'(a preencher)'. Faça a busca da FASE 1.2 antes de gerar.")
