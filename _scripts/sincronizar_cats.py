@@ -103,6 +103,26 @@ def _remote_existe(rclone):
     return r.returncode == 0 and (REMOTE + ":") in (r.stdout or "")
 
 
+def _remote_valido(rclone):
+    """Existe E tem um token OAuth salvo. 'rclone config create' pode deixar
+    o remote cadastrado mas vazio por dentro - por exemplo quando o AFT
+    esgota o tempo no navegador antes de clicar em Permitir: a secao
+    [aftcats] e escrita, mas sem a linha 'token'. Depois disso, listremotes
+    continua enxergando o remote (parece conectado), e so uma operacao real
+    (lsf, copy) revela o problema, com 'empty token found'. Checar o token
+    aqui evita relatar 'ja_conectado' para uma conexao que nao funciona."""
+    if not _remote_existe(rclone):
+        return False
+    r = _roda_rclone(rclone, ["config", "show", REMOTE])
+    if r.returncode != 0:
+        return False
+    for linha in (r.stdout or "").splitlines():
+        chave, _, valor = linha.partition("=")
+        if chave.strip() == "token":
+            return bool(valor.strip())
+    return False
+
+
 # ---------------------------------------------------------------------------
 # aft-config.md (pasta_aft.py mora nesta mesma pasta _scripts)
 # ---------------------------------------------------------------------------
@@ -203,7 +223,7 @@ def cmd_status(args):
     if not rclone:
         est["estado"] = "rclone_ausente"
         _sair(est, 2)
-    if not _remote_existe(rclone):
+    if not _remote_valido(rclone):
         est["estado"] = "remote_nao_configurado"
         _sair(est, 2)
     est["remote_configurado"] = True
@@ -229,8 +249,14 @@ def cmd_conectar(args):
         _sair({"estado": "rclone_ausente",
                "instalar": ("brew install rclone" if sys.platform == "darwin"
                             else "winget install Rclone.Rclone")}, 2)
-    if _remote_existe(rclone):
+    if _remote_valido(rclone):
         _sair({"estado": "ja_conectado", "remote": REMOTE}, 0)
+    if _remote_existe(rclone):
+        # Remote cadastrado mas sem token valido (tentativa anterior que
+        # esgotou o tempo no navegador antes de salvar o login). Remove antes
+        # de recriar - senao o rclone reaproveita a secao vazia e o problema
+        # se repete.
+        _roda_rclone(rclone, ["config", "delete", REMOTE])
     # Abre o navegador para o OAuth (cliente verificado do rclone). O AFT
     # escolhe a conta Gmail autorizada do notebooks-aft e clica em Permitir.
     # scope=drive.readonly: leitura apenas; root_folder_id prende o remote a
@@ -244,7 +270,7 @@ def cmd_conectar(args):
     except subprocess.TimeoutExpired:
         _sair({"estado": "erro",
                "erro": "tempo esgotado esperando a autorizacao no navegador"}, 1)
-    if r.returncode != 0 or not _remote_existe(rclone):
+    if r.returncode != 0 or not _remote_valido(rclone):
         _sair({"estado": "erro", "erro": "rclone config create falhou"}, 1)
     ok, res = _lista_ufs_remotas(rclone)
     if ok:
@@ -261,7 +287,7 @@ def cmd_sync(args):
     rclone = _rclone()
     if not rclone:
         _sair({"estado": "rclone_ausente"}, 2)
-    if not _remote_existe(rclone):
+    if not _remote_valido(rclone):
         _sair({"estado": "remote_nao_configurado"}, 2)
     uf = _uf(args)
     if not uf:
