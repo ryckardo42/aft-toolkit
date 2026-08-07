@@ -640,6 +640,9 @@ def main():
     ap.add_argument("--empresa", help="razao social a usar no relatorio (opcional)")
     ap.add_argument("--definir-base", help="grava a pasta das planilhas no aft-config.md e sai")
     ap.add_argument("--mostrar-base", action="store_true", help="mostra a pasta configurada e sai")
+    ap.add_argument("--desde", type=int, metavar="ANO",
+                    help="considerar apenas CATs com data do acidente a partir de "
+                         "01/01/<ANO> (recorte temporal da fiscalizacao)")
     args = ap.parse_args()
 
     if args.definir_base:
@@ -689,13 +692,32 @@ def main():
     if args.empresa:
         empresa = args.empresa
 
+    recorte = ""
+    if args.desde:
+        # CAT sem data de acidente legível fica de fora do recorte, mas é contada
+        # em separado: some-la ao filtro seria inventar data que o registro não tem.
+        antes = len(registros)
+        com_data = [r for r in registros if _data(r.get("dt"))]
+        sem_data = antes - len(com_data)
+        registros = [r for r in com_data if _data(r["dt"]).year >= args.desde]
+        recorte = (f"Recorte aplicado: apenas CATs a partir de 01/01/{args.desde} — "
+                   f"{len(registros)} de {antes} CATs do CNPJ"
+                   + (f"; {sem_data} sem data de acidente ficaram de fora"
+                      if sem_data else "") + ".")
+
     if not registros:
         print(f"NENHUMA_CAT: não há CAT para o CNPJ {cnpj_fmt(cnpj14)} na fonte "
-              f"consultada ({modo}). Nenhum arquivo foi gerado.")
+              f"consultada ({modo})"
+              + (f", com o recorte a partir de 01/01/{args.desde}" if args.desde else "")
+              + ". Nenhum arquivo foi gerado.")
         sys.exit(3)
 
     registros = _ordenar(registros)
     est = _estatisticas(registros)
+    if recorte:
+        # o recorte entra na descrição da fonte para constar do MD e do DOCX:
+        # relatório parcial precisa dizer que é parcial
+        fonte = f"{fonte} — {recorte}"
 
     saida = Path(args.saida).expanduser()
     saida.mkdir(parents=True, exist_ok=True)
@@ -710,6 +732,8 @@ def main():
     # Resumo para o chat: SOMENTE agregados e caminhos - nunca nome de trabalhador.
     print("RELATORIO_GERADO")
     print(f"  Modo: {modo}")
+    if recorte:
+        print(f"  {recorte}")
     print(f"  CNPJ: {cnpj_fmt(cnpj14)}")
     print(f"  Empresa: {_ou_ni(empresa)}")
     print(f"  Total de CATs: {est['total']} | Com óbito: {est['obitos']} | "
