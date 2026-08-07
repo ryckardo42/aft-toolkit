@@ -331,6 +331,8 @@ def ler_csv_portal(caminho):
             "obs": campo(row, "ObsCat"),
             "obito": campo(row, "IndCatObito"),
             "dt_obito": campo(row, "DtObito"),
+            "cid_cod": campo(row, "CdCid"),
+            "situacao": campo(row, "DsSituacaoGeradora"),
             "tipo_acidente": TIPO_ACIDENTE.get(campo(row, "TpAcidente"),
                                                campo(row, "TpAcidente")),
             "tipo_cat": campo(row, "DsTipoCat"),
@@ -355,7 +357,9 @@ COLS_B = {  # campo do relatorio -> nome exato da coluna nas planilhas
     "parte": "Parte do corpo atingida",
     "complesao": "Descrição complementar da lesão",
     "cid": "CID",
+    "cid_cod": "CID - código",
     "causa": "Agente causador",
+    "situacao": "Situação geradora",
     "local": "Especificação do local do acidente",
     "municipio_a": "Município do local do acidente",
     "municipio_b": "UF do local do acidente",
@@ -461,6 +465,142 @@ def _ordenar(registros):
 def _eh_obito(r):
     return (r.get("obito") == "S" or bool(_data(r.get("dt_obito")))
             or r.get("tipo_cat") == "Comunicação de óbito")
+
+
+# ---------------------------------------------------------------------------
+# Modo doencas ocupacionais (--doencas)
+#
+# Alem das CATs registradas como "Doença", o modo caca CATs cadastradas como
+# "Típico" cujo CID aponta para provavel doenca ocupacional mascarada (pratica
+# comum: a crise aguda de LER/DORT vira "acidente" e a empresa se poupa de
+# rever GRO/PGR e AET). Referencias: Lista de Doencas Relacionadas ao Trabalho
+# (Portaria GM/MS 1.999/2023; Anexo II do Decreto 3.048/1999) e o ementario de
+# Doencas do Trabalho (NotebookLM).
+#
+# Chaves com 3 caracteres casam o grupo CID inteiro (M75 pega M75.1 etc.);
+# chaves com 4+ casam o codigo exato sem ponto (Z730 = Z73.0).
+# ---------------------------------------------------------------------------
+CID_DOENCA_ALTA = {  # forte associacao com doenca ocupacional
+    "G56": "Mononeuropatias dos membros superiores (inclui síndrome do túnel do carpo, G56.0)",
+    "M75": "Lesões do ombro (inclui síndrome do manguito rotador, M75.1)",
+    "M77": "Outras entesopatias (inclui epicondilite medial M77.0 e lateral M77.1)",
+    "M65": "Sinovite e tenossinovite (inclui tenossinovite de De Quervain, M65.4)",
+    "M70": "Transtornos dos tecidos moles relacionados com uso, uso excessivo e pressão",
+    "M50": "Transtornos dos discos cervicais",
+    "M51": "Outros transtornos de discos intervertebrais",
+    "H833": "Efeitos do ruído sobre o ouvido interno - PAIR (H83.3)",
+    "H90": "Perda de audição por transtorno de condução e/ou neurossensorial",
+    "F32": "Episódios depressivos",
+    "F33": "Transtorno depressivo recorrente",
+    "F41": "Outros transtornos ansiosos",
+    "F43": "Reações ao estresse grave (inclui TEPT, F43.1)",
+    "F48": "Outros transtornos neuróticos (inclui neurastenia)",
+    "Z730": "Síndrome de Burnout - esgotamento profissional (Z73.0)",
+    "J45": "Asma",
+    "J60": "Pneumoconiose dos mineiros de carvão",
+    "J61": "Pneumoconiose devida a amianto (asbestose)",
+    "J62": "Pneumoconiose devida a poeira que contém sílica (silicose)",
+    "J63": "Pneumoconiose devida a outras poeiras inorgânicas",
+    "J64": "Pneumoconiose não especificada",
+    "J65": "Pneumoconiose associada com tuberculose",
+    "J66": "Doença das vias aéreas devida a poeiras orgânicas",
+    "J67": "Pneumonite de hipersensibilidade devida a poeiras orgânicas",
+    "J68": "Afecções respiratórias por inalação de produtos químicos, gases, fumaças e vapores",
+    "L23": "Dermatite alérgica de contato",
+    "L24": "Dermatite de contato por irritantes",
+    "L25": "Dermatite de contato não especificada",
+    "C16": "Neoplasia maligna do estômago",
+    "C223": "Angiossarcoma do fígado (C22.3 - arsênio, cloreto de vinila)",
+    "C25": "Neoplasia maligna do pâncreas",
+    "C30": "Neoplasia maligna da cavidade nasal e do ouvido médio",
+    "C31": "Neoplasia maligna dos seios da face",
+    "C32": "Neoplasia maligna da laringe",
+    "C34": "Neoplasia maligna dos brônquios e do pulmão",
+    "C40": "Neoplasia maligna dos ossos e cartilagens dos membros",
+    "C44": "Outras neoplasias malignas da pele",
+    "C45": "Mesotelioma",
+    "C67": "Neoplasia maligna da bexiga (aminas aromáticas)",
+    "C91": "Leucemia linfoide",
+    "C92": "Leucemia mieloide (benzeno)",
+    "C93": "Leucemia monocítica",
+    "C94": "Outras leucemias de células especificadas",
+    "C95": "Leucemia de tipo celular não especificado",
+}
+CID_DOENCA_MEDIA = {  # dor musculoesqueletica inespecifica: so vale com reforco
+    "M54": "Dorsalgia (inclui cervicalgia e lombalgia)",
+    "M79": "Outros transtornos dos tecidos moles (inclui mialgia)",
+    "M62": "Outros transtornos musculares",
+    "M53": "Outras dorsopatias",
+    "M25": "Outros transtornos articulares (inclui dor articular)",
+    "A15": "Tuberculose respiratória",
+    "A16": "Tuberculose das vias respiratórias sem confirmação",
+    "A17": "Tuberculose do sistema nervoso",
+    "A18": "Tuberculose de outros órgãos",
+    "A19": "Tuberculose miliar",
+}
+# Sinais de reforco no "Agente causador" ou na "Situação geradora": esforco
+# excessivo (qualquer variante do catalogo), movimento repetitivo e agente/
+# situacao "inexistente" (acidente tipico de verdade tem agente concreto).
+SINAIS_REFORCO = ("esforco excessivo", "repetitiv", "inexistente")
+
+CATEGORIAS_DOENCA = ("declarada", "forte", "suspeita")
+ROTULO_CATEGORIA = {
+    "declarada": "Doenças declaradas (CAT registrada como Doença)",
+    "forte": "Suspeitas fortes (CAT Típico com CID de doença ocupacional e "
+             "esforço excessivo/repetitivo ou agente inexistente)",
+    "suspeita": "Suspeitas (CAT Típico com CID compatível com doença ocupacional)",
+}
+
+
+def _sem_acento(s):
+    import unicodedata
+    s = unicodedata.normalize("NFD", str(s or "").lower())
+    return "".join(c for c in s if not unicodedata.combining(c))
+
+
+def _cid_normalizado(r):
+    """Codigo CID sem ponto, em maiusculas (M75.1 -> M751). Cai para o texto
+    descritivo quando a fonte nao tem a coluna de codigo."""
+    cod = re.sub(r"[^A-Z0-9]", "", str(r.get("cid_cod") or "").upper())
+    if cod:
+        return cod
+    m = re.match(r"([A-TV-Z]\d{2}\d?)", str(r.get("cid") or "").upper().replace(".", ""))
+    return m.group(1) if m else ""
+
+
+def _cid_na_lista(cid, tabela):
+    """Rotulo da tabela para o CID (codigo exato prevalece sobre o grupo)."""
+    for chave in (cid, cid[:4], cid[:3]):
+        if chave and chave in tabela:
+            return tabela[chave]
+    return None
+
+
+def _tem_reforco(r):
+    texto = _sem_acento(r.get("causa")) + " | " + _sem_acento(r.get("situacao"))
+    return next((s for s in SINAIS_REFORCO if s in texto), None)
+
+
+def classificar_doenca(r):
+    """(categoria, motivo) quando a CAT interessa ao relatorio de doencas;
+    'fraco' para o indicio que so entra na contagem; None para o resto."""
+    if r.get("tipo_acidente") == "Doença":
+        return "declarada", "CAT registrada pelo empregador como doença"
+    if r.get("tipo_acidente") != "Típico":
+        return None, ""
+    cid = _cid_normalizado(r)
+    reforco = _tem_reforco(r)
+    sufixo = f'; reforço: "{reforco}" no agente causador/situação geradora' if reforco else ""
+    rotulo = _cid_na_lista(cid, CID_DOENCA_ALTA)
+    if rotulo:
+        return (("forte" if reforco else "suspeita"),
+                f"CID {cid} - {rotulo}{sufixo}")
+    rotulo = _cid_na_lista(cid, CID_DOENCA_MEDIA)
+    if rotulo:
+        if reforco:
+            return "suspeita", f"CID {cid} - {rotulo}{sufixo}"
+        return "fraco", ""
+    return None, ""
 
 
 # Empresas com dezenas de CATs geram relatorio quilometrico. O modo economico
@@ -658,6 +798,164 @@ def gerar_docx(caminho, empresa, cnpj14, registros, fonte, est):
     return True
 
 
+# ---------------------------------------------------------------------------
+# Relatorio de doencas ocupacionais (--doencas)
+# ---------------------------------------------------------------------------
+def _agrupar_doencas(registros):
+    """Separa as CATs por categoria de doenca; devolve tambem quantos indicios
+    fracos (CID inespecifico sem reforco) ficaram so na contagem."""
+    grupos = {c: [] for c in CATEGORIAS_DOENCA}
+    fracos = 0
+    for r in registros:
+        cat, motivo = classificar_doenca(r)
+        if cat in grupos:
+            r2 = dict(r)
+            r2["_motivo"] = motivo
+            grupos[cat].append(r2)
+        elif cat == "fraco":
+            fracos += 1
+    return {c: _ordenar(rs) for c, rs in grupos.items()}, fracos
+
+
+def _linhas_doenca(r):
+    pares = _linhas_acidente(r)
+    if r.get("situacao"):
+        pares.append(("Situação geradora", r["situacao"]))
+    if r.get("_motivo"):
+        pares.append(("Indício", r["_motivo"]))
+    return pares
+
+
+def _estat_doencas(grupos, fracos, total_base):
+    listadas = [r for rs in grupos.values() for r in rs]
+    cids, partes = {}, {}
+    for r in listadas:
+        c = _cid_normalizado(r) or NAO_INFORMADO
+        cids[c] = cids.get(c, 0) + 1
+        if r.get("parte"):
+            partes[r["parte"]] = partes.get(r["parte"], 0) + 1
+    datas = [_data(r["dt"]) for r in listadas if _data(r.get("dt"))]
+    return {
+        "total_base": total_base,
+        "listadas": len(listadas),
+        "obitos": sum(1 for r in listadas if _eh_obito(r)),
+        "por_categoria": {c: len(grupos[c]) for c in CATEGORIAS_DOENCA},
+        "fracos": fracos,
+        "cids": cids,
+        "partes": partes,
+        "periodo": (f"{min(datas).strftime('%d/%m/%Y')} a "
+                    f"{max(datas).strftime('%d/%m/%Y')}") if datas else NAO_INFORMADO,
+    }
+
+
+NOTA_METODO_DOENCAS = (
+    "Metodologia: além das CATs registradas como Doença, o relatório aponta "
+    "CATs cadastradas como acidente Típico cujo CID é compatível com doença "
+    "ocupacional (LER/DORT, PAIR, transtornos mentais, pneumoconioses, "
+    "dermatoses e neoplasias ocupacionais - Lista de Doenças Relacionadas ao "
+    "Trabalho, Portaria GM/MS nº 1.999/2023, e Anexo II do Decreto nº "
+    "3.048/1999). Conta como reforço a menção a esforço excessivo, movimento "
+    "repetitivo ou agente/situação inexistente no Agente causador ou na "
+    "Situação geradora. As suspeitas são indícios de possível mascaramento da "
+    "doença como acidente típico; a caracterização cabe ao Auditor-Fiscal.")
+
+
+def gerar_md_doencas(caminho, empresa, cnpj14, grupos, est, fonte, notas):
+    hoje = datetime.now().strftime("%d/%m/%Y")
+    L = ["# Relatório de Doenças Ocupacionais (CATs)", ""]
+    L += [f"**Empresa:** {_ou_ni(empresa)}",
+          f"**CNPJ:** {cnpj_fmt(cnpj14)}",
+          f"**Fonte:** {fonte}",
+          f"**Gerado em:** {hoje}", ""]
+    L += ["## Resumo", "",
+          f"- CATs do CNPJ analisadas: {est['total_base']}",
+          f"- CATs listadas neste relatório: {est['listadas']} "
+          f"(declaradas: {est['por_categoria']['declarada']} · suspeitas fortes: "
+          f"{est['por_categoria']['forte']} · suspeitas: {est['por_categoria']['suspeita']})",
+          f"- CATs listadas com óbito: {est['obitos']}",
+          f"- Período das CATs listadas: {est['periodo']}"]
+    if est["fracos"]:
+        L.append(f"- Indícios fracos não listados (CID musculoesquelético "
+                 f"inespecífico sem reforço): {est['fracos']}")
+    if est["cids"]:
+        L.append("- CIDs mais frequentes: " + _top(est["cids"]))
+    if est["partes"]:
+        L.append("- Partes do corpo mais atingidas: " + _top(est["partes"]))
+    for nota in notas:
+        L.append(f"- **{nota}**")
+    L += ["", f"> {NOTA_METODO_DOENCAS}", ""]
+    n = 0
+    for c in CATEGORIAS_DOENCA:
+        if not grupos[c]:
+            continue
+        L += [f"## {ROTULO_CATEGORIA[c]}", ""]
+        for r in grupos[c]:
+            n += 1
+            L.append(f"* **{_rotulo(n, r).replace('Acidente', 'CAT')}**")
+            for rotulo, valor in _linhas_doenca(r):
+                L.append(f"    * **{rotulo}:** {valor}")
+            L.append("")
+    L += ["---", f"Total de CATs listadas: {est['listadas']} "
+          f"(de {est['total_base']} CATs do CNPJ na fonte)"]
+    Path(caminho).write_text("\n".join(L) + "\n", encoding="utf-8")
+
+
+def gerar_docx_doencas(caminho, empresa, cnpj14, grupos, est, fonte, notas):
+    m = _importar_modulo("aft-modelo-docx/scripts", "modelo_docx")
+    if m is None:
+        return False
+    hoje = datetime.now().strftime("%d/%m/%Y")
+    doc = m.novo_documento()
+    m.capa(doc, "RELATÓRIO DE DOENÇAS OCUPACIONAIS",
+           subtitulo="CATs de doença e suspeitas de doença registrada como acidente típico",
+           unidade=f"{_ou_ni(empresa)} — CNPJ {cnpj_fmt(cnpj14)}",
+           data=f"Gerado em {hoje}")
+
+    m.titulo_secao(doc, "1. Resumo")
+    linhas = [("CATs do CNPJ analisadas", str(est["total_base"])),
+              ("CATs listadas", str(est["listadas"])),
+              ("Doenças declaradas", str(est["por_categoria"]["declarada"])),
+              ("Suspeitas fortes", str(est["por_categoria"]["forte"])),
+              ("Suspeitas", str(est["por_categoria"]["suspeita"])),
+              ("CATs listadas com óbito", str(est["obitos"])),
+              ("Período das CATs listadas", est["periodo"])]
+    if est["fracos"]:
+        linhas.append(("Indícios fracos não listados", str(est["fracos"])))
+    if est["cids"]:
+        linhas.append(("CIDs mais frequentes", _top(est["cids"])))
+    if est["partes"]:
+        linhas.append(("Partes do corpo mais atingidas", _top(est["partes"])))
+    for nota in notas:
+        linhas.append(("Observação", nota))
+    linhas.append(("Fonte", fonte))
+    m.tabela_rotulo_valor(doc, linhas)
+    m.paragrafo(doc, NOTA_METODO_DOENCAS, italico=True)
+
+    num_secao, n = 1, 0
+    for c in CATEGORIAS_DOENCA:
+        if not grupos[c]:
+            continue
+        num_secao += 1
+        m.titulo_secao(doc, f"{num_secao}. {ROTULO_CATEGORIA[c]}")
+        for r in grupos[c]:
+            n += 1
+            m.subtitulo(doc, f"{_rotulo(n, r).replace('Acidente', 'CAT')[:-1]}"
+                             f" — {_data_fmt(r.get('dt'))}")
+            for rotulo, valor in _linhas_doenca(r):
+                if rotulo == "Dia":
+                    continue
+                m.marcador(doc, f"{rotulo}: {valor}")
+
+    m.paragrafo(doc)
+    m.paragrafo(doc, "Documento de trabalho gerado pelo AFT Toolkit "
+                     "(/aft-relatorio-acidentes, modo doenças ocupacionais) a "
+                     "partir dos registros de CAT. As suspeitas são indícios; a "
+                     "caracterização de doença ocupacional cabe ao Auditor-Fiscal.",
+                italico=True)
+    doc.save(str(caminho))
+    return True
+
+
 def _backup(caminho):
     if Path(caminho).exists():
         carimbo = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -686,7 +984,14 @@ def main():
                          "depois maior afastamento; empate = mais recente)")
     ap.add_argument("--auto-economico", action="store_true",
                     help=f"aplica --limite {LIMITE_ECONOMICO} sozinho quando ha mais que isso")
+    ap.add_argument("--doencas", action="store_true",
+                    help="modo doencas ocupacionais: lista as CATs de doenca e as "
+                         "CATs 'Tipico' com CID/agente sugestivo de doenca mascarada")
     args = ap.parse_args()
+
+    if args.doencas and (args.limite or args.auto_economico):
+        ap.error("--limite/--auto-economico não se aplicam ao --doencas "
+                 "(o relatório de doenças já é um recorte)")
 
     if args.definir_base:
         r = definir_base(args.definir_base)
@@ -739,6 +1044,82 @@ def main():
         print(f"NENHUMA_CAT: não há CAT para o CNPJ {cnpj_fmt(cnpj14)} na fonte "
               f"consultada ({modo}). Nenhum arquivo foi gerado.")
         sys.exit(3)
+
+    # ------------------------------------------------ modo doencas (--doencas)
+    if args.doencas:
+        fora_recorte = 0
+        if args.desde:
+            registros, fora_recorte = _recorte_desde(registros, args.desde)
+        total_base = len(registros)
+        grupos, fracos = _agrupar_doencas(registros)
+        est = _estat_doencas(grupos, fracos, total_base)
+
+        if args.contar:
+            print("CONTAGEM_DOENCAS " + json.dumps({
+                "total_cats": total_base,
+                "listadas": est["listadas"],
+                "declaradas": est["por_categoria"]["declarada"],
+                "suspeitas_fortes": est["por_categoria"]["forte"],
+                "suspeitas": est["por_categoria"]["suspeita"],
+                "indicios_fracos": fracos,
+                "obitos": est["obitos"],
+                "cids": dict(sorted(est["cids"].items(),
+                                    key=lambda kv: -kv[1])[:10]),
+                "cnpj": cnpj_fmt(cnpj14),
+                "empresa": empresa or "",
+            }, ensure_ascii=False))
+            sys.exit(0)
+
+        if not est["listadas"]:
+            print(f"NENHUMA_DOENCA: nas {total_base} CAT(s) do CNPJ "
+                  f"{cnpj_fmt(cnpj14)} não há CAT de doença nem suspeita de "
+                  f"doença mascarada como acidente típico"
+                  + (f" ({fracos} indício(s) fraco(s): CID inespecífico sem "
+                     f"reforço)" if fracos else "")
+                  + ". Nenhum arquivo foi gerado.")
+            sys.exit(3)
+
+        notas = []
+        if args.desde:
+            notas.append(f"Recorte temporal: somente CATs a partir de "
+                         f"01/01/{args.desde} ({fora_recorte} registro(s) fora "
+                         "do recorte, incluindo os sem data válida).")
+
+        saida = Path(args.saida).expanduser()
+        saida.mkdir(parents=True, exist_ok=True)
+        nome = "Relatorio-Doencas-" + so_digitos(cnpj14).zfill(14)
+        md_path = saida / (nome + ".md")
+        docx_path = saida / (nome + ".docx")
+        backups = [b for b in (_backup(md_path), _backup(docx_path)) if b]
+        gerar_md_doencas(md_path, empresa, cnpj14, grupos, est, fonte, notas)
+        docx_ok = gerar_docx_doencas(docx_path, empresa, cnpj14, grupos, est,
+                                     fonte, notas)
+
+        print("RELATORIO_DOENCAS_GERADO")
+        print(f"  Modo: {modo}")
+        print(f"  CNPJ: {cnpj_fmt(cnpj14)}")
+        print(f"  Empresa: {_ou_ni(empresa)}")
+        print(f"  CATs analisadas: {total_base} | Listadas: {est['listadas']} "
+              f"(declaradas: {est['por_categoria']['declarada']} · fortes: "
+              f"{est['por_categoria']['forte']} · suspeitas: "
+              f"{est['por_categoria']['suspeita']}) | Óbitos: {est['obitos']}")
+        if fracos:
+            print(f"  Indícios fracos não listados: {fracos}")
+        if est["cids"]:
+            print("  CIDs mais frequentes: " + _top(est["cids"], 5))
+        if descartados:
+            print(f"  CATs retificadas descartadas (substituídas pela retificação): {descartados}")
+        if args.desde:
+            print(f"  Recorte temporal: desde 01/01/{args.desde} "
+                  f"({fora_recorte} registro(s) fora do recorte)")
+        print(f"  MD:   {md_path}")
+        if docx_ok:
+            print(f"  DOCX: {docx_path}")
+        else:
+            print("  DOCX_FALHOU: a skill aft-modelo-docx não foi encontrada - só o MD foi gerado.")
+        for b in backups:
+            print(f"  Backup do arquivo anterior: {b}")
+        sys.exit(0)
 
     # --contar: so os numeros, para a skill decidir (e perguntar) antes de gerar.
     if args.contar:

@@ -9,7 +9,11 @@ description: >
   "levantar as CATs da empresa", "acidentes desse CNPJ", "puxa os acidentes",
   ou quando o AFT anexar um CSV CatsCNPJ_*.csv exportado do Portal AFT. Dois
   modos: A) CSV do Portal AFT anexado; B) varredura da base estadual de CATs
-  (planilhas .xlsx do eSocial, uma por ano) filtrando pelo CNPJ. NÃO confundir
+  (planilhas .xlsx do eSocial, uma por ano) filtrando pelo CNPJ. Acione TAMBÉM
+  para o RELATÓRIO DE DOENÇAS OCUPACIONAIS ("doenças do trabalho da empresa",
+  "LER/DORT", "doenças ocupacionais", "CATs de doença"): o modo --doencas lista
+  as CATs de doença e caça CATs cadastradas como acidente típico cujo CID
+  sugere doença mascarada. NÃO confundir
   com /aft-analise-acidente (análise aprofundada de UM acidente, IN 2/2022) —
   esta skill LEVANTA o histórico; a análise de mérito é da outra.
 compatibility: macOS e Windows (Git Bash). Requer Python 3 com openpyxl (Modo B) e python-docx + a skill aft-modelo-docx (para o .docx).
@@ -63,6 +67,43 @@ O Modo B filtra pela coluna *"Número de inscrição do estabelecimento onde o
 trabalhador exerce atividades"* e junta os resultados de todos os anos. CATs
 retificadas são substituídas pela retificação; reaberturas e comunicações de
 óbito aparecem anotadas.
+
+## Modo doenças ocupacionais (`--doencas`)
+
+Quando o AFT quiser focar a fiscalização nas **doenças do trabalho** da empresa
+(e não no histórico completo de acidentes), acrescente `--doencas` a qualquer
+dos dois modos. Doença ocupacional é categoria própria — e é prática conhecida
+a empresa **mascarar a doença como acidente típico** (a crise aguda de LER/DORT
+vira "acidente" e a empresa se poupa de rever GRO/PGR e AET). Por isso o modo
+classifica as CATs em três categorias:
+
+1. **Doenças declaradas** — CAT com tipo de acidente "Doença";
+2. **Suspeitas fortes** — CAT "Típico" com CID fortemente associado a doença
+   ocupacional (LER/DORT: G56, M75, M77, M65, M70, M50/M51; PAIR; transtornos
+   mentais F32/F33/F41/F43; pneumoconioses; dermatoses de contato; neoplasias
+   ocupacionais) **e** reforço no Agente causador ou na Situação geradora
+   (esforço excessivo, movimento repetitivo, agente/situação "inexistente");
+3. **Suspeitas** — CAT "Típico" com CID da lista acima sem reforço, ou com CID
+   musculoesquelético inespecífico (M54, M79, M62, M53, M25) **com** reforço.
+
+CID inespecífico sem reforço não é listado — entra só como contagem de
+"indícios fracos" no resumo (senão o relatório afogaria em lombalgias comuns).
+A lista de CIDs vem da Lista de Doenças Relacionadas ao Trabalho (Portaria
+GM/MS nº 1.999/2023; Anexo II do Decreto nº 3.048/1999) e está no topo do
+próprio script (`CID_DOENCA_ALTA` / `CID_DOENCA_MEDIA`).
+
+```bash
+# contar primeiro (segundos, nada é gravado):
+python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --cnpj <CNPJ> --doencas --contar
+# gerar (sai Relatorio-Doencas-<cnpj>.md e .docx na mesma pasta Acidentes/):
+python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --cnpj <CNPJ> --doencas --saida "<OS_ATIVAS>/<EMPRESA>/Acidentes"
+```
+
+`--desde AAAA` funciona igual; `--limite`/`--auto-economico` não se aplicam (o
+relatório de doenças já é um recorte, tipicamente pequeno). Se sair
+`NENHUMA_DOENCA`, diga ao AFT quantas CATs a empresa tem e que nenhuma é de
+doença nem suspeita. **Sempre lembre ao AFT que as suspeitas são indícios** —
+a caracterização de doença ocupacional é decisão dele, caso a caso.
 
 ## Fluxo de execução
 
