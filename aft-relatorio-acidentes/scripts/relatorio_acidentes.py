@@ -45,6 +45,7 @@ except Exception:
 import argparse
 import csv
 import io
+import json
 import re
 import shutil
 import sys
@@ -462,6 +463,38 @@ def _eh_obito(r):
             or r.get("tipo_cat") == "Comunicação de óbito")
 
 
+# Empresas com dezenas de CATs geram relatorio quilometrico. O modo economico
+# limita a LISTAGEM aos mais graves; o RESUMO estatistico continua cobrindo
+# todos os acidentes do conjunto (agregados nao ocupam espaco nem expoem gente).
+LIMITE_ECONOMICO = 25
+
+
+def _dias_tratamento(r):
+    t = r.get("tratamento") or ""
+    return int(t) if t and so_digitos(t) == t else 0
+
+
+def _recorte_desde(registros, ano):
+    """So acidentes com data valida >= 01/01/<ano>. Registro sem data nao tem
+    como pertencer ao recorte - fica fora e e contado para o aviso."""
+    corte = datetime(int(ano), 1, 1)
+    dentro = [r for r in registros
+              if _data(r.get("dt")) and _data(r["dt"]) >= corte]
+    return dentro, len(registros) - len(dentro)
+
+
+def _selecao_economica(registros, n):
+    """Os n mais graves: obito sempre entra (e o acidente mais grave que
+    existe, mesmo sem dias de afastamento declarados); depois, maior tempo de
+    tratamento; empate decidido pelo mais recente. A lista escolhida volta em
+    ordem cronologica, como o resto do relatorio."""
+    def chave(r):
+        d = _data(r.get("dt"))
+        return (not _eh_obito(r), -_dias_tratamento(r),
+                -(d.toordinal() if d else 0))
+    return _ordenar(sorted(registros, key=chave)[:n])
+
+
 def _rotulo(i, r):
     extras = []
     if _eh_obito(r):
@@ -560,6 +593,8 @@ def gerar_md(caminho, empresa, cnpj14, registros, fonte, est):
         L.append("- Principais agentes causadores: " + _top(est["causas"]))
     if est["partes"]:
         L.append("- Partes do corpo mais atingidas: " + _top(est["partes"]))
+    for nota in est.get("notas", []):
+        L.append(f"- **{nota}**")
     L += ["", "## Acidentes", ""]
     for i, r in enumerate(registros, 1):
         L.append(f"* **{_rotulo(i, r)}**")
@@ -600,6 +635,8 @@ def gerar_docx(caminho, empresa, cnpj14, registros, fonte, est):
         linhas.append(("Principais agentes causadores", _top(est["causas"])))
     if est["partes"]:
         linhas.append(("Partes do corpo mais atingidas", _top(est["partes"])))
+    for nota in est.get("notas", []):
+        linhas.append(("Observação", nota))
     linhas.append(("Fonte", fonte))
     m.tabela_rotulo_valor(doc, linhas)
 
@@ -640,9 +677,15 @@ def main():
     ap.add_argument("--empresa", help="razao social a usar no relatorio (opcional)")
     ap.add_argument("--definir-base", help="grava a pasta das planilhas no aft-config.md e sai")
     ap.add_argument("--mostrar-base", action="store_true", help="mostra a pasta configurada e sai")
-    ap.add_argument("--desde", type=int, metavar="ANO",
-                    help="considerar apenas CATs com data do acidente a partir de "
-                         "01/01/<ANO> (recorte temporal da fiscalizacao)")
+    ap.add_argument("--contar", action="store_true",
+                    help="so conta: total, obitos e distribuicao por ano (JSON), sem gerar arquivo")
+    ap.add_argument("--desde", type=int, metavar="AAAA",
+                    help="recorte temporal: so acidentes a partir de 01/01/AAAA")
+    ap.add_argument("--limite", type=int, metavar="N",
+                    help="modo economico: lista so os N mais graves (obitos sempre; "
+                         "depois maior afastamento; empate = mais recente)")
+    ap.add_argument("--auto-economico", action="store_true",
+                    help=f"aplica --limite {LIMITE_ECONOMICO} sozinho quando ha mais que isso")
     args = ap.parse_args()
 
     if args.definir_base:
@@ -666,7 +709,7 @@ def main():
             print(instrucao_montar_base())
         sys.exit(0)
 
-    if not args.saida:
+    if not args.saida and not args.contar:
         ap.error("--saida é obrigatório")
 
     descartados = 0
@@ -692,32 +735,63 @@ def main():
     if args.empresa:
         empresa = args.empresa
 
-    recorte = ""
-    if args.desde:
-        # CAT sem data de acidente legível fica de fora do recorte, mas é contada
-        # em separado: some-la ao filtro seria inventar data que o registro não tem.
-        antes = len(registros)
-        com_data = [r for r in registros if _data(r.get("dt"))]
-        sem_data = antes - len(com_data)
-        registros = [r for r in com_data if _data(r["dt"]).year >= args.desde]
-        recorte = (f"Recorte aplicado: apenas CATs a partir de 01/01/{args.desde} — "
-                   f"{len(registros)} de {antes} CATs do CNPJ"
-                   + (f"; {sem_data} sem data de acidente ficaram de fora"
-                      if sem_data else "") + ".")
-
     if not registros:
         print(f"NENHUMA_CAT: não há CAT para o CNPJ {cnpj_fmt(cnpj14)} na fonte "
-              f"consultada ({modo})"
-              + (f", com o recorte a partir de 01/01/{args.desde}" if args.desde else "")
-              + ". Nenhum arquivo foi gerado.")
+              f"consultada ({modo}). Nenhum arquivo foi gerado.")
         sys.exit(3)
+
+    # --contar: so os numeros, para a skill decidir (e perguntar) antes de gerar.
+    if args.contar:
+        anos, sem_data = {}, 0
+        for r in registros:
+            d = _data(r.get("dt"))
+            if d:
+                anos[str(d.year)] = anos.get(str(d.year), 0) + 1
+            else:
+                sem_data += 1
+        print("CONTAGEM " + json.dumps({
+            "total": len(registros),
+            "obitos": sum(1 for r in registros if _eh_obito(r)),
+            "por_ano": dict(sorted(anos.items())),
+            "sem_data": sem_data,
+            "limite_economico": LIMITE_ECONOMICO,
+            "cnpj": cnpj_fmt(cnpj14),
+            "empresa": empresa or "",
+        }, ensure_ascii=False))
+        sys.exit(0)
+
+    # Recorte temporal (--desde AAAA), a pedido do AFT.
+    fora_recorte = 0
+    if args.desde:
+        antes = len(registros)
+        registros, fora_recorte = _recorte_desde(registros, args.desde)
+        if not registros:
+            print(f"NENHUMA_CAT: nenhum acidente a partir de 01/01/{args.desde} "
+                  f"(a base tem {antes} CAT(s) do CNPJ {cnpj_fmt(cnpj14)}, todas "
+                  "anteriores ao recorte ou sem data). Nenhum arquivo foi gerado.")
+            sys.exit(3)
 
     registros = _ordenar(registros)
     est = _estatisticas(registros)
-    if recorte:
-        # o recorte entra na descrição da fonte para constar do MD e do DOCX:
-        # relatório parcial precisa dizer que é parcial
-        fonte = f"{fonte} — {recorte}"
+    est["notas"] = []
+    if args.desde:
+        est["notas"].append(
+            f"Recorte temporal: somente acidentes a partir de 01/01/{args.desde} "
+            f"({fora_recorte} registro(s) da base ficaram fora do recorte, "
+            "incluindo os sem data valida).")
+
+    # Modo economico: limita a LISTAGEM; resumo continua sobre todos.
+    limite = args.limite
+    if not limite and args.auto_economico and est["total"] > LIMITE_ECONOMICO:
+        limite = LIMITE_ECONOMICO
+    listados = registros
+    if limite and est["total"] > limite:
+        listados = _selecao_economica(registros, limite)
+        est["notas"].append(
+            f"Modo econômico: a relação abaixo traz somente os {limite} acidentes "
+            f"mais graves (óbitos sempre incluídos; depois, maior tempo de "
+            f"afastamento; empate decidido pelo mais recente) de um total de "
+            f"{est['total']}. O resumo acima considera todos.")
 
     saida = Path(args.saida).expanduser()
     saida.mkdir(parents=True, exist_ok=True)
@@ -726,14 +800,12 @@ def main():
     docx_path = saida / (nome + ".docx")
 
     backups = [b for b in (_backup(md_path), _backup(docx_path)) if b]
-    gerar_md(md_path, empresa, cnpj14, registros, fonte, est)
-    docx_ok = gerar_docx(docx_path, empresa, cnpj14, registros, fonte, est)
+    gerar_md(md_path, empresa, cnpj14, listados, fonte, est)
+    docx_ok = gerar_docx(docx_path, empresa, cnpj14, listados, fonte, est)
 
     # Resumo para o chat: SOMENTE agregados e caminhos - nunca nome de trabalhador.
     print("RELATORIO_GERADO")
     print(f"  Modo: {modo}")
-    if recorte:
-        print(f"  {recorte}")
     print(f"  CNPJ: {cnpj_fmt(cnpj14)}")
     print(f"  Empresa: {_ou_ni(empresa)}")
     print(f"  Total de CATs: {est['total']} | Com óbito: {est['obitos']} | "
@@ -748,6 +820,12 @@ def main():
         print("  Partes do corpo mais atingidas: " + _top(est["partes"], 3))
     if descartados:
         print(f"  CATs retificadas descartadas (substituídas pela retificação): {descartados}")
+    if args.desde:
+        print(f"  Recorte temporal: desde 01/01/{args.desde} "
+              f"({fora_recorte} registro(s) fora do recorte)")
+    if len(listados) < est["total"]:
+        print(f"  Modo econômico: listados os {len(listados)} mais graves "
+              f"de {est['total']} (resumo cobre todos)")
     print(f"  MD:   {md_path}")
     if docx_ok:
         print(f"  DOCX: {docx_path}")

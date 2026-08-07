@@ -388,10 +388,14 @@ setor, a máquina e o tipo de risco a olhar primeiro. Se o **CNPJ é conhecido**
      consultado (base estadual ainda não montada)". A preparação nunca trava por
      isso — e a base, uma vez montada, serve para todas as fiscalizações.
 2. Gere o relatório:
-   `... relatorio_acidentes.py --cnpj <CNPJ> --saida "$PASTA_OS/Acidentes"`
+   `... relatorio_acidentes.py --cnpj <CNPJ> --saida "$PASTA_OS/Acidentes" --auto-economico`
    (se o AFT anexou um CSV `CatsCNPJ_*.csv` do Portal AFT, use `--csv` no lugar
    de `--cnpj`). `NENHUMA_CAT` → registre "sem CAT na base consultada" — também
-   é informação de preparação.
+   é informação de preparação. O `--auto-economico` evita relatório quilométrico
+   em empresa com dezenas de CATs: acima de 25, a listagem fica com os 25 mais
+   graves (óbitos sempre entram) e o resumo continua cobrindo todos — **sem
+   perguntar nada** (a preparação não para por isso; o AFT pode pedir o completo
+   depois pela `/aft-relatorio-acidentes`).
 3. Use **somente o resumo agregado** que o script imprime (totais, óbitos,
    período, tipos, principais agentes causadores e partes do corpo) para
    preencher a seção `## Histórico de acidentes (CATs)` do `preparacao.md` —
