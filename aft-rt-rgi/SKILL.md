@@ -559,7 +559,7 @@ Para cada ementa, monte um bloco EXATAMENTE neste formato:
 Ementa: {codigo} - {descricao_curta}
 
 I - DA FISCALIZAÇÃO:
-Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em {data_inspecao}.
+Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em {data_inspecao}. {enriquecimento_contextual}
 
 II - IRREGULARIDADE:
 DA INFRAÇÃO COMETIDA: Constatou-se que o empregador aqui autuado incorreu na ementa supracitada, ao {descricao_ementa_min}, {trecho_objetos}, resultando no termo de embargo/interdição em anexo.
@@ -577,6 +577,50 @@ Inspeção realizada no estabelecimento e relatório técnico do embargo/interdi
 > ELEMENTOS DE CONVICÇÃO. O template acima termina, de propósito, no Subtítulo 2 +
 > ELEMENTOS DE CONVICÇÃO.
 
+#### 7.2.1. Enriquecimento contextual do Subtítulo 1
+
+`{enriquecimento_contextual}` não é campo novo a coletar: a informação **já foi levantada**
+no item 2 do RT (`Contexto-da-inspecao-fisica`), e antes disso no `inspecao-fisica.md`.
+Releia esse contexto e transporte para o auto, em prosa corrida, o que ele trouxer. Sem
+isso o auto sai anêmico, dizendo apenas "no estabelecimento da empresa qualificada" quando
+o RT sabe que se trata de um supermercado com açougue e padaria, quem acompanhou a
+inspeção e quantos trabalhadores há no local. Essas informações situam o fato e sustentam
+o auto na impugnação.
+
+A **frase-âncora é fixa** e vem primeiro; o contexto vem depois, na sequência. Acrescente
+apenas os itens que o contexto fornecer:
+
+| Informação no contexto | Como inserir |
+|---|---|
+| Atividade econômica, nome fantasia e setores do estabelecimento | `A atividade econômica desenvolvida, identificada na inspeção, é a [atividade].` — havendo nome fantasia e setores: `A inspeção foi realizada no estabelecimento denominado [NOME FANTASIA], que funciona como [atividade], com [setores].` — **opcional**: omita se o contexto não trouxer. |
+| Número de trabalhadores do estabelecimento | `O estabelecimento conta com [N] trabalhadores.` |
+| Preposto/acompanhante da inspeção física | `A inspeção foi acompanhada pelo preposto [NOME], [função].` |
+| Acompanhante da auditoria documental (quando diverso) | `A auditoria de documentos foi acompanhada por [NOME], [função].` |
+| Endereço do local fiscalizado (quando difere do endereço do autuado) | `A inspeção foi realizada no estabelecimento localizado na [endereço], distinto do endereço do autuado.` |
+| Obra de construção | `Trata-se de obra ([tipo], ex.: prédio) com [N] pavimentos, localizada na [endereço].` |
+| Outro CNPJ/empresa no mesmo estabelecimento | `No mesmo estabelecimento funciona também a empresa [NOME] (CNPJ [...]).` |
+| Turnos de trabalho | `O estabelecimento opera em [N] turnos ([descrição]).` |
+
+> Regras: (1) só inclua o que o contexto disser; (2) tom oficial, terceira pessoa; (3)
+> frase-âncora primeiro, contexto depois; (4) se não houver contexto além da âncora, o
+> subtítulo é só a frase-âncora, sem `{enriquecimento_contextual}`.
+
+**O enriquecimento é idêntico em todos os autos do mesmo RT.** Ele descreve a ação fiscal,
+não a irregularidade: escreva uma vez e repita literalmente nos N autos. O que varia de
+auto para auto é o Subtítulo 2.
+
+**Não migre para cá o que é do Subtítulo 2.** Acidente anterior, número de expostos e
+descrição da máquina pertencem à irregularidade e ao RT; o Subtítulo 1 situa a ação fiscal
+(quem, onde, o que é o estabelecimento), não o fato autuado.
+
+**Exemplo** (contexto do RT: supermercado com 81 trabalhadores, acompanhado pelo gerente
+da loja e, na fase documental, pela gerente de DP):
+
+```
+I - DA FISCALIZAÇÃO:
+Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em 05/08/2026. A inspeção foi realizada no estabelecimento denominado Store Supermercados, que funciona como supermercado, com açougue, padaria, estoque de produtos alimentícios em geral, hortifruti e demais setores. O estabelecimento conta com 81 trabalhadores. A inspeção foi acompanhada pelo preposto Educlenio Alves, gerente da loja. A auditoria de documentos foi acompanhada por Raine Dias, gerente de Departamento Pessoal.
+```
+
 #### 7.3. Regras de substituição
 
 - `{N}` — índice sequencial começando em 1.
@@ -588,6 +632,10 @@ Inspeção realizada no estabelecimento e relatório técnico do embargo/interdi
   equipamentos`.
 - `{data_inspecao}` — data da inspeção física no formato `DD/MM/AAAA` (mesma usada na seção
   1 do RT).
+- `{enriquecimento_contextual}` — prosa corrida montada pela tabela do item 7.2.1, a partir
+  do contexto que já está no item 2 do RT. Idêntica em todos os autos do mesmo RT. Se o
+  contexto nada trouxer, remova o marcador e encerre o Subtítulo 1 na frase-âncora, sem
+  deixar espaço duplo.
 - `{descricao_ementa_min}` — a descrição curta com **a primeira letra em minúscula** e **sem
   ponto final**. Ex: `deixar de instalar sistemas de segurança em zonas de perigo de máquinas
   e/ou equipamentos`.
@@ -714,6 +762,7 @@ Competência delegada pela Portaria 1719/2014...
 | Irregularidade só em parte da obra/estabelecimento | Paralisação PARCIAL delimitando o escopo (pavimentos, setor, máquinas), pela regra da menor unidade possível (3.2.2.3.1 da NR-03) |
 | AFT quer foto no RT | Passo 4-bis (`inserir_foto_docx.py`); se a imagem só existir colada no chat, pedir ao AFT para salvá-la como arquivo |
 | Máquina interditada tem anexo próprio na NR-12 | Item 7 deve exigir laudo **conclusivo pela adequação ao anexo**, citando anexo e item (ver "Como pedir laudo de máquina") |
+| Autos saem sem contexto ("no estabelecimento da empresa qualificada" e nada mais) | Faltou o enriquecimento do item 7.2.1: o contexto já está no item 2 do RT, transporte-o para o Subtítulo 1 |
 | Anexo da máquina desconhecido | Consultar `references/anexos-nr12.md`; se a máquina não estiver lá, resolver pelo notebook da NR — nunca presumir pela semelhança física |
 | Máquina sem anexo próprio (maioria dos casos) | Item 7 pede ART e laudo do sistema de segurança citando os itens gerais violados, sem inventar anexo |
 | Anexo dispensa o que se ia exigir | Conferir a seção "Armadilhas" de `references/anexos-nr12.md` antes de fechar o item 7 |
