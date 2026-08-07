@@ -307,6 +307,26 @@ cd ~/.claude/skills && git diff --name-only HEAD@{1} HEAD -- config/notebooks.js
   `sessao-expirada`, apenas registre no resumo e sugira `/aft-notebooklm-login` — não é
   bloqueante.
 
+## Passo 2i — Planilhas de CAT em dia (só se a sincronização estiver configurada)
+
+Quem conectou o espelho de CATs no `/aft-setup` (Passo 2a, caminho automático) tem a
+pasta `CATs` mantida em dia por aqui. Rode **sem perguntar** (incremental — só baixa
+planilha nova ou atualizada):
+
+```bash
+python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --sync
+```
+
+- **`ok` com `novos`/`atualizados` não vazios** → mencione no resumo do Passo 4, em
+  linguagem de gente: *"chegou a planilha de CAT de 2027 do seu estado"*.
+- **`ok` sem novidade** → nada a dizer.
+- **`rclone_ausente` ou `remote_nao_configurado`** → o AFT usa o caminho manual;
+  **pule em silêncio** (não ofereça nada — o Passo 2a do `/aft-setup` é o lugar de
+  configurar isso).
+- **`sem_acesso`** → uma linha no resumo: o Gmail dele ainda não foi autorizado no
+  espelho do notebooks-aft; a base local continua valendo.
+- Qualquer erro → registre no resumo; **não é bloqueante**.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve
