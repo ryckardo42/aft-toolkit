@@ -137,6 +137,11 @@ Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:
 3. **`relatorio-final.json`** em `Relatórios de Fiscalização/` — os dados estruturados do
    relatório (esquema no topo de `scripts/gera_relatorio_docx.py`), fonte do .docx. Inclui os
    campos `embaraco_fraude` e `outras_ocorrencias` quando aplicável.
+
+   O campo `data` da capa é **local e data de emissão do relatório**, não do estabelecimento
+   fiscalizado: monte-o como `"<município>-<uf>, <data por extenso>"` lendo `municipio`/`uf` do
+   `aft-config.md` (a lotação do AFT). O título ("RELATÓRIO DE AUDITORIA FISCAL DO TRABALHO") é
+   fixo e o próprio script o aplica — não é preciso (nem possível) informá-lo no JSON.
 4. **`relatorio-final.docx`** — gere rodando:
    ```
    python3 ~/.claude/skills/aft-sfitweb-rel/scripts/gera_relatorio_docx.py "<pasta-OS>/Relatórios de Fiscalização/relatorio-final.json"
@@ -224,7 +229,7 @@ Além disso:
 ## Formato de saída obrigatório
 
 ```
-RELATÓRIO FINAL SIMPLIFICADO
+RELATÓRIO DE AUDITORIA FISCAL DO TRABALHO
 
 1. Identificação da Fiscalização
 Empresa Fiscalizada: [Razão social - CNPJ]

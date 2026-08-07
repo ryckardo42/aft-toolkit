@@ -10,10 +10,11 @@ formatação vem da biblioteca modelo_docx — este script só monta as seções
 
 Esquema do JSON (listas vazias ou chaves ausentes omitem/ajustam a seção):
 {
-  "titulo":          "RELATÓRIO FINAL SIMPLIFICADO",
   "subtitulo":       "Relatório de fiscalização trabalhista — consolidação da ação fiscal",
   "unidade":         "EMPRESA LTDA — CNPJ 00.000.000/0000-00",
-  "data":            "Goiânia-GO, 20 de julho de 2026",
+  "data":            "<Município>-<UF>, 20 de julho de 2026",  # lotação do AFT (aft-config.md:
+                                                                # municipio/uf) — NUNCA o município
+                                                                # do estabelecimento fiscalizado
   "identificacao":   [["Empresa Fiscalizada", "..."], ["CNPJ", "..."], ...],
   "sintese":         ["parágrafo 1", "parágrafo 2"],
   "embaraco_fraude": ["parágrafo detalhando como o administrado impediu/dificultou/negou..."]
@@ -65,12 +66,16 @@ import modelo_docx as m  # noqa: E402
 
 EMBARACO_TITULO = "⚠ EMBARAÇO À FISCALIZAÇÃO E FRAUDE (art. 630 da CLT)"
 
+# Título fixo de todo relatório de fiscalização gerado pelo toolkit — não é
+# configurável por OS nem por chamada; qualquer "titulo" em `dados` é ignorado.
+TITULO_PADRAO = "RELATÓRIO DE AUDITORIA FISCAL DO TRABALHO"
+
 
 def montar(dados: dict, saida: Path):
     doc = m.novo_documento()
 
     m.capa(doc,
-           dados.get("titulo", "RELATÓRIO FINAL SIMPLIFICADO"),
+           TITULO_PADRAO,
            subtitulo=dados.get("subtitulo"),
            unidade=dados.get("unidade"),
            data=dados.get("data"))
