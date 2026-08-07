@@ -159,7 +159,11 @@ NotebookLMs. Se o AFT tem acesso aos notebooks, o download é automático e o
 
 1. Pergunte o **Gmail** do AFT (a mesma conta Google dos NotebookLMs, se ele usa)
    e grave no `aft-config.md` a linha `gmail: "<endereço>"` (logo abaixo de
-   `notebooklm_browser`), se ainda não existir.
+   `notebooklm_browser`), se ainda não existir. Avise já aqui, em uma frase: se é
+   a primeira vez, ele precisa **ativar o acesso** (autosserviço, vale na hora) em
+   <https://notebooks-aft.vercel.app/aft-toolkit#cats> — digitar esse mesmo Gmail
+   e clicar em "Ativar acesso". Pode ativar agora ou seguir e ativar quando o
+   passo 4 acusar `sem_acesso`.
 2. Diagnóstico:
    ```bash
    python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --status
