@@ -185,9 +185,11 @@ NotebookLMs. Se o AFT tem acesso aos notebooks, o download é automático e o
    ```
    - `ok` → diga quantas planilhas chegaram (`total_xlsx`, `novos`) e que o
      `/aft-atualizar` cuida das próximas sozinho.
-   - `sem_acesso` → o Gmail ainda não foi autorizado no espelho (a autorização
-     acompanha a liberação do notebooks-aft). Registre a pendência, diga que ao
-     ser liberado basta rodar `/aft-atualizar`, e dê o recado do caminho manual.
+   - `sem_acesso` → o Gmail ainda não tem leitura do espelho. **A ativação é
+     autosserviço**: mande o AFT abrir <https://notebooks-aft.vercel.app/aft-toolkit#cats>,
+     digitar o Gmail do cadastro dos Notebooks e clicar em "Ativar acesso" —
+     vale na hora. Ofereça repetir o `--sync` em seguida; se ele preferir depois,
+     o `/aft-atualizar` resolve sozinho.
    - Qualquer outro estado → registre no resumo e caia no caminho manual.
 
 **Caminho manual (fallback — a fonte oficial).** Vale para quem não tem o Gmail

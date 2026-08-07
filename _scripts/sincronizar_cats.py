@@ -47,6 +47,15 @@ if os.name == "nt":  # console cp1252 do Windows
 DRIVE_FOLDER_ID = "1-38yX-gFrW6YfJP9Wjo5W8ZFgaRTdnuH"
 REMOTE = "aftcats"  # nome do remote do rclone criado pelo --conectar
 
+# Pagina de autosservico: AFT com cadastro aprovado nos Notebooks ativa sozinho
+# a leitura do espelho (digita o Gmail e clica em "Ativar acesso").
+LINK_ATIVACAO = "https://notebooks-aft.vercel.app/aft-toolkit#cats"
+
+DICA_SEM_ACESSO = (
+    "Seu Gmail ainda nao tem leitura do espelho de CATs. Ative voce mesmo: abra "
+    + LINK_ATIVACAO + " , digite o Gmail do seu cadastro dos Notebooks e clique "
+    "em 'Ativar acesso'. A liberacao vale na hora - depois e so sincronizar de novo.")
+
 UFS_VALIDAS = {
     "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS",
     "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC",
@@ -243,8 +252,8 @@ def cmd_conectar(args):
     if res == "sem_acesso":
         _sair({"estado": "sem_acesso", "remote": REMOTE,
                "dica": ("A conta conectou, mas nao enxerga o espelho de CATs. "
-                        "Ou o Gmail ainda nao foi autorizado no notebooks-aft, "
-                        "ou a conta escolhida no navegador foi outra.")}, 3)
+                        "Ou a conta escolhida no navegador foi outra, ou falta "
+                        "ativar o acesso. " + DICA_SEM_ACESSO)}, 3)
     _sair({"estado": "erro", "erro": res}, 1)
 
 
@@ -264,7 +273,7 @@ def cmd_sync(args):
     ok, res = _lista_ufs_remotas(rclone)
     if not ok:
         if res == "sem_acesso":
-            _sair({"estado": "sem_acesso"}, 3)
+            _sair({"estado": "sem_acesso", "dica": DICA_SEM_ACESSO}, 3)
         _sair({"estado": "erro", "erro": res}, 1)
     if uf not in res:
         _sair({"estado": "uf_nao_encontrada", "uf": uf, "ufs_disponiveis": res}, 1)
