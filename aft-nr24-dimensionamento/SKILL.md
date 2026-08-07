@@ -10,9 +10,10 @@ description: >
   "quantos banheiros", "quantas bacias sanitárias", "quantos mictórios",
   "quantos lavatórios", "quantos chuveiros", "área do vestiário", "quantos
   armários", "quantos bebedouros", "dimensionar alojamento", "condições
-  sanitárias e de conforto", ou ao informar quantos homens e quantas mulheres
-  trabalham no estabelecimento pedindo o que a NR-24 exige — mesmo sem citar a
-  norma. Cobre também as ÁREAS DE VIVÊNCIA de CANTEIRO DE OBRAS e de FRENTE DE
+  sanitárias e de conforto", ao informar quantos homens e quantas mulheres
+  trabalham no estabelecimento, ou ao ANEXAR A RELAÇÃO DE VÍNCULOS ATIVOS do SFIT
+  pedindo o que a NR-24 exige — mesmo sem citar a norma; dela os números saem
+  sozinhos, sem o AFT contar nada. Cobre também as ÁREAS DE VIVÊNCIA de CANTEIRO DE OBRAS e de FRENTE DE
   TRABALHO pela NR-18 (item 18.5), setorial e prevalente: acione com "canteiro de
   obras", "área de vivência", "banheiros da obra", "frente de trabalho", "banheiro
   químico", "item 18.5.3", ou quando a fiscalizada for da construção (CNAE 41, 42
@@ -177,9 +178,22 @@ contagem de armários e devolve a obrigação do 24.4.8 no lugar.
 
 ## Fluxo de trabalho
 
-1. **Colete homens e mulheres.** Se o AFT der só o total, peça a divisão por sexo:
-   sem ela o item 24.2.2 não se aplica corretamente. Se houver Relação de Vínculos
-   Ativos do SFIT, os números saem dela (ver "Uso dentro da preparação" abaixo).
+1. **Colete homens e mulheres — mas não faça o AFT contar.** Se ele **anexar a
+   Relação de Vínculos Ativos do SFIT** (`ImprimirVinculosAtivosPDF*.pdf`, cabeçalho
+   "Relação de Empregados do Estabelecimento"), **não pergunte nada**: os números
+   saem dela. **Não abra esse PDF** — tem centenas de nomes de trabalhador. Rode:
+
+   ```bash
+   python ~/.claude/skills/aft-preparacao-acao-fiscal/scripts/vinculos_ativos.py \
+     "<arquivo.pdf>" --json
+   ```
+
+   e use `composicao.homens` e `composicao.mulheres` do resultado. Vale tanto no uso
+   avulso quanto dentro da preparação (ver "Uso dentro da preparação" abaixo).
+
+   Sem a Relação, aceite os números que o AFT informar. Se ele der só o total, peça a
+   divisão por sexo: sem ela o item 24.2.2 não se aplica corretamente — e mencione
+   que a Relação de Vínculos resolve isso sozinha, se ele tiver o PDF à mão.
 1b. **Verifique se é obra** pelos sinais da Regra de ouro nº 4 (CNAE 41/42/43,
    "SPE" no nome, ou o AFT dizendo). Sendo, use `--obra` — ou `--frente-trabalho`,
    se o que se fiscaliza é a frente e não o canteiro.
