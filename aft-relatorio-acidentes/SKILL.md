@@ -114,7 +114,28 @@ grava o caminho uma vez, e ele passa a prevalecer sobre a convenção:
 python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --definir-base "<pasta indicada>"
 ```
 
-**4. Gerar o relatório.**
+**4. Contar antes de gerar.** Empresa grande pode ter dezenas de CATs — e um
+relatório quilométrico. Rode primeiro a contagem (segundos, nada é gravado):
+
+```bash
+python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --cnpj <CNPJ> --contar
+# (Modo A: troque --cnpj pelo --csv "<arquivo.csv>")
+```
+
+Sai `CONTAGEM {"total": ..., "obitos": ..., "por_ano": {...}, ...}`.
+
+- **Total ≤ 25** → gere direto o relatório completo (passo 5), sem perguntar.
+- **Total > 25** → mostre ao AFT os números (total, óbitos, distribuição por
+  ano) e pergunte, **uma única vez**, como ele quer o relatório:
+  1. **Completo** — todos os acidentes;
+  2. **Econômico** — só os **25 mais graves** (óbitos sempre entram; depois,
+     maior tempo de afastamento; empate vai para o mais recente). O resumo
+     estatístico continua cobrindo todos;
+  3. **Recorte temporal** — só os acidentes a partir de um ano que ele escolher
+     (a distribuição por ano ajuda: "desde 2024 são 18"). Pode combinar com o
+     econômico se ainda ficar grande.
+
+**5. Gerar o relatório.**
 
 ```bash
 # Modo A (CSV do Portal AFT):
@@ -124,17 +145,22 @@ python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py -
 python ~/.claude/skills/aft-relatorio-acidentes/scripts/relatorio_acidentes.py --cnpj <CNPJ> --saida "<OS_ATIVAS>/<EMPRESA>/Acidentes"
 ```
 
+Conforme a escolha do passo 4, acrescente `--limite 25` (econômico) e/ou
+`--desde <AAAA>` (recorte temporal). O relatório declara o recorte e o modo no
+próprio Resumo — quem ler depois sabe que é uma seleção, não o total.
+
 O script grava `Relatorio-Acidentes-<cnpj>.md` e `.docx` (se já existirem, faz
 backup `.bak-<data-hora>` antes) e imprime o resumo agregado. No Modo A ele
 extrai razão social e CNPJ dos metadados do CSV; se o AFT também informou um
 CNPJ e ele divergir do arquivo, o script recusa — mostre o erro ao AFT.
 
-**5. Reportar ao AFT.** Repita o resumo em linguagem simples: total de CATs,
-quantas com óbito, período, distribuição por tipo/ano e os dois arquivos
-gerados (caminho completo). **Sem nomes de trabalhadores.** Se houver óbito,
-destaque e lembre que a análise aprofundada é a `/aft-analise-acidente`.
+**6. Reportar ao AFT.** Repita o resumo em linguagem simples: total de CATs,
+quantas com óbito, período, distribuição por tipo/ano, o recorte/modo aplicado
+(se houver) e os dois arquivos gerados (caminho completo). **Sem nomes de
+trabalhadores.** Se houver óbito, destaque e lembre que a análise aprofundada é
+a `/aft-analise-acidente`.
 
-**6. Registrar na OS.** Acrescente uma linha na linha do tempo do `memory.md`
+**7. Registrar na OS.** Acrescente uma linha na linha do tempo do `memory.md`
 da empresa (ex.: `| <data> | Relatório de acidentes gerado: N CATs, X óbitos,
 período A-B (Acidentes/Relatorio-Acidentes-<cnpj>.md) | relatorio-acidentes |`).
 

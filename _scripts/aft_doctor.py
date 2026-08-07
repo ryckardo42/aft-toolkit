@@ -279,6 +279,45 @@ else:
         "aft-config.md nao existe (seus dados de CIF/UORG)",
         "Rode /aft-setup para informar nome, CIF e lotacao uma unica vez.")
 
+# 7b. Planilhas de CAT (base do historico de acidentes) ----------------------
+# Mesma resolucao da /aft-relatorio-acidentes: `pasta_cats:` do aft-config.md
+# quando aponta para pasta existente; senao <PASTA_AFT>/CATs (ou CAT).
+try:
+    _cats = None
+    _cfg_cats = None
+    _cfg_md = AFT_DIR / "aft-config.md"
+    if _cfg_md.is_file():
+        for _l in _cfg_md.read_text(encoding="utf-8").splitlines():
+            _m = re.match(r'\s*pasta_cats\s*:\s*"?([^"#]+?)"?\s*$', _l)
+            if _m and _m.group(1).strip():
+                _cfg_cats = Path(_m.group(1).strip()).expanduser()
+                break
+    if _cfg_cats and _cfg_cats.is_dir():
+        _cats = _cfg_cats
+    else:
+        for _nome in ("CATs", "CAT"):
+            if (AFT_DIR / _nome).is_dir():
+                _cats = AFT_DIR / _nome
+                break
+    _n_xlsx = len(list(_cats.glob("*.xlsx"))) if _cats else 0
+    if _cats and _n_xlsx:
+        add("Planilhas de CAT (historico de acidentes)", "ok",
+            f"{_n_xlsx} planilha(s) em {_cats}")
+    else:
+        _onde_cats = _cats if _cats else AFT_DIR / "CATs"
+        add("Planilhas de CAT (historico de acidentes)", "aviso",
+            f"nenhuma planilha .xlsx em {_onde_cats}",
+            "Sem elas a /aft-relatorio-acidentes nao tem onde procurar e a "
+            "/aft-preparacao-acao-fiscal monta o dossie da visita SEM o "
+            "historico de acidentes da empresa. Nada quebra, mas o relatorio "
+            "de acidentes nao sai. Para resolver: ative seu acesso em "
+            "https://notebooks-aft.vercel.app/aft-toolkit#cats (Gmail do "
+            "cadastro dos Notebooks) e rode o Passo 2a do /aft-setup - ou "
+            "baixe as planilhas da sua UF manualmente na area do ENIT "
+            "(SharePoint do MTE, conta institucional) para essa pasta.")
+except Exception:
+    pass  # checagem acessoria: nunca derruba o diagnostico
+
 # 8. Bibliotecas Python ------------------------------------------------------
 libs = {
     "pillow": "PIL",            # fotos -> PDF
