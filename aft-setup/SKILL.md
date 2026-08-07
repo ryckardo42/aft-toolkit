@@ -147,9 +147,51 @@ Ao lado de `OS ATIVAS`, o toolkit procura uma pasta **`CATs`** com as planilhas 
 Comunicação de Acidente do estado do AFT (uma `.xlsx` por ano, fonte eSocial). É
 delas que sai o histórico de acidentes de qualquer empresa fiscalizada.
 
-Crie a pasta agora, dentro de `<PASTA_AFT>`, e dê o recado abaixo com o **caminho
-real** dele. Não trave o setup esperando: baixar as planilhas é coisa que o AFT faz
-no navegador quando quiser, e o resto do toolkit funciona sem elas.
+Crie a pasta agora, dentro de `<PASTA_AFT>`. Há **dois caminhos** para enchê-la —
+tente o automático primeiro; nenhum dos dois trava o setup (estados de erro viram
+pendência no resumo, nunca bloqueio).
+
+**Caminho automático (recomendado) — espelho do notebooks-aft no Google Drive.**
+As planilhas de todas as UFs têm um espelho no Google Drive do projeto
+notebooks-aft, **restrito aos Gmails autorizados** — os mesmos que acessam os
+NotebookLMs. Se o AFT tem acesso aos notebooks, o download é automático e o
+`/aft-atualizar` mantém a pasta em dia sozinho dali em diante:
+
+1. Pergunte o **Gmail** do AFT (a mesma conta Google dos NotebookLMs, se ele usa)
+   e grave no `aft-config.md` a linha `gmail: "<endereço>"` (logo abaixo de
+   `notebooklm_browser`), se ainda não existir.
+2. Diagnóstico:
+   ```bash
+   python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --status
+   ```
+   Se `rclone_ausente`, instale você mesmo o rclone (ferramenta gratuita de
+   sincronização; o comando certo vem no campo `instalar_rclone` do JSON —
+   `brew install rclone` no Mac, `winget install Rclone.Rclone` no Windows) e
+   repita o `--status`. Se o gerenciador de pacotes falhar (brew quebrado, winget
+   ausente), baixe o binário oficial de `https://downloads.rclone.org` (zip
+   `osx-arm64` ou `windows-amd64` conforme a máquina) e ponha o executável em
+   `~/.local/bin/` — o script procura lá também.
+3. Se `remote_nao_configurado`, conecte (**fora do sandbox** — o comando abre o
+   navegador):
+   ```bash
+   python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --conectar
+   ```
+   Avise antes, em duas frases: *"vai abrir uma página do Google; escolha a sua
+   conta Gmail (a mesma dos NotebookLMs) e clique em Permitir. A permissão é de
+   leitura do seu Drive e o toolkit a usa somente para copiar a pasta de CATs."*
+4. Sincronize:
+   ```bash
+   python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --sync
+   ```
+   - `ok` → diga quantas planilhas chegaram (`total_xlsx`, `novos`) e que o
+     `/aft-atualizar` cuida das próximas sozinho.
+   - `sem_acesso` → o Gmail ainda não foi autorizado no espelho (a autorização
+     acompanha a liberação do notebooks-aft). Registre a pendência, diga que ao
+     ser liberado basta rodar `/aft-atualizar`, e dê o recado do caminho manual.
+   - Qualquer outro estado → registre no resumo e caia no caminho manual.
+
+**Caminho manual (fallback — a fonte oficial).** Vale para quem não tem o Gmail
+autorizado ou prefere não conectar conta nenhuma:
 
 > 📥 **Ponha as planilhas de CAT do seu estado em `Documentos\AFT\CATs`.**
 >

@@ -165,6 +165,8 @@ def instrucao_montar_base():
         "configurado.\n"
         "Sem elas nao ha onde procurar: o relatorio de acidentes nao sai, e a preparacao\n"
         "da acao fiscal monta o dossie sem os ultimos acidentes da empresa.\n"
+        "Atalho: se o seu Gmail e autorizado do notebooks-aft, o /aft-setup (Passo 2a)\n"
+        "baixa e atualiza essas planilhas sozinho (script sincronizar_cats.py).\n"
         "Se preferir manter a base em outro lugar, rode: --definir-base \"<pasta>\"")
 
 
