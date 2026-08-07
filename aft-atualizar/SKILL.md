@@ -323,8 +323,9 @@ python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --sync
 - **`rclone_ausente` ou `remote_nao_configurado`** → o AFT usa o caminho manual;
   **pule em silêncio** (não ofereça nada — o Passo 2a do `/aft-setup` é o lugar de
   configurar isso).
-- **`sem_acesso`** → uma linha no resumo: o Gmail dele ainda não foi autorizado no
-  espelho do notebooks-aft; a base local continua valendo.
+- **`sem_acesso`** → uma linha no resumo, com a solução: ativar em
+  <https://notebooks-aft.vercel.app/aft-toolkit#cats> (digitar o Gmail do cadastro e
+  clicar em "Ativar acesso"); a base local continua valendo enquanto isso.
 - Qualquer erro → registre no resumo; **não é bloqueante**.
 
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
