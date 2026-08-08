@@ -132,7 +132,7 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 | Interdição/embargo | `/aft-rt-rgi` |
 | Analisar AFD/AEJ/atestado de ponto | `/aft-jornada-analise` |
 | Gerar o TXT do Sistema Auditor | `/aft-gera-ai` |
-| Relatório final | `/aft-sfitweb-rel` |
+| Relatório final | `/aft-relatorio` |
 
 ## Como receber atualizações
 

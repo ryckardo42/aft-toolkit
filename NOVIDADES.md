@@ -6,6 +6,67 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 08/08/2026 (2)
+<!-- commit: relatorio-rename-nomes-ri -->
+
+**O `/aft-sfitweb-rel` agora se chama `/aft-relatorio` — e os arquivos saem
+nomeados pelo RI da fiscalização.**
+
+- **Nome novo, hábito antigo preservado.** O comando é `/aft-relatorio`. Se você
+  pedir "SFITWEB-REL" por costume, a skill continua atendendo — o nome antigo
+  virou frase de acionamento. Todo o toolkit foi atualizado (README, painel,
+  arquitetura, CLAUDE.md do AFT). O nome **SFIT-WEB do sistema do governo** não
+  mudou em lugar nenhum: os PDFs de Demanda/OS da `/aft-nova-os` e da
+  `/aft-preparacao-acao-fiscal`, e o campo do SFITWEB onde você cola o texto,
+  seguem com o nome de sempre.
+- **Arquivos com o número do RI.** Os três arquivos do relatório passam a se
+  chamar `Relatorio auditoria RI <ri>` — ex.: `Relatorio auditoria RI
+  320457354.docx` (e o `.md` e o `.json` com o mesmo nome-base). O RI é lido do
+  `memory.md` da OS. Se o RI estiver em branco lá, o nome sai como
+  `Relatorio auditoria`, sem interromper você para perguntar.
+- **O dossiê dos autos vem junto, com o nome do RI.** O PDF único de autos +
+  anexos continua sendo gerado pela `/aft-autos-pdf-reunidos` no lugar de sempre
+  (`AUTOS/Autos reunidos/`), e agora uma **cópia** vai para a pasta do relatório
+  como `RI 320457354 - autos e anexos.pdf`. Assim a pasta
+  `Relatórios de Fiscalização/` tem, lado a lado e com nomes que se explicam, o
+  relatório e o dossiê que ele cita — e a página "ANEXOS" dentro do .docx passou
+  a apontar para o nome certo do arquivo.
+- A pasta continua sendo `Relatórios de Fiscalização/` dentro da OS; nada foi
+  movido nem renomeado no que você já tinha gerado.
+
+---
+
+## 08/08/2026
+<!-- commit: registro-ctps-vigencia-fraude -->
+
+**`/aft-registro`: o auto de CTPS agora escolhe a ementa certa por data e por
+fraude — e a capitulação saiu do "inciso I" para "incisos I e II".**
+
+- **Capitulação corrigida.** As ementas de CTPS (`002288-8` para ME/EPP e
+  `002286-1` para as demais) são capituladas no art. 29, caput, da CLT
+  combinado com o art. **14, incisos I e II**, da Portaria Consolidada MTE
+  nº 1/2025 — a skill vinha citando só o inciso I. O texto do auto também
+  passou a explicar o inciso II (descrição do cargo, parcela variável do
+  salário, estabelecimento; prazo até o dia 15 do mês seguinte à admissão),
+  além dos 5 dias úteis do inciso I.
+- **Regra de transição.** Essas ementas só valem para fatos **a partir de
+  02/01/2026**. Para infrações entre 25/08/2022 e 01/01/2026 o ementário manda
+  usar `002204-7` (ME/EPP) e `002206-3` (demais) — a skill avisa e manda
+  consultar o ementário, porque o texto desses dois códigos não está na base.
+  Quando o prazo venceu antes de 02/01/2026 e a falta persistia na inspeção, a
+  skill não decide sozinha: apresenta as duas alternativas e você escolhe.
+- **Fraude ao vínculo.** Se a narrativa indicar pejotização, MEI, falso
+  cooperativismo, falso estágio ou falso autônomo, a skill confirma com você em
+  uma frase e troca os dois autos para as ementas de fraude — registro
+  `002270-5` (ME/EPP) / `002269-1` (demais) e CTPS `002285-3` (ME/EPP) /
+  `002284-5` (demais) —, acrescentando o art. 9º da CLT à capitulação e
+  descrevendo o arranjo no corpo dos autos. Sem indício de fraude, nada muda:
+  seguem as ementas de sempre.
+- Todos os códigos e textos foram conferidos no ementário oficial antes de
+  entrar na skill.
+
+---
+
 ## 07/08/2026 (5)
 <!-- commit: relatorio-doencas-ocupacionais -->
 

@@ -92,7 +92,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/aft-revisa-auto` | Revisa o rascunho dos autos antes do empacotamento: checklist 5W1H e parágrafo de dano coletivo (SST) — gate automático dentro do `/aft-gera-ai` |
 | `/aft-gera-ai` | Empacota autos redigidos no TXT importável pelo Sistema Auditor (latin-1), com anexos em PDF e pseudonimização reversível |
 | `/aft-autos-lavrados` | Lê os PDFs já transmitidos no Sistema Auditor (`C:\SistemasAFT\...\PRO`), cruza com os rascunhos e marca no `memory.md` o que está lavrado `[x]` / pendente `[ ]` — read-only sobre o Sistema Auditor |
-| `/aft-sfitweb-rel` | Relatório Final Simplificado a partir do `memory.md`: notificações lavradas, autos por tema e interdições com estado atual — texto para o SFITWEB + `.docx` para chefia/MPT |
+| `/aft-relatorio` | Relatório Final Simplificado a partir do `memory.md`: notificações lavradas, autos por tema e interdições com estado atual — texto para o SFITWEB + `.docx` para chefia/MPT |
 | `/aft-modelo-docx` | O **padrão visual** de todo `.docx` do toolkit: template oficial com o cabeçalho da auditoria (AFT/SIT), Times 12, títulos em azul institucional e tabelas zebradas — biblioteca `modelo_docx.py` usada pelas demais skills e pelos documentos avulsos |
 | `/aft-sessoes-os` | Uma **sessão do Claude Code por empresa fiscalizada**, no grupo "OS ATIVAS" do menu lateral — **automático**: o vigia de sessões (serviço padrão da instalação) cria as sessões sozinho toda vez que o app fecha, com vínculo `sessao_claude` no `memory.md`, backup e `--desfazer`. A skill fica para conferir, aplicar "agora" ou desfazer |
 
@@ -115,7 +115,7 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 4. /aft-gera-ai              → TXT importável + anexos na pasta Autos DD-MM/
 5. Sistema Auditor       → botão "imp. txt" → revisão → transmissão
 6. /aft-autos-lavrados       → confere o que foi transmitido e marca no memory.md
-7. /aft-sfitweb-rel          → relatório final consolidado
+7. /aft-relatorio          → relatório final consolidado
 ```
 
 Sem `/aft-preparacao-acao-fiscal`, o começo do fluxo continua sendo `/aft-nova-os` (cadastro simples, sem checklist de documentos). Dúvida técnica ou pesquisa de ementa, em qualquer ponto do fluxo, é `/aft-consulta`.
@@ -191,7 +191,7 @@ As skills buscam o código da ementa em 3 camadas:
 ├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel, servir_painel, det_sync, instalar_rotina_painel, instalar_servidor_painel)
 ├── aft-setup/ · aft-doctor/ · aft-atualizar/ · aft-nova-skill/ · aft-notebooklm-login/ · aft-nova-os/ · aft-organiza-os/ · aft-painel/ · aft-agenda-det/ · aft-gera-ai/ · aft-inspecao-fisica/ · aft-auditoria-geral/
 ├── aft-preparacao-acao-fiscal/ · aft-NAD/   (planejamento pré-visita e notificação de documentos)
-├── aft-consulta/ · aft-registro/ · aft-det-630/ · aft-tn-nco/ · aft-email/ · aft-sfitweb-rel/ · aft-PGR-analise/ · aft-aet-auditoria/ · aft-rt-rgi/ · aft-auditoria-AR-NR12/ · aft-rt-manutencao/ · aft-analise-acidente/ · aft-autos-lavrados/ · aft-revisa-auto/ · aft-modelo-docx/ · aft-sessoes-os/
+├── aft-consulta/ · aft-registro/ · aft-det-630/ · aft-tn-nco/ · aft-email/ · aft-relatorio/ · aft-PGR-analise/ · aft-aet-auditoria/ · aft-rt-rgi/ · aft-auditoria-AR-NR12/ · aft-rt-manutencao/ · aft-analise-acidente/ · aft-autos-lavrados/ · aft-revisa-auto/ · aft-modelo-docx/ · aft-sessoes-os/
 ├── aft-NR01/ · aft-NR12/ · aft-NR18/   (consultoras por NR, com references/ementas-comuns.md)
 ├── aft-cnae-grau-risco-nr04/ · aft-dimensionamento-sesmt-nr04/ · aft-cipa-nr05-dimensionamento/ · aft-nr24-dimensionamento/   (enquadramento CNAE→GR, SESMT da NR-04, CIPA da NR-05 e instalações da NR-24, por script determinístico)
 ├── aft-jornada-analise/ · aft-jornada-valida-afd-aej/ · aft-jornada-atestado/ · aft-jornada-auto-afd-aej/

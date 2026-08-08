@@ -933,7 +933,7 @@ const CMDS=[
  ['/aft-det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
  ['/aft-tn-nco','Redige a Notificação para Correção de Irregularidades, texto pronto para colar no DET, item por item.'],
  ['/aft-rt-rgi','Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).'],
- ['/aft-sfitweb-rel','Relatório Final Simplificado consolidando autos, termos e notificações.']];
+ ['/aft-relatorio','Relatório Final Simplificado consolidando autos, termos e notificações.']];
 function copiaCmd(i,k){copia(CMDS[k][0]+' — OS '+DATA.os[i].empregador)}
 function copiaCaminho(i){copia(DATA.os[i].caminho)}
 // E-mail redigido pela /aft-email: copia o corpo cru, pronto para colar no

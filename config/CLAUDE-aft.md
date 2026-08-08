@@ -96,7 +96,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Interdição/embargo → `/aft-rt-rgi` · empresa mandou laudo → `/aft-auditoria-AR-NR12` · manter a medida → `/aft-rt-manutencao`
 - Pacote de ponto (AFD/AEJ/atestado) → `/aft-jornada-analise`
 - Revisar minutas (5W1H) → `/aft-revisa-auto` · gerar o TXT → `/aft-gera-ai` · conferir transmitidos → `/aft-autos-lavrados`
-- Relatório final → `/aft-sfitweb-rel` · `.docx` avulso → `/aft-modelo-docx` · sessões por OS → `/aft-sessoes-os`
+- Relatório final → `/aft-relatorio` · `.docx` avulso → `/aft-modelo-docx` · sessões por OS → `/aft-sessoes-os`
 - Criar habilidade própria minha → `/aft-nova-skill`
 
 **Constatação de auditoria** (SESMT/CIPA mal dimensionado, ASO faltando, programa

@@ -1,20 +1,25 @@
 ---
-name: aft-sfitweb-rel
+name: aft-relatorio
 model: sonnet
 effort: medium
 description: >
   Use quando o AFT precisar gerar o Relatório Final Simplificado da
-  fiscalização trabalhista. Acione com "SFITWEB-REL", "relatório final de
+  fiscalização trabalhista. Acione com /aft-relatorio, "relatório final de
   fiscalização", "gerar relatório", "relatório simplificado", "consolidar a
-  fiscalização", "relatório de encerramento da ação fiscal", ou ao pedir
-  para sintetizar autos de infração, termos de interdição/embargo e
-  notificações num único relatório. Fonte primária é o memory.md da OS.
-  Antes de gerar, PERGUNTA ao AFT se quer incluir outras ocorrências, e
-  destaca embaraço à fiscalização ou fraude (art. 630 da CLT).
+  fiscalização", "relatório de encerramento da ação fiscal", "SFITWEB-REL"
+  (nome antigo desta skill), ou ao pedir para sintetizar autos de infração,
+  termos de interdição/embargo e notificações num único relatório. Fonte
+  primária é o memory.md da OS. Antes de gerar, PERGUNTA ao AFT se quer
+  incluir outras ocorrências, e destaca embaraço à fiscalização ou fraude
+  (art. 630 da CLT). NÃO confundir com /aft-relatorio-acidentes (relatório de
+  acidentes e doenças a partir das CATs).
 ---
 
-# sfitweb-rel — Relatório Final Simplificado de Fiscalização
+# relatorio — Relatório Final Simplificado de Fiscalização
 **AFT Toolkit**
+
+> Esta skill se chamava `/aft-sfitweb-rel` até 08/08/2026. O nome antigo continua
+> funcionando como frase de acionamento, mas o comando é `/aft-relatorio`.
 
 ## Objetivo
 
@@ -128,13 +133,24 @@ fiéis ao que ele relatou. Se ele não quiser acrescentar nada, siga sem a seç�
 ### 5. Redigir e salvar — na pasta "Relatórios de Fiscalização"
 
 Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:
-**`<pasta-OS>/Relatórios de Fiscalização/`** (crie-a se não existir). Entregue:
+**`<pasta-OS>/Relatórios de Fiscalização/`** (crie-a se não existir).
+
+> **Nome dos arquivos — pelo RI.** Leia o `ri:` do front-matter do `memory.md` (9 dígitos) e
+> use-o como **nome-base** dos três arquivos:
+>
+> - **Com RI:** `Relatorio auditoria RI <ri>` → ex.: `Relatorio auditoria RI 320457354.docx`
+> - **Sem RI** (campo `ri:` vazio ou ausente): `Relatorio auditoria` — sem perguntar nada.
+>
+> Escreva o RI só com os dígitos, como está no memory.md (sem pontos e sem a palavra "nº").
+> Onde este texto disser `<base>`, substitua por esse nome-base.
+
+Entregue:
 
 1. **Texto limpo no chat** — em bloco de texto puro, sem nenhuma marcação markdown, pronto para
    colar no campo do SFITWEB (autos no formato de bloco acima).
-2. **`relatorio-final.md`** em `Relatórios de Fiscalização/` (confirme antes de sobrescrever;
+2. **`<base>.md`** em `Relatórios de Fiscalização/` (confirme antes de sobrescrever;
    se já existir, faça backup com `_scripts/backup_arquivo.py`).
-3. **`relatorio-final.json`** em `Relatórios de Fiscalização/` — os dados estruturados do
+3. **`<base>.json`** em `Relatórios de Fiscalização/` — os dados estruturados do
    relatório (esquema no topo de `scripts/gera_relatorio_docx.py`), fonte do .docx. Inclui os
    campos `embaraco_fraude` e `outras_ocorrencias` quando aplicável.
 
@@ -142,9 +158,10 @@ Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:
    fiscalizado: monte-o como `"<município>-<uf>, <data por extenso>"` lendo `municipio`/`uf` do
    `aft-config.md` (a lotação do AFT). O título ("RELATÓRIO DE AUDITORIA FISCAL DO TRABALHO") é
    fixo e o próprio script o aplica — não é preciso (nem possível) informá-lo no JSON.
-4. **`relatorio-final.docx`** — gere rodando:
+4. **`<base>.docx`** — gere rodando (o script deriva o nome do .docx do nome do .json,
+   então basta o JSON estar com o nome-base certo):
    ```
-   python3 ~/.claude/skills/aft-sfitweb-rel/scripts/gera_relatorio_docx.py "<pasta-OS>/Relatórios de Fiscalização/relatorio-final.json"
+   python3 ~/.claude/skills/aft-relatorio/scripts/gera_relatorio_docx.py "<pasta-OS>/Relatórios de Fiscalização/<base>.json"
    ```
    O script constrói o documento com a biblioteca do **padrão visual do toolkit** (skill
    `/aft-modelo-docx` — template oficial com o cabeçalho da auditoria, Times New Roman 12,
@@ -155,35 +172,51 @@ Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:
 `Relatórios de Fiscalização/` onde o `.docx` foi salvo.
 
 Ao final, registre a atividade no `## Registro de atividades` do memory.md
-(`| dd/mm/aaaa | Relatório final simplificado gerado (.md + .docx) | /aft-sfitweb-rel |`).
+(`| dd/mm/aaaa | Relatório final simplificado gerado (.md + .docx) | /aft-relatorio |`).
 
 ### 6. Gerar o anexo: todos os autos + anexos em um PDF único
 
 Depois de entregar o relatório, gere o dossiê que o acompanha como anexo: siga a skill
 **`/aft-autos-pdf-reunidos`** a partir do Passo 2.5 dela (a OS já está resolvida) — ela
 pergunta o modo (Completo ou Econômico) e reúne todos os `AI_*.PDF` do Sistema Auditor
-com os anexos de cada auto. **Neste fluxo, o destino é a pasta do relatório** (não o
-padrão `AUTOS/` da skill), e o JSON do script vai para arquivo, porque o passo seguinte
-o consome:
+com os anexos de cada auto. **O original fica no destino padrão daquela skill**
+(`<pasta-OS>/AUTOS/Autos reunidos/`; em OS sem a caixa `AUTOS/`, `<pasta-OS>/Autos reunidos/`)
+e o JSON do script vai para arquivo ao lado dele, porque o passo seguinte o consome:
 
 ```bash
-python ~/.claude/skills/aft-autos-pdf-reunidos/scripts/reune_autos_pdf.py "<EMPRESA>" "<CNPJ_OU_8DIGITOS>" "<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.pdf" > "<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.json"
+python ~/.claude/skills/aft-autos-pdf-reunidos/scripts/reune_autos_pdf.py "<EMPRESA>" "<CNPJ_OU_8DIGITOS>" "<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.pdf" > "<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.json"
 ```
 
 (No modo Econômico, acrescente `--paginas-anexo 10`.)
 
-Em seguida, acrescente ao `relatorio-final.docx` a página final **"ANEXOS - Autos de
+Depois **copie** o PDF para a pasta do relatório, com o nome do RI — é a via que
+acompanha o relatório:
+
+- **Com RI:** `RI <ri> - autos e anexos.pdf` → ex.: `RI 320457354 - autos e anexos.pdf`
+- **Sem RI:** `Autos e anexos.pdf`
+
+```bash
+cp "<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.pdf" "<pasta-OS>/Relatórios de Fiscalização/<nome-do-anexo>.pdf"
+```
+
+É **cópia**, não movimentação: o original continua em `Autos reunidos/`. No Windows, use
+`copy` no lugar de `cp`.
+
+Em seguida, acrescente ao `<base>.docx` a página final **"ANEXOS - Autos de
 Infração"**, que apresenta o dossiê (com as observações de limite de páginas, Núcleo de
 Multas, anexos repetidos e o total de páginas não incluídas — o script monta tudo a
-partir do JSON). Antes, confira que o Word não está com o arquivo aberto
+partir do JSON). O **terceiro argumento é o nome do PDF anexo** citado no corpo da página:
+passe o nome da cópia, para o relatório apontar para o arquivo que está ao lado dele.
+Antes, confira que o Word não está com o arquivo aberto
 (`_scripts/checar_arquivo_aberto.py`) e faça backup (`_scripts/backup_arquivo.py`):
 
 ```bash
-python ~/.claude/skills/aft-sfitweb-rel/scripts/anexa_pagina_anexos.py "<pasta-OS>/Relatórios de Fiscalização/relatorio-final.docx" "<pasta-OS>/Relatórios de Fiscalização/autos-reunidos.json"
+python ~/.claude/skills/aft-relatorio/scripts/anexa_pagina_anexos.py "<pasta-OS>/Relatórios de Fiscalização/<base>.docx" "<pasta-OS>/AUTOS/Autos reunidos/autos-reunidos.json" "<nome-do-anexo>.pdf"
 ```
 
 O script é idempotente (regravar substitui a página, não duplica). Informe ao AFT os dois
-caminhos: o `relatorio-final.docx` (agora com a página de anexos) e o `autos-reunidos.pdf`.
+caminhos da pasta do relatório: o `<base>.docx` (agora com a página de anexos) e a cópia
+`<nome-do-anexo>.pdf` — e, em uma linha, onde ficou o original.
 
 - **Sem nenhum auto transmitido** (Seção 4 vazia), pule este passo inteiro — não há o que
   reunir nem página de anexos a acrescentar.

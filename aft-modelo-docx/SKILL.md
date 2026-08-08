@@ -25,7 +25,7 @@ cópia de `Template/Template com cabeçalho.docx` do toolkit).
 
 **Quando usar:** qualquer `.docx` sem template oficial próprio — em especial os documentos
 avulsos que o AFT pede fora das skills (regra do perfil do auditor) e as saídas `.docx` de
-skills como o `/aft-sfitweb-rel`.
+skills como o `/aft-relatorio`.
 
 **Quando NÃO usar:** documentos com modelo oficial específico — RT de interdição/embargo
 (`/aft-rt-rgi`, `/aft-rt-manutencao`) e Relação de autos (`/aft-autos-lavrados`) mantêm seus
@@ -102,6 +102,6 @@ A implementação completa (e canônica) é `scripts/modelo_docx.py` — na dúv
   grava sobre ele.
 - Privacidade: as regras do perfil do auditor valem para o conteúdo (nunca CPF; nome de
   trabalhador só se imprescindível).
-- Exemplo real de uso: `aft-sfitweb-rel/scripts/gera_relatorio_docx.py` (Relatório Final
+- Exemplo real de uso: `aft-relatorio/scripts/gera_relatorio_docx.py` (Relatório Final
   Simplificado — capa, identificação, tabelas de notificações e de autos por tema,
   assinatura).

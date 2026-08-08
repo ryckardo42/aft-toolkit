@@ -564,7 +564,7 @@ Auditor-Fiscal do Trabalho NESTA auditoria:
    notificações do DET), /analise-preliminar (analisar a resposta da empresa),
    /aft-inspecao-fisica (relato de campo) e /aft-auditoria-geral (enquadrar e redigir os
    autos), /aft-gera-ai (TXT do Sistema Auditor), /aft-autos-lavrados (conferir o
-   transmitido), /aft-tn-nco e /aft-NAD (notificações), /aft-sfitweb-rel (relatório final).
+   transmitido), /aft-tn-nco e /aft-NAD (notificações), /aft-relatorio (relatório final).
 3. **"Atualizar o card" / "atualizar o painel" / "atualizar as datas"** =
    registrar na ficha `memory.md` (seções `## Notificações DET`, `## Pendências`,
    `## Registro de atividades`) — o painel (http://127.0.0.1:8347) lê essa ficha.
