@@ -78,7 +78,7 @@
       "act": "Lê os PDFs transmitidos em ...\\PRO, cruza com os rascunhos e marca no memory.md o que está lavrado [x] / pendente [ ]."
     },
     {
-      "who": "/aft-sfitweb-rel",
+      "who": "/aft-relatorio",
       "act": "Relatório Final Simplificado: notificações, autos por tema e interdições, do memory.md — texto p/ SFITWEB + .docx p/ chefia·MPT."
     }
   ],
@@ -325,14 +325,14 @@
           "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
         },
         {
-          "nome": "/aft-sfitweb-rel",
+          "nome": "/aft-relatorio",
           "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia·MPT.",
           "tech": "lê memory.md, autos-lavrados.md e interdicao-embargo/ · gera .docx · model: sonnet"
         },
         {
           "nome": "/aft-modelo-docx",
           "role": "Padrão visual de todo .docx do toolkit: template com cabeçalho AFT·SIT, Times 12, azul institucional, tabelas zebradas.",
-          "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /aft-sfitweb-rel e docs avulsos · model: sonnet"
+          "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /aft-relatorio e docs avulsos · model: sonnet"
         },
         {
           "nome": "/aft-sessoes-os",

@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""anexa_pagina_anexos.py — acrescenta ao relatorio-final.docx a página final
-"ANEXOS - Autos de Infração", que apresenta o PDF único gerado pela skill
-/aft-autos-pdf-reunidos (autos-reunidos.pdf) como anexo do relatório.
+"""anexa_pagina_anexos.py — acrescenta ao .docx do relatório (skill /aft-relatorio)
+a página final "ANEXOS - Autos de Infração", que apresenta o PDF único gerado pela
+skill /aft-autos-pdf-reunidos como anexo do relatório.
 
 Uso:
-    python3 anexa_pagina_anexos.py <relatorio-final.docx> <autos-reunidos.json>
+    python3 anexa_pagina_anexos.py <relatorio.docx> <autos-reunidos.json> [nome-do-pdf-anexo]
 
   <autos-reunidos.json>: o JSON impresso pelo reune_autos_pdf.py (redirecionado
   para arquivo). Dele saem o modo (paginas_anexo_limite), as páginas cortadas e
   as páginas omitidas por repetição de anexo.
+
+  [nome-do-pdf-anexo]: nome do PDF citado no corpo da página — a via que acompanha
+  o relatório, normalmente "RI <ri> - autos e anexos.pdf". Padrão:
+  "autos-reunidos.pdf".
 
 A página entra após o fim do relatório, com quebra de página, no padrão visual
 do toolkit (biblioteca modelo_docx). Idempotente: se o documento já tem a
@@ -100,12 +104,13 @@ def remover_pagina_existente(doc) -> bool:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("Uso: anexa_pagina_anexos.py <relatorio-final.docx> "
-              "<autos-reunidos.json>", file=sys.stderr)
+    if len(sys.argv) not in (3, 4):
+        print("Uso: anexa_pagina_anexos.py <relatorio.docx> "
+              "<autos-reunidos.json> [nome-do-pdf-anexo]", file=sys.stderr)
         return 2
 
     docx_path, json_path = Path(sys.argv[1]), Path(sys.argv[2])
+    nome_anexo = sys.argv[3] if len(sys.argv) == 4 else "autos-reunidos.pdf"
     if not docx_path.is_file():
         print(f"ERRO: relatório não encontrado: {docx_path}", file=sys.stderr)
         return 1
@@ -129,7 +134,7 @@ def main() -> int:
 
     m.paragrafo(doc, "Relação dos autos de infração completos lavrados e "
                      "respectivos anexos.")
-    m.paragrafo(doc, "A relação integra o arquivo autos-reunidos.pdf, que "
+    m.paragrafo(doc, f"A relação integra o arquivo {nome_anexo}, que "
                      "acompanha este relatório.")
     for i, texto in enumerate(montar_textos(dados), start=1):
         m.paragrafo(doc, f"Observação {i}: {texto}")

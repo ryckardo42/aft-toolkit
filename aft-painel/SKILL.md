@@ -147,7 +147,7 @@ python ~/.claude/skills/_scripts/servir_painel.py "<OS_ATIVAS>" --abrir
   descrição já registrada no campo `embargo_interdicao`).
 - **Botões de comando**: copiam para a área de transferência um comando pronto
   (`/aft-inspecao-fisica`, `/aft-auditoria-geral`, `/aft-gera-ai`, `/aft-autos-lavrados`, `/aft-det-630`,
-  `/aft-tn-nco`, `/aft-rt-rgi`, `/aft-sfitweb-rel` — sempre com `— OS <EMPREGADOR>` anexado)
+  `/aft-tn-nco`, `/aft-rt-rgi`, `/aft-relatorio` — sempre com `— OS <EMPREGADOR>` anexado)
   para o AFT colar no Claude Code; ao passar o mouse, cada botão mostra uma legenda com
   o resumo da skill (texto vindo da arquitetura do toolkit). Ações que exigem julgamento
   nunca rodam pelo servidor.

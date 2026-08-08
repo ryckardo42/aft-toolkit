@@ -49,6 +49,7 @@ Antes de gerar qualquer texto, colete os seguintes dados. Se faltar algum, pergu
 2. **Lista de trabalhadores irregulares** — para cada um: nome completo, função e **data de admissão**. Quando o AFT informar a data (ex.: "admitidos em 10 de maio de 2026"), **SEMPRE** converta para `dd/mm/aaaa` (→ `10/05/2026`) e guarde como `[data_admissao]`. Essa data é citada **expressamente** na narrativa — "admitido(a) em `dd/mm/aaaa`" — e também vai para a linha tipo 4 do TXT (via `/aft-gera-ai`). **Nunca** escreva "X dias antes da inspeção".
 3. **ME/EPP** — a empresa é Microempresa ou Empresa de Pequeno Porte?
 4. **Pasta da OS** — qual empresa em `<OS_ATIVAS>/` (para salvar o texto e o de-para)
+5. **Arranjo formal fraudulento?** — o padrão é **não**: não pergunte por rotina. Só levante a hipótese se a narrativa do AFT trouxer indício de fraude ao vínculo (pejotização, contratação de MEI, falso cooperativismo, falso estágio, falso autônomo, contrato de prestação de serviços mascarando emprego). Nesse caso, confirme em **uma frase** com o AFT antes de trocar as ementas — a fraude muda o código dos Autos 1 e 2 e acrescenta o art. 9º da CLT à capitulação.
 
 Se faltar algum dado, responda apenas:
 > *"Para lavrar os autos, preciso de: [dados ausentes]."*
@@ -76,27 +77,64 @@ A narrativa do AFT quase sempre traz **fatos concretos** que comprovam o víncul
 
 ### Auto 1 — Falta de Registro (art. 41 CLT)
 
-**Se ME/EPP:**
+**Sem arranjo fraudulento — ME/EPP:**
 - Código: `001774-4`
 - Ementa: *Admitir ou manter empregado em microempresa ou empresa de pequeno porte sem o respectivo registro em livro, ficha ou sistema eletrônico competente.*
 - Capitulação: Art. 41, caput, c/c art. 47, §1º da Consolidação das Leis do Trabalho, com redação conferida pela Lei 13.467/17.
 
-**Se não ME/EPP:**
+**Sem arranjo fraudulento — não ME/EPP:**
 - Código: `001775-2`
 - Ementa: *Admitir ou manter empregado sem o respectivo registro em livro, ficha ou sistema eletrônico competente, o empregador não enquadrado como microempresa ou empresa de pequeno porte.*
 - Capitulação: Art. 41, caput, c/c art. 47, caput, da Consolidação das Leis do Trabalho, com redação conferida pela Lei 13.467/17.
 
+**Com fraude ao vínculo (triagem 5 confirmada) — ME/EPP:**
+- Código: `002270-5`
+- Ementa: *Admitir ou manter empregado em microempresa ou empresa de pequeno porte sem o respectivo registro em livro, ficha ou sistema eletrônico competente, mediante fraude.*
+- Capitulação: Art. 41, caput, c/c art. 9º, da Consolidação das Leis do Trabalho.
+- Vigência (ementário): a partir de 01/01/2026.
+
+**Com fraude ao vínculo (triagem 5 confirmada) — não ME/EPP:**
+- Código: `002269-1`
+- Ementa: *Admitir ou manter empregado sem o respectivo registro em livro, ficha ou sistema eletrônico competente, mediante fraude, o empregador não enquadrado como microempresa ou empresa de pequeno porte.*
+- Capitulação: Art. 41, caput, c/c art. 9º, da Consolidação das Leis do Trabalho.
+- Vigência (ementário): a partir de 01/01/2026.
+
 ### Auto 2 — Falta de Anotação na CTPS (art. 29 CLT)
 
-**Se ME/EPP:**
-- Código: `002288-8`
-- Ementa: *Deixar o empregador enquadrado como microempresa ou empresa de pequeno porte de anotar a CTPS do trabalhador no prazo legal.*
-- Capitulação: Art. 29, caput, da Consolidação das Leis do Trabalho, c/c art. 14, inciso I, da Portaria Consolidada MTE nº 1, de 17 de dezembro de 2025.
+**Escolha do código — cruze porte e fraude** (fatos ocorridos a partir de 02/01/2026):
 
-**Se não ME/EPP:**
-- Código: `002286-1`
-- Ementa: *Deixar o empregador de anotar a CTPS do trabalhador no prazo legal.*
-- Capitulação: Art. 29, caput, da Consolidação das Leis do Trabalho, c/c art. 14, inciso I, da Portaria Consolidada MTE nº 1, de 17 de dezembro de 2025.
+| | Sem arranjo fraudulento | Com fraude ao vínculo |
+|---|---|---|
+| **ME/EPP** | `002288-8` | `002285-3` |
+| **Não ME/EPP** | `002286-1` | `002284-5` |
+
+- `002288-8` — *Deixar o empregador enquadrado como microempresa ou empresa de pequeno porte de anotar a CTPS do trabalhador no prazo legal.*
+  Capitulação: Art. 29, caput, da Consolidação das Leis do Trabalho, combinado com art. 14, incisos I e II, da Portaria Consolidada MTE nº 1, de 17 de dezembro de 2025.
+- `002286-1` — *Deixar o empregador de anotar a CTPS do trabalhador no prazo legal.*
+  Capitulação: Art. 29, caput, da Consolidação das Leis do Trabalho, combinado com art. 14, incisos I e II, da Portaria Consolidada MTE nº 1, de 17 de dezembro de 2025.
+- `002285-3` — *Deixar o empregador enquadrado como microempresa ou empresa de pequeno porte de anotar a CTPS do trabalhador no prazo legal, quando admitido mediante fraude ao vínculo de emprego.*
+  Capitulação: Art. 29, caput, da Consolidação das Leis do Trabalho, com redação dada pela Lei nº 13.874/2019, c/c art. 9º da Consolidação das Leis do Trabalho, c/c art. 14, incisos I e II, da Portaria Consolidada MTE nº 1, de 17 de dezembro de 2025.
+- `002284-5` — *Deixar o empregador de anotar a CTPS do trabalhador no prazo legal, quando admitido mediante fraude ao vínculo de emprego.*
+  Capitulação: Art. 29, caput, da Consolidação das Leis do Trabalho, com redação dada pela Lei nº 13.874/2019, c/c art. 9º da Consolidação das Leis do Trabalho, c/c art. 14, incisos I e II, da Portaria Consolidada MTE nº 1, de 17 de dezembro de 2025.
+
+Nenhuma das quatro tem gradação nem per capita (N/A).
+
+> **Regra de transição temporal (obrigatória).** Os quatro códigos acima valem **somente
+> para fatos ocorridos a partir de 02/01/2026**, data de vigência da Portaria Consolidada
+> MTE nº 1/2025. Para infrações do período **25/08/2022 a 01/01/2026** o ementário manda
+> usar `002204-7` (ME/EPP) e `002206-3` (não ME/EPP) — **os textos e as capitulações
+> desses dois códigos não estão no ementário carregado**: consulte o `/aft-consulta` ou o
+> ementário oficial antes de usar e **nunca os escreva de memória**.
+>
+> **Que data manda:** o vencimento do prazo de anotação (5 dias úteis contados da
+> admissão, art. 14, inciso I). Se o prazo venceu a partir de 02/01/2026, use a tabela
+> acima. Se venceu antes dessa data e a falta persistia na inspeção, **não decida
+> sozinho**: apresente ao AFT as duas alternativas (ementa do período antigo x ementa
+> nova, pela natureza continuada da infração) e siga o que ele determinar.
+
+> **Dupla autuação.** Falta de registro (art. 41) e falta de anotação na CTPS (art. 29)
+> são infrações autônomas e caminham juntas: lavre **sempre os dois autos**, mantendo a
+> coerência entre eles — se o Auto 1 for de fraude, o Auto 2 também é.
 
 ### Auto 3 — Falta de Exame Médico Admissional (NR-07)
 
@@ -134,7 +172,7 @@ Monte os três blocos no formato consumido pelo `/aft-gera-ai`. **Texto puro**, 
 
 ```
 === AUTO DE INFRAÇÃO #1 ===
-Ementa: [codigo_art41] - [texto da ementa conforme ME/EPP]
+Ementa: [codigo_art41] - [texto da ementa conforme porte (ME/EPP) e fraude]
 
 I - DA FISCALIZAÇÃO:
 
@@ -199,7 +237,7 @@ planejamento e no curso da ação fiscal, que evidenciou a omissão do empregado
 
 ```
 === AUTO DE INFRAÇÃO #2 ===
-Ementa: [codigo_art29] - [texto da ementa conforme ME/EPP]
+Ementa: [codigo_art29] - [texto da ementa conforme porte (ME/EPP) e fraude]
 
 I - DA FISCALIZAÇÃO:
 
@@ -225,10 +263,13 @@ Fiscal Digital das Obrigações Fiscais Previdenciárias e Trabalhistas - até c
 b) código da CBO; c) valor do salário contratual; d) tipo de contrato de trabalho em
 relação ao seu prazo, com a indicação do término, na hipótese de contrato por prazo
 determinado; e e) categoria do trabalhador, conforme classificação adotada pelo eSocial.
+As demais informações da anotação, relacionadas no inciso II do mesmo art. 14 (entre elas
+a descrição do cargo ou função, a parcela variável do salário e a identificação do
+estabelecimento), devem ser prestadas até o dia 15 do mês seguinte ao da admissão.
 
 Em consulta ao banco de dados do eSocial, realizada no dia [data_inspecao],
 constatou-se que o(s) trabalhador(es) não teve(tiveram) a(s) Carteira(s) de Trabalho
-anotada(s) (prestação das informações relacionadas no art. 14, inciso I, da Portaria
+anotada(s) (prestação das informações relacionadas no art. 14, incisos I e II, da Portaria
 Consolidada MTE nº 1, de 17 de dezembro de 2025) no prazo legal, não havendo qualquer
 informação a respeito dos citados vínculos com o empregador autuado. Sendo assim,
 incorreu o empregador na infração ementada acima, contrariando os dispositivos legais
@@ -279,6 +320,7 @@ ocupacional prévio.
 - **Lista idêntica** nos três autos. Numeração sequencial, **sempre com a data de admissão expressa**: `1- [[TRAB_01]] - Função, admitido(a) em dd/mm/aaaa.` Nunca use "X dias antes da inspeção".
 - **`[FATOS_OBSERVADOS]` (só no AUTO 1)**: insira os fatos concretos relatados pelo AFT (uniforme, subordinação, salário, jornada/horário) numa frase iniciada por "A auditoria constatou que…", entre a lista e o parágrafo dos quatro requisitos. Use apenas o que foi relatado; omita a frase se não houver fatos.
 - **Auto 3 (exame admissional)**: incluído por padrão. Ao apresentar os autos, avise que pode ser removido se a empresa comprovar ASO admissional.
+- **Fraude ao vínculo confirmada pelo AFT**: além de trocar os códigos dos Autos 1 e 2, descreva o arranjo nos dois autos — qual a forma aparente adotada (contrato de prestação de serviços com PJ, MEI, cooperativa, estágio, autônomo), quem a impôs e por que ela não subsiste diante dos quatro requisitos apurados —, concluindo que o ajuste é nulo de pleno direito por desvirtuar e impedir a aplicação dos preceitos da CLT (art. 9º). Use **apenas os fatos relatados pelo AFT**; sem relato do arranjo, não invente e siga com as ementas sem fraude.
 - **Dados ausentes**: use `[DADO NÃO INFORMADO]`.
 - **Tom**: sóbrio, formal, impessoal, terceira pessoa.
 - **Sem travessões** (não existem no latin-1): use hífen simples, vírgula ou parênteses.

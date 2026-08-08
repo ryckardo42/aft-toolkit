@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""gera_relatorio_docx.py — Relatório Final Simplificado (.docx) do /aft-sfitweb-rel.
+"""gera_relatorio_docx.py — Relatório Final Simplificado (.docx) do /aft-relatorio.
 
 Uso:
-    python3 gera_relatorio_docx.py <relatorio-final.json> [saida.docx]
+    python3 gera_relatorio_docx.py <relatorio.json> [saida.docx]
 
 Constrói o .docx sobre o padrão visual do toolkit (skill aft-modelo-docx: template
 oficial com o cabeçalho da auditoria + formatação institucional). Toda a

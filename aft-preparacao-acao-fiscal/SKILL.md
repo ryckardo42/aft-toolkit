@@ -115,7 +115,7 @@ _(OS SFIT nº <os> / demanda nº <demanda> — ementas a fiscalizar)_
 ```
 
 - Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Na linha de origem, cite o(s) documento(s) que você leu (OS, Demanda ou ambos); vindo os dois, deduplique por código.
-- As caixas `- [ ]` são para marcar, ao longo da fiscalização, o que já foi verificado/autuado — a `/aft-auditoria-geral` e o relatório final (`/aft-sfitweb-rel`) podem se apoiar nesta seção.
+- As caixas `- [ ]` são para marcar, ao longo da fiscalização, o que já foi verificado/autuado — a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção.
 
 ### FASE 1.2 — Perfil da empresa (busca rápida na internet)
 

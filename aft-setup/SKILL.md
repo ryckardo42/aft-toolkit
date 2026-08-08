@@ -622,7 +622,7 @@ Fluxo típico de uma fiscalização:
   4. /aft-auditoria-geral  → enquadra NR/ementa e redige os autos
   5. /aft-gera-ai           → gera o TXT para importar no Sistema Auditor
   6. /aft-autos-lavrados    → confere o que foi transmitido
-Outras: /aft-registro · /aft-PGR-analise · /aft-rt-rgi · /aft-det-630 · /aft-jornada-analise · /aft-sfitweb-rel
+Outras: /aft-registro · /aft-PGR-analise · /aft-rt-rgi · /aft-det-630 · /aft-jornada-analise · /aft-relatorio
 ```
 
 Se a pasta `OS ATIVAS/` estiver vazia, pergunte ativamente: *"Você já tem fiscalizações
