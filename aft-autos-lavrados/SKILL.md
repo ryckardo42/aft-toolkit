@@ -208,6 +208,22 @@ Para cada auto **válido** (Passo 2.5 — `unico`, `mantido_ultimo`, `manter_tod
 
 > A chave de cruzamento é o **número da ementa**, não o nome do arquivo. Ignore os autos `cancelado_presumido` aqui — quem representa a ementa é o auto válido que os substituiu.
 
+### Passo 4.5 — Reenquadramento de ementa (planejado ≠ lavrado)
+
+O AFT pode trocar a ementa de um auto **dentro do próprio Sistema Auditor**, no momento da lavratura — o rascunho local (`autos.md`/`.txt`) continua com a ementa antiga, mas o PDF transmitido sai sob outra. Isso não é erro de transmissão nem pendência real: é a mesma irregularidade, sob outro enquadramento. **O que vale é o que foi lavrado.**
+
+1. Dentro do **mesmo lote** (mesma subpasta `Autos DD-MM/`, mesma data de lavratura), verifique se sobrou pelo menos uma ementa **pendente** (planejada, não encontrada no scan) e pelo menos um auto **lavrado sem rascunho local**.
+2. Compare a `resumo_irregularidade` (Passo 3) do auto lavrado sem rascunho com o texto do rascunho da ementa pendente (o parágrafo "II - IRREGULARIDADE"). Se descreverem o **mesmo fato** (mesmo equipamento/local/constatação), trate como **reenquadramento** — não pergunte ao AFT, decida e registre:
+   - **Não** liste essas duas entradas em "Pendentes de transmissão" nem em "Lavrados sem rascunho local".
+   - Registre em vez disso na nova seção "Ementas reenquadradas no Sistema Auditor" (Passo 5): ementa planejada → ementa lavrada, AI, e uma frase dizendo que é a mesma constatação de fato.
+   - **Atualize o rascunho local** (o `autos.md` do lote) trocando a linha `Ementa: <planejada> - <descrição>` por uma nota de reenquadramento logo acima, no formato:
+     `[NOTA: reenquadrado no Sistema Auditor na lavratura de <data> — transmitido sob a ementa <lavrada> (AI <numero_ai>), e não sob a ementa <planejada> abaixo. Mesma constatação de fato; ver autos-lavrados.md.]`
+     **Não reescreva** o corpo do auto (parágrafos de fiscalização/irregularidade/capitulação) — você não tem certeza da redação legal exata da ementa nova; só sinalize. Mantenha a ementa antiga na linha original, para o histórico.
+3. Se a constatação **não bater** (fatos diferentes), mantenha nas seções normais (pendente / sem rascunho) — não é reenquadramento, é uma divergência real.
+4. Ambiguidade real (não dá para saber se é o mesmo fato) → trate como caso normal (pendente + sem rascunho, sem inventar vínculo) e, se relevante, mencione a suspeita no relatório do Passo 7 — mas isso não é motivo para perguntar ao AFT antes de gravar o resto do snapshot.
+
+> A chave de cruzamento aqui é a **descrição do fato**, não o número da ementa — é exatamente por isso que o caso não aparece no Passo 4 (que casa só por número).
+
 ### Passo 5 — Gerar `autos-lavrados.md` na pasta da OS
 
 Escreva em `<pasta-OS>/autos-lavrados.md` (sobrescreve com aviso no chat se já existir):
@@ -224,6 +240,7 @@ Escreva em `<pasta-OS>/autos-lavrados.md` (sobrescreve com aviso no chat se já 
 |---|---|
 | Lavrados válidos (transmitidos) | <N> |
 | Substituídos (presumidamente cancelados) | <C> |
+| Reenquadrados (mesma constatação, ementa diferente) | <R> |
 | Pendentes de transmissão | <M> |
 | Lavrados sem rascunho local | <K> |
 
@@ -242,6 +259,9 @@ Escreva em `<pasta-OS>/autos-lavrados.md` (sobrescreve com aviso no chat se já 
 ## Autos substituídos (presumidamente cancelados)
 - Ementa <num> — AI <numero_ai> — substituído por AI <substituido_por> (re-lavratura; PDF antigo permanece na pasta)
 
+## Ementas reenquadradas no Sistema Auditor
+- Ementa planejada <num_planejada> → lavrada como <num_lavrada> — AI <numero_ai>. Mesma constatação de fato (<breve descrição>); reenquadramento detectado automaticamente (Passo 4.5).
+
 ## Pendentes de transmissão
 - Ementa <num> — `<arquivo do rascunho>` — não localizado no Sistema Auditor
 
@@ -250,6 +270,8 @@ Escreva em `<pasta-OS>/autos-lavrados.md` (sobrescreve com aviso no chat se já 
 ```
 
 > A seção "Autos substituídos" só aparece se houver autos `cancelado_presumido`. É informativa (transparência da re-lavratura) e **não** conta como lavrado.
+
+> A seção "Ementas reenquadradas" só aparece se o Passo 4.5 detectou algum caso. Também é informativa — o auto **conta como lavrado** (entra no Detalhamento com a ementa efetivamente transmitida), só não aparece separadamente em "Pendentes" nem em "Sem rascunho".
 
 **Se `pasta_auditor` é null** (OS sem autos transmitidos), grave mesmo assim:
 ```markdown
@@ -299,6 +321,7 @@ Regras:
 - 1 linha por auto, no máximo 1 frase curta (do `resumo_irregularidade`, sem dados pessoais).
 - **Chave de dedup das linhas `[x]` e `(cancelado)`: número do AI** (único por auto — permite ementas legitimamente repetidas, ex.: `001960-7`). As linhas `[ ]` pendentes, que ainda não têm AI, seguem sendo chaveadas por ementa.
 - **Promoção de pendências:** as skills `/aft-auditoria-geral`, `/aft-det-630` e `/aft-jornada-auto-afd-aej` deixam linhas `- [ ]` (por ementa) aqui. Ao confirmar a transmissão, promova a `- [x]` acrescentando o AI. Se a ementa tem **um** auto válido, promova a própria linha; se tem **vários** (`manter_todos` ou "relacionar todos"), gere **uma linha `[x]` por AI**.
+- **Reenquadramento (Passo 4.5):** não crie linha `[ ]` para a ementa planejada. Grave **uma única** linha `[x]` com a ementa efetivamente lavrada, anotando entre parênteses "(reenquadrada de <ementa planejada> no Sistema Auditor)". Se já existir uma linha `[ ]` da ementa planejada (de uma promoção de pendência anterior), **remova-a** ao gravar a `[x]` — o que vale é o que foi lavrado.
 - Se a linha (por AI, ou por ementa nas pendentes) já existe, **substitua** mantendo a ordem; se nova, **append**.
 
 Depois, adicione 1 linha em `## Registro de atividades` (append na tabela; não toque nas existentes):
@@ -351,6 +374,7 @@ Use `⚠` para linhas com pendentes > 0, com autos `revisar` não decididos, ou 
 | PDF corrompido/ilegível | Entra no relatório como "AI <numero> — leitura falhou"; não atualiza o memory.md para essa linha |
 | OS sem autos nem rascunhos | Gera `autos-lavrados.md` com "nenhum auto" e registra só o snapshot do dia |
 | Ementa duplicada em 2+ autos | Regra do Passo 2.5: mantém o último (maior AI) como válido; anteriores viram "substituídos". Exceção `001960-7` (todos válidos) e `001775-2`/`001774-4`/`002270-5`/`002269-1` (pergunta ao AFT) |
+| Ementa planejada some e outra ementa aparece sem rascunho, mesmo lote | Regra do Passo 4.5: se a constatação de fato bater, é reenquadramento no Sistema Auditor — resolve sozinho, sem perguntar. Registra em "Ementas reenquadradas" e atualiza o rascunho local com uma nota |
 
 ## Regras
 

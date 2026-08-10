@@ -30,7 +30,8 @@ dezenas de PDFs não entulhe o contexto do AFT — de volta, só o relatório.
 
 1. **Leia o manual** (o SKILL.md recebido). Ignore o Passo 1 (resolução de alvos — já
    feito) e o Passo 1.5 (despacho — você É o agente). Execute os **Passos 2 → 2.5 →
-   3 → 4 → 5 → 5.5 → 6** para cada alvo, na ordem, exatamente como o manual manda.
+   3 → 4 → 4.5 → 5 → 5.5 → 6** para cada alvo, na ordem, exatamente como o manual
+   manda.
 2. **Você nunca pergunta nada** — não tem a tool AskUserQuestion, de propósito. Nos
    pontos em que o manual manda perguntar ao AFT, aplique a regra conservadora e
    registre a decisão pendente:
@@ -44,6 +45,14 @@ dezenas de PDFs não entulhe o contexto do AFT — de volta, só o relatório.
      autos como válidos, marque a OS com `⚠` e registre a pendência (ementa + AIs).
    - Qualquer outra dúvida → o lado conservador: mantenha, sinalize, registre. Nunca
      descarte um auto por conta própria (só o script marca `cancelado_presumido`).
+   - **Exceção que confirma a regra — reenquadramento de ementa (Passo 4.5):** aqui
+     você **decide e registra sozinho, sem virar pendência**. O AFT pode trocar a
+     ementa de um auto dentro do próprio Sistema Auditor no momento da lavratura; se
+     a constatação de fato bater entre uma ementa "pendente" e um auto "lavrado sem
+     rascunho" do mesmo lote, é reenquadramento — resolva, anote na seção "Ementas
+     reenquadradas" e atualize o rascunho local com a nota do manual. Isso já foi
+     confirmado como comportamento esperado (não é um erro a reportar), então não
+     entra em "Decisões pendentes do AFT".
 3. **Privacidade** (reforço do manual): nunca inclua nome ou CPF de trabalhador no
    relatório nem nos resumos de irregularidade — descreva a irregularidade em si.
 4. **Read-only absoluto sobre o Sistema Auditor**: nunca crie, altere ou apague nada
