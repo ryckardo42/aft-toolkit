@@ -22,8 +22,10 @@ Modos:
                                      SEM_MARCADOR
                                      EM_DIA v<N>
                                      DESATUALIZADO instalada=v<X> template=v<Y>
+                                     DIVERGENTE v<N>   (mesma versao, conteudo diferente)
   --aplicar <template> <alvo>      substitui so o bloco marcado (backup antes).
-                                     So age se o alvo ja tiver marcador e estiver velho.
+                                     So age se o alvo ja tiver marcador e estiver velho
+                                     ou divergente do template.
   --adotar-substituir <template> <alvo>   troca o alvo INTEIRO pelo bloco marcado.
   --adotar-acrescentar <template> <alvo>  acrescenta o bloco marcado ao fim do alvo.
 
@@ -98,15 +100,20 @@ def bloco_do_template(template_path):
 
 
 def cmd_status(template_path, alvo_path):
-    ver_t, _ = bloco_do_template(template_path)
+    ver_t, bloco_t = bloco_do_template(template_path)
     if not os.path.isfile(alvo_path):
         print("SEM_ARQUIVO")
         return
-    ver_a, _ = extrair_bloco(ler(alvo_path))
+    ver_a, bloco_a = extrair_bloco(ler(alvo_path))
     if ver_a is None:
         print("SEM_MARCADOR")
     elif ver_t > ver_a:
         print(f"DESATUALIZADO instalada=v{ver_a} template=v{ver_t}")
+    elif ver_t == ver_a and bloco_a != bloco_t:
+        # mesma versao, conteudo diferente: template editado sem bump, ou alguem
+        # mexeu dentro dos marcadores do arquivo instalado. Comparar so o numero
+        # deixaria a diferenca passar para sempre.
+        print(f"DIVERGENTE v{ver_a}")
     else:
         print(f"EM_DIA v{ver_a}")
 
@@ -117,17 +124,20 @@ def cmd_aplicar(template_path, alvo_path):
         print("SEM_ARQUIVO")
         return
     alvo_txt = ler(alvo_path)
-    ver_a, _ = extrair_bloco(alvo_txt)
+    ver_a, bloco_a = extrair_bloco(alvo_txt)
     if ver_a is None:
         print("SEM_MARCADOR")  # nao mexe: sem marcador nao da para isolar o bloco
         return
-    if ver_t <= ver_a:
+    if ver_t < ver_a or (ver_t == ver_a and bloco_a == bloco_t):
         print(f"EM_DIA v{ver_a}")
         return
     backup(alvo_path)
     novo = BLOCO_RE.sub(lambda _m: bloco_t, alvo_txt, count=1)
     gravar(alvo_path, novo)
-    print(f"ATUALIZADO v{ver_a} v{ver_t}")
+    if ver_t == ver_a:
+        print(f"RESSINCRONIZADO v{ver_a}")
+    else:
+        print(f"ATUALIZADO v{ver_a} v{ver_t}")
 
 
 def cmd_adotar_substituir(template_path, alvo_path):

@@ -695,14 +695,18 @@ else:
 # 13. Perfil do auditor (CLAUDE.md) em dia? -----------------------------------
 # O perfil instalado carrega um marcador com versao (AFT-TOOLKIT-PERFIL:INICIO vN).
 # O /aft-atualizar (Passo 2e) atualiza sozinho quando o template avanca.
-_re_marc = _re2.compile(r"AFT-TOOLKIT-PERFIL:INICIO\s+v(\d+)")
+_re_marc = _re2.compile(
+    r"<!--\s*AFT-TOOLKIT-PERFIL:INICIO\s+v(\d+).*?AFT-TOOLKIT-PERFIL:FIM\s*-->",
+    _re2.DOTALL)
 _tpl = SKILLS_DIR / "config" / "CLAUDE-aft.md"
 _alvo = HOME / ".claude" / "CLAUDE.md"
 _v_tpl = None
+_bloco_tpl = None
 if _tpl.is_file():
     try:
         _m = _re_marc.search(_tpl.read_text(encoding="utf-8"))
         _v_tpl = int(_m.group(1)) if _m else None
+        _bloco_tpl = _m.group(0) if _m else None
     except OSError:
         pass
 
@@ -730,6 +734,12 @@ else:
             "disponivel)",
             "Rode 'Atualize o AFT Toolkit' (/aft-atualizar) - a atualizacao do "
             "perfil e automatica e preserva o que voce escreveu por fora.")
+    elif int(_m.group(1)) == _v_tpl and _m.group(0) != _bloco_tpl:
+        add("Perfil do auditor - versao", "aviso",
+            f"perfil divergente do toolkit (mesma versao v{_v_tpl}, conteudo "
+            "diferente)",
+            "Rode 'Atualize o AFT Toolkit' (/aft-atualizar) - ele ressincroniza "
+            "o bloco do toolkit e preserva o que voce escreveu por fora.")
     else:
         add("Perfil do auditor - versao", "ok",
             f"perfil em dia (v{_m.group(1)})")
