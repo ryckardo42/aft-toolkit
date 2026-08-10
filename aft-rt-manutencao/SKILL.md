@@ -205,9 +205,10 @@ python3 ~/.claude/skills/aft-rt-manutencao/scripts/montar_rt_manutencao.py spec.
   subtítulo 2.1/2.2); `**negrito**` é suportado
 - `cidade_data` / `nome_aft`: do contexto ou `aft-config.md`
 
-O script valida o XML, avisa se sobrar placeholder e faz backup `.bak` se o arquivo já
-existir. Se acusar que o template mudou (contagem de blocos), avise o usuário em vez de
-forçar.
+O script localiza o cabeçalho, o bloco fixo final e a linha de cidade/data **pelo texto**
+do template (não por posição), valida o XML, recusa gerar se sobrar algum placeholder
+`{{...}}` e faz backup `.bak` se o arquivo já existir. Se acusar que uma âncora não foi
+encontrada, o template mudou de verdade: avise o usuário em vez de forçar.
 
 ### Etapa 8 — Encerrar
 

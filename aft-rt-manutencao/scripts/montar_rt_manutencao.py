@@ -3,13 +3,16 @@
 
 Mantém cabeçalho, rodapé, estilos e o bloco fixo final do template (DO PEDIDO DE
 SUSPENSÃO + instruções do SEI + assinatura) e substitui o miolo pelas seções da
-manutenção. Uso:
+manutenção. Cabeçalho, bloco fixo final e linha de cidade/data são localizados no
+template POR TEXTO (as âncoras "RELATÓRIO TÉCNICO", "CNPJ:", "DO PEDIDO DE
+SUSPENSÃO", "{{cidade}}"), nunca por posição fixa: o template ganha e perde blocos
+a cada revisão. Uso:
 
     python3 montar_rt_manutencao.py spec.json
 
 O spec.json (UTF-8):
 {
-  "template": "/caminho/para/template.docx",
+  "template": "~/.claude/skills/aft-rt-rgi/template.docx",
   "output":   "/caminho/para/RT_Manutencao.docx",
   "titulo_linha2": "TERMO DE MANUTENÇÃO DE EMBARGO Nº 3.089.823-4",
   "titulo_linha3": "(Ref. ao Termo de Embargo Nº 1.087.867-0)",   // opcional
@@ -109,6 +112,48 @@ def blank():
             f'<w:ind w:left="112" w:right="829"/><w:rPr>{RPR}</w:rPr></w:pPr></w:p>')
 
 
+def texto(bloco):
+    """Texto visível de um bloco do template (os runs concatenados)."""
+    return "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", bloco)).strip()
+
+
+def achar(blocks, condicao, descricao, inicio=0):
+    """Índice do primeiro bloco cujo texto satisfaz a condição, ancorado por TEXTO.
+
+    Nunca por posição fixa: o template.docx do aft-rt-rgi ganha e perde blocos a
+    cada revisão, e índices fixos quebram o script inteiro (ver NOVIDADES 10/08/2026).
+    """
+    for i in range(inicio, len(blocks)):
+        if condicao(texto(blocks[i])):
+            return i
+    sys.exit(f"âncora não encontrada no template.docx: {descricao} — o template do "
+             f"aft-rt-rgi mudou; ajuste o script")
+
+
+def escrever_texto(bloco, novo):
+    """Reescreve o texto de um bloco preservando sua formatação.
+
+    O Word fragmenta um placeholder em vários runs (`{{`, `cnpj`, `}}`), então
+    substituição run a run não funciona: joga-se o texto inteiro no primeiro run
+    e esvaziam-se os demais, que herdam a mesma formatação.
+    """
+    restante = [novo]
+
+    def rep(_m):
+        return f'<w:t xml:space="preserve">{restante.pop(0) if restante else ""}</w:t>'
+
+    return re.sub(r"<w:t[^>]*>[^<]*</w:t>", rep, bloco)
+
+
+def preencher(bloco, valores):
+    """Troca os placeholders {{chave}} do bloco pelos valores do spec."""
+    atual = "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", bloco))
+    novo = atual
+    for chave, valor in valores.items():
+        novo = novo.replace("{{%s}}" % chave, esc(valor))
+    return bloco if novo == atual else escrever_texto(bloco, novo)
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit("uso: montar_rt_manutencao.py spec.json")
@@ -122,30 +167,33 @@ def main():
     body_m = re.search(r"<w:body>(.*)</w:body>", xml, re.S)
     body = body_m.group(1)
     blocks = re.findall(r"<w:p [^>]*>.*?</w:p>|<w:p/>|<w:tbl>.*?</w:tbl>", body, re.S)
-    assert len(blocks) == 134, (
-        f"template com {len(blocks)} blocos (esperado 134) — o template.docx mudou; ajuste o script")
-    tail_extra = body[body.rfind(blocks[-1]) + len(blocks[-1]):]
+    tail_extra = body[body.rfind(blocks[-1]) + len(blocks[-1]):]  # sectPr do template
 
-    # cabeçalho da 1ª página: bloco 0 (vazio) + 1 (RELATÓRIO TÉCNICO) mantidos;
-    # bloco 2 (TERMO DE INTERDIÇÃO Nº XXXXX) substituído pelas linhas do título da manutenção
-    head = blocks[0:2]
+    # --- cabeçalho da 1ª página (âncoras por texto, nunca por posição) ---
+    # tudo até a linha "RELATÓRIO TÉCNICO" (inclusive) vem do template;
+    # a linha seguinte (TERMO DE INTERDIÇÃO Nº {{numero_termo}}) dá lugar ao
+    # título da manutenção; dela até a linha do CNPJ o template volta a mandar.
+    i_rt = achar(blocks, lambda t: t == "RELATÓRIO TÉCNICO", "linha 'RELATÓRIO TÉCNICO'")
+    i_termo = achar(blocks, lambda t: "TERMO DE" in t, "linha do número do termo", i_rt + 1)
+    i_emp = achar(blocks, lambda t: t.startswith("EMPREGADOR:"), "linha 'EMPREGADOR:'", i_termo + 1)
+    i_cnpj = achar(blocks, lambda t: t.startswith("CNPJ:"), "linha 'CNPJ:'", i_emp + 1)
+
+    head = blocks[: i_rt + 1]
     head.append(para_titulo(spec["titulo_linha2"]))
     if spec.get("titulo_linha3"):
         head.append(para_titulo(spec["titulo_linha3"]))
-    head += blocks[3:9]  # em branco + EMPREGADOR + CNPJ + espaçamento
+    valores = {"empregador": spec["empregador"], "cnpj": spec["cnpj"]}
+    head += [preencher(b, valores) for b in blocks[i_termo + 1: i_cnpj + 1]]
 
-    # rodapé fixo do template: DO PEDIDO DE SUSPENSÃO + SEI + cidade/data + assinatura
-    foot = blocks[97:134]
+    # --- bloco fixo final do template: DO PEDIDO DE SUSPENSÃO + SEI + cidade/data + assinatura ---
+    i_ped = achar(blocks, lambda t: t.startswith("DO PEDIDO DE SUSPENSÃO"),
+                  "linha 'DO PEDIDO DE SUSPENSÃO...'", i_cnpj + 1)
+    foot = [preencher(b, {"auditor_fiscal": spec["nome_aft"]}) for b in blocks[i_ped:]]
 
-    # cidade/data (bloco 123 do template, fragmentado em runs) — refeito com run único
-    i_cd = 123 - 97
-    assert "XXXXX" in foot[i_cd] and "202" in foot[i_cd], "bloco cidade/data mudou de posição no template"
-    foot[i_cd] = (f'<w:p w14:paraId="{pid()}" w14:textId="77777777" w:rsidR="00BE1DD9" w:rsidRDefault="000171B9" w:rsidP="00A157A2">'
-                  '<w:pPr><w:pStyle w:val="Corpodetexto"/><w:tabs><w:tab w:val="left" w:pos="10377"/></w:tabs>'
-                  '<w:spacing w:before="1"/><w:ind w:right="-143"/><w:jc w:val="center"/>'
-                  '<w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr>'
-                  '<w:r><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>'
-                  f'<w:t xml:space="preserve">{esc(spec["cidade_data"])}</w:t></w:r></w:p>')
+    # a linha de cidade/data vem no template como "{{cidade}}-{{uf}}, {{data}}",
+    # mas o spec traz a linha inteira já montada
+    i_cd = achar(foot, lambda t: "{{cidade}}" in t, "linha de cidade/data '{{cidade}}-{{uf}}, {{data}}'")
+    foot[i_cd] = escrever_texto(foot[i_cd], esc(spec["cidade_data"]))
 
     # seções do miolo
     miolo = []
@@ -157,12 +205,12 @@ def main():
     new_body = "".join(head) + blank() + "".join(miolo) + blank() + blank() + "".join(foot) + tail_extra
     new_xml = xml[:body_m.start(1)] + new_body + xml[body_m.end(1):]
 
-    # placeholders remanescentes do template
-    new_xml = new_xml.replace("<w:t>XXXX</w:t>", f"<w:t>{esc(spec['empregador'])}</w:t>", 1)
-    new_xml = new_xml.replace("<w:t>XXXXX</w:t>", f"<w:t>{esc(spec['cnpj'])}</w:t>", 1)
-    new_xml = new_xml.replace("<w:t>XXXXXXXX</w:t>", f"<w:t>{esc(spec['nome_aft'])}</w:t>")
-
     parseString(new_xml)  # valida o XML antes de empacotar
+
+    # documento com efeito legal: nenhum placeholder do template pode sobrar
+    restante = re.findall(r"\{\{[^}]*\}\}", "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", new_body)))
+    if restante:
+        sys.exit(f"placeholders remanescentes no documento: {restante}")
 
     if os.path.exists(out_path):
         os.replace(out_path, out_path + ".bak")
@@ -171,11 +219,6 @@ def main():
         data = new_xml.encode("utf-8") if n == "word/document.xml" else zin.read(n)
         zout.writestr(n, data)
     zout.close()
-
-    # confere que não sobrou placeholder
-    restante = re.findall(r"X{4,}", " ".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", new_xml)))
-    if restante:
-        print(f"AVISO: placeholders remanescentes: {restante}")
     print(f"OK -> {out_path}")
 
 
