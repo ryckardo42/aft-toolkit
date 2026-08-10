@@ -17,7 +17,11 @@ DET pela extensão Chrome ("SisOS — Sync DET").
 Uso:
     python instalar_servidor_painel.py instalar <python_path> <pasta_os_ativas> [--porta N]
     python instalar_servidor_painel.py remover
+    python instalar_servidor_painel.py reiniciar
     python instalar_servidor_painel.py status
+
+`reiniciar` derruba o processo em execução e o sobe de novo — necessário após
+uma atualização do toolkit: o servidor só carrega o código novo ao reiniciar.
 
 Imprime um JSON no stdout: {"ok": bool, "sistema": "...", "detalhe": "...",
 "acao": "..."}. Nunca lança exceção não tratada.
@@ -38,6 +42,7 @@ except Exception:
     pass
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -106,6 +111,25 @@ def remover_macos() -> int:
     if plist.exists():
         plist.unlink()
     return resultado(True, "macOS", "Serviço do servidor removido.", "remover")
+
+
+def reiniciar_macos() -> int:
+    plist = plist_path()
+    if not plist.exists():
+        return resultado(True, "macOS",
+                         "Servidor não instalado como serviço — nada a reiniciar.", "reiniciar")
+    r = subprocess.run(["launchctl", "kickstart", "-k",
+                        f"gui/{os.getuid()}/{LABEL_LAUNCHD}"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:  # kickstart indisponível (macOS antigo): unload/load
+        subprocess.run(["launchctl", "unload", str(plist)], capture_output=True)
+        r = subprocess.run(["launchctl", "load", str(plist)], capture_output=True, text=True)
+        if r.returncode != 0:
+            return resultado(False, "macOS",
+                             f"Reinício falhou: {r.stderr.strip() or r.stdout.strip()}",
+                             "reiniciar")
+    return resultado(True, "macOS", "Servidor reiniciado — código atualizado em vigor.",
+                     "reiniciar")
 
 
 def status_macos() -> int:
@@ -188,6 +212,29 @@ def remover_windows() -> int:
     return resultado(True, "Windows", "Tarefa removida (se existia).", "remover")
 
 
+def reiniciar_windows() -> int:
+    r = subprocess.run(["schtasks", "/Query", "/TN", NOME_TAREFA], capture_output=True, text=True)
+    if r.returncode != 0:
+        return resultado(True, "Windows",
+                         "Servidor não instalado como tarefa — nada a reiniciar.", "reiniciar")
+    # Mesma sequência de derrubada do instalar_windows: parar a tarefa NÃO basta,
+    # o processo python antigo pode sobreviver segurando a porta.
+    script_ps = (
+        f"Stop-ScheduledTask -TaskName {_ps_aspas(NOME_TAREFA)} -ErrorAction SilentlyContinue; "
+        "Get-CimInstance Win32_Process -Filter \"Name like '%python%'\" | "
+        "Where-Object { $_.CommandLine -like '*servir_painel.py*' } | "
+        "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; "
+        "Start-Sleep -Milliseconds 700; "
+        f"Start-ScheduledTask -TaskName {_ps_aspas(NOME_TAREFA)}")
+    r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script_ps],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        return resultado(False, "Windows",
+                         f"Reinício falhou: {r.stderr.strip() or r.stdout.strip()}", "reiniciar")
+    return resultado(True, "Windows", "Servidor reiniciado — código atualizado em vigor.",
+                     "reiniciar")
+
+
 def status_windows() -> int:
     r = subprocess.run(["schtasks", "/Query", "/TN", NOME_TAREFA], capture_output=True, text=True)
     if r.returncode != 0:
@@ -199,7 +246,7 @@ def status_windows() -> int:
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("Uso: instalar_servidor_painel.py <instalar|remover|status> ...", file=sys.stderr)
+        print("Uso: instalar_servidor_painel.py <instalar|remover|reiniciar|status> ...", file=sys.stderr)
         return 2
     acao = sys.argv[1]
     sistema = "macOS" if sys.platform == "darwin" else ("Windows" if sys.platform.startswith("win") else "outro")
@@ -231,6 +278,9 @@ def main() -> int:
 
     if acao == "remover":
         return remover_macos() if sistema == "macOS" else remover_windows()
+
+    if acao == "reiniciar":
+        return reiniciar_macos() if sistema == "macOS" else reiniciar_windows()
 
     if acao == "status":
         return status_macos() if sistema == "macOS" else status_windows()

@@ -6,6 +6,34 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 10/08/2026
+<!-- commit: painel-subpastas-md-formatado -->
+
+**O painel agora enxerga os relatórios guardados em subpastas — e a leitura
+deles no navegador ficou mais bem formatada.**
+
+- **Relatórios de subpasta entram no painel.** Até agora, o cartão "Relatórios
+  da OS" só listava os `.md` da raiz da pasta da empresa. Os que as skills
+  salvam em subpasta ficavam invisíveis: os autos da interdição
+  (`interdicao-embargo/autos.md`, da `/aft-rt-rgi`), os relatórios de acidentes
+  e doenças (`Acidentes/`, da `/aft-relatorio-acidentes`) e o texto-fonte do
+  relatório final (`Relatórios de Fiscalização/`, da `/aft-relatorio`). Agora
+  todos aparecem no painel, identificados pelo caminho ("interdicao-embargo/
+  autos.md"), clicáveis e legíveis no navegador como os demais. Nada muda de
+  lugar no disco: o painel apenas passou a enxergar onde os arquivos já estavam.
+- **Leitura mais fiel ao documento.** O visualizador de relatórios do painel
+  passou a entender listas dentro de listas (antes achatava tudo num nível só),
+  links clicáveis, citações e blocos de código — além do que já fazia: títulos,
+  negrito, tabelas e as caixinhas de tarefa. Documento com aparência de
+  documento, inclusive para imprimir.
+- **O painel passa a se atualizar de verdade.** Descobrimos que o servidor do
+  painel continuava rodando a versão antiga mesmo depois de uma atualização —
+  ele só carrega o código novo quando reinicia (o que antes só acontecia no
+  próximo login). O `/aft-atualizar` agora reinicia o servidor sozinho sempre
+  que baixa novidade, então as melhorias passam a valer na hora.
+
+---
+
 ## 08/08/2026 (2)
 <!-- commit: relatorio-rename-nomes-ri -->
 

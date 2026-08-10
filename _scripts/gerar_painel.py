@@ -393,16 +393,21 @@ def parse_autos_lavrados_md(pasta: Path) -> dict:
 
 
 def listar_docs(pasta: Path) -> list[str]:
-    """Relatórios .md na raiz da pasta da OS (analise-preliminar-*.md,
-    autos-lavrados.md...), para o modal linkar na rota /doc/ do modo
-    interativo. Ficam de fora os .md que o modal já exibe por inteiro:
-    memory.md (o card é a ficha), inspecao-fisica.md (seção própria) e
-    email.md (cartão próprio, com botão de copiar)."""
+    """Relatórios .md da pasta da OS (analise-preliminar-*.md,
+    autos-lavrados.md...) — raiz e 1 nível de subpasta (interdicao-embargo/
+    autos.md, Acidentes/Relatorio-*.md), para o modal linkar na rota /doc/
+    do modo interativo. Ficam de fora os .md que o modal já exibe por
+    inteiro: memory.md (o card é a ficha), inspecao-fisica.md (seção
+    própria) e email.md (cartão próprio, com botão de copiar)."""
     try:
-        return sorted(p.name for p in pasta.glob("*.md")
-                      if p.is_file()
-                      and p.name not in ("memory.md", "inspecao-fisica.md",
-                                         "email.md"))
+        docs = [p.name for p in pasta.glob("*.md")
+                if p.is_file()
+                and p.name not in ("memory.md", "inspecao-fisica.md",
+                                   "email.md")]
+        docs += [f"{p.parent.name}/{p.name}" for p in pasta.glob("*/*.md")
+                 if p.is_file() and not p.parent.name.startswith(".")
+                 and not p.name.startswith(".")]
+        return sorted(docs)
     except OSError:
         return []
 
@@ -967,10 +972,14 @@ function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.valu
 // (renderização legível em outra aba); fora dele, texto simples.
 function urlDoc(o,d){return '/doc/'+encodeURIComponent(o.pasta)+'/'+encodeURIComponent(d)}
 function linkDocs(i,t){const o=DATA.os[i];let s=esc(t);
- if(!ATIVO||!o.pasta||!o.docs)return s;
- for(const d of o.docs){const e=esc(d);
-  s=s.split(e).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>')}
- return s}
+ if(!ATIVO||!o.pasta||!o.docs||!o.docs.length)return s;
+ // Passada única, nomes mais longos primeiro: "autos.md" não pode quebrar o
+ // link de "interdicao-embargo/autos.md" que o contém.
+ const nomes=[...o.docs].sort((a,b)=>b.length-a.length)
+  .map(d=>esc(d).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+ return s.replace(new RegExp(nomes.join('|'),'g'),m=>{
+  const d=o.docs.find(x=>esc(x)===m);
+  return '<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+m+'</a>'})}
 // ---- Dossiê da OS (tela de detalhe) ----------------------------------------
 // Estágio do andamento da OS: régua fixa de 5 marcos.
 const STAGES=['Aberta','Inspecionada','Em instrução','Autuada','Encerrada'];

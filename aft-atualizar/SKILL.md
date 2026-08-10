@@ -170,7 +170,16 @@ sai da máquina). Confira o estado no `aft-config.md`:
 grep -q 'servidor_painel: *"ligado"' "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/aft-config.md" && echo "ja_ligado" || echo "instalar"
 ```
 
-- **`ja_ligado`** → nada a fazer; siga para o Passo 2d.
+- **`ja_ligado`** → se o Passo 1 **baixou atualização** (a lista de commits não estava
+  vazia), reinicie o servidor para que ele carregue o código novo — um processo em
+  execução não enxerga arquivos atualizados até reiniciar:
+
+  ```bash
+  python ~/.claude/skills/_scripts/instalar_servidor_painel.py reiniciar
+  ```
+
+  (no Windows, com o `python_path` do `aft-config.md`). Sem atualização no Passo 1,
+  nada a fazer. Siga para o Passo 2d.
 - **`instalar`** → rode o Passo 7c do `/aft-setup` (mesmo script
   `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados) e
   grave `servidor_painel: "ligado"` no `aft-config.md` — se a chave já existir com outro
