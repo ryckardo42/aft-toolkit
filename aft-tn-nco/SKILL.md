@@ -8,7 +8,10 @@ description: >
   corrigir irregularidades de SST. Dispare com /aft-tn-nco, "cria a
   notificação para corrigir", "redige a TN de correção", "notifica a empresa
   para sanar as irregularidades", "monta a notificação dessas
-  irregularidades". Acione também PROATIVAMENTE logo após identificar
+  irregularidades", "notifica tudo o que foi autuado", "uma notificação para
+  cada auto lavrado". Puxa sozinha os autos já lavrados (/aft-autos-lavrados)
+  e oferece um checklist das ementas para o AFT escolher o que notificar.
+  Acione também PROATIVAMENTE logo após identificar
   irregularidade + NR/item + ementa. NÃO é o auto de infração (/aft-
   auditoria-geral → /aft-gera-ai).
 ---
@@ -53,15 +56,69 @@ Guarde: `PASTA_OS`, `EMPREGADOR`.
 
 ---
 
+## FASE 0.5 — Puxar os autos já lavrados (SEMPRE)
+
+Toda execução desta skill começa consultando o que **já foi autuado** naquela OS — o AFT não precisa ter rodado `/aft-autos-lavrados` antes. A ordem é da fonte mais barata para a mais cara; pare na primeira que responder:
+
+1. **Snapshot do dia.** Se existir `<PASTA_OS>/autos-lavrados.md` com a data de geração de **hoje** (linha `_Snapshot gerado em <YYYY-MM-DD>_`), leia-o e siga. Não rode o scan de novo.
+2. **Snapshot velho ou ausente → rode a varredura.** Invoque a tool `Agent` com `subagent_type: "aft-autos-lavrados"`, passando **só esta OS** (caminho absoluto da pasta + CNPJ/CPF, ou os 8 primeiros dígitos, conforme o Passo 1 daquela skill), o `python_path` do `aft-config.md` e o caminho do manual `~/.claude/skills/aft-autos-lavrados/SKILL.md`. Avise o AFT em uma linha ("conferindo no Sistema Auditor o que já foi lavrado…"). Ao voltar, leia o `autos-lavrados.md` gravado.
+   - Se o tipo de agente não existir, execute a `/aft-autos-lavrados` inline (o fallback previsto nela).
+3. **Sistema Auditor inalcançável** (pasta `PRO` não encontrada, volume do Parallels não montado, erro no scan) → **não trave a notificação**. Diga ao AFT, em uma frase, que não deu para conferir o Sistema Auditor agora e que a lista vem do `memory.md`; use as linhas `- [x]` de `## Autos lavrados` do `memory.md` como fonte dos autos.
+4. **Nenhum auto lavrado** (OS ainda não autuada, ou snapshot vazio) → diga isso em uma linha e siga direto para a FASE 1 pelas fontes normais (contexto da sessão / lista colada / pendências). É o caso da notificação preventiva, dupla visita e ME/EPP — perfeitamente normal.
+
+> **Por que sempre:** o pedido típico é "notifica tudo o que foi autuado". Sem este passo, a skill dependia de o AFT ter rodado `/aft-autos-lavrados` antes e acabava notificando de memória — com risco de deixar auto de fora ou notificar o que não foi lavrado. O que vale é o que está no Sistema Auditor.
+
+Guarde, de cada auto **válido** do snapshot: `numero_ai`, `ementa_num`, `ementa_descricao`, `constatação` e a base legal (NR/item), quando identificável. Autos das seções "Autos substituídos" e "Pendentes de transmissão" **não** entram no checklist (o primeiro foi cancelado; o segundo ainda não existe no mundo jurídico).
+
+### Autos vindos de interdição/embargo
+
+Marque como **origem interdição/embargo** o auto que:
+
+- tiver a ementa citada no Termo/RT dentro de `<PASTA_OS>/interdicao-embargo/` (leia os documentos de lá, se a pasta existir); ou
+- cuja constatação mencione máquina, equipamento, setor ou frente de serviço **interditado/embargado**.
+
+Esses autos entram no checklist **desmarcados por padrão**, e você explica ao AFT, antes de perguntar:
+
+> A correção das irregularidades que motivaram a interdição/embargo normalmente **não** segue por notificação NCO no DET: o rito é a empresa apresentar laudo/AR, que o AFT julga (`/aft-auditoria-AR-NR12`) para depois levantar a medida (`/aft-embargo-interdicao-levantamento`). Se a mesma exigência valer para **outras** máquinas ou setores não interditados, aí sim faz sentido notificar — nesse caso, redija a exigência mirando os equipamentos não abrangidos pela interdição, e não o objeto interditado.
+
+Quem decide é o AFT: se ele marcar o item, gere normalmente.
+
+---
+
 ## FASE 1 — Coletar as irregularidades a notificar
 
-A fonte é **contexto da sessão + lista colada** (a skill detecta):
+Junte, numa lista única de candidatas:
 
-1. **Encadeada / contexto da sessão:** se a sessão já contém irregularidades enquadradas (saída de `/aft-auditoria-geral`, `/aft-PGR-analise`, ou o `inspecao-fisica.md` da OS), reaproveite-as direto. Confirme com o AFT quais entram na notificação (ofereça marcar/desmarcar).
-2. **Colada:** se o AFT colou uma lista de irregularidades no prompt, use-a.
-3. **Standalone sem lista:** leia `## Pendências` e `## Inspeção física` do `memory.md` da OS (se existir) e liste candidatas; senão, peça ao AFT a lista.
+1. **Autos lavrados** (FASE 0.5) — um candidato por auto válido.
+2. **Contexto da sessão:** irregularidades já enquadradas na sessão (saída de `/aft-auditoria-geral`, `/aft-PGR-analise`, ou o `inspecao-fisica.md` da OS) que **ainda não viraram auto**.
+3. **Colada:** lista de irregularidades que o AFT colou no prompt.
+4. **`memory.md`:** `## Pendências` e `## Inspeção física`, quando as fontes acima não bastarem. Se nada disso existir, peça a lista ao AFT.
 
-Para **cada** irregularidade, você precisa de três coisas (capture o que faltar perguntando ao AFT):
+Elimine duplicatas pela ementa: se a irregularidade do contexto já tem auto lavrado, ela aparece **uma vez só**, como auto.
+
+### Checklist de seleção (obrigatório quando houver 2+ candidatas)
+
+Primeiro, mostre **a lista inteira numerada** na tela, para o AFT ver tudo de uma vez:
+
+```
+Candidatas a notificar — <EMPREGADOR>
+
+ #  Origem        Ementa      Irregularidade
+ 1  AI 23.227.251-4  001839-2   papeletas "ponto britânico"
+ 2  AI 23.284.209-4  312467-3   injetora sem proteção  ⚠ interdição
+ 3  auditoria        —          extintores sem sinalização (sem auto)
+```
+
+Depois, colete a seleção com `AskUserQuestion` em modo **`multiSelect: true`** — é o checklist na tela:
+
+- **No máximo 4 opções por pergunta e 4 perguntas por chamada** (limite da tool): agrupe as candidatas em blocos de 4 (`header`: "Autos 1-4", "Autos 5-8"…). Até 16 candidatas cabem em uma chamada; acima disso, faça rodadas sucessivas e avise quantos lotes vêm.
+- **`label`** = identificador curto (`AI 23.227.251-4` ou `Ementa 001839-2`); **`description`** = descrição da ementa + a constatação em meia linha, com o aviso `(interdição — ver rito próprio)` quando for o caso.
+- Itens de origem interdição/embargo vão sempre por último no bloco, com o aviso acima já apresentado no chat.
+- Se o AFT já disse no prompt o que quer ("faz para todos os autos", "só os de NR-12"), **não pergunte**: aplique e mostre a lista do que entrou.
+
+Só uma candidata → não monte checklist; confirme em uma frase.
+
+Para **cada** irregularidade selecionada, você precisa de três coisas (capture o que faltar perguntando ao AFT). Nas que vêm de auto lavrado, a **base legal** e a **ementa** já estão no snapshot — reaproveite-as e escreva só a exigência:
 
 | Campo | O que é | Exemplo |
 |---|---|---|
@@ -77,7 +134,9 @@ Para **cada** irregularidade, você precisa de três coisas (capture o que falta
 
 ## FASE 2 — Buscar a ementa (só quando existir)
 
-Para cada irregularidade, busque o **código da ementa** no formato `XXXXXX-X` (ex.: `312467-3`). A ementa é **opcional**: se não houver ementa correspondente (ex.: orientação ou exigência sem ementa específica), o item sai **sem** o `[...]` no final — não invente código.
+> **Pule esta fase nas irregularidades que vieram de auto lavrado** (FASE 0.5): a ementa é a que o Sistema Auditor registrou — use `ementa_num` como está, sem consultar o NotebookLM. Só as irregularidades **sem auto** passam pelas camadas abaixo.
+
+Para cada irregularidade sem auto, busque o **código da ementa** no formato `XXXXXX-X` (ex.: `312467-3`). A ementa é **opcional**: se não houver ementa correspondente (ex.: orientação ou exigência sem ementa específica), o item sai **sem** o `[...]` no final — não invente código.
 
 Estratégia em 3 camadas (mesma de `/aft-auditoria-geral`):
 
@@ -110,7 +169,7 @@ O texto tem **três partes fixas/variáveis**. Preserve acentuação (UTF-8).
 ### Introdução (FIXA — copie literalmente)
 
 ```
-Em conformidade com a legislação em vigor, especialmente o previsto na alínea X do art. 18 do Decreto 4552/2002 (Regulamento da Inspeção do Trabalho), fica a empresa NOTIFICADA a cumprir as exigências de Segurança e Medicina do Trabalho relacionadas nessa notificação:
+Em conformidade com a legislação em vigor, especialmente o previsto na alínea X do art. 18 do Decreto 4552/2002 (Regulamento da Inspeção do Trabalho), fica a empresa NOTIFICADA a cumprir para o cumprimento de obrigações e/ou a correção de irregularidades e adoção de medidas que eliminem os riscos para a saúde e segurança dos trabalhadores, nas instalações ou métodos de trabalho relacionadas nessa notificação:
 ```
 
 > ⚠️ **O "X" em "alínea X" está CORRETO e é intencional** — designa a décima alínea (alínea 10) do art. 18. **Nunca** substitua o "X" por uma letra, número arábico ou qualquer outro valor, e nunca "corrija" essa frase. Copie a introdução exatamente como está acima.
@@ -204,7 +263,9 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 
 ## Encadeamento
 
+- **Entrada automática:** esta skill sempre consulta antes a `/aft-autos-lavrados` (FASE 0.5) — o AFT não precisa rodá-la à mão.
 - **Origem natural:** logo após `/aft-auditoria-geral` ou `/aft-PGR-analise` identificarem irregularidades + ementas, ofereça rodar `/aft-tn-nco` para a empresa corrigir (especialmente em dupla visita / ME-EPP, onde a correção precede a autuação).
+- **Interdição/embargo:** para as irregularidades que motivaram a medida, o caminho é `/aft-auditoria-AR-NR12` (julgar o laudo/AR apresentado) e depois `/aft-embargo-interdicao-levantamento` (levantar) ou `/aft-embargo-interdicao-manutencao` (manter) — não a notificação NCO.
 - Depois de gerar, o AFT cola os blocos manualmente no DET (o toolkit não automatiza o preenchimento do DET).
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 
@@ -213,7 +274,10 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 ## Regras
 
 - **Nunca** altere o "X" de "alínea X do art. 18" nem reescreva a introdução/observações fixas — são texto canônico do AFT, copiados verbatim para o DET.
-- **Nunca** invente código de ementa, item de NR ou base legal. Ementa só entra quando confirmada (Fase 2); na dúvida, item sem `[...]`.
+- **Nunca** invente código de ementa, item de NR ou base legal. Ementa só entra quando confirmada (vinda do auto lavrado ou da Fase 2); na dúvida, item sem `[...]`.
+- **Nunca notifique auto que não existe:** só entram no checklist os autos **válidos** do snapshot. Substituídos (cancelados) e pendentes de transmissão ficam de fora.
+- **Nunca decida sozinho** incluir ou excluir irregularidade de interdição/embargo: apresente o rito próprio, deixe desmarcada e siga a escolha do AFT.
+- A consulta ao Sistema Auditor **não pode travar a notificação**: se falhar, avise em uma frase e siga pelo `memory.md`.
 - Redija cada item como **obrigação a cumprir** (verbo de ação no infinitivo), não como descrição da falha.
 - **Respeite o teto de 1000 caracteres** por campo do DET (cada item e o campo de observações). Conte e mostre a contagem na apresentação; se estourar, resolva com o AFT antes de entregar.
 - Encoding **UTF-8** em todo o pipeline.
