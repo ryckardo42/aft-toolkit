@@ -236,6 +236,12 @@ Aja conforme a **única linha** de saída:
   Mencione no resumo do Passo 4, em uma linha: *"Seu perfil de auditor foi atualizado
   (v\<X\> → v\<Y\>) — só o bloco do toolkit; o que você tinha escrito à parte ficou
   intacto."* (A versão nova do perfil vale a partir da **próxima** conversa.)
+- **`DIVERGENTE v<N>`** → mesma versão nos dois lados, mas o conteúdo do bloco difere (o
+  template mudou sem trocar de número, ou alguém editou dentro dos marcadores do arquivo
+  instalado). Trate como o caso acima: rode o mesmo `--aplicar`, **sem perguntar** (o
+  script faz backup e troca só o bloco marcado). No resumo do Passo 4: *"Seu perfil de
+  auditor foi ressincronizado com o do toolkit (v\<N\>) — só o bloco do toolkit; o que
+  você tinha escrito à parte ficou intacto."*
 - **`SEM_MARCADOR`** → é uma instalação **antiga**, feita antes dos marcadores. Aqui o
   toolkit não tem como distinguir o texto velho dele do que o AFT escreveu, então
   **ofereça UMA vez** (mesma escolha do Passo 5b do `/aft-setup`): *"Seu perfil de
