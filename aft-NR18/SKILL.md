@@ -7,8 +7,8 @@ description: >
   vivência", "andaime", "guarda-corpo", "periferia da laje", "elevador de
   obra", "serra circular", "ponta de vergalhão", "instalações elétricas
   temporárias", "rede de segurança" — e sempre que /aft-auditoria-geral ou
-  /aft-embargo-interdicao identificarem a NR-18. NÃO trata embargo/interdição (/aft-rt-
-  rgi) nem redige o auto inteiro (/aft-auditoria-geral).
+  /aft-embargo-interdicao identificarem a NR-18. NÃO trata embargo/interdição
+  (/aft-embargo-interdicao) nem redige o auto inteiro (/aft-auditoria-geral).
 ---
 
 # NR18 — Consultora especializada para irregularidades na indústria da construção
