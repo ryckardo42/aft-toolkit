@@ -1,22 +1,22 @@
 ---
-name: aft-levantamento-total
+name: aft-embargo-interdicao-levantamento
 model: sonnet
 description: >
   Use quando o AFT JÁ DECIDIU deferir a suspensão e quiser redigir o Relatório
   Técnico de LEVANTAMENTO TOTAL de interdição ou embargo — o RT que analisa o
   requerimento do empregador no SEI e conclui que as exigências foram cumpridas
-  e o risco grave e iminente foi afastado. Acione com "/aft-levantamento-total",
+  e o risco grave e iminente foi afastado. Acione com "/aft-embargo-interdicao-levantamento",
   "levantamento da interdição", "levantar a interdição", "levantar o embargo",
   "deferir a suspensão", "vou suspender a interdição", "RT de levantamento",
   "termo de levantamento", "a empresa cumpriu tudo e vou liberar". NÃO
-  confundir com /aft-rt-rgi (RT que fundamenta a interdição original), com
-  /aft-auditoria-AR-NR12 (julga o laudo apresentado) nem com /aft-rt-manutencao
+  confundir com /aft-embargo-interdicao (RT que fundamenta a interdição original), com
+  /aft-auditoria-AR-NR12 (julga o laudo apresentado) nem com /aft-embargo-interdicao-manutencao
   (nega a suspensão e mantém a medida). Encadeia após /aft-auditoria-AR-NR12
   com parecer favorável. Quem decide levantar é sempre o AFT.
-compatibility: macOS e Windows (Git Bash). Requer o template.docx da skill aft-rt-rgi instalada. Script em Python 3 (stdlib).
+compatibility: macOS e Windows (Git Bash). Requer o template.docx da skill aft-embargo-interdicao instalada. Script em Python 3 (stdlib).
 ---
 
-# aft-levantamento-total — RT de Levantamento Total de Interdição/Embargo
+# aft-embargo-interdicao-levantamento — RT de Levantamento Total de Interdição/Embargo
 **AFT Toolkit**
 
 > **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
@@ -50,10 +50,10 @@ Divisão de trabalho no ecossistema:
 
 | Skill | Papel |
 |---|---|
-| `/aft-rt-rgi` | RT que **fundamenta** a interdição/embargo original (+ autos derivados) |
+| `/aft-embargo-interdicao` | RT que **fundamenta** a interdição/embargo original (+ autos derivados) |
 | `/aft-auditoria-AR-NR12` | **julga o laudo/apreciação de riscos** apresentado pela empresa |
-| `/aft-rt-manutencao` | RT que **nega a suspensão e mantém** a medida |
-| `/aft-levantamento-total` (esta) | RT que **defere a suspensão e levanta** a medida por inteiro |
+| `/aft-embargo-interdicao-manutencao` | RT que **nega a suspensão e mantém** a medida |
+| `/aft-embargo-interdicao-levantamento` (esta) | RT que **defere a suspensão e levanta** a medida por inteiro |
 
 ---
 
@@ -67,7 +67,7 @@ empregador. Redirecione quando:
 
 - O AFT ainda quer **julgar o laudo/apreciação de riscos** juntado → rode antes a
   `/aft-auditoria-AR-NR12` e use o parecer como subsídio;
-- O AFT vai **negar** a suspensão → `/aft-rt-manutencao`;
+- O AFT vai **negar** a suspensão → `/aft-embargo-interdicao-manutencao`;
 - O levantamento seria **parcial** (levanta uns objetos, mantém outros) → fora do
   caso típico desta skill: avise o AFT e, se ele quiser seguir mesmo assim, adapte
   o título ("LEVANTAMENTO PARCIAL"), a seção 3 (só os objetos levantados) e a
@@ -183,16 +183,16 @@ Grave o `spec.json` **com a tool Write** (nunca digite acentos na linha de
 comando) e rode o script:
 
 ```bash
-python3 ~/.claude/skills/aft-levantamento-total/scripts/montar_rt_levantamento.py spec.json
+python3 ~/.claude/skills/aft-embargo-interdicao-levantamento/scripts/montar_rt_levantamento.py spec.json
 ```
 
-- `template`: `~/.claude/skills/aft-rt-rgi/template.docx` (instalado com a skill
-  aft-rt-rgi do toolkit; se não existir, instale-a primeiro). O script preserva o
+- `template`: `~/.claude/skills/aft-embargo-interdicao/template.docx` (instalado com a skill
+  aft-embargo-interdicao do toolkit; se não existir, instale-a primeiro). O script preserva o
   cabeçalho institucional (logos MTE/SIT), a fonte e os espaçamentos do template
   e **descarta** o bloco fixo "DO PEDIDO DE SUSPENSÃO" + instruções do SEI — com
   o levantamento total a medida se encerra e essas instruções perdem o objeto;
 - `output`: `<pasta-OS>/interdicao-embargo/RT_Levantamento_[TERMO].docx` — crie a
-  pasta se não existir (`mkdir -p`); é a mesma pasta canônica do `/aft-rt-rgi`;
+  pasta se não existir (`mkdir -p`); é a mesma pasta canônica do `/aft-embargo-interdicao`;
 - `rotulo_documento`: `CNPJ`, `CPF` ou `CAEPF`, conforme o termo original;
 - `secoes`: as 7 seções aprovadas (tipos: `p` parágrafo, `b` bullet, `q`
   citação, `h2` subtítulo, `m` linha sem recuo — use `m` na linha
@@ -213,7 +213,7 @@ ainda guarda um `.bak` automático do arquivo anterior.
 3. Lembre, quando fizer sentido: o **Termo de Levantamento oficial** é emitido
    pelo sistema federal — este RT é a peça técnica que o fundamenta;
 4. Esta skill **não gera autos**: os autos da interdição/embargo original já
-   foram lavrados pelo `/aft-rt-rgi`.
+   foram lavrados pelo `/aft-embargo-interdicao`.
 
 ---
 
@@ -240,15 +240,15 @@ ainda guarda um `.bak` automático do arquivo anterior.
 
 | Situação | Ação |
 |---|---|
-| Levantamento **parcial** | Fora do caso típico: avisar; se o AFT seguir, adaptar título, seção 3 e conclusão indicando o que permanece interditado — e sugerir `/aft-rt-manutencao` para formalizar a manutenção do restante |
+| Levantamento **parcial** | Fora do caso típico: avisar; se o AFT seguir, adaptar título, seção 3 e conclusão indicando o que permanece interditado — e sugerir `/aft-embargo-interdicao-manutencao` para formalizar a manutenção do restante |
 | Medida é **embargo** | Trocar interdição → embargo em todas as ocorrências (título, seções 1, 3 e 7, gênero de "LEVANTADO") |
 | Empregador pessoa física / produtor rural | `rotulo_documento`: `CPF` (ou `CAEPF`), com o número como no termo original |
 | Sem número próprio do Termo de Levantamento | Título sem o "Nº"; ou manter o marcador que o AFT indicar para preencher depois |
 | Laudo/apreciação de riscos precisa ser julgado | Rodar `/aft-auditoria-AR-NR12` antes; parecer favorável vira subsídio (citado em 1 linha no item 2, sem reabrir o mérito) |
-| AFT vai negar a suspensão | `/aft-rt-manutencao` |
+| AFT vai negar a suspensão | `/aft-embargo-interdicao-manutencao` |
 | Houve inspeção física E análise documental | Item 2 registra as duas datas; item 4 usa a variante "Após a nova inspeção física e a análise..." |
 | Termo/RT original não localizado | Pedir ao AFT — nunca inventar objeto, número ou datas |
-| Template do aft-rt-rgi ausente | Instalar a skill aft-rt-rgi primeiro (o template vem com ela) |
+| Template do aft-embargo-interdicao ausente | Instalar a skill aft-embargo-interdicao primeiro (o template vem com ela) |
 | `.docx` de saída aberto no Word | `checar_arquivo_aberto.py` acusa ABERTO → pedir para fechar e rodar de novo |
 | Script acusa "RELATÓRIO TÉCNICO não encontrado" | O template.docx mudou — avisar o usuário (é defeito do toolkit, não do AFT) em vez de forçar |
 | AFT quer destacar algo | Item 2 (fatos da análise/inspeção) ou item 7 (conclusão), a critério dele |

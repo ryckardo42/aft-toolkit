@@ -10,7 +10,7 @@ description: >
   pasta na OS ATIVAS", "importar uma auditoria antiga", "arruma a pasta da
   empresa X", "padroniza essa OS", "acabei de copiar os arquivos da
   fiscalização". Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
-  nada. NÃO cadastra OS do zero (/aft-nova-os) nem baixa do DET.
+  nada. NÃO cadastra OS do zero (/aft-nova-auditoria) nem baixa do DET.
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
@@ -228,7 +228,7 @@ Regras do plano:
 - **Interdição/embargo**: subpasta `interdicao-embargo/` — pasta **única por OS** (sem sufixo
   de data) onde vai TODO o material da medida: termo assinado, RT que a fundamenta, RT de
   manutenção, requerimento de suspensão e juntados do empregador, e os autos derivados
-  (`autos.md` + TXT do `/aft-gera-ai`). É a mesma pasta que o `/aft-rt-rgi` e o `/aft-rt-manutencao`
+  (`autos.md` + TXT do `/aft-gera-ai`). É a mesma pasta que o `/aft-embargo-interdicao` e o `/aft-embargo-interdicao-manutencao`
   escrevem. Se já existir uma pasta antiga `Autos TE-TI DD-MM/`, inclua no plano
   renomeá-la para `interdicao-embargo/` (ou mover o conteúdo dela para lá).
 - Fotos: subpasta `fotos/` (crie se estiverem soltas; renomeie `FOTO/` → `fotos/`).
@@ -242,7 +242,7 @@ Regras do plano:
 
 1. Para cada pasta do plano: renomeie a pasta (`mv`), depois mova/renomeie os arquivos.
 2. Crie (ou atualize, com backup antes) o `memory.md` no esquema padrão do toolkit (o
-   mesmo do `/aft-nova-os`):
+   mesmo do `/aft-nova-auditoria`):
 
 ```markdown
 ---
@@ -342,7 +342,7 @@ Próximos passos sugeridos: /analise-preliminar (respostas de DET) · /aft-det-6
 
 ## Encadeamento
 
-- Não substitui `/aft-nova-os` (cadastro do zero, sem documentos) — esta skill parte de
+- Não substitui `/aft-nova-auditoria` (cadastro do zero, sem documentos) — esta skill parte de
   documentos existentes.
 - A resposta do empregador organizada alimenta `/analise-preliminar`; a seção de autos
   do memory.md é preenchida/refinada pelo `/aft-autos-lavrados` (FASE 5, automático).

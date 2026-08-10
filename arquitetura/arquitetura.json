@@ -1,13 +1,13 @@
 {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-07-29",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 40 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "data": "2026-08-10",
+  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 45 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 40,
-    "scripts": 27,
+    "skills": 45,
+    "scripts": 35,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 29/07/2026"
+    "commit": "ver `git log -1` — atualizado em 10/08/2026"
   },
   "atores": [
     {
@@ -39,10 +39,10 @@
   "fluxo": [
     {
       "who": "/aft-preparacao-acao-fiscal",
-      "act": "Opcional, antes da visita: resolve/cria a OS (chama /aft-nova-os), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /aft-NAD ao final. Salva preparacao.md."
+      "act": "Opcional, antes da visita: resolve/cria a OS (chama /aft-nova-auditoria), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /aft-NAD ao final. Salva preparacao.md."
     },
     {
-      "who": "/aft-nova-os",
+      "who": "/aft-nova-auditoria",
       "act": "Cadastra a empresa, o CNPJ, o município e o 1º DET com prazo. Cria OS ATIVAS/<NOME> <CNPJ>/ e o memory.md no esquema padrão. Começo do fluxo (direto, ou chamado por /aft-preparacao-acao-fiscal)."
     },
     {
@@ -59,7 +59,7 @@
     },
     {
       "who": "/aft-auditoria-geral",
-      "act": "Enquadra os achados (relato de campo + Anotações da auditoria em aberto), identifica NR/ementa (via /aft-consulta ao NotebookLM) e redige os autos. Aciona consultoras /aft-NR12 e /aft-NR18; desvia para /aft-registro, /aft-rt-rgi (risco grave), /aft-PGR-analise, /aft-aet-auditoria ou /aft-analise-acidente. Gate de dupla visita (ME/EPP)."
+      "act": "Enquadra os achados (relato de campo + Anotações da auditoria em aberto), identifica NR/ementa (via /aft-consulta ao NotebookLM) e redige os autos. Aciona consultoras /aft-NR12 e /aft-NR18; desvia para /aft-informalidade, /aft-embargo-interdicao (risco grave), /aft-PGR-analise, /aft-aet-auditoria ou /aft-analise-acidente. Gate de dupla visita (ME/EPP)."
     },
     {
       "who": "/aft-revisa-auto",
@@ -131,7 +131,7 @@
           "tech": "notebooklm auth · NOTEBOOKLM_REFRESH_CMD · model: sonnet"
         },
         {
-          "nome": "/aft-nova-os",
+          "nome": "/aft-nova-auditoria",
           "role": "Cadastra uma auditoria (nome livre — razão social, fantasia ou o que o AFT preferir; CNPJ/CPF opcional, município, RI opcional com aviso de que sem ele o sync do DET não importa notificações desta OS, DET com prazo) — o começo do fluxo. Idempotente.",
           "tech": "cria memory.md · model: sonnet"
         },
@@ -162,8 +162,8 @@
       "skills": [
         {
           "nome": "/aft-preparacao-acao-fiscal",
-          "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-os), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Salva preparacao.md na pasta da OS.",
-          "tech": "chama /aft-nova-os · .depara_[CNPJ].json na raiz da OS · model: opus"
+          "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Salva preparacao.md na pasta da OS.",
+          "tech": "chama /aft-nova-auditoria · .depara_[CNPJ].json na raiz da OS · model: opus"
         },
         {
           "nome": "/aft-NAD",
@@ -192,7 +192,7 @@
           "tech": "orquestra consultoras · herda o modelo da sessão"
         },
         {
-          "nome": "/aft-registro",
+          "nome": "/aft-informalidade",
           "role": "Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) + exame admissional (NR-07).",
           "tech": "data de admissão dd/mm/aaaa · model: sonnet"
         },
@@ -209,7 +209,7 @@
         {
           "nome": "/aft-auditoria-AR-NR12",
           "role": "Julga o laudo de adequação à NR-12 / apreciação de riscos (ABNT NBR ISO 12100) apresentado pela empresa, em pedido de suspensão de interdição ou resposta a notificação. Checklist de 6 blocos (método de estimativa; HRN como priorização, não substituto; categoria de segurança S/F/P → B-1-2-3-4, sempre na saída; requisitos NR-12 dependentes da apreciação — redundância 12.4.14, IHM, rearme, monitoramento 12.5.2-e; PLH/ART/TRT com recusa ancorada em atividade × atribuição; interface de segurança relé/CLP) e entrega resumo + análise didática + parecer (APTO / APTO COM RESSALVAS / INSUFICIENTE). Saída numerada auditoria-X-AR-NR12.md por OS.",
-          "tech": "notebooklm NR-12 (opcional, fallback) · handoff p/ /aft-tn-nco e /aft-rt-manutencao · model: opus 1M"
+          "tech": "notebooklm NR-12 (opcional, fallback) · handoff p/ /aft-tn-nco e /aft-embargo-interdicao-manutencao · model: opus 1M"
         },
         {
           "nome": "/aft-det-630",
@@ -227,14 +227,19 @@
           "tech": "email.md acumulativo · cartão de e-mails no painel (só versão local) · model: haiku"
         },
         {
-          "nome": "/aft-rt-rgi",
+          "nome": "/aft-embargo-interdicao",
           "role": "Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).",
           "tech": "template.docx SRTE/GO · herda o modelo da sessão"
         },
         {
-          "nome": "/aft-rt-manutencao",
+          "nome": "/aft-embargo-interdicao-manutencao",
           "role": "Relatório Técnico de Manutenção de Interdição/Embargo em .docx: analisa o requerimento de suspensão do empregador (documentos solicitados × apresentados, cumprimento das medidas de proteção, resultado da inspeção física se houve) e conclui pela manutenção da medida quando o único ou todos os objetos são mantidos. NUNCA deduz os argumentos do auditor — pergunta. Estrutura: 1) OBJETIVO, 2) DA ANÁLISE DOS DOCUMENTOS SOLICITADOS E APRESENTADOS E DO CUMPRIMENTO DAS MEDIDAS, 3) CONCLUSÃO (texto padrão de manutenção + observação SEI), 4) REQUISITOS PARA NOVO REQUERIMENTO (opcional). Reaproveita o parecer da /aft-auditoria-AR-NR12 como núcleo da seção 2.",
-          "tech": "montar_rt_manutencao.py (reusa o cabeçalho do template.docx do /aft-rt-rgi; stdlib, roda no Git Bash) · model: opus 1M"
+          "tech": "montar_rt_manutencao.py (reusa o cabeçalho do template.docx do /aft-embargo-interdicao; stdlib, roda no Git Bash) · model: opus 1M"
+        },
+        {
+          "nome": "/aft-embargo-interdicao-levantamento",
+          "role": "Relatório Técnico de LEVANTAMENTO TOTAL de interdição/embargo em .docx — o oposto da manutenção: analisa o requerimento de suspensão no SEI, conclui que as exigências foram cumpridas e que o risco grave e iminente foi afastado, e levanta a medida por inteiro. Encadeia depois da /aft-auditoria-AR-NR12 com parecer favorável. Quem decide levantar é sempre o AFT.",
+          "tech": "montar_rt_levantamento.py (reusa o cabeçalho do template.docx do /aft-embargo-interdicao, localizado por texto e não por posição fixa; stdlib) · model: sonnet"
         },
         {
           "nome": "/aft-analise-acidente",
@@ -276,6 +281,11 @@
           "nome": "/aft-cipa-nr05-dimensionamento",
           "role": "Dimensiona a CIPA (Quadro I da NR-05) a partir do grau de risco e do nº de empregados. Devolve os dois níveis — quantitativo por bancada (efetivos/suplentes de cada representação) e total paritário (dobro: eleitos + designados) —, com a regra de grupos de 2.500 acima de 10.000, e orienta qual número comparar com cada documento na verificação fiscal.",
           "tech": "scripts/dimensionar_cipa.py (Quadro I) · herda o modelo da sessão"
+        },
+        {
+          "nome": "/aft-nr24-dimensionamento",
+          "role": "Dimensiona as instalações da NR-24 (bacias sanitárias, mictórios, lavatórios, chuveiros, área de vestiário e armários, bebedouros, local de refeições, alojamento) a partir do número de homens e mulheres — ou direto da Relação de Vínculos Ativos do SFIT. Cobre também as áreas de vivência de canteiro de obras e frente de trabalho pela NR-18 (item 18.5), que prevalece na construção. O cálculo nunca é feito de cabeça: sai do script determinístico.",
+          "tech": "dimensionar_nr24.py + references/nr24_parametros.md · model: sonnet"
         }
       ]
     },
@@ -325,9 +335,19 @@
           "tech": "scan_autos.py (autodetecta pasta PRO no Windows e no Mac+Parallels via /Volumes/*) · pypdf/pdftotext · model: sonnet"
         },
         {
+          "nome": "/aft-autos-pdf-reunidos",
+          "role": "Reúne os PDFs dos autos já transmitidos de uma empresa num único PDF, com os anexos de cada auto logo depois dele — o dossiê para juntar ao processo. Oferece modo Completo (anexos inteiros) ou Econômico (10 páginas por anexo). Read-only sobre o Sistema Auditor; o PDF final vai para a pasta da OS.",
+          "tech": "reune_autos_pdf.py (pypdf) · allowed-tools sem rede · model: sonnet"
+        },
+        {
           "nome": "/aft-relatorio",
           "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia·MPT.",
           "tech": "lê memory.md, autos-lavrados.md e interdicao-embargo/ · gera .docx · model: sonnet"
+        },
+        {
+          "nome": "/aft-relatorio-acidentes",
+          "role": "Levanta o histórico de CATs de um CNPJ (lesão, parte do corpo, CID, agente causador, óbitos) por dois caminhos: CSV do Portal AFT anexado, ou varredura da base estadual de CATs (uma planilha .xlsx por ano). No modo --doencas lista as CATs de doença ocupacional e caça as cadastradas como acidente típico cujo CID sugere doença mascarada. Levanta o histórico; a análise de mérito de um acidente é da /aft-analise-acidente.",
+          "tech": "relatorio_acidentes.py (openpyxl) · planilhas em <PASTA_AFT>/CATs (sincronizar_cats.py) · .docx pelo /aft-modelo-docx · model: sonnet"
         },
         {
           "nome": "/aft-modelo-docx",
@@ -584,6 +604,10 @@
   ],
   "decisoes": [
     {
+      "topico": "Renomeação de 5 skills: auditoria, embargo/interdição e informalidade (10/08/2026)",
+      "txt": "Os nomes passaram a descrever a tarefa do auditor, não a sigla interna. (1) /aft-nova-os -> /aft-nova-auditoria: uma Ordem de Serviço pode gerar VÁRIOS Relatórios de Inspeção — num mesmo estabelecimento convivem dois, três ou mais CNPJs, e o AFT abre uma auditoria (um RI) para cada empresa; o que a skill cadastra é a auditoria, não a OS. A pasta de trabalho continua se chamando 'OS ATIVAS'/'OS ARQUIVADAS' (nada foi movido no disco) e o front-matter ri: do memory.md segue sendo o identificador da auditoria. (2) /aft-rt-rgi -> /aft-embargo-interdicao, /aft-rt-manutencao -> /aft-embargo-interdicao-manutencao e /aft-levantamento-total -> /aft-embargo-interdicao-levantamento: 'RGI' só é legível para quem já conhece a sigla, e o prefixo comum faz as três aparecerem juntas ao digitar /aft-embargo. (3) /aft-registro -> /aft-informalidade, que é o tema real da skill (falta de registro, CTPS e exame admissional). Renomeação de pastas + referências (git mv, sem tocar no conteúdo das skills): o template.docx do RT foi junto com a pasta e os três montadores apontam para o novo caminho. O NOVIDADES.md guarda a tabela de-para; entradas antigas do changelog mantêm os nomes da época, de propósito. O perfil do auditor (config/CLAUDE-aft.md) foi para v13 — é o que leva os nomes novos às máquinas já instaladas."
+    },
+    {
       "topico": "Relação de autos é .docx, sem PDF",
       "txt": "A Relação de autos lavrados sai só em .docx (29/07/2026). A conversão automática para PDF foi retirada junto com o _scripts/docx_para_pdf.py, que era seu único consumidor. Motivo: o documento que vai ao processo já é o .docx, então o PDF nunca foi exigência — era conveniência. Em troca, ele obrigava a existir LibreOffice ou automação COM do Word, e o /aft-doctor passou a acusar 'nem LibreOffice nem Word encontrados' em máquina Windows COM Word instalado: a checagem olhava uma única chave de registro (App Paths\\winword.exe) numa única visão de 32/64 bits, então Python 64 bits + Office 32 bits dava falso negativo. Vários colegas reportaram o aviso. Em vez de endurecer a detecção (mais código para sustentar uma conversão dispensável), removeu-se a exigência inteira: a checagem saiu do /aft-doctor e quem quiser PDF usa Arquivo > Salvar como... > PDF no Word. Menos dependência de máquina, menos aviso assustando o AFT."
     },
@@ -601,15 +625,15 @@
     },
     {
       "topico": "Sem SISOS/Supabase",
-      "txt": "O toolkit é offline: os memory.md são o banco local e o /aft-painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /aft-nova-os."
+      "txt": "O toolkit é offline: os memory.md são o banco local e o /aft-painel é a camada de visão (SISOS-lite, só leitura). Cadastro pelo /aft-nova-auditoria."
     },
     {
       "topico": "Pasta de trabalho fixa — resolvida de verdade (OneDrive/idioma)",
-      "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /aft-nova-os, conferida e CRIADA se faltar pelo /aft-doctor, e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Até 21/07/2026 o caminho era um mkdir cru (~/Documents/AFT) hardcoded em 4 scripts — no Windows isso falha silenciosamente sempre que o OneDrive redireciona 'Documentos' (comum em backup de pastas) ou o Windows está em português ('Documentos', não 'Documents'): a pasta nascia órfã, o AFT nunca a achava pelo Explorer (caso real 22/07/2026). Corrigido com _scripts/pasta_aft.py: le a chave User Shell Folders\\\\Personal do registro do Windows (cobre OneDrive e idioma de uma vez), com fallback por variável OneDrive e por candidatos diretos; prioriza SEMPRE uma pasta AFT que já tenha dados (nunca orfanando instalação anterior); expõe diagnostico() e mover_para_canonico() (--mover) para quem já instalou no lugar errado migrar com consentimento, sem sobrescrever nada. gerar_painel.py, servir_painel.py e sessoes_os.py foram religados ao mesmo resolvedor."
+      "txt": "Documents/AFT/OS ATIVAS/ é o único lugar onde moram as pastas das empresas fiscalizadas — criada pelo /aft-setup (Passo 2), populada pelo /aft-nova-auditoria, conferida e CRIADA se faltar pelo /aft-doctor, e lida por todas as skills que tocam a pasta da OS. Ao lado, OS ARQUIVADAS/ recebe as fiscalizações encerradas. Até 21/07/2026 o caminho era um mkdir cru (~/Documents/AFT) hardcoded em 4 scripts — no Windows isso falha silenciosamente sempre que o OneDrive redireciona 'Documentos' (comum em backup de pastas) ou o Windows está em português ('Documentos', não 'Documents'): a pasta nascia órfã, o AFT nunca a achava pelo Explorer (caso real 22/07/2026). Corrigido com _scripts/pasta_aft.py: le a chave User Shell Folders\\\\Personal do registro do Windows (cobre OneDrive e idioma de uma vez), com fallback por variável OneDrive e por candidatos diretos; prioriza SEMPRE uma pasta AFT que já tenha dados (nunca orfanando instalação anterior); expõe diagnostico() e mover_para_canonico() (--mover) para quem já instalou no lugar errado migrar com consentimento, sem sobrescrever nada. gerar_painel.py, servir_painel.py e sessoes_os.py foram religados ao mesmo resolvedor."
     },
     {
       "topico": "Empacotamento único",
-      "txt": "Todo TXT é gerado no /aft-gera-ai; /aft-registro, /aft-PGR-analise, /aft-aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
+      "txt": "Todo TXT é gerado no /aft-gera-ai; /aft-informalidade, /aft-PGR-analise, /aft-aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
     },
     {
       "topico": "Latin-1 sem iconv",
@@ -645,19 +669,19 @@
     },
     {
       "topico": "Detecção determinística no /aft-painel",
-      "txt": "A identificação de notificações DET não cadastradas é do script (regex de código + 1ª página via pdfplumber, comparada ao memory.md) — o modelo (haiku) só relata o que o script achou e encaminha o cadastro ao /aft-nova-os. Heurística: o painel apresenta como 'confira e cadastre', nunca como fato."
+      "txt": "A identificação de notificações DET não cadastradas é do script (regex de código + 1ª página via pdfplumber, comparada ao memory.md) — o modelo (haiku) só relata o que o script achou e encaminha o cadastro ao /aft-nova-auditoria. Heurística: o painel apresenta como 'confira e cadastre', nunca como fato."
     },
     {
       "topico": "Bases distintas",
       "txt": "Nunca mexer nas skills pessoais do mantenedor (~/.claude/skills do Ricardo) ao trabalhar no toolkit; o toolkit é uma adaptação à parte."
     },
     {
-      "topico": "CNPJ/CPF opcional na /aft-nova-os, obrigatório só no /aft-gera-ai",
-      "txt": "A /aft-nova-os deixou de exigir CNPJ/CPF: o AFT nomeia a auditoria livremente (razão social, fantasia, com ou sem identificador). O CNPJ/CPF só se torna obrigatório no /aft-gera-ai (exigência do próprio Sistema Auditor para o TXT) — se a OS ainda não tiver, o gera-ai pergunta, grava no memory.md e RENOMEIA a pasta da OS prefixando o CNPJ na frente do nome original (mv, não recria). Reflexo no .depara: quando a tokenização de trabalhadores (preparacao-acao-fiscal) roda antes do CNPJ ser conhecido, o arquivo nasce como .depara.json (sem sufixo) e o gera-ai sabe procurar os dois nomes."
+      "topico": "CNPJ/CPF opcional na /aft-nova-auditoria, obrigatório só no /aft-gera-ai",
+      "txt": "A /aft-nova-auditoria deixou de exigir CNPJ/CPF: o AFT nomeia a auditoria livremente (razão social, fantasia, com ou sem identificador). O CNPJ/CPF só se torna obrigatório no /aft-gera-ai (exigência do próprio Sistema Auditor para o TXT) — se a OS ainda não tiver, o gera-ai pergunta, grava no memory.md e RENOMEIA a pasta da OS prefixando o CNPJ na frente do nome original (mv, não recria). Reflexo no .depara: quando a tokenização de trabalhadores (preparacao-acao-fiscal) roda antes do CNPJ ser conhecido, o arquivo nasce como .depara.json (sem sufixo) e o gera-ai sabe procurar os dois nomes."
     },
     {
       "topico": "autos-lavrados: Mac+Parallels e match por 8 dígitos",
-      "txt": "scan_autos.py passou a autodetectar a pasta PRO do Sistema Auditor também no Mac com Parallels (glob em /Volumes/*/SistemasAFT/Auditor/Docs/AutosDeInfracao/PRO, o disco C: da VM montado no Finder), além do padrão Windows e do 3º argumento manual. E aceita identificador de 8, 11 ou 14 dígitos (antes exigia 14, o que rejeitava CPF/CAEPF) — como toda pasta do Sistema Auditor termina com os 8 primeiros dígitos do CNPJ/CPF, esse prefixo basta para achar os autos. Reflexo da /aft-nova-os sem CNPJ: quando a OS não tem identificador, a skill pergunta os 8 dígitos ao AFT (modo OS única) ou pula a OS com aviso (modo lote)."
+      "txt": "scan_autos.py passou a autodetectar a pasta PRO do Sistema Auditor também no Mac com Parallels (glob em /Volumes/*/SistemasAFT/Auditor/Docs/AutosDeInfracao/PRO, o disco C: da VM montado no Finder), além do padrão Windows e do 3º argumento manual. E aceita identificador de 8, 11 ou 14 dígitos (antes exigia 14, o que rejeitava CPF/CAEPF) — como toda pasta do Sistema Auditor termina com os 8 primeiros dígitos do CNPJ/CPF, esse prefixo basta para achar os autos. Reflexo da /aft-nova-auditoria sem CNPJ: quando a OS não tem identificador, a skill pergunta os 8 dígitos ao AFT (modo OS única) ou pula a OS com aviso (modo lote)."
     },
     {
       "topico": "autos-lavrados: uma ementa = um auto válido (dedup por re-lavratura)",
@@ -693,7 +717,7 @@
     },
     {
       "topico": "Bug crítico corrigido: notificações de fiscalizações antigas vazavam para a OS errada",
-      "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro. ENDURECIDO em 22/07/2026 (caso real CONSORCIO SQ, RI alheio 319969819 importado mesmo com o filtro acima): a união com 'RIs já registrados no memory.md' foi removida — um RI registrado um dia (por engano, ou de uma varredura antiga) virava 'conhecido' para sempre e continuava puxando notificações irmãs. Regra atual: o campo ri: do front-matter é o ÚNICO identificador da auditoria (aceita mais de um RI, separados por vírgula, para o caso real de duas fiscalizações do mesmo CNPJ); nada é inferido de notificações já na ficha. Sem ri: preenchido, adota o da notificação mais recente e grava — daí em diante vale a regra estrita. Para reduzir esse atrito de origem, o /aft-nova-os passou a coletar o RI (opcional) já no cadastro, avisando que sem ele o sync automático não importa nada da OS."
+      "txt": "No primeiro teste real da extensão, o clique em Sincronizar importou 4 notificações numa OS, mas 3 eram de uma fiscalização de anos atrás, já concluída — a pesquisa no DET é por CNPJ do empregador, então devolve notificações de TODAS as fiscalizações já feitas naquele CNPJ, não só a atual. Investigação com os dados reais da API (campos ri, situacaoRi, dataEnvio) descartou duas hipóteses erradas: (a) filtrar por situacaoRi — várias OS legítimas em OS ATIVAS têm TODAS as notificações como FISC_CONCLUIDA_E_AFERIDA (a fiscalização encerrou, a pasta ainda não foi arquivada), e filtrar por isso apagaria dado real; (b) assumir 1 RI por OS de forma rígida — existe o caso real de uma OS que acompanha duas fiscalizações do mesmo CNPJ com RIs distintos (a ação fiscal normal e a investigação de um acidente, conduzida com outro AFT). Solução: filtro por RI, onde RIs conhecidos = ri: do front-matter ∪ RIs das notificações já registradas no memory.md (a união cobre o caso multi-RI); sem RI conhecido, adota o da notificação mais recente. Notificação de RI alheio nunca é descartada em silêncio — volta em ignoradas_detalhe e no toast da extensão ('↳ N de outra fiscalização'). As linhas contaminadas foram removidas do memory.md afetado (com backup) e o filtro foi validado por replay dos dados reais capturados (servidor rodado com AFT_DET_DEBUG + AFT_DET_DRYRUN antes de qualquer escrita). Armadilha descoberta no caminho: enquanto as linhas erradas estavam na ficha, elas faziam o RI antigo virar 'conhecido' — a contaminação se auto-perpetuava, então a limpeza tem de vir antes do filtro. ENDURECIDO em 22/07/2026 (caso real CONSORCIO SQ, RI alheio 319969819 importado mesmo com o filtro acima): a união com 'RIs já registrados no memory.md' foi removida — um RI registrado um dia (por engano, ou de uma varredura antiga) virava 'conhecido' para sempre e continuava puxando notificações irmãs. Regra atual: o campo ri: do front-matter é o ÚNICO identificador da auditoria (aceita mais de um RI, separados por vírgula, para o caso real de duas fiscalizações do mesmo CNPJ); nada é inferido de notificações já na ficha. Sem ri: preenchido, adota o da notificação mais recente e grava — daí em diante vale a regra estrita. Para reduzir esse atrito de origem, o /aft-nova-auditoria passou a coletar o RI (opcional) já no cadastro, avisando que sem ele o sync automático não importa nada da OS."
     },
     {
       "topico": "Bug corrigido: sync de prazo corrompia linha com dois prazos na mesma notificação",
@@ -705,7 +729,7 @@
     },
     {
       "topico": "Testes reais de ponta a ponta do sync do DET (2 novas OS)",
-      "txt": "Para validar os dois bugs corrigidos, duas OS novas foram criadas como campo de prova real (não simulado): uma via /aft-organiza-os (testou o caminho 'RI já conhecido' e expôs o bug da linha com dois prazos) e outra via /aft-nova-os + /aft-inspecao-fisica, sem nenhuma notificação DET ainda (testou o caminho 'RI desconhecido, adota o da notificação mais recente'). De quebra, o /aft-organiza-os teve o model pinado trocado de opus para sonnet (mais barato, suficiente para a classificação/extração da skill)."
+      "txt": "Para validar os dois bugs corrigidos, duas OS novas foram criadas como campo de prova real (não simulado): uma via /aft-organiza-os (testou o caminho 'RI já conhecido' e expôs o bug da linha com dois prazos) e outra via /aft-nova-auditoria + /aft-inspecao-fisica, sem nenhuma notificação DET ainda (testou o caminho 'RI desconhecido, adota o da notificação mais recente'). De quebra, o /aft-organiza-os teve o model pinado trocado de opus para sonnet (mais barato, suficiente para a classificação/extração da skill)."
     },
     {
       "topico": "Subtítulos dos autos em algarismos romanos (I -, II -, III -)",
@@ -721,7 +745,7 @@
     },
     {
       "topico": "Pasta única interdicao-embargo/ por OS",
-      "txt": "Toda a documentação de interdição/embargo de uma auditoria mora numa pasta única 'interdicao-embargo/' (sem sufixo de data): o termo assinado, o RT que a fundamenta (/aft-rt-rgi) e seus autos derivados (autos.md + TXT do /aft-gera-ai + termo anexo), o RT de manutenção (/aft-rt-manutencao) e o requerimento de suspensão com os juntados do empregador. Substituiu a antiga 'Autos TE-TI DD-MM/'. O /aft-organiza-os classifica arquivos com 'interdicao'/'embargo'/'TE-TI' no nome (ou 'TERMO DE INTERDIÇÃO/EMBARGO/MANUTENÇÃO' na 1ª página) e os roteia para lá; /aft-rt-rgi e /aft-rt-manutencao escrevem direto nela. Com 2+ termos na mesma OS, sufixam-se os arquivos com o nº do termo (RT_Interdicao_<termo>.docx) para não sobrescrever."
+      "txt": "Toda a documentação de interdição/embargo de uma auditoria mora numa pasta única 'interdicao-embargo/' (sem sufixo de data): o termo assinado, o RT que a fundamenta (/aft-embargo-interdicao) e seus autos derivados (autos.md + TXT do /aft-gera-ai + termo anexo), o RT de manutenção (/aft-embargo-interdicao-manutencao) e o requerimento de suspensão com os juntados do empregador. Substituiu a antiga 'Autos TE-TI DD-MM/'. O /aft-organiza-os classifica arquivos com 'interdicao'/'embargo'/'TE-TI' no nome (ou 'TERMO DE INTERDIÇÃO/EMBARGO/MANUTENÇÃO' na 1ª página) e os roteia para lá; /aft-embargo-interdicao e /aft-embargo-interdicao-manutencao escrevem direto nela. Com 2+ termos na mesma OS, sufixam-se os arquivos com o nº do termo (RT_Interdicao_<termo>.docx) para não sobrescrever."
     },
     {
       "topico": "CLAUDE.md do AFT: bloco gerenciado com marcadores, atualizado sozinho",
@@ -765,7 +789,7 @@
     "As skills são apoio à redação e organização; o conteúdo jurídico de cada auto, termo e relatório é responsabilidade do AFT, que revisa tudo antes de transmitir.",
     "Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.",
     "/aft-autos-lavrados: a extração por pypdf precisa de calibração/verificação na 1ª execução contra os PDFs reais do Sistema Auditor.",
-    "O template do RT (aft-rt-rgi/template.docx) segue o modelo SRTE/GO — auditores de outras SRTEs ajustam o cabeçalho.",
+    "O template do RT (aft-embargo-interdicao/template.docx) segue o modelo SRTE/GO — auditores de outras SRTEs ajustam o cabeçalho.",
     "/aft-atualizar atualiza o notebooklm-py automaticamente, sem perguntar antes — é uma dependência de terceiro (teng-lin/notebooklm-py) fora do controle de versão do toolkit.",
     "As skills com model: claude-opus-4-8[1m] dependem do plano do AFT ter acesso ao modelo — o /aft-doctor testa e explica em linguagem simples se faltar.",
     "A detecção de notificações DET do /aft-painel é heurística (pode dar falso positivo) — o AFT confere antes de cadastrar.",

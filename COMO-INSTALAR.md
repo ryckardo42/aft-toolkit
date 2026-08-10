@@ -101,7 +101,7 @@ Com uma única aprovação sua, ele faz três coisas:
   daquela auditoria é tratado na sessão dela.
 
 Quem está começando do zero (sem fiscalizações em andamento) pula este passo e usa o
-`/aft-nova-os` a cada auditoria nova.
+`/aft-nova-auditoria` a cada auditoria nova.
 
 ---
 
@@ -122,14 +122,14 @@ Sem o NotebookLM, tudo continua funcionando — as skills pedem o código da eme
 | Situação | Digite |
 |---|---|
 | Importar suas fiscalizações em andamento (1º passo!) | copie as pastas para `OS ATIVAS` e digite `/aft-organiza-os` |
-| Cadastrar uma auditoria nova | `/aft-nova-os` |
+| Cadastrar uma auditoria nova | `/aft-nova-auditoria` |
 | Ver suas OS e prazos de DET | `/aft-painel` |
 | Voltou de uma inspeção | `/aft-inspecao-fisica` e narre o que viu |
 | Quer redigir os autos | `/aft-auditoria-geral` |
-| Trabalhador sem registro | `/aft-registro` |
+| Trabalhador sem registro | `/aft-informalidade` |
 | Analisar um PGR | `/aft-PGR-analise` |
 | Empresa não entregou documentos do DET | `/aft-det-630` |
-| Interdição/embargo | `/aft-rt-rgi` |
+| Interdição/embargo | `/aft-embargo-interdicao` |
 | Analisar AFD/AEJ/atestado de ponto | `/aft-jornada-analise` |
 | Gerar o TXT do Sistema Auditor | `/aft-gera-ai` |
 | Relatório final | `/aft-relatorio` |

@@ -111,7 +111,7 @@ a caracterização de doença ocupacional é decisão dele, caso a caso.
 `python_path` vem do `aft-config.md`. Identifique a pasta da empresa em
 `<OS_ATIVAS>` pelo CNPJ ou nome (confira o `memory.md`). A saída é
 `<OS_ATIVAS>/<EMPRESA>/Acidentes`. Se a empresa **não tem pasta de OS**, avise
-e pergunte: cadastrar com `/aft-nova-os` primeiro, ou gravar em outra pasta que
+e pergunte: cadastrar com `/aft-nova-auditoria` primeiro, ou gravar em outra pasta que
 o AFT indicar.
 
 **2. Escolher o modo.** CSV informado → Modo A. Só CNPJ → Modo B.

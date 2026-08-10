@@ -66,7 +66,7 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
    ```
    Extraia o que houver: razão social (título), `**CNPJ:**`, município, número de trabalhadores, datas. É um arquivo markdown simples — não exige schema.
 
-3. **Se `memory.md` não existir:** pergunte ao AFT os dados básicos (empregador, CNPJ, município) e crie um `memory.md` mínimo no esquema padrão do toolkit (front-matter `empregador`/`cnpj`/`municipio`/`status: em_andamento`; título `# RAZAO_SOCIAL`; `**CNPJ:**` formatado; e as seções `## Notificações DET`, `## Autos lavrados`, `## Anotações da auditoria`, `## Registro de atividades` — o mesmo formato que o `/aft-nova-os` cria e o `/aft-painel` lê). Se o AFT recusar, prossiga sem ele (a Fase 4 será pulada). Idealmente sugira rodar `/aft-nova-os` para abrir a OS antes.
+3. **Se `memory.md` não existir:** pergunte ao AFT os dados básicos (empregador, CNPJ, município) e crie um `memory.md` mínimo no esquema padrão do toolkit (front-matter `empregador`/`cnpj`/`municipio`/`status: em_andamento`; título `# RAZAO_SOCIAL`; `**CNPJ:**` formatado; e as seções `## Notificações DET`, `## Autos lavrados`, `## Anotações da auditoria`, `## Registro de atividades` — o mesmo formato que o `/aft-nova-auditoria` cria e o `/aft-painel` lê). Se o AFT recusar, prossiga sem ele (a Fase 4 será pulada). Idealmente sugira rodar `/aft-nova-auditoria` para abrir a OS antes.
 
 4. **Se a empresa não existir em OS ATIVAS:** pergunte se deseja criar a pasta. Padrão de nome: `<EMPREGADOR CAIXA ALTA> <CNPJ_SÓ_DÍGITOS>`.
 
@@ -101,22 +101,22 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
 
    Assim que carregar o relato, e **antes** de prosseguir ao passo 2, faça duas varreduras de palavras-chave no texto. Estes são os **primeiros** gatilhos da skill — roteiam o trabalho antes de qualquer redação.
 
-   **Gatilho A — Risco grave e iminente → `/aft-rt-rgi`**
+   **Gatilho A — Risco grave e iminente → `/aft-embargo-interdicao`**
 
    Varra o relato (case-insensitive) por: `GIR`, `RGI`, `interditar`, `interdição`, `embargar`, `embargo`, `RISCO GRAVE E IMINENTE`, `grave e iminente risco`. Se encontrar qualquer ocorrência:
    1. Marque `[RISCO_GRAVE = true]`.
-   2. Avise o AFT e **acione imediatamente** a skill `/aft-rt-rgi` (medida cautelar é urgente e **não** é bloqueada por dupla visita):
-      > *"⚠️ Detectei sinal de risco grave e iminente no relato (\"[trecho]\"). Vou acionar `/aft-rt-rgi` para o Relatório Técnico de Interdição/Embargo — os dados da OS já estão carregados."*
-   3. O `/aft-rt-rgi` redige o RT **e** os autos derivados das ementas de risco. Ao retornar, retome esta skill para as **demais** irregularidades (as que não são de risco grave) — não redija em duplicata os autos que o `/aft-rt-rgi` já produziu.
+   2. Avise o AFT e **acione imediatamente** a skill `/aft-embargo-interdicao` (medida cautelar é urgente e **não** é bloqueada por dupla visita):
+      > *"⚠️ Detectei sinal de risco grave e iminente no relato (\"[trecho]\"). Vou acionar `/aft-embargo-interdicao` para o Relatório Técnico de Interdição/Embargo — os dados da OS já estão carregados."*
+   3. O `/aft-embargo-interdicao` redige o RT **e** os autos derivados das ementas de risco. Ao retornar, retome esta skill para as **demais** irregularidades (as que não são de risco grave) — não redija em duplicata os autos que o `/aft-embargo-interdicao` já produziu.
 
-   **Gatilho B — Empregado sem aft-registro/CTPS → `/aft-registro`**
+   **Gatilho B — Empregado sem aft-informalidade/CTPS → `/aft-informalidade`**
 
    Varra o relato (case-insensitive) por sinais de informalidade: `sem registro`, `sem carteira`, `não registrado`, `informal`, `CTPS não assinada`, `sem eSocial`, `clandestino`, ou trabalhador presente sem vínculo formal. Se encontrar:
    1. Marque a(s) irregularidade(s) correspondente(s) como tipo `registro`. A falta de registro **nunca** é coberta por dupla visita — autuação obrigatória mesmo em ME/EPP.
-   2. Avise o AFT e **acione** a skill `/aft-registro` (autos art. 41 + art. 29), **em paralelo** ao fluxo normal desta skill para as demais irregularidades:
-      > *"👤 Detectei trabalhador sem registro no relato (\"[trecho]\"). Vou acionar `/aft-registro` para os autos art. 41 (registro) + art. 29 (CTPS), que seguem em paralelo às demais autuações."*
+   2. Avise o AFT e **acione** a skill `/aft-informalidade` (autos art. 41 + art. 29), **em paralelo** ao fluxo normal desta skill para as demais irregularidades:
+      > *"👤 Detectei trabalhador sem registro no relato (\"[trecho]\"). Vou acionar `/aft-informalidade` para os autos art. 41 (registro) + art. 29 (CTPS), que seguem em paralelo às demais autuações."*
 
-   > Os dois gatilhos podem disparar juntos. Trate cada irregularidade **uma única vez**: risco grave → `/aft-rt-rgi`; sem registro → `/aft-registro`; demais SST/CLT → fluxo normal (Fases 2–5).
+   > Os dois gatilhos podem disparar juntos. Trate cada irregularidade **uma única vez**: risco grave → `/aft-embargo-interdicao`; sem registro → `/aft-informalidade`; demais SST/CLT → fluxo normal (Fases 2–5).
 
 2. Extraia cada **irregularidade discreta** dos bullets do relato (ou da narrativa colada, no fallback). Cada irregularidade = um fato distinto que pode gerar um auto separado. Nem todo bullet é irregularidade: alguns são contexto da visita (abertura, preposto que acompanhou, setor inspecionado) — não gere auto deles, mas aproveite-os como contexto factual na redação (Fase 3).
 3. Apresente a lista numerada:
@@ -143,8 +143,8 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
 
    | Tipo de sinal | Irregularidade afetada | Ação |
    |---|---|---|
-   | Trabalhador sem registro (CPF/CTPS não assinada/sem eSocial) | Qualquer | Sempre autua via `/aft-registro` — dupla visita **nunca** protege |
-   | Risco grave e iminente (máquina sem proteção em operação, trabalho em altura sem EPC/EPI, etc.) | Qualquer | Autuação + RT de interdição via `/aft-rt-rgi` |
+   | Trabalhador sem registro (CPF/CTPS não assinada/sem eSocial) | Qualquer | Sempre autua via `/aft-informalidade` — dupla visita **nunca** protege |
+   | Risco grave e iminente (máquina sem proteção em operação, trabalho em altura sem EPC/EPI, etc.) | Qualquer | Autuação + RT de interdição via `/aft-embargo-interdicao` |
    | AFT menciona explicitamente quebra: *"não cumpriu a TN"*, *"não corrigiu"*, *"segunda visita"*, *"reincidência"*, *"já foi notificada"*, *"empresa se recusou a corrigir"*, *"fraudou"*, *"obstaculizou"* | Irregularidades relacionadas | Perguntar confirmação |
    | Nenhum sinal | Todas as SST/CLT restantes | ❌ Dupla visita ativa — listar para notificação, não autuar |
 
@@ -250,8 +250,8 @@ Antes de redigir qualquer auto, aplique o mapa `{dupla_visita_ativa, quebra}` de
 
 | `dupla_visita_ativa` | `quebra` | Tipo | Ação |
 |---|---|---|---|
-| qualquer | — | Trabalhador sem registro | ⚠️ Não redigir aqui → encaminhar `/aft-registro` na Fase 5 |
-| qualquer | — | Risco grave e iminente | Redigir auto normalmente + flag para `/aft-rt-rgi` |
+| qualquer | — | Trabalhador sem registro | ⚠️ Não redigir aqui → encaminhar `/aft-informalidade` na Fase 5 |
+| qualquer | — | Risco grave e iminente | Redigir auto normalmente + flag para `/aft-embargo-interdicao` |
 | `false` | — | SST/CLT geral | Redigir normalmente |
 | `true` | `true` | SST/CLT geral | Redigir normalmente (dupla visita quebrada pelo AFT) |
 | `true` | `false` | SST/CLT geral | ❌ Não redigir — ir para **Caminho alternativo** |
@@ -445,7 +445,7 @@ Esta fase só executa se existe um `memory.md` na pasta da OS (criado na Fase 0 
 
 3. **Se risco grave detectado, criar `## Interdições/Embargos`** (seção opcional):
    ```
-   - [DD/MM/AAAA] — Interdição [total/parcial] [objeto] (NR-XX) — RT pendente via /aft-rt-rgi
+   - [DD/MM/AAAA] — Interdição [total/parcial] [objeto] (NR-XX) — RT pendente via /aft-embargo-interdicao
    ```
 
 4. **Adicionar pendências em `## Pendências`** (criar se não existir):
@@ -458,7 +458,7 @@ Esta fase só executa se existe um `memory.md` na pasta da OS (criado na Fase 0 
    ```
    Se risco grave:
    ```
-   - [ ] Gerar RT para interdição [objeto] via /aft-rt-rgi
+   - [ ] Gerar RT para interdição [objeto] via /aft-embargo-interdicao
    ```
 
 5. **Fechar as anotações que viraram auto** — em `## Anotações da auditoria`, para cada anotação em aberto (`- [ ]`) que originou um auto (ou TN), marque `[x]` e anexe o desfecho, sem apagar o texto:
@@ -521,28 +521,28 @@ Próximos passos:
 
 ### Se risco grave detectado:
 
-> *Fallback.* O gatilho prioritário da Fase 1 já deve ter acionado `/aft-rt-rgi`. Use este bloco apenas se o risco grave só ficou evidente durante a redação (Fase 3) e ainda não foi encaminhado.
+> *Fallback.* O gatilho prioritário da Fase 1 já deve ter acionado `/aft-embargo-interdicao`. Use este bloco apenas se o risco grave só ficou evidente durante a redação (Fase 3) e ainda não foi encaminhado.
 
 ```
 ⚠️ RISCO GRAVE E IMINENTE detectado:
   - [descrição da situação] (NR-XX)
 
 Deseja gerar o Relatório Técnico de Interdição/Embargo agora?
-→ Execute /aft-rt-rgi
+→ Execute /aft-embargo-interdicao
 
 Dados da OS já estão carregados (empregador, CNPJ, irregularidades).
 ```
 
 > Risco grave e iminente não é bloqueado pela dupla visita — a interdição/embargo é medida cautelar, não sanção pecuniária.
 
-### Se empregado sem aft-registro/CTPS na narrativa:
+### Se empregado sem aft-informalidade/CTPS na narrativa:
 
-> *Fallback.* O gatilho prioritário da Fase 1 já deve ter acionado `/aft-registro`. Use este bloco apenas se a informalidade só apareceu mais tarde no fluxo.
+> *Fallback.* O gatilho prioritário da Fase 1 já deve ter acionado `/aft-informalidade`. Use este bloco apenas se a informalidade só apareceu mais tarde no fluxo.
 
 ```
 👤 Detectado empregado sem registro na narrativa.
 Para autos CLT art. 41 + art. 29:
-→ Execute /aft-registro
+→ Execute /aft-informalidade
 ```
 
 > A falta de registro **nunca** é coberta pela dupla visita — autuação é obrigatória mesmo em ME/EPP.

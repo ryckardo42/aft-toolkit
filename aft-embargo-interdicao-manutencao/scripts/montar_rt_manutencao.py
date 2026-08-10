@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monta o RT de Manutenção de Interdição/Embargo (.docx) a partir do template do aft-rt-rgi.
+"""Monta o RT de Manutenção de Interdição/Embargo (.docx) a partir do template do aft-embargo-interdicao.
 
 Mantém cabeçalho, rodapé, estilos e o bloco fixo final do template (DO PEDIDO DE
 SUSPENSÃO + instruções do SEI + assinatura) e substitui o miolo pelas seções da

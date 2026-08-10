@@ -207,4 +207,4 @@ entra na minuta.
   CPF ou razão social. Após registrar trabalhador no de-para da OS, refira-se a ele só pelos
   tokens `[[TRAB_NN]]`/`[[CPF_NN]]`.
 - Se o pedido for de lavratura/medida (auto, RT de interdição, notificação), **redirecione** para
-  a skill correta (`/aft-auditoria-geral`, `/aft-rt-rgi`, `/aft-tn-nco`) — esta skill só subsidia.
+  a skill correta (`/aft-auditoria-geral`, `/aft-embargo-interdicao`, `/aft-tn-nco`) — esta skill só subsidia.

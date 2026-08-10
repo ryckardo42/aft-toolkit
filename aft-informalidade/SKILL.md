@@ -1,18 +1,19 @@
 ---
-name: aft-registro
+name: aft-informalidade
 model: sonnet
 effort: medium
 description: >
   Use quando o AFT quiser lavrar auto de infração por falta de registro de
   trabalhador (art. 41 CLT) e/ou falta de anotação na CTPS (art. 29 CLT).
-  Acione com /aft-registro, "lavrar registro", "auto de registro", "falta de
-  registro", "trabalhador sem registro", "empregado informal", "sem carteira
+  Acione com /aft-informalidade, "informalidade", "lavrar registro", "auto
+  de registro", "falta de registro", "trabalhador sem registro",
+  "empregado informal", "sem carteira
   assinada", "sem registro no eSocial", "trabalhador clandestino",
   "empregado não registrado". Redige os autos no formato consumido pelo
   /aft-gera-ai.
 ---
 
-# registro — Autos de Infração: Falta de Registro (art. 41), CTPS (art. 29) e Exame Admissional (NR-07)
+# aft-informalidade — Autos de Infração: Falta de Registro (art. 41), CTPS (art. 29) e Exame Admissional (NR-07)
 **AFT Toolkit**
 
 > **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de

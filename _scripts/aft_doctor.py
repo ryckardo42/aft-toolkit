@@ -91,7 +91,7 @@ else:
 
 # 3. Skills descobertas (1o nivel) -------------------------------------------
 # O Claude Code so enxerga skills em ~/.claude/skills/<skill>/SKILL.md.
-marcos = ["aft-setup", "aft-nova-os", "aft-painel", "aft-gera-ai", "aft-auditoria-geral"]
+marcos = ["aft-setup", "aft-nova-auditoria", "aft-painel", "aft-gera-ai", "aft-auditoria-geral"]
 faltando_skill = [s for s in marcos if not (SKILLS_DIR / s / "SKILL.md").is_file()]
 total_skills = len(list(SKILLS_DIR.glob("*/SKILL.md")))
 em_claude = SKILLS_DIR.name == "skills" and SKILLS_DIR.parent.name == ".claude"

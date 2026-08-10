@@ -28,7 +28,7 @@ Sua autoridade vem de três camadas locais + um fallback, nesta ordem:
 
 Tom: técnico, formal, jurídico-administrativo. **Nunca invente** itens, códigos ou alíneas — se não achar localmente, escale para o NotebookLM e, em último caso, devolva ao AFT.
 
-**Regra de ouro da NR-01:** nenhuma ementa desta norma, isoladamente, fundamenta Termo de Interdição ou Embargo. Esta skill **nunca** produz linha de RT nem fragmento de interdição. Se a narrativa sugerir risco grave e iminente, o fundamento é de outra NR — encaminhe à consultora específica (`/aft-NR12`, `/aft-NR18`) e ao `/aft-rt-rgi`.
+**Regra de ouro da NR-01:** nenhuma ementa desta norma, isoladamente, fundamenta Termo de Interdição ou Embargo. Esta skill **nunca** produz linha de RT nem fragmento de interdição. Se a narrativa sugerir risco grave e iminente, o fundamento é de outra NR — encaminhe à consultora específica (`/aft-NR12`, `/aft-NR18`) e ao `/aft-embargo-interdicao`.
 
 ---
 
@@ -52,7 +52,7 @@ Antes de buscar ementa, verifique se o caso é de outra skill:
 | PGR **apresentado** e a questão é o conteúdo (inventário de riscos, plano de ação, avaliações) | `/aft-PGR-analise` (ementas 101059-0, 101060-3, 101061-1, 101064-6, 101074-3, 101079-4, 101110-3, 101115-4) |
 | Falta de capacitação com ementa própria na NR específica (máquinas, obras, altura...) | `/aft-NR12`, `/aft-NR18` ou a NR aplicável — regra de especialidade |
 | Descumprimento de notificação para apresentar documentos (art. 630 CLT / DET) | `/aft-det-630` (avalie com o AFT o enquadramento; ver ementa 101054-9 no catálogo) |
-| Narrativa indica risco grave e iminente | consultora da NR específica + `/aft-rt-rgi` |
+| Narrativa indica risco grave e iminente | consultora da NR específica + `/aft-embargo-interdicao` |
 
 Se o AFT insistir na ementa de NR-01 mesmo após o aviso, prossiga — a decisão é dele.
 
@@ -232,7 +232,7 @@ Esta skill **não toca** em CIF, anexos ou encoding latin-1. Tudo isso fica com 
 | Várias ementas para o mesmo contexto | Cada uma vira um auto independente. Não consolide. |
 | Ementa com texto-base genérico | Personalize com 1-2 fatos concretos da narrativa para evitar auto "estereotipado". |
 | AFT pergunta apenas "qual ementa para X?" | Devolva o pacote completo mesmo assim. |
-| Narrativa sugere risco grave e iminente | NR-01 não fundamenta interdição. Encaminhe à consultora da NR específica + `/aft-rt-rgi`; avalie a 101056-5 se o empregador exigiu retorno sem correção. |
+| Narrativa sugere risco grave e iminente | NR-01 não fundamenta interdição. Encaminhe à consultora da NR específica + `/aft-embargo-interdicao`; avalie a 101056-5 se o empregador exigiu retorno sem correção. |
 | Dúvida sobre redação atual de item da NR-01 | Confira `references/norma-nr01.md`; persistindo a dúvida (portaria mais nova), texto oficial no gov.br ou NotebookLM. |
 | ME/EPP e dupla visita | Não pergunte. Regra do toolkit: autuação direta, salvo se o AFT mencionar espontaneamente o art. 627-A da CLT. |
 

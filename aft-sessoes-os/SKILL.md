@@ -39,7 +39,7 @@ app do Claude é fechado, aplica o que estiver pendente: cria a sessão de quem 
 (título = empresa, pasta de trabalho = pasta da OS), coloca no grupo e grava o vínculo
 `sessao_claude:` no memory.md. **Na próxima abertura do app, as sessões estão lá.**
 
-O AFT não precisa fazer nada: criou OS nova (`/aft-nova-os`), organizou um lote
+O AFT não precisa fazer nada: criou OS nova (`/aft-nova-auditoria`), organizou um lote
 (`/aft-organiza-os`), copiou uma pasta à mão — o vigia cuida, no próximo ciclo natural de
 fechar/abrir o app.
 
