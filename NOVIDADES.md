@@ -27,11 +27,11 @@ deles no navegador ficou mais bem formatada.**
   negrito, tabelas e as caixinhas de tarefa. Documento com aparência de
   documento, inclusive para imprimir.
 - **Cards em ordem de cadastro.** Os cards das auditorias agora aparecem do
-  cadastro mais recente para o mais antigo (pela data de início registrada no
-  `memory.md`); auditorias sem essa data ficam ao final, em ordem alfabética.
-  Antes a ordem era por urgência de DET (vencidos primeiro) — os prazos
-  continuam cobertos pelos selos coloridos de cada card e pela agenda
-  "Próximos vencimentos" no rodapé.
+  cadastro mais recente para o mais antigo — pela data em que a OS entrou no
+  painel (criação da ficha `memory.md`), o que vale para todas as auditorias,
+  mesmo as sem data de início registrada. Antes a ordem era por urgência de
+  DET (vencidos primeiro) — os prazos continuam cobertos pelos selos coloridos
+  de cada card e pela agenda "Próximos vencimentos" no rodapé.
 - **O painel passa a se atualizar de verdade.** Descobrimos que o servidor do
   painel continuava rodando a versão antiga mesmo depois de uma atualização —
   ele só carrega o código novo quando reinicia (o que antes só acontecia no

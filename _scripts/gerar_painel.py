@@ -1476,10 +1476,18 @@ def main() -> int:
     oss = []
     if base.exists():
         for mem in sorted(base.glob("*/memory.md")):
+            # Momento em que a OS entrou no painel = criação do memory.md
+            # (st_birthtime no macOS; no Windows st_ctime é a criação).
             try:
-                oss.append(parse_memory(mem))
+                st = mem.stat()
+                criado_em = getattr(st, "st_birthtime", None) or st.st_ctime
+            except OSError:
+                criado_em = 0.0
+            try:
+                oss.append(parse_memory(mem) | {"criado_em": criado_em})
             except Exception as e:  # uma OS ruim não derruba o painel
                 oss.append({
+                    "criado_em": criado_em,
                     "pasta": mem.parent.name, "caminho": str(mem.parent),
                     "empregador": mem.parent.name, "cnpj": "", "municipio": "",
                     "status": "erro", "embargo": "", "ri": "", "num_trabalhadores": None,
@@ -1541,14 +1549,12 @@ def main() -> int:
                 elif dd <= 7:
                     n_urgentes += 1
 
-    # Ordena: cadastro mais recente primeiro (data_inicio do memory.md,
-    # gravada pela /aft-nova-os); OS sem data ao fim, desempate por nome.
-    # (Até 10/08/2026 a ordem era por urgência de DET — a agenda "Próximos
-    # vencimentos", no rodapé, continua cobrindo os prazos.)
+    # Ordena: auditoria criada mais recentemente no painel primeiro (data de
+    # criação do memory.md — vale para toda OS, com ou sem data_inicio);
+    # desempate por nome. (Até 10/08/2026 a ordem era por urgência de DET —
+    # a agenda "Próximos vencimentos", no rodapé, continua cobrindo os prazos.)
     def chave(o):
-        return (o["data_inicio"] is None,
-                -o["data_inicio"].toordinal() if o["data_inicio"] else 0,
-                (o["empregador"] or "").lower())
+        return (-o.get("criado_em", 0.0), (o["empregador"] or "").lower())
     oss.sort(key=chave)
 
     venc = coletar_vencimentos(oss, hoje)
