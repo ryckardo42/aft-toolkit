@@ -348,6 +348,8 @@ ACOES = {
 def _md_inline(s: str) -> str:
     s = html.escape(s)
     s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+    s = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
+               r'<a href="\2" target="_blank" rel="noopener">\1</a>', s)
     s = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
     s = re.sub(r"(?<!\*)\*([^*\s][^*]*)\*(?!\*)", r"<i>\1</i>", s)
     return s
@@ -355,20 +357,27 @@ def _md_inline(s: str) -> str:
 
 def md_para_html(md: str) -> str:
     """Conversor mínimo (stdlib) do subconjunto de markdown usado nos
-    relatórios do ecossistema: títulos, negrito/itálico/código, listas,
-    tabelas e réguas. O que não reconhece vira parágrafo."""
+    relatórios do ecossistema: títulos, negrito/itálico/código, links,
+    listas (inclusive aninhadas), citações, blocos de código, tabelas e
+    réguas. O que não reconhece vira parágrafo."""
     m = RE_FM.match(md)
     if m:  # front-matter não interessa ao leitor
         md = md[m.end():]
     out: list[str] = []
-    lista: str | None = None   # "ul" | "ol" abertas
+    listas: list[tuple[int, str]] = []  # pilha (indentação, "ul"|"ol") abertas
     tabela: list[str] = []
+    quote = False
+    codigo: list[str] | None = None     # linhas do bloco ``` aberto
 
-    def fecha_lista():
-        nonlocal lista
-        if lista:
-            out.append(f"</{lista}>")
-            lista = None
+    def fecha_listas(indent: int = -1):
+        while listas and listas[-1][0] > indent:
+            out.append(f"</{listas.pop()[1]}>")
+
+    def fecha_quote():
+        nonlocal quote
+        if quote:
+            out.append("</blockquote>")
+            quote = False
 
     def fecha_tabela():
         nonlocal tabela
@@ -386,9 +395,24 @@ def md_para_html(md: str) -> str:
         tabela = []
 
     for linha in md.splitlines():
+        if codigo is not None:              # dentro de um bloco ``` ... ```
+            if linha.strip().startswith("```"):
+                out.append("<pre><code>" + html.escape("\n".join(codigo))
+                           + "</code></pre>")
+                codigo = None
+            else:
+                codigo.append(linha)
+            continue
         s = linha.strip()
+        if s.startswith("```"):
+            fecha_listas()
+            fecha_quote()
+            fecha_tabela()
+            codigo = []
+            continue
         if s.startswith("|"):
-            fecha_lista()
+            fecha_listas()
+            fecha_quote()
             tabela.append(s)
             continue
         fecha_tabela()
@@ -396,15 +420,22 @@ def md_para_html(md: str) -> str:
         m_ul = re.match(r"^[-*]\s+(.*)$", s)
         m_ol = re.match(r"^\d+[.)]\s+(.*)$", s)
         if m_h:
-            fecha_lista()
+            fecha_listas()
+            fecha_quote()
             n = len(m_h.group(1))
             out.append(f"<h{n}>{_md_inline(m_h.group(2))}</h{n}>")
         elif m_ul or m_ol:
+            fecha_quote()
             tipo = "ul" if m_ul else "ol"
-            if lista != tipo:
-                fecha_lista()
+            ind = len(linha) - len(linha.lstrip())
+            fecha_listas(ind)               # fecha níveis mais fundos que este
+            if not listas or listas[-1][0] < ind:
                 out.append(f"<{tipo}>")
-                lista = tipo
+                listas.append((ind, tipo))
+            elif listas[-1][1] != tipo:     # mesmo nível, trocou ul<->ol
+                out.append(f"</{listas.pop()[1]}>")
+                out.append(f"<{tipo}>")
+                listas.append((ind, tipo))
             item = (m_ul or m_ol).group(1)
             # Checkbox de tarefa ("- [ ] item" / "- [x] item"): vira caixinha
             # em vez dos colchetes crus. Os relatórios do toolkit são cheios
@@ -418,16 +449,31 @@ def md_para_html(md: str) -> str:
                            f"{_md_inline(m_cb.group(2))}</li>")
             else:
                 out.append(f"<li>{_md_inline(item)}</li>")
+        elif s.startswith(">"):
+            fecha_listas()
+            if not quote:
+                out.append("<blockquote>")
+                quote = True
+            corpo = s.lstrip(">").strip()
+            if corpo:
+                out.append(f"<p>{_md_inline(corpo)}</p>")
         elif s in ("---", "***", "___"):
-            fecha_lista()
+            fecha_listas()
+            fecha_quote()
             out.append("<hr>")
         elif s:
-            fecha_lista()
+            fecha_listas()
+            fecha_quote()
             out.append(f"<p>{_md_inline(s)}</p>")
         else:
-            fecha_lista()
-    fecha_lista()
+            fecha_listas()
+            fecha_quote()
+    fecha_listas()
+    fecha_quote()
     fecha_tabela()
+    if codigo is not None:                  # ``` que ficou sem fechar
+        out.append("<pre><code>" + html.escape("\n".join(codigo))
+                   + "</code></pre>")
     return "\n".join(out)
 
 
@@ -456,6 +502,12 @@ li.tarefa.feita{color:var(--t2)}
 li.tarefa.feita .cb{color:var(--teal)}
 code{background:var(--cream);border:1px solid var(--bds);border-radius:4px;
 padding:1px 5px;font-size:13px}
+pre{background:var(--cream);border:1px solid var(--bds);border-radius:6px;
+padding:10px 12px;overflow-x:auto;font-size:13px;line-height:1.45}
+pre code{background:none;border:none;padding:0}
+blockquote{border-left:3px solid var(--coral);margin:10px 0;padding:2px 14px;
+color:var(--t2)}
+main a{color:var(--coral-deep)}
 hr{border:none;border-top:1px solid var(--bds);margin:24px 0}
 table{border-collapse:collapse;margin:12px 0;font-size:14px;width:100%}
 th,td{border:1px solid var(--bds);padding:6px 10px;text-align:left;vertical-align:top}
@@ -605,16 +657,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def _serve_doc(self):
         """GET /doc/<pasta-da-OS>/<arquivo>.md — renderiza o relatório em HTML.
-        Mesma validação de caminho do /api/acao: só .md dentro de OS ATIVAS."""
+        <arquivo> pode ter 1 nível de subpasta (interdicao-embargo/autos.md,
+        Acidentes/Relatorio-*.md). Mesma validação de caminho do /api/acao:
+        só .md dentro de OS ATIVAS."""
         try:
             partes = self.path[len("/doc/"):].split("/")
-            if len(partes) != 2:
-                raise ValueError("use /doc/<pasta>/<arquivo>.md")
+            if len(partes) not in (2, 3):
+                raise ValueError("use /doc/<pasta>/[subpasta/]<arquivo>.md")
             pasta = urllib.parse.unquote(partes[0]).strip()
-            arquivo = urllib.parse.unquote(partes[1]).strip()
+            arquivo = "/".join(urllib.parse.unquote(p).strip() for p in partes[1:])
+            segs = arquivo.split("/")
             if (not pasta or "/" in pasta or "\\" in pasta or pasta.startswith(".")
-                    or not arquivo or "/" in arquivo or "\\" in arquivo
-                    or arquivo.startswith(".") or not arquivo.endswith(".md")):
+                    or "\\" in arquivo or len(segs) > 2
+                    or any((not s) or s.startswith(".") for s in segs)
+                    or not arquivo.endswith(".md")):
                 raise ValueError("caminho inválido")
             alvo = (self.base / pasta / arquivo).resolve()
             if self.base.resolve() not in alvo.parents or not alvo.exists():

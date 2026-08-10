@@ -393,16 +393,21 @@ def parse_autos_lavrados_md(pasta: Path) -> dict:
 
 
 def listar_docs(pasta: Path) -> list[str]:
-    """Relatórios .md na raiz da pasta da OS (analise-preliminar-*.md,
-    autos-lavrados.md...), para o modal linkar na rota /doc/ do modo
-    interativo. Ficam de fora os .md que o modal já exibe por inteiro:
-    memory.md (o card é a ficha), inspecao-fisica.md (seção própria) e
-    email.md (cartão próprio, com botão de copiar)."""
+    """Relatórios .md da pasta da OS (analise-preliminar-*.md,
+    autos-lavrados.md...) — raiz e 1 nível de subpasta (interdicao-embargo/
+    autos.md, Acidentes/Relatorio-*.md), para o modal linkar na rota /doc/
+    do modo interativo. Ficam de fora os .md que o modal já exibe por
+    inteiro: memory.md (o card é a ficha), inspecao-fisica.md (seção
+    própria) e email.md (cartão próprio, com botão de copiar)."""
     try:
-        return sorted(p.name for p in pasta.glob("*.md")
-                      if p.is_file()
-                      and p.name not in ("memory.md", "inspecao-fisica.md",
-                                         "email.md"))
+        docs = [p.name for p in pasta.glob("*.md")
+                if p.is_file()
+                and p.name not in ("memory.md", "inspecao-fisica.md",
+                                   "email.md")]
+        docs += [f"{p.parent.name}/{p.name}" for p in pasta.glob("*/*.md")
+                 if p.is_file() and not p.parent.name.startswith(".")
+                 and not p.name.startswith(".")]
+        return sorted(docs)
     except OSError:
         return []
 
@@ -967,9 +972,15 @@ function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.valu
 // (renderização legível em outra aba); fora dele, texto simples.
 function urlDoc(o,d){return '/doc/'+encodeURIComponent(o.pasta)+'/'+encodeURIComponent(d)}
 function linkDocs(i,t){const o=DATA.os[i];let s=esc(t);
- if(!ATIVO||!o.pasta||!o.docs)return s;
- for(const d of o.docs){const e=esc(d);
-  s=s.split(e).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>')}
+ if(!ATIVO||!o.pasta||!o.docs||!o.docs.length)return s;
+ // Em duas fases, nomes mais longos primeiro (nome -> marcador -> link):
+ // "autos.md" não pode quebrar o link de "interdicao-embargo/autos.md" que o
+ // contém, nem casar dentro do HTML já inserido do link de outro documento.
+ const ds=[...o.docs].sort((a,b)=>b.length-a.length),trocas=[];
+ ds.forEach((d,k)=>{const e=esc(d),m='\\u0001'+k+'\\u0001';
+  if(s.indexOf(e)>=0){s=s.split(e).join(m);trocas.push([m,d,e])}});
+ for(const [m,d,e] of trocas)
+  s=s.split(m).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>');
  return s}
 // ---- Dossiê da OS (tela de detalhe) ----------------------------------------
 // Estágio do andamento da OS: régua fixa de 5 marcos.
@@ -1386,6 +1397,28 @@ def render_vencimentos(venc: list[dict]) -> str:
             + "".join(lis) + resto + "</ul></div>")
 
 
+def render_pendencias(oss: list[dict]) -> str:
+    """Bloco 'Pendências por auditoria', abaixo dos vencimentos: TODAS as
+    pendências em aberto ([ ] do ## Pendências do memory.md), agrupadas por
+    OS na mesma ordem dos cards. É o destino do aviso semanal de segunda
+    (notificar_pendencias.py) — a notificação traz só os números, a lista
+    completa mora aqui."""
+    grupos = []
+    for o in oss:
+        pend = o.get("pendencias") or []
+        if not pend:
+            continue
+        lis = "".join(f"<li>◻ {html.escape(datas_para_br(p))}</li>" for p in pend)
+        grupos.append(f"<p><b>{html.escape(o['empregador'])}</b></p>"
+                      f'<ul class="lista">{lis}</ul>')
+    if not grupos:
+        return ""
+    total = sum(len(o.get("pendencias") or []) for o in oss)
+    return (f'<div class="venc"><h3>Pendências por auditoria '
+            f'<span style="float:right">{total}</span></h3>'
+            + "".join(grupos) + "</div>")
+
+
 def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
                  com_pasta: bool, artifact: bool) -> str:
     cards = []
@@ -1434,6 +1467,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
 </div>
 <div class="grid">{grade}</div>
 {render_vencimentos(venc)}
+{render_pendencias(oss)}
 <div id="veu"></div><div id="detalhe"></div>
 <footer>{rodape}</footer>
 <script>const DATA={json_js};{JS}</script>
@@ -1465,10 +1499,18 @@ def main() -> int:
     oss = []
     if base.exists():
         for mem in sorted(base.glob("*/memory.md")):
+            # Momento em que a OS entrou no painel = criação do memory.md
+            # (st_birthtime no macOS; no Windows st_ctime é a criação).
             try:
-                oss.append(parse_memory(mem))
+                st = mem.stat()
+                criado_em = getattr(st, "st_birthtime", None) or st.st_ctime
+            except OSError:
+                criado_em = 0.0
+            try:
+                oss.append(parse_memory(mem) | {"criado_em": criado_em})
             except Exception as e:  # uma OS ruim não derruba o painel
                 oss.append({
+                    "criado_em": criado_em,
                     "pasta": mem.parent.name, "caminho": str(mem.parent),
                     "empregador": mem.parent.name, "cnpj": "", "municipio": "",
                     "status": "erro", "embargo": "", "ri": "", "num_trabalhadores": None,
@@ -1530,9 +1572,12 @@ def main() -> int:
                 elif dd <= 7:
                     n_urgentes += 1
 
-    # Ordena: vencidos primeiro, depois por dias-restantes; sem-prazo ao fim.
+    # Ordena: auditoria criada mais recentemente no painel primeiro (data de
+    # criação do memory.md — vale para toda OS, com ou sem data_inicio);
+    # desempate por nome. (Até 10/08/2026 a ordem era por urgência de DET —
+    # a agenda "Próximos vencimentos", no rodapé, continua cobrindo os prazos.)
     def chave(o):
-        return (o["dias_top"] is None, o["dias_top"] if o["dias_top"] is not None else 0)
+        return (-o.get("criado_em", 0.0), (o["empregador"] or "").lower())
     oss.sort(key=chave)
 
     venc = coletar_vencimentos(oss, hoje)
