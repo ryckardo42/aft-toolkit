@@ -403,7 +403,7 @@ Se `python` não existir, tente `py -c "import sys; print(sys.executable)"` ou
 
 Explique: `pillow` converte fotos de evidência em PDF; `pikepdf` inspeciona assinaturas
 e comprime anexos grandes; `pypdf` lê os autos lavrados (`/aft-autos-lavrados`);
-`python-docx` gera e edita o Relatório Técnico (.docx) da interdição (`/aft-rt-rgi`);
+`python-docx` gera e edita o Relatório Técnico (.docx) da interdição (`/aft-embargo-interdicao`);
 `pdfplumber` extrai texto de PDFs de fiscalização (termos, autos-modelo);
 `pillow-heif` lê fotos HEIC/HEIF do iPhone (opcional, só se houver esse formato).
 
@@ -637,13 +637,13 @@ Apresente:
    na próxima vez que você fechar e reabrir o app.
 
 Fluxo típico de uma fiscalização:
-  1. /aft-nova-os           → cadastra a empresa e o prazo do DET
+  1. /aft-nova-auditoria           → cadastra a empresa e o prazo do DET
   2. /aft-painel            → vê todas as OS e os prazos vencendo
   3. /aft-inspecao-fisica   → registra o relato da visita
   4. /aft-auditoria-geral  → enquadra NR/ementa e redige os autos
   5. /aft-gera-ai           → gera o TXT para importar no Sistema Auditor
   6. /aft-autos-lavrados    → confere o que foi transmitido
-Outras: /aft-registro · /aft-PGR-analise · /aft-rt-rgi · /aft-det-630 · /aft-jornada-analise · /aft-relatorio
+Outras: /aft-informalidade · /aft-PGR-analise · /aft-embargo-interdicao · /aft-det-630 · /aft-jornada-analise · /aft-relatorio
 ```
 
 Se a pasta `OS ATIVAS/` estiver vazia, pergunte ativamente: *"Você já tem fiscalizações

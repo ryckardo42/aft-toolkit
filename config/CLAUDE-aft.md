@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v12 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v13 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Carregado em toda conversa: diz ao Claude
@@ -82,7 +82,7 @@ listar, ler ou gravar. Cada empresa tem pasta própria em `OS ATIVAS/` com a fic
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
 - Toolkit instalado/funcionando → `/aft-doctor` · atualizar → `/aft-atualizar` · deu erro → `/aft-erro`
-- Cadastrar auditoria → `/aft-nova-os` · prazos e panorama → `/aft-painel` · no Google Calendar → `/aft-agenda-det`
+- Cadastrar auditoria → `/aft-nova-auditoria` · prazos e panorama → `/aft-painel` · no Google Calendar → `/aft-agenda-det`
 - Pasta bagunçada jogada em OS ATIVAS (docs de antes do toolkit) → `/aft-organiza-os`
 - Planejar a ação fiscal ANTES da visita → `/aft-preparacao-acao-fiscal`
 - Pedir documentos pelo DET → `/aft-NAD` · notificar para corrigir → `/aft-tn-nco`
@@ -90,10 +90,10 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Narrar a visita → `/aft-inspecao-fisica`
 - Dúvida técnica, ementa, capitulação → `/aft-consulta`
 - Redigir autos (campo E/OU documental) → `/aft-auditoria-geral` (consultoras: `/aft-NR01`, `/aft-NR12`, `/aft-NR18`)
-- Trabalhador sem registro → `/aft-registro` · empregador não entregou DET → `/aft-det-630`
+- Trabalhador sem registro → `/aft-informalidade` · empregador não entregou DET → `/aft-det-630`
 - Analisar PGR → `/aft-PGR-analise` · AET → `/aft-aet-auditoria` · acidente → `/aft-analise-acidente`
 - Grau de risco/CNAE → `/aft-cnae-grau-risco-nr04` · SESMT → `/aft-dimensionamento-sesmt-nr04` · CIPA → `/aft-cipa-nr05-dimensionamento` · banheiros, mictórios, vestiário e bebedouros → `/aft-nr24-dimensionamento`
-- Interdição/embargo → `/aft-rt-rgi` · empresa mandou laudo → `/aft-auditoria-AR-NR12` · manter a medida → `/aft-rt-manutencao`
+- Interdição/embargo → `/aft-embargo-interdicao` · empresa mandou laudo → `/aft-auditoria-AR-NR12` · manter a medida → `/aft-embargo-interdicao-manutencao`
 - Pacote de ponto (AFD/AEJ/atestado) → `/aft-jornada-analise`
 - Revisar minutas (5W1H) → `/aft-revisa-auto` · gerar o TXT → `/aft-gera-ai` · conferir transmitidos → `/aft-autos-lavrados`
 - Relatório final → `/aft-relatorio` · `.docx` avulso → `/aft-modelo-docx` · sessões por OS → `/aft-sessoes-os`
@@ -104,7 +104,7 @@ vencido…) não vira auto na hora: registre em `## Anotações da auditoria` do
 a `/aft-auditoria-geral` depois transforma em auto.
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico ou Termo de
-Interdição e pedir os autos, use **sempre** a `/aft-rt-rgi` para redigi-los (nunca
+Interdição e pedir os autos, use **sempre** a `/aft-embargo-interdicao` para redigi-los (nunca
 improvise por fora). Mostre os autos e **pergunte se estão OK**; quando eu confirmar,
 chame a `/aft-gera-ai`.
 
@@ -119,7 +119,7 @@ vale **só no turno em que ela é invocada**. Como 31 das 40 skills são `sonnet
 
 **Me avise para pôr a caixa em Opus** quando eu abrir uma sessão dedicada a julgar um
 documento técnico entregue pela empresa: `/aft-PGR-analise`, `/aft-aet-auditoria`,
-`/aft-analise-acidente`, `/aft-auditoria-AR-NR12` ou `/aft-rt-manutencao`. Elas declaram
+`/aft-analise-acidente`, `/aft-auditoria-AR-NR12` ou `/aft-embargo-interdicao-manutencao`. Elas declaram
 `opus`, mas o pin só cobre o primeiro turno — numa análise de vários turnos quem decide é
 a caixa. Avise uma vez, no começo; se eu preferir seguir em Sonnet, siga sem insistir.
 

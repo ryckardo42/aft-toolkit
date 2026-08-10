@@ -25,7 +25,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 
 **Conferir:** a qualquer momento, rode **`/aft-doctor`** para checar se está tudo no lugar (Python, Git, skills, configuração) — ele diz, em linguagem simples, o que falta e como resolver.
 
-**Primeiro passo essencial (quem já fiscaliza):** copie as pastas das suas auditorias em andamento — do jeito que estiverem — para `~/Documents/AFT/OS ATIVAS/` e rode **`/aft-organiza-os`**. Com uma única aprovação, ele organiza tudo no padrão do toolkit, roda o `/aft-autos-lavrados` (busca no Sistema Auditor os autos já transmitidos de cada empresa e os registra no `memory.md`) e as **sessões de chat por empresa** aparecem sozinhas no grupo "OS ATIVAS" do menu lateral na próxima vez que você fechar e reabrir o app (vigia de sessões, automático). Quem começa do zero pula direto para o `/aft-nova-os`.
+**Primeiro passo essencial (quem já fiscaliza):** copie as pastas das suas auditorias em andamento — do jeito que estiverem — para `~/Documents/AFT/OS ATIVAS/` e rode **`/aft-organiza-os`**. Com uma única aprovação, ele organiza tudo no padrão do toolkit, roda o `/aft-autos-lavrados` (busca no Sistema Auditor os autos já transmitidos de cada empresa e os registra no `memory.md`) e as **sessões de chat por empresa** aparecem sozinhas no grupo "OS ATIVAS" do menu lateral na próxima vez que você fechar e reabrir o app (vigia de sessões, automático). Quem começa do zero pula direto para o `/aft-nova-auditoria`.
 
 **Atualização:** peça ao Claude *"Atualize o AFT Toolkit"* (ou `/aft-atualizar`) — ele atualiza as skills (`git pull`) **e** o comando `notebooklm` (`notebooklm-py`), se houver versão nova, e confirma com o `/aft-doctor` que nada quebrou.
 
@@ -39,7 +39,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/aft-atualizar` | Atualiza as skills (`git pull`) e o comando `notebooklm` (notebooklm-py), se houver versão nova, e roda o `/aft-doctor` ao final para confirmar |
 | `/aft-nova-skill` | Ajuda o AFT (leigo) a criar uma **habilidade própria**, para uma tarefa que o toolkit não cobre: pergunta objetivo, gatilhos e passos em linguagem simples e grava `~/.claude/skills/minha-<nome>/SKILL.md`. O prefixo reservado `minha-` garante que a skill própria é descoberta pelo Claude Code e **nunca se perde numa atualização** |
 | `/aft-notebooklm-login` | Conecta/reconecta o NotebookLM à conta Google com mínima intervenção (cookies do navegador ou um único login em janela do Edge) — o Claude conduz tudo, sem terminal |
-| `/aft-nova-os` | Cadastra uma auditoria (nome livre, CNPJ opcional, município e o DET com prazo) — o começo do fluxo |
+| `/aft-nova-auditoria` | Cadastra uma auditoria (nome livre, CNPJ opcional, município e o DET com prazo) — o começo do fluxo |
 | `/aft-organiza-os` | Importa uma **pasta bagunçada de fiscalização pré-toolkit** jogada em `OS ATIVAS/`: lê os documentos (notificações DET, relação de autos do Sistema Auditor, resposta do empregador, fotos), extrai empregador/CNPJ-CPF/prazos/autos, mostra o plano antes-e-depois e — com sua aprovação — renomeia a pasta para o padrão, cria o `memory.md` completo e move cada arquivo para onde as demais skills esperam. Nunca apaga nada |
 | `/aft-painel` | Gera um `painel.html` local em formato **dashboard de cards**: um card por OS colorido pela urgência do prazo de DET, e um clique abre o **detalhe da auditoria** (DETs, todos os autos de infração lavrados com nº do AI e constatação, pendências, atividades). Detecta PDFs de notificação DET ainda **não cadastrados** na ficha e, com `--scan`, puxa os autos ao vivo do Sistema Auditor (Windows ou Mac+Parallels, degradando para o último snapshot se indisponível) — um SISOS local, sem nuvem. Tem **modo interativo** opcional (mini-servidor local em `http://127.0.0.1:8347`, 100% offline): os cards ganham ações mecânicas — marcar DET respondida, resolver pendência, registrar atividade, mudar status e alternar embargo/interdição vigente/suspenso — gravadas direto no `memory.md` com backup automático, além de botões 📋 que copiam comandos prontos para colar no Claude Code. Aberto pelo arquivo (duplo-clique) continua só leitura. Com a extensão Chrome **"SisOS — Sync DET"** (Web Store) e o modo interativo no ar, o botão Sincronizar no site do DET puxa notificações novas e prazos atualizados direto para os `memory.md` (endpoint local `/api/det-sync` — sem nuvem nenhuma). O modo interativo pode ficar **sempre ligado** (serviço do sistema — LaunchAgent no macOS, Agendador de Tarefas com reinício automático no Windows), oferecido na instalação. Pode instalar também uma rotina diária que regenera o painel estático de manhã e, opcionalmente (com consentimento), publica como Artifact privado. O painel traz ainda o bloco **"Próximos vencimentos"** (agenda consolidada de DETs e pendências datadas de todas as OS), com botão "agendar no Google Calendar" por notificação — sem login nenhum |
 | `/aft-agenda-det` | Espelha os prazos das notificações DET no **Google Calendar** do AFT, pelo conector oficial do Claude (login único do Google pela interface do Claude — nenhuma senha passa pelo toolkit): um evento de dia inteiro por notificação (`DET <código> <12 primeiros caracteres do empregador>`), com data atualizada quando o prazo é prorrogado e ✓ no título quando a notificação é respondida. Nunca apaga eventos nem toca no que não é do padrão. Só espelha: a fonte da verdade continua sendo o `memory.md` |
@@ -56,15 +56,15 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 | `/aft-inspecao-fisica` | Transforma a narrativa ditada da visita num relato de campo estruturado (`inspecao-fisica.md`) — fiel, sem enquadramento |
 | `/aft-consulta` | Consulta os ementários/notebooks do NotebookLM: tira dúvidas técnico-jurídicas **ou** enquadra um fato — missão tripla (IDENTIFICAR a ementa, FUNDAMENTAR capitulação/gradação/notas, REDIGIR minuta de Histórico anti-nulidade). Só consulta; não lavra (delega a `/aft-auditoria-geral`/`/aft-gera-ai`) |
 | `/aft-auditoria-geral` | Lê o relato de campo, identifica NR/ementa (NotebookLM) e redige os autos de infração (todas as NRs + CLT), com gate de dupla visita |
-| `/aft-registro` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
+| `/aft-informalidade` | Autos de falta de registro (art. 41 CLT) + falta de anotação na CTPS (art. 29 CLT) |
 | `/aft-PGR-analise` | Auditoria sistemática do PGR (NR-01) nas 7 ementas, com confronto campo × documento e citação de páginas |
 | `/aft-aet-auditoria` | Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e AET anexada a cada auto |
 | `/aft-det-630` | Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT) |
 | `/aft-tn-nco` | Redige a Notificação para Correção de Irregularidades (texto pronto para colar no DET, item por item) |
 | `/aft-email` | Redige o **e-mail** que acompanha o ato da fiscalização (notificação lavrada no DET, Termo de Interdição/Embargo encaminhado, adequação de documento analisado): resume o ato, deixa os prazos explícitos, avisa a consequência do descumprimento e empurra o destinatário para o canal oficial (DET / SEI). Entrega sempre **duas versões** — uma direta, para empresário sem jurídico, e uma técnica, para advogado/departamento jurídico — e, com o seu OK, grava no `email.md` da OS, que aparece no painel com botão de copiar. Nunca cita nome da empresa nem CNPJ, e **não envia nada**: quem envia é você |
-| `/aft-rt-rgi` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
+| `/aft-embargo-interdicao` | Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas |
 | `/aft-auditoria-AR-NR12` | Julga o laudo de adequação à NR-12 / apreciação de riscos de máquinas (NBR ISO 12100, NBR 14153) apresentado pela empresa — em pedido de suspensão de interdição ou resposta a notificação — em 6 blocos de verificação, com parecer |
-| `/aft-rt-manutencao` | Relatório Técnico de MANUTENÇÃO de interdição/embargo em .docx: analisa o requerimento de suspensão do empregador e conclui pela manutenção da medida (encadeia após `/aft-auditoria-AR-NR12` com parecer insuficiente) |
+| `/aft-embargo-interdicao-manutencao` | Relatório Técnico de MANUTENÇÃO de interdição/embargo em .docx: analisa o requerimento de suspensão do empregador e conclui pela manutenção da medida (encadeia após `/aft-auditoria-AR-NR12` com parecer insuficiente) |
 | `/aft-analise-acidente` | Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx |
 
 ### Consultoras especializadas por NR
@@ -98,7 +98,7 @@ Veja o passo a passo completo em [COMO-INSTALAR.md](COMO-INSTALAR.md) (ou na apo
 
 ## Modo rápido: cada skill funciona isolada
 
-O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos de DET e manter o painel atualizado — mas **nenhuma skill de redação exige esse fluxo**. Você pode chamar `/aft-auditoria-geral`, `/aft-registro`, `/aft-rt-rgi`, `/aft-PGR-analise` ou `/aft-det-630` direto, colar a narrativa da inspeção e receber o texto do auto pronto, sem nunca ter rodado `/aft-nova-os` e sem precisar do CNPJ real (um nome fantasia basta — o texto do auto nunca embute o CNPJ no corpo, ele é só metadado administrativo). O CNPJ só passa a ser obrigatório no `/aft-gera-ai`, porque é um campo exigido pelo próprio Sistema Auditor (não pelo toolkit) para a importação do TXT — ou seja, dá pra usar o toolkit só para gerar o texto dos autos, sem nunca empacotar nada.
+O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos de DET e manter o painel atualizado — mas **nenhuma skill de redação exige esse fluxo**. Você pode chamar `/aft-auditoria-geral`, `/aft-informalidade`, `/aft-embargo-interdicao`, `/aft-PGR-analise` ou `/aft-det-630` direto, colar a narrativa da inspeção e receber o texto do auto pronto, sem nunca ter rodado `/aft-nova-auditoria` e sem precisar do CNPJ real (um nome fantasia basta — o texto do auto nunca embute o CNPJ no corpo, ele é só metadado administrativo). O CNPJ só passa a ser obrigatório no `/aft-gera-ai`, porque é um campo exigido pelo próprio Sistema Auditor (não pelo toolkit) para a importação do TXT — ou seja, dá pra usar o toolkit só para gerar o texto dos autos, sem nunca empacotar nada.
 
 ## Fluxo típico de uma fiscalização
 
@@ -110,19 +110,19 @@ O fluxo completo abaixo é o caminho recomendado para quem quer rastrear prazos 
 1. Visita ao estabelecimento
 2. /aft-inspecao-fisica      → narra o que viu; vira relato estruturado na pasta da OS
 3. /aft-auditoria-geral     → enquadra NR/ementa e redige os autos
-   (desvios automáticos: /aft-registro p/ trabalhador sem registro ·
-    /aft-rt-rgi p/ risco grave e iminente · /aft-PGR-analise p/ auditoria do PGR)
+   (desvios automáticos: /aft-informalidade p/ trabalhador sem registro ·
+    /aft-embargo-interdicao p/ risco grave e iminente · /aft-PGR-analise p/ auditoria do PGR)
 4. /aft-gera-ai              → TXT importável + anexos na pasta Autos DD-MM/
 5. Sistema Auditor       → botão "imp. txt" → revisão → transmissão
 6. /aft-autos-lavrados       → confere o que foi transmitido e marca no memory.md
 7. /aft-relatorio          → relatório final consolidado
 ```
 
-Sem `/aft-preparacao-acao-fiscal`, o começo do fluxo continua sendo `/aft-nova-os` (cadastro simples, sem checklist de documentos). Dúvida técnica ou pesquisa de ementa, em qualquer ponto do fluxo, é `/aft-consulta`.
+Sem `/aft-preparacao-acao-fiscal`, o começo do fluxo continua sendo `/aft-nova-auditoria` (cadastro simples, sem checklist de documentos). Dúvida técnica ou pesquisa de ementa, em qualquer ponto do fluxo, é `/aft-consulta`.
 
 ## Estrutura de trabalho
 
-`Documentos\AFT\OS ATIVAS\` é onde moram as pastas de todas as empresas fiscalizadas — é criada pelo `/aft-setup` e cada empresa nova entra ali via `/aft-nova-os`. Quando a fiscalização termina, a pasta da empresa vai para `OS ARQUIVADAS\` (mesmo nível).
+`Documentos\AFT\OS ATIVAS\` é onde moram as pastas de todas as empresas fiscalizadas — é criada pelo `/aft-setup` e cada empresa nova entra ali via `/aft-nova-auditoria`. Quando a fiscalização termina, a pasta da empresa vai para `OS ARQUIVADAS\` (mesmo nível).
 
 ```
 Documentos\AFT\
@@ -130,7 +130,7 @@ Documentos\AFT\
 ├── painel.html              (visão geral das OS — gerado pelo /aft-painel)
 ├── OS ATIVAS\
 │   └── EMPRESA X 12345678000190\
-│       ├── memory.md                (ficha da fiscalização — criada pelo /aft-nova-os)
+│       ├── memory.md                (ficha da fiscalização — criada pelo /aft-nova-auditoria)
 │       ├── inspecao-fisica.md       (relato de campo)
 │       ├── autos.md                 (autos redigidos)
 │       ├── autos-lavrados.md        (o que já foi transmitido — fica na raiz)
@@ -189,9 +189,9 @@ As skills buscam o código da ementa em 3 camadas:
 ├── config/uorgs.csv         (tabela oficial de UORGs — o /aft-setup resolve o código pela cidade)
 ├── config/CLAUDE-aft.md     (perfil do auditor — o /aft-setup instala em ~/.claude/CLAUDE.md)
 ├── _scripts/                (scripts compartilhados: rehydrate, checar_pii, fotos, compressão, docx, gerar_painel, servir_painel, det_sync, instalar_rotina_painel, instalar_servidor_painel)
-├── aft-setup/ · aft-doctor/ · aft-atualizar/ · aft-nova-skill/ · aft-notebooklm-login/ · aft-nova-os/ · aft-organiza-os/ · aft-painel/ · aft-agenda-det/ · aft-gera-ai/ · aft-inspecao-fisica/ · aft-auditoria-geral/
+├── aft-setup/ · aft-doctor/ · aft-atualizar/ · aft-nova-skill/ · aft-notebooklm-login/ · aft-nova-auditoria/ · aft-organiza-os/ · aft-painel/ · aft-agenda-det/ · aft-gera-ai/ · aft-inspecao-fisica/ · aft-auditoria-geral/
 ├── aft-preparacao-acao-fiscal/ · aft-NAD/   (planejamento pré-visita e notificação de documentos)
-├── aft-consulta/ · aft-registro/ · aft-det-630/ · aft-tn-nco/ · aft-email/ · aft-relatorio/ · aft-PGR-analise/ · aft-aet-auditoria/ · aft-rt-rgi/ · aft-auditoria-AR-NR12/ · aft-rt-manutencao/ · aft-analise-acidente/ · aft-autos-lavrados/ · aft-revisa-auto/ · aft-modelo-docx/ · aft-sessoes-os/
+├── aft-consulta/ · aft-informalidade/ · aft-det-630/ · aft-tn-nco/ · aft-email/ · aft-relatorio/ · aft-PGR-analise/ · aft-aet-auditoria/ · aft-embargo-interdicao/ · aft-auditoria-AR-NR12/ · aft-embargo-interdicao-manutencao/ · aft-analise-acidente/ · aft-autos-lavrados/ · aft-revisa-auto/ · aft-modelo-docx/ · aft-sessoes-os/
 ├── aft-NR01/ · aft-NR12/ · aft-NR18/   (consultoras por NR, com references/ementas-comuns.md)
 ├── aft-cnae-grau-risco-nr04/ · aft-dimensionamento-sesmt-nr04/ · aft-cipa-nr05-dimensionamento/ · aft-nr24-dimensionamento/   (enquadramento CNAE→GR, SESMT da NR-04, CIPA da NR-05 e instalações da NR-24, por script determinístico)
 ├── aft-jornada-analise/ · aft-jornada-valida-afd-aej/ · aft-jornada-atestado/ · aft-jornada-auto-afd-aej/
@@ -208,7 +208,7 @@ As skills buscam o código da ementa em 3 camadas:
 
 - As skills são **apoio à redação e organização**. O conteúdo jurídico de cada auto, termo e relatório é de responsabilidade do AFT, que revisa tudo antes de transmitir.
 - Nunca aceite código de ementa, item de NR ou capitulação sem conferir no ementário oficial.
-- O template do RT (`aft-rt-rgi/template.docx`) segue o modelo da SRTE/GO — auditores de outras SRTEs devem ajustar o cabeçalho.
+- O template do RT (`aft-embargo-interdicao/template.docx`) segue o modelo da SRTE/GO — auditores de outras SRTEs devem ajustar o cabeçalho.
 - Guard-rail de PII: `_scripts/checar_pii.py` varre um relato/pasta e **avisa** se houver CPF ou PIS/PASEP com dígito verificador válido (o único dado de alto dano que pode entrar por engano). Não troca nem bloqueia nada — a anonimização real continua determinística (`rehydrate.py`).
 - Guard-rail de supply-chain: `_scripts/checar_diff.py` varre o diff de uma atualização (linhas que estão chegando) por Unicode invisível e padrões de exfiltração/execução remota, e **avisa** antes do `git pull` (chamado pelo `/aft-atualizar`). Também é só um alarme — quem decide atualizar é o AFT.
 

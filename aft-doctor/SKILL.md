@@ -48,7 +48,7 @@ O script imprime um relatorio legivel e, na ultima linha, um JSON prefixado com
 A partir do JSON, responda de forma clara e acolhedora. Regra de ouro:
 
 - **Se `erros` = 0 e `avisos` = 0** → diga que esta tudo pronto e relembre o comeco do
-  fluxo (`/aft-nova-os` para cadastrar uma OS, `/aft-painel` para ver os prazos).
+  fluxo (`/aft-nova-auditoria` para cadastrar uma OS, `/aft-painel` para ver os prazos).
 - **Se houver `erros` (vermelho)** → liste-os PRIMEIRO, com a solucao de cada um (campo
   `dica`). Sao itens que impedem o toolkit de funcionar (ex.: Python ausente, skills
   nao descobertas, config incompleta).

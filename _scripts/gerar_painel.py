@@ -41,7 +41,7 @@ Uso:
                   OS ARQUIVADAS/ é organização de disco, feita à parte.
 
 Compatível com os dois esquemas de memory.md em uso:
-  - o padrão do toolkit (/aft-nova-os), e
+  - o padrão do toolkit (/aft-nova-auditoria), e
   - o schema v2 do ecossistema Cowork (front-matter com data_inicio,
     data_vencimento, num_trabalhadores, datas ISO nas linhas de DET).
 
@@ -937,7 +937,7 @@ const CMDS=[
  ['/aft-autos-lavrados','Confere no Sistema Auditor o que já foi transmitido e marca [x]/[ ] no memory.md; cada auto identificado pelo número do AI.'],
  ['/aft-det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
  ['/aft-tn-nco','Redige a Notificação para Correção de Irregularidades, texto pronto para colar no DET, item por item.'],
- ['/aft-rt-rgi','Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).'],
+ ['/aft-embargo-interdicao','Relatório Técnico de Interdição/Embargo em .docx + autos derivados das ementas (risco grave e iminente, NR-03).'],
  ['/aft-relatorio','Relatório Final Simplificado consolidando autos, termos e notificações.']];
 function copiaCmd(i,k){copia(CMDS[k][0]+' — OS '+DATA.os[i].empregador)}
 function copiaCaminho(i){copia(DATA.os[i].caminho)}
@@ -1445,7 +1445,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
 
     grade = ("".join(cards) if cards else
              '<div class="aviso-vazio">Nenhuma OS encontrada em OS ATIVAS. '
-             'Use /aft-nova-os para cadastrar a primeira.</div>')
+             'Use /aft-nova-auditoria para cadastrar a primeira.</div>')
     dados = {"os": montar_json_os(oss, hoje, com_pasta), "venc": venc}
     json_js = json.dumps(dados, ensure_ascii=False).replace("</", "<\\/")
     titulo_art = "<title>Painel AFT</title>\n" if artifact else ""

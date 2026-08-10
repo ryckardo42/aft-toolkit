@@ -9,7 +9,7 @@ description: >
   skills. Acione com "/aft-modelo-docx", "documento no padrão do toolkit",
   "gera um docx", "modelo de documento", ou automaticamente sempre que outra
   skill ou pedido avulso exigir um .docx. NÃO substitui os templates
-  oficiais de /aft-rt-rgi, /aft-rt-manutencao e /aft-autos-lavrados.
+  oficiais de /aft-embargo-interdicao, /aft-embargo-interdicao-manutencao e /aft-autos-lavrados.
 ---
 
 # modelo-docx — o padrão de documento .docx do AFT Toolkit
@@ -28,7 +28,7 @@ avulsos que o AFT pede fora das skills (regra do perfil do auditor) e as saídas
 skills como o `/aft-relatorio`.
 
 **Quando NÃO usar:** documentos com modelo oficial específico — RT de interdição/embargo
-(`/aft-rt-rgi`, `/aft-rt-manutencao`) e Relação de autos (`/aft-autos-lavrados`) mantêm seus
+(`/aft-embargo-interdicao`, `/aft-embargo-interdicao-manutencao`) e Relação de autos (`/aft-autos-lavrados`) mantêm seus
 templates.
 
 ## Como usar (para o Claude e para outras skills)

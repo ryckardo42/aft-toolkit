@@ -4,7 +4,7 @@ montar_rt.py - monta o Relatorio Tecnico de Interdicao/Embargo (.docx) a partir
 do template oficial do toolkit e de um arquivo JSON com os campos.
 
 O template traz placeholders no formato {{chave}} (ver "Dicionario de campos" na
-skill /aft-rt-rgi). O script substitui cada chave pelo valor, repete os blocos
+skill /aft-embargo-interdicao). O script substitui cada chave pelo valor, repete os blocos
 que se repetem (objetos e fatores de risco), monta as listas reais do Word
 (medidas e documentos) e preserva TODO o texto fixo - itens 1, 2 e 8, a
 metodologia da NR-3 e as Tabelas 3.1/3.2/3.3 sao juridicamente vinculados.
@@ -86,7 +86,7 @@ except Exception:
     pass
 
 AQUI = Path(__file__).resolve().parent
-TEMPLATE = AQUI.parent / "aft-rt-rgi" / "template.docx"
+TEMPLATE = AQUI.parent / "aft-embargo-interdicao" / "template.docx"
 
 RE_PARAGRAFO = re.compile(r"<w:p\b[^>]*>.*?</w:p>|<w:p\b[^>]*/>", re.S)
 RE_TEXTO = re.compile(r"(<w:t\b[^>]*>)(.*?)(</w:t>)", re.S)

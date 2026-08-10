@@ -23,7 +23,7 @@ caro) e, ao clicar num card, **o detalhe completo da auditoria**: notificações
 estado, todos os autos de infração lavrados (número do AI, ementa, constatação, data),
 autos substituídos, pendências e o registro de atividades. A fonte da verdade são os
 arquivos `memory.md` e `autos-lavrados.md` de cada OS — esta skill apenas os lê e gera uma
-página HTML. **Nunca escreve nos memory.md** (quem cadastra/atualiza é o `/aft-nova-os` e as
+página HTML. **Nunca escreve nos memory.md** (quem cadastra/atualiza é o `/aft-nova-auditoria` e as
 demais skills).
 
 ## Passo 0 — Resolver a pasta das OS
@@ -90,7 +90,7 @@ A partir do JSON, dê um resumo objetivo, **destacando o que precisa de ação**
 - Depois os que vencem em ≤ 7 dias (`dias` entre 0 e 7).
 - Se `notificacoes_nao_cadastradas > 0`: liste cada item de `novas` (empregador, arquivo,
   código e datas) e diga que essas notificações **não estão na ficha** — sugira cadastrar
-  com `/aft-nova-os` (ou editar o `memory.md` da OS). **Esta skill não cadastra nada.**
+  com `/aft-nova-auditoria` (ou editar o `memory.md` da OS). **Esta skill não cadastra nada.**
 - Informe o total de OS ativas e de autos lavrados (e a fonte: scan ao vivo ou snapshot).
   Se `os_encerradas_ocultas > 0`, mencione em uma frase ("+ N encerrada(s) fora do
   painel — peça `/aft-painel --todas` para ver todas").
@@ -107,12 +107,12 @@ Exemplo de resposta:
 
 🔵 Notificação encontrada na pasta mas NÃO cadastrada:
   • EMPRESA Z — Notificação ABC123.pdf — código ABC123..., prazo 20/06/2026
-    -> Quer cadastrar? Rode /aft-nova-os (ou me peça para abrir a ficha).
+    -> Quer cadastrar? Rode /aft-nova-auditoria (ou me peça para abrir a ficha).
 
 Painel completo: <caminho do painel.html> (clique nos cards para o detalhe)
 ```
 
-Se `os_ativas = 0`, diga que não há OS cadastradas e sugira `/aft-nova-os`.
+Se `os_ativas = 0`, diga que não há OS cadastradas e sugira `/aft-nova-auditoria`.
 
 ## Passo 3 — Oferecer abrir o painel
 
@@ -147,7 +147,7 @@ python ~/.claude/skills/_scripts/servir_painel.py "<OS_ATIVAS>" --abrir
   descrição já registrada no campo `embargo_interdicao`).
 - **Botões de comando**: copiam para a área de transferência um comando pronto
   (`/aft-inspecao-fisica`, `/aft-auditoria-geral`, `/aft-gera-ai`, `/aft-autos-lavrados`, `/aft-det-630`,
-  `/aft-tn-nco`, `/aft-rt-rgi`, `/aft-relatorio` — sempre com `— OS <EMPREGADOR>` anexado)
+  `/aft-tn-nco`, `/aft-embargo-interdicao`, `/aft-relatorio` — sempre com `— OS <EMPREGADOR>` anexado)
   para o AFT colar no Claude Code; ao passar o mouse, cada botão mostra uma legenda com
   o resumo da skill (texto vindo da arquitetura do toolkit). Ações que exigem julgamento
   nunca rodam pelo servidor.

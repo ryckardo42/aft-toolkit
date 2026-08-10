@@ -52,7 +52,7 @@ institucional dele.
 
 1. Argumento posicional (CNPJ de 14 dígitos ou pedaço do nome) → match nas pastas de
    `<OS_ATIVAS>/`.
-2. Skill encadeada na mesma sessão (depois de `/aft-NAD`, `/aft-tn-nco`, `/aft-rt-rgi`,
+2. Skill encadeada na mesma sessão (depois de `/aft-NAD`, `/aft-tn-nco`, `/aft-embargo-interdicao`,
    `/aft-PGR-analise`, `/aft-analise-acidente`…) → herde a OS do contexto.
 3. Vários matches → `AskUserQuestion`. Nenhum match e nenhum contexto → pergunte o
    empregador; se ele não tiver pasta de OS, **gere o e-mail assim mesmo** no chat e
@@ -72,7 +72,7 @@ Descubra **sobre o que** é o e-mail. As origens típicas:
 | Origem | Como chega | O que o e-mail faz |
 |---|---|---|
 | **Notificação do DET** | PDF anexado, com código único (ex.: `RMNH7CCU34YWSH`) ou saída recém-gerada da `/aft-NAD` ou `/aft-tn-nco` | avisa que há notificação nova, resume os itens, manda entrar no DET |
-| **Termo de Interdição / Embargo** | PDF do Termo ou RT recém-gerado pela `/aft-rt-rgi` | encaminha o Termo e explica como pedir a suspensão pelo SEI |
+| **Termo de Interdição / Embargo** | PDF do Termo ou RT recém-gerado pela `/aft-embargo-interdicao` | encaminha o Termo e explica como pedir a suspensão pelo SEI |
 | **Documento analisado** (PGR, AET, laudo de máquina, análise de acidente) | análise feita antes na sessão (`/aft-PGR-analise`, `/aft-aet-auditoria`, `/aft-auditoria-AR-NR12`) | comunica o que precisa ser adequado e por qual canal responder |
 | **Texto do próprio AFT** | ele cola um rascunho e pede para melhorar | revisa (ver FASE 4) e devolve reescrito |
 | **Assunto avulso** | ele descreve em uma frase o que quer comunicar | redige do zero, com o que ele informou |
@@ -276,7 +276,7 @@ Depois de gravar:
 
 - **Depois de `/aft-NAD` ou `/aft-tn-nco`:** ofereça o e-mail avisando que a notificação
   foi lavrada no DET.
-- **Depois de `/aft-rt-rgi`:** ofereça o e-mail de encaminhamento do Termo, com o bloco do
+- **Depois de `/aft-embargo-interdicao`:** ofereça o e-mail de encaminhamento do Termo, com o bloco do
   SEI.
 - **Depois de `/aft-PGR-analise`, `/aft-aet-auditoria`, `/aft-auditoria-AR-NR12`:** ofereça
   o e-mail pedindo as adequações apontadas na análise.

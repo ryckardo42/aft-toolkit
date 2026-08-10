@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monta o RT de Levantamento TOTAL de Interdicao/Embargo (.docx) a partir do template do aft-rt-rgi.
+"""Monta o RT de Levantamento TOTAL de Interdicao/Embargo (.docx) a partir do template do aft-embargo-interdicao.
 
 Mantem o cabecalho institucional (logos MTE/SIT), os estilos e a fonte do
 template e monta o miolo com as 7 secoes do levantamento. Diferente do RT de
@@ -11,7 +11,7 @@ instrucoes deixam de fazer sentido. Uso:
 
 O spec.json (UTF-8):
 {
-  "template": "~/.claude/skills/aft-rt-rgi/template.docx",
+  "template": "~/.claude/skills/aft-embargo-interdicao/template.docx",
   "output":   "/caminho/RT_Levantamento_4145339-5.docx",
   "titulo_linha2": "TERMO DE LEVANTAMENTO DE INTERDICAO N 9.999.999-9",
   "titulo_linha3": "(Ref. ao Termo de Interdicao N 4.145.339-5)",   // opcional
@@ -147,7 +147,7 @@ def main():
     i_rt = next((i for i, b in enumerate(blocks)
                  if "".join(re.findall(r"<w:t[^>]*>([^<]*)</w:t>", b)).strip() == "RELATÓRIO TÉCNICO"), None)
     if i_rt is None:
-        sys.exit("linha 'RELATÓRIO TÉCNICO' não encontrada — o template.docx do aft-rt-rgi mudou; ajuste o script")
+        sys.exit("linha 'RELATÓRIO TÉCNICO' não encontrada — o template.docx do aft-embargo-interdicao mudou; ajuste o script")
     head = blocks[: i_rt + 1]
     tail_extra = body[body.rfind(blocks[-1]) + len(blocks[-1]):]  # sectPr do template
 
