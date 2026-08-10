@@ -1397,6 +1397,28 @@ def render_vencimentos(venc: list[dict]) -> str:
             + "".join(lis) + resto + "</ul></div>")
 
 
+def render_pendencias(oss: list[dict]) -> str:
+    """Bloco 'Pendências por auditoria', abaixo dos vencimentos: TODAS as
+    pendências em aberto ([ ] do ## Pendências do memory.md), agrupadas por
+    OS na mesma ordem dos cards. É o destino do aviso semanal de segunda
+    (notificar_pendencias.py) — a notificação traz só os números, a lista
+    completa mora aqui."""
+    grupos = []
+    for o in oss:
+        pend = o.get("pendencias") or []
+        if not pend:
+            continue
+        lis = "".join(f"<li>◻ {html.escape(datas_para_br(p))}</li>" for p in pend)
+        grupos.append(f"<p><b>{html.escape(o['empregador'])}</b></p>"
+                      f'<ul class="lista">{lis}</ul>')
+    if not grupos:
+        return ""
+    total = sum(len(o.get("pendencias") or []) for o in oss)
+    return (f'<div class="venc"><h3>Pendências por auditoria '
+            f'<span style="float:right">{total}</span></h3>'
+            + "".join(grupos) + "</div>")
+
+
 def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
                  com_pasta: bool, artifact: bool) -> str:
     cards = []
@@ -1445,6 +1467,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
 </div>
 <div class="grid">{grade}</div>
 {render_vencimentos(venc)}
+{render_pendencias(oss)}
 <div id="veu"></div><div id="detalhe"></div>
 <footer>{rodape}</footer>
 <script>const DATA={json_js};{JS}</script>

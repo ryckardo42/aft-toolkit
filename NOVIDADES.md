@@ -26,6 +26,15 @@ deles no navegador ficou mais bem formatada.**
   links clicáveis, citações e blocos de código — além do que já fazia: títulos,
   negrito, tabelas e as caixinhas de tarefa. Documento com aparência de
   documento, inclusive para imprimir.
+- **Aviso semanal de pendências (novo, opcional).** Toda segunda-feira de manhã
+  o seu computador pode te avisar, com uma notificação nativa, quantas
+  pendências estão em aberto nas suas auditorias — ex.: "17 pendências em 8
+  auditorias". De propósito, a notificação mostra **só os números** (ela pode
+  aparecer com a tela bloqueada); a lista completa fica na nova seção
+  **"Pendências por auditoria"** do painel, logo abaixo dos próximos
+  vencimentos. Sem pendência em aberto, nada é exibido. Roda inteiramente fora
+  do Claude Code (agendamento do próprio sistema, zero tokens) e o
+  `/aft-atualizar` vai te oferecer a ativação uma única vez.
 - **Cards em ordem de cadastro.** Os cards das auditorias agora aparecem do
   cadastro mais recente para o mais antigo — pela data em que a OS entrou no
   painel (criação da ficha `memory.md`), o que vale para todas as auditorias,

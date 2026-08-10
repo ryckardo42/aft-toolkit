@@ -337,6 +337,25 @@ python "<python_path>" ~/.claude/skills/_scripts/sincronizar_cats.py --sync
   clicar em "Ativar acesso"); a base local continua valendo enquanto isso.
 - Qualquer erro → registre no resumo; **não é bloqueante**.
 
+## Passo 2j — Oferecer o aviso semanal de pendências (só na primeira vez)
+
+O toolkit ganhou um aviso semanal: toda segunda-feira de manhã, uma notificação nativa
+do computador com o total de pendências em aberto das auditorias (a lista completa fica
+na seção "Pendências por auditoria" do painel). Confira se já foi oferecido:
+
+```bash
+grep -q "aviso_pendencias" "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/aft-config.md" && echo "ja_perguntado" || echo "nunca_perguntado"
+```
+
+- **`ja_perguntado`** → não pergunte de novo; siga para o Passo 3.
+- **`nunca_perguntado`** → ofereça **uma única vez**, em uma frase: *"Novidade: posso
+  deixar seu computador te avisar toda segunda de manhã quantas pendências estão em
+  aberto nas suas auditorias — notificação do próprio sistema, sem gastar nada. Quer?"*
+  - **Não** → grave `aviso_pendencias: ""` no front-matter do `aft-config.md` e siga.
+  - **Sim** → siga o Passo 7f do `/aft-setup` (script `instalar_rotina_pendencias.py`,
+    mesmo `python_path`/pasta de OS ATIVAS) e grave `aviso_pendencias: "08:00"` (ou o
+    horário escolhido) no `aft-config.md`.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve

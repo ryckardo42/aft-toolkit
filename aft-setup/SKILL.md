@@ -585,6 +585,27 @@ próxima vez que você fechar e reabrir o app."* Se falhar, não é bloqueante �
 resumo e siga (o `/aft-atualizar` tenta de novo). Quem não quiser o automático pede
 "remover o vigia de sessões" a qualquer momento.
 
+## Passo 7f — Aviso semanal de pendências (opcional)
+
+Ofereça, em uma frase: *"Quer receber toda segunda-feira de manhã uma notificação do
+computador com o total de pendências em aberto das suas auditorias? A lista completa
+fica na seção 'Pendências por auditoria' do painel."*
+
+- **Se não** → grave `aviso_pendencias: ""` no front-matter do `aft-config.md` (para não
+  perguntar de novo) e siga.
+- **Se sim**:
+  1. Instale com o script cross-platform (segunda-feira às 08:00 por padrão; outro
+     horário com `--hora HH:MM`):
+     ```bash
+     python ~/.claude/skills/_scripts/instalar_rotina_pendencias.py instalar "<python_path>" "<pasta OS ATIVAS>"
+     ```
+  2. Leia o JSON de retorno e traduza em uma frase. Grave `aviso_pendencias: "08:00"`
+     (ou o horário escolhido) no `aft-config.md`.
+
+> A notificação é nativa (macOS/Windows), roda fora do Claude Code e mostra **só os
+> totais** — nenhum nome de empresa nem texto de pendência aparece (ela pode surgir com
+> a tela bloqueada). Sem pendência em aberto, nada é exibido.
+
 ## Passo 8 — Resumo final
 
 Apresente:
