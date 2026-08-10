@@ -973,13 +973,15 @@ function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.valu
 function urlDoc(o,d){return '/doc/'+encodeURIComponent(o.pasta)+'/'+encodeURIComponent(d)}
 function linkDocs(i,t){const o=DATA.os[i];let s=esc(t);
  if(!ATIVO||!o.pasta||!o.docs||!o.docs.length)return s;
- // Passada única, nomes mais longos primeiro: "autos.md" não pode quebrar o
- // link de "interdicao-embargo/autos.md" que o contém.
- const nomes=[...o.docs].sort((a,b)=>b.length-a.length)
-  .map(d=>esc(d).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
- return s.replace(new RegExp(nomes.join('|'),'g'),m=>{
-  const d=o.docs.find(x=>esc(x)===m);
-  return '<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+m+'</a>'})}
+ // Em duas fases, nomes mais longos primeiro (nome -> marcador -> link):
+ // "autos.md" não pode quebrar o link de "interdicao-embargo/autos.md" que o
+ // contém, nem casar dentro do HTML já inserido do link de outro documento.
+ const ds=[...o.docs].sort((a,b)=>b.length-a.length),trocas=[];
+ ds.forEach((d,k)=>{const e=esc(d),m='\\u0001'+k+'\\u0001';
+  if(s.indexOf(e)>=0){s=s.split(e).join(m);trocas.push([m,d,e])}});
+ for(const [m,d,e] of trocas)
+  s=s.split(m).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>');
+ return s}
 // ---- Dossiê da OS (tela de detalhe) ----------------------------------------
 // Estágio do andamento da OS: régua fixa de 5 marcos.
 const STAGES=['Aberta','Inspecionada','Em instrução','Autuada','Encerrada'];
