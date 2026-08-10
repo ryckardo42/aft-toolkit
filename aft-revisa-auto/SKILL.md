@@ -89,7 +89,7 @@ cada elemento:
 
 **Discriminador:** o auto é de SST quando a ementa se baseia em **Norma Regulamentadora
 (NR)** — NR-01 (eixos de SST/GRO/assédio), NR-05, NR-06, NR-07, NR-09, NR-12, NR-15,
-NR-17, NR-18, NR-35 e demais NRs. Autos **contratuais** (aft-registro/CTPS, jornada, FGTS,
+NR-17, NR-18, NR-35 e demais NRs. Autos **contratuais** (aft-informalidade/CTPS, jornada, FGTS,
 salário) **não são SST**.
 
 - **Auto de SST sem o parágrafo → insira-o** ao final do bloco 2 (IRREGULARIDADE),
@@ -199,7 +199,7 @@ fixo de parágrafos):**
   PGR/AET/aft-auditoria-geral tem constatações suficientes para isso.
 
 Aplica-se a qualquer bloco II vindo de qualquer skill redatora (`/aft-PGR-analise`,
-`/aft-auditoria-geral`, `/aft-aet-auditoria`, `/aft-registro`, `/aft-rt-rgi` etc.) — se já chegar
+`/aft-auditoria-geral`, `/aft-aet-auditoria`, `/aft-informalidade`, `/aft-embargo-interdicao` etc.) — se já chegar
 paragrafado, não mexa.
 
 ---

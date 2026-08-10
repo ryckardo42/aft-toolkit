@@ -1,20 +1,20 @@
 ---
-name: aft-rt-manutencao
+name: aft-embargo-interdicao-manutencao
 model: opus
 description: >
   Use quando o AFT pedir para redigir o Relatório Técnico de MANUTENÇÃO de
   interdição ou embargo — o RT que analisa o requerimento de suspensão
   formulado pelo empregador e conclui pela manutenção da medida. Acione com
-  "/aft-rt-manutencao", "manutenção da interdição", "manutenção do embargo",
+  "/aft-embargo-interdicao-manutencao", "manutenção da interdição", "manutenção do embargo",
   "manter a interdição", "manter o embargo", "RT de manutenção", "negar a
   suspensão", "indeferir o levantamento", "a empresa pediu suspensão e não
-  vou levantar". NÃO confundir com /aft-rt-rgi (RT que fundamenta a
+  vou levantar". NÃO confundir com /aft-embargo-interdicao (RT que fundamenta a
   interdição original) nem /aft-auditoria-AR-NR12 (julga o laudo). Encadeia
   após /aft-auditoria-AR-NR12 com parecer INSUFICIENTE.
-compatibility: macOS e Windows (Git Bash). Requer o template.docx da skill aft-rt-rgi instalada. Script em Python 3 (stdlib).
+compatibility: macOS e Windows (Git Bash). Requer o template.docx da skill aft-embargo-interdicao instalada. Script em Python 3 (stdlib).
 ---
 
-# rt-manutencao — RT de Manutenção de Interdição/Embargo
+# aft-embargo-interdicao-manutencao — RT de Manutenção de Interdição/Embargo
 **AFT Toolkit**
 
 > **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
@@ -42,9 +42,9 @@ Divisão de trabalho no ecossistema:
 
 | Skill | Papel |
 |---|---|
-| `/aft-rt-rgi` | RT que **fundamenta** a interdição/embargo original (+ autos derivados) |
+| `/aft-embargo-interdicao` | RT que **fundamenta** a interdição/embargo original (+ autos derivados) |
 | `/aft-auditoria-AR-NR12` | **julga o laudo/apreciação de riscos** apresentado pela empresa |
-| `/aft-rt-manutencao` (esta) | RT que **nega a suspensão e mantém** a medida |
+| `/aft-embargo-interdicao-manutencao` (esta) | RT que **nega a suspensão e mantém** a medida |
 
 Se um laudo técnico/apreciação de riscos for o centro do requerimento, a análise dele
 pertence à `/aft-auditoria-AR-NR12` — ofereça rodá-la primeiro (ou reaproveite o
@@ -72,7 +72,7 @@ ls "<pasta-OS>/interdicao-embargo" 2>/dev/null || \
 
 Na pasta `interdicao-embargo/` (ou, na ausência dela, espalhado pela OS), localize:
 
-1. **O RT original** que embasou a interdição/embargo (saída do `/aft-rt-rgi` ou PDF do
+1. **O RT original** que embasou a interdição/embargo (saída do `/aft-embargo-interdicao` ou PDF do
    sistema) — dele saem os *Documentos Solicitados* e as *Medidas de Proteção* exigidas;
 2. **O requerimento de suspensão** do empregador (petição, e-mail, SEI);
 3. **Os documentos juntados** pelo requerente (laudos, ARTs, projetos, fotos, vídeos).
@@ -194,13 +194,13 @@ Monte o `spec.json` e rode o script empacotado (mantém cabeçalho/rodapé/estil
 fixo final do template — pedido de suspensão + SEI + assinatura):
 
 ```bash
-python3 ~/.claude/skills/aft-rt-manutencao/scripts/montar_rt_manutencao.py spec.json
+python3 ~/.claude/skills/aft-embargo-interdicao-manutencao/scripts/montar_rt_manutencao.py spec.json
 ```
 
-- `template`: `~/.claude/skills/aft-rt-rgi/template.docx` (instalado com a skill aft-rt-rgi do toolkit; se não existir, instale-a primeiro)
+- `template`: `~/.claude/skills/aft-embargo-interdicao/template.docx` (instalado com a skill aft-embargo-interdicao do toolkit; se não existir, instale-a primeiro)
 - `output`: `<pasta-OS>/interdicao-embargo/RT_Manutencao_[TERMO].docx` — crie a pasta
   `interdicao-embargo/` se ainda não existir (`mkdir -p`); é a mesma pasta canônica usada
-  pelo `/aft-rt-rgi`, para todo o material da interdição/embargo ficar junto
+  pelo `/aft-embargo-interdicao`, para todo o material da interdição/embargo ficar junto
 - `secoes`: as seções aprovadas (tipos: `p` parágrafo, `b` bullet, `q` citação, `h2`
   subtítulo 2.1/2.2); `**negrito**` é suportado
 - `cidade_data` / `nome_aft`: do contexto ou `aft-config.md`

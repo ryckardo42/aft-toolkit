@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monta o RT de Manutenção de Interdição/Embargo (.docx) a partir do template do aft-rt-rgi.
+"""Monta o RT de Manutenção de Interdição/Embargo (.docx) a partir do template do aft-embargo-interdicao.
 
 Mantém cabeçalho, rodapé, estilos e o bloco fixo final do template (DO PEDIDO DE
 SUSPENSÃO + instruções do SEI + assinatura) e substitui o miolo pelas seções da
@@ -12,7 +12,7 @@ a cada revisão. Uso:
 
 O spec.json (UTF-8):
 {
-  "template": "~/.claude/skills/aft-rt-rgi/template.docx",
+  "template": "~/.claude/skills/aft-embargo-interdicao/template.docx",
   "output":   "/caminho/para/RT_Manutencao.docx",
   "titulo_linha2": "TERMO DE MANUTENÇÃO DE EMBARGO Nº 3.089.823-4",
   "titulo_linha3": "(Ref. ao Termo de Embargo Nº 1.087.867-0)",   // opcional
@@ -120,14 +120,14 @@ def texto(bloco):
 def achar(blocks, condicao, descricao, inicio=0):
     """Índice do primeiro bloco cujo texto satisfaz a condição, ancorado por TEXTO.
 
-    Nunca por posição fixa: o template.docx do aft-rt-rgi ganha e perde blocos a
+    Nunca por posição fixa: o template.docx do aft-embargo-interdicao ganha e perde blocos a
     cada revisão, e índices fixos quebram o script inteiro (ver NOVIDADES 10/08/2026).
     """
     for i in range(inicio, len(blocks)):
         if condicao(texto(blocks[i])):
             return i
     sys.exit(f"âncora não encontrada no template.docx: {descricao} — o template do "
-             f"aft-rt-rgi mudou; ajuste o script")
+             f"aft-embargo-interdicao mudou; ajuste o script")
 
 
 def escrever_texto(bloco, novo):

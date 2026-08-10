@@ -6,28 +6,58 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
-## 10/08/2026 (3)
+## 10/08/2026 (4)
 <!-- commit: rt-manutencao-ancoras-por-texto -->
 
-**Correção: a `/aft-rt-manutencao` voltou a gerar o documento — estava quebrada
-desde 02/08/2026.**
+**Correção: a `/aft-embargo-interdicao-manutencao` voltou a gerar o documento —
+estava quebrada desde 02/08/2026.**
 
 - **O que acontecia.** Toda tentativa de gerar o Relatório Técnico de Manutenção
   de interdição/embargo parava com uma mensagem técnica ("template com 124
   blocos (esperado 134)") e nenhum `.docx` era criado. Nada de errado na sua
   máquina: era defeito do toolkit. O script contava os parágrafos do modelo
   oficial e ia buscar o cabeçalho, o bloco final e a linha de cidade/data em
-  posições fixas dessa contagem; quando o modelo do `/aft-rt-rgi` ganhou o campo
-  de contexto da inspeção física, em 02/08/2026, as posições saíram do lugar e
-  tudo travou.
+  posições fixas dessa contagem; quando o modelo da `/aft-embargo-interdicao`
+  ganhou o campo de contexto da inspeção física, em 02/08/2026, as posições
+  saíram do lugar e tudo travou.
 - **Como ficou.** O script agora acha cada parte **pelo texto** dela no modelo
   (a linha "RELATÓRIO TÉCNICO", a linha do "CNPJ:", o bloco "DO PEDIDO DE
-  SUSPENSÃO"), do mesmo jeito que a `/aft-levantamento-total` já fazia. O modelo
-  pode ganhar ou perder parágrafos que o documento continua saindo certo.
+  SUSPENSÃO"), do mesmo jeito que a `/aft-embargo-interdicao-levantamento` já
+  fazia. O modelo pode ganhar ou perder parágrafos que o documento continua
+  saindo certo.
 - **Uma trava a mais, porque o documento tem efeito legal.** Se algum campo do
   modelo não for preenchido (nome do empregador, CNPJ, data, seu nome), o script
   **não grava o arquivo** e avisa — em vez de entregar um relatório com lacuna
   passando despercebida.
+
+---
+
+## 10/08/2026 (3)
+<!-- commit: renomeia-skills-auditoria-embargo-informalidade -->
+
+**Cinco skills mudaram de nome, para dizer o que realmente fazem.** Nada mudou
+por dentro: o texto, as ementas e os documentos gerados são exatamente os mesmos.
+Só o comando é outro.
+
+| Antes | Agora | Por quê |
+|---|---|---|
+| `/aft-nova-os` | `/aft-nova-auditoria` | Uma OS pode virar **vários RIs**: num mesmo estabelecimento costumam conviver dois, três ou mais CNPJs, e você abre uma auditoria (um RI) para cada um. O que a skill cadastra é a auditoria, não a OS |
+| `/aft-rt-rgi` | `/aft-embargo-interdicao` | "RGI" só diz alguma coisa para quem já conhece a sigla |
+| `/aft-rt-manutencao` | `/aft-embargo-interdicao-manutencao` | Agora as três skills de interdição/embargo aparecem juntas quando você digita `/aft-embargo` |
+| `/aft-levantamento-total` | `/aft-embargo-interdicao-levantamento` | idem |
+| `/aft-registro` | `/aft-informalidade` | É a skill da informalidade: falta de registro (art. 41), CTPS (art. 29) e exame admissional |
+
+**O nome antigo deixa de funcionar.** Se digitar `/aft-rt-rgi`, não vai achar — é
+`/aft-embargo-interdicao` agora. Pedir em português continua funcionando igual
+("cadastra essa auditoria", "monta o RT de interdição", "trabalhador sem registro"):
+as skills continuam sendo encontradas pelo que você descreve.
+
+Seu **perfil de auditor** (o `CLAUDE.md`) é atualizado sozinho nesta atualização,
+com os nomes novos — o que você escreveu por fora dos marcadores fica intacto.
+Suas skills próprias (`minha-*`) não foram tocadas.
+
+> Detalhe técnico: como na renomeação de 26/07/2026, esta atualização mexe em muitos
+> arquivos de uma vez. Lista grande de mudanças é esperado.
 
 ---
 

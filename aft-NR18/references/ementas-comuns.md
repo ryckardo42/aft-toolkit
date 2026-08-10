@@ -11,7 +11,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as **29 ementas de NR-18** m
 
 > **Como usar:** dada uma narrativa do AFT, varra os "Gatilhos" abaixo para localizar a ementa. Se mais de uma bater, escolha a mais específica e mantenha as outras como candidatas — em obras é comum que vários fatos distintos coexistam, cada um gerando um auto. Se nenhuma bater, vá ao fallback NotebookLM.
 
-> **Sem dimensão cautelar:** este catálogo **não** classifica ementas quanto a embargo/interdição. Quando a inspeção indicar risco grave e iminente (queda de altura, elevador inseguro, choque elétrico), a fundamentação e a decisão sobre **embargo de obra/frente de serviço** (ou interdição de setor/equipamento) ficam inteiramente a cargo do `/aft-rt-rgi`. Esta skill apenas identifica a ementa e redige o bloco 2.
+> **Sem dimensão cautelar:** este catálogo **não** classifica ementas quanto a embargo/interdição. Quando a inspeção indicar risco grave e iminente (queda de altura, elevador inseguro, choque elétrico), a fundamentação e a decisão sobre **embargo de obra/frente de serviço** (ou interdição de setor/equipamento) ficam inteiramente a cargo do `/aft-embargo-interdicao`. Esta skill apenas identifica a ementa e redige o bloco 2.
 
 ---
 

@@ -1,11 +1,12 @@
 ---
-name: aft-rt-rgi
+name: aft-embargo-interdicao
 model: sonnet
 description: >
   Use SEMPRE que o AFT pedir para criar, gerar ou redigir um Relatório
   Técnico para Interdição e/ou Embargo (RT). Acione com "relatório técnico
   de interdição/embargo", "RT de interdição", "gerar o relatório técnico",
-  "montar o RT", "AFT-RT-RGI". Logo após o RT, redige obrigatoriamente os
+  "montar o RT", "/aft-embargo-interdicao", "embargar a obra", "interditar
+  a máquina". Logo após o RT, redige obrigatoriamente os
   autos derivados das ementas da seção 4. Acione TAMBÉM quando o AFT ANEXAR
   um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta skill
   que os redige, nunca improvisar por fora. Acione AINDA quando o AFT
@@ -15,7 +16,7 @@ description: >
   sempre o AFT.
 ---
 
-# aft-rt-rgi — Relatório Técnico para Interdição e Embargo
+# aft-embargo-interdicao — Relatório Técnico para Interdição e Embargo
 **AFT Toolkit**
 
 > **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
@@ -35,7 +36,7 @@ description: >
 ## Objetivo
 
 Gerar um **Relatório Técnico para Interdição e/ou Embargo** em formato `.docx`, baseado no
-modelo oficial incluído no toolkit (`~/.claude/skills/aft-rt-rgi/template.docx`,
+modelo oficial incluído no toolkit (`~/.claude/skills/aft-embargo-interdicao/template.docx`,
 modelo **universal**: cabeçalho, cidade/UF e data já vêm como placeholder genérico,
 qualquer AFT de qualquer SRTE pode usar sem adaptação). O documento mantém
 TODO o conteúdo fixo do modelo (cabeçalho, logotipos, textos legais, citações doutrinárias,
@@ -310,7 +311,7 @@ suspensão. Sem essa amarração, o empregador junta laudo genérico e o exame v
 discussão sobre o que deveria ter sido pedido.
 
 **Resolva o anexo pela tabela de correlação**, em
-`~/.claude/skills/aft-rt-rgi/references/anexos-nr12.md` — leia esse arquivo sempre que
+`~/.claude/skills/aft-embargo-interdicao/references/anexos-nr12.md` — leia esse arquivo sempre que
 o RT interditar máquina. Ele traz o escopo dos 12 anexos, a tabela máquina → anexo →
 item a citar (itens conferidos no notebook da NR-12) e, no fim, as **dispensas
 expressas** de cada anexo, que limitam o que se pode exigir no item 7. Exemplos:
@@ -430,7 +431,7 @@ embargo** no texto fixo. Se um placeholder sumir do template, ele **para com err
 
 ```bash
 mkdir -p /tmp/RT_temp
-cp ~/.claude/skills/aft-rt-rgi/template.docx /tmp/RT_temp/template.docx
+cp ~/.claude/skills/aft-embargo-interdicao/template.docx /tmp/RT_temp/template.docx
 ```
 
 > No Windows com Git Bash, `/tmp` existe e funciona normalmente.

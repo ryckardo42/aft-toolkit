@@ -364,7 +364,7 @@ notificação DEVE sempre incluir, entre outros, estes quatro itens:
 
 **RT) Manutenção da interdição** — apenas no modo `suspensão de interdição` com parecer
 INSUFICIENTE (ou APTO COM RESSALVAS que não sane o risco): *"Quer que eu gere o Relatório
-Técnico de manutenção da interdição?"* Se aceito, chame `/aft-rt-rgi` reaproveitando esta
+Técnico de manutenção da interdição?"* Se aceito, chame `/aft-embargo-interdicao` reaproveitando esta
 análise como seção de fundamentação (a análise dos laudos vira o núcleo do RT).
 
 ---
@@ -380,4 +380,4 @@ análise como seção de fundamentação (a análise dos laudos vira o núcleo d
   explícita de ausência.
 - Dados reais da empresa ficam nos arquivos da OS — não os exponha fora dela.
 - Esta skill **julga o documento**; não redige autos de infração (isso é /aft-auditoria-geral
-  ou /aft-rt-rgi → /aft-gera-ai) nem lavra interdição.
+  ou /aft-embargo-interdicao → /aft-gera-ai) nem lavra interdição.

@@ -40,7 +40,7 @@ Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o pró
 **Aprofundamento técnico é da `/aft-consulta`.** Esta skill não consulta os NotebookLMs nem estuda temas por conta própria: ela organiza os fatos e os documentos. Quando o AFT quiser tirar uma dúvida técnica, achar a ementa certa ou entender o que exigir sobre um tema, o caminho é `/aft-consulta` — antes, durante ou depois da preparação, quantas vezes precisar. Não ofereça estudo prévio nem pergunte "quais temas quer estudar".
 
 ## Pasta base
-`<OS_ATIVAS>/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/aft-nova-os`)
+`<OS_ATIVAS>/<NOME_DA_AUDITORIA>/` (CNPJ pode ou não estar no nome — ver `/aft-nova-auditoria`)
 
 ---
 
@@ -91,8 +91,8 @@ Sem PDF anexado, siga direto para a FASE 1 — a skill funciona como sempre, com
 ## FASE 1 — Resolver/criar a OS
 
 1. Se a empresa já tem pasta em `OS ATIVAS/`, use-a.
-2. Se não existe, **chame o fluxo do `/aft-nova-os`** para coletar o nome da auditoria, município (e DET, se já houver) e criar a pasta + `memory.md`. Não duplique a lógica de `/aft-nova-os` — reaproveite-a. O CNPJ é opcional nessa fase (só se torna obrigatório no `/aft-gera-ai`) — se o AFT já souber, informe; se não, siga sem.
-3. **Se a FASE 0 leu uma Demanda e/ou Ordem de Serviço do SFIT**, alimente o fluxo do `/aft-nova-os` com o que foi extraído em vez de re-perguntar: proponha o nome da auditoria (razão social ou fantasia — o AFT confirma ou troca) e leve CNPJ, município, telefone, CNAE/grau de risco e RI confirmado. Depois de criada/resolvida a pasta:
+2. Se não existe, **chame o fluxo do `/aft-nova-auditoria`** para coletar o nome da auditoria, município (e DET, se já houver) e criar a pasta + `memory.md`. Não duplique a lógica de `/aft-nova-auditoria` — reaproveite-a. O CNPJ é opcional nessa fase (só se torna obrigatório no `/aft-gera-ai`) — se o AFT já souber, informe; se não, siga sem.
+3. **Se a FASE 0 leu uma Demanda e/ou Ordem de Serviço do SFIT**, alimente o fluxo do `/aft-nova-auditoria` com o que foi extraído em vez de re-perguntar: proponha o nome da auditoria (razão social ou fantasia — o AFT confirma ou troca) e leve CNPJ, município, telefone, CNAE/grau de risco e RI confirmado. Depois de criada/resolvida a pasta:
    - **copie o(s) PDF(s)** para a raiz da pasta da OS: a Demanda como `OS <nº da OS> - Demanda <nº da demanda>.pdf` (é o original, com os dados do denunciante — fica local, como os demais documentos sensíveis da OS) e a Ordem de Serviço como `OS <nº da OS>.pdf`;
    - acrescente ao corpo do `memory.md` (logo após `**CNPJ:**`) as linhas `**Endereço:**` (completo, com CEP e ponto de referência), `**Telefone:**` e `**OS (SFIT):** <nº da OS> · **Demanda:** <nº da demanda>`;
    - se a Ordem de Serviço trouxe o prazo limite para término, acrescente também `**Vencimento da OS:** <dd/mm/aaaa>` (é prazo da fiscalização, não de DET — fora da seção `## Notificações DET`, o painel não o confunde);
@@ -198,7 +198,7 @@ Se o AFT forneceu uma lista **nominal** de trabalhadores (nome, e opcionalmente 
 > **Exceção: a Relação de Vínculos Ativos do SFIT tem fluxo próprio — vá à FASE 3.1.** Não a leia nem a tokenize à mão: um script a processa localmente e devolve só os agregados e o punhado de pessoas que o AFT precisa procurar.
 
 1. **Reaproveite** um `.depara_<CNPJ>.json` (ou `.depara.json`, se o CNPJ ainda não foi informado) existente na **raiz da pasta da OS**, se houver (não confundir com o de uma subpasta `Autos DD-MM/` — a preparação acontece antes de qualquer lavratura). Se existir, acrescente os trabalhadores novos sem renumerar os existentes.
-2. Se não existir, crie o arquivo na raiz da OS no mesmo esquema usado pelo `/aft-gera-ai`: `.depara_<CNPJ>.json` se o CNPJ já foi informado (na `/aft-nova-os` desta OS), ou `.depara.json` (sem sufixo) se ainda não — o `/aft-gera-ai` sabe procurar os dois nomes e renomeia para incluir o CNPJ quando ele for coletado.
+2. Se não existir, crie o arquivo na raiz da OS no mesmo esquema usado pelo `/aft-gera-ai`: `.depara_<CNPJ>.json` se o CNPJ já foi informado (na `/aft-nova-auditoria` desta OS), ou `.depara.json` (sem sufixo) se ainda não — o `/aft-gera-ai` sabe procurar os dois nomes e renomeia para incluir o CNPJ quando ele for coletado.
    ```json
    {
      "cnpj": "[cnpj_14_digitos, ou vazio se ainda não informado]",
@@ -290,7 +290,7 @@ documentação do serviço especializado.
    os **dois níveis** que ela devolve: o Quadro I por representação e o total paritário (o
    dobro), discriminando eleitos e designados.
 5. **Grave no `memory.md`** (front-matter e as linhas espelhadas no corpo, conforme o
-   esquema da `/aft-nova-os`): `trabalhadores:`, `cnae:` e `grau_risco:`. É daí que o
+   esquema da `/aft-nova-auditoria`): `trabalhadores:`, `cnae:` e `grau_risco:`. É daí que o
    script da FASE 7 recalcula tudo sozinho para o `.docx`.
 6. Acrescente aos `## Pontos de atenção para a visita`: conferir a CIPA em exercício (ata
    de eleição, mandato vigente, efetivos e suplentes em cada representação) e a composição
@@ -616,7 +616,7 @@ Próximos passos:
 
 ## Encadeamento
 
-- Chama `/aft-nova-os` (FASE 1) para resolver/criar a OS — não duplica essa lógica.
+- Chama `/aft-nova-auditoria` (FASE 1) para resolver/criar a OS — não duplica essa lógica.
 - Chama `/aft-cnae-grau-risco-nr04`, `/aft-dimensionamento-sesmt-nr04` e `/aft-cipa-nr05-dimensionamento` (FASE 3.5) para o grau de risco, o SESMT e a CIPA devidos — os cálculos são dos scripts delas, nunca de cabeça.
 - Chama `/aft-nr24-dimensionamento` (FASE 3.6) para as instalações sanitárias, mictórios, lavatórios e bebedouros devidos, a partir dos homens e mulheres da Relação de Vínculos — sem os flags de exposição, para que o documento de campo traga também os cenários condicionais. Sendo canteiro de obras (CNAE 41/42/43 ou "SPE" no nome), a mesma skill aplica a NR-18 no lugar da NR-24, e o `.docx` diz em que sinal se baseou.
 - Trata a Relação de Vínculos Ativos do SFIT com o próprio `vinculos_ativos.py` (FASE 3.1), inteiramente local: nem o PDF nem a lista nominal entram no contexto do modelo.

@@ -1,19 +1,20 @@
 ---
-name: aft-nova-os
+name: aft-nova-auditoria
 model: sonnet
 effort: medium
 description: >
   Use quando o AFT quiser cadastrar/abrir uma nova auditoria (OS) —
   registrar a empresa que vai fiscalizar e, se já houver, a notificação do
-  DET com o prazo. Acione com /aft-nova-os, "nova OS", "cadastrar
-  auditoria", "abrir auditoria", "nova empresa", "começar fiscalização",
+  DET com o prazo. Acione com /aft-nova-auditoria, "nova auditoria", "nova
+  OS", "cadastrar auditoria", "abrir auditoria", "novo RI", "nova empresa",
+  "começar fiscalização",
   "registrar empresa", "abrir OS", "criar pasta da empresa" — ou ao anexar
   um PDF do SFIT-WEB (Demanda ou Ordem de Serviço) pedindo o cadastro.
   Anonimiza o denunciante da Demanda. É o ponto de entrada do fluxo de
   fiscalização.
 ---
 
-# nova-os — Cadastrar uma auditoria (OS)
+# aft-nova-auditoria — Cadastrar uma auditoria (RI)
 **AFT Toolkit**
 
 > **Onde ficam as pastas das OS.** O AFT pode ter mudado a pasta de trabalho de
@@ -89,7 +90,7 @@ Depois de criar a pasta (Passo 2), **copie o(s) PDF(s)** para a raiz dela: a Dem
 
 > Com o PDF lido, ofereça também a `/aft-preparacao-acao-fiscal`: ela faz o planejamento
 > completo da ação (resumo desidentificado da denúncia, estudo prévio nos NotebookLMs,
-> link do Google Maps, checklist de documentos) — o `/aft-nova-os` só cadastra a OS.
+> link do Google Maps, checklist de documentos) — o `/aft-nova-auditoria` só cadastra a OS.
 
 ## Passo 1 — Coletar os dados
 
@@ -113,7 +114,7 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 > **Sem RI, avise o AFT** (uma frase, sem bloquear o cadastro): *"Sem o RI, o sync automático do DET (extensão Chrome) não vai importar as notificações desta auditoria — você pode informar agora ou completar depois no memory.md."* Se o AFT não souber o RI ainda (comum ao abrir a OS antes da 1ª notificação), siga sem — o `det_sync.py` adota sozinho o RI da primeira notificação confirmada e grava no front-matter, então o aviso é só para quem já tem o RI em mãos e esqueceria de informar.
 
 > Se o AFT ainda não notificou nada pelo DET, deixe a seção de DET vazia — dá para
-> acrescentar depois (basta editar o `memory.md` ou rodar `/aft-det-630`/`/aft-nova-os` de novo).
+> acrescentar depois (basta editar o `memory.md` ou rodar `/aft-det-630`/`/aft-nova-auditoria` de novo).
 
 ## Passo 2 — Resolver a pasta da OS
 
@@ -121,7 +122,7 @@ Nome da pasta (padrão do toolkit): `<NOME_DA_AUDITORIA>` — exatamente o nome 
 1, em CAIXA ALTA (com ou sem CNPJ/CPF embutido, conforme o AFT informou). Se o CNPJ/CPF foi
 informado, grave-o também no `memory.md` (`**CNPJ:**` ou `**CPF:**`); se não, deixe vazio —
 quando o CNPJ for informado futuramente (no `/aft-gera-ai`, tipicamente), a pasta é renomeada
-lá, com o CNPJ **na frente** do nome original (`<CNPJ> <NOME_DA_AUDITORIA>`). O `/aft-nova-os`
+lá, com o CNPJ **na frente** do nome original (`<CNPJ> <NOME_DA_AUDITORIA>`). O `/aft-nova-auditoria`
 não faz esse rename — só o `/aft-gera-ai`, quando o CNPJ é finalmente coletado.
 
 ```bash
@@ -182,7 +183,7 @@ _(vazio)_
 ## Registro de atividades
 | Data | Ação | Detalhes |
 |------|------|----------|
-| <dd/mm/aaaa> | OS cadastrada | via /aft-nova-os |
+| <dd/mm/aaaa> | OS cadastrada | via /aft-nova-auditoria |
 ```
 
 > **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor. As linhas `**Endereço:**`, `**Telefone:**`, `**OS (SFIT):**`/`**Demanda:**` e `**Vencimento da OS:**` também são opcionais — só entram quando conhecidas (tipicamente lidas dos PDFs do SFIT, Passo 0; o vencimento existe só na Ordem de Serviço); omita a linha inteira quando não houver o dado. O vencimento da OS fica FORA da seção `## Notificações DET` — assim o painel não o confunde com prazo de DET.
@@ -238,5 +239,5 @@ você segue a `/aft-sessoes-os` (fluxo pontual).
   no `/aft-gera-ai`). Não é obrigatório para abrir a OS — só na hora de gerar os autos.
 - Se o CNPJ ainda não foi informado, a pasta fica só com o nome dado no Passo 1. O
   `/aft-gera-ai` a renomeia (prefixando o CNPJ) no momento em que o CNPJ for coletado — o
-  `/aft-nova-os` não faz esse rename.
+  `/aft-nova-auditoria` não faz esse rename.
 - Idempotente: rodar de novo para a mesma auditoria atualiza o DET/CNPJ, não recria a pasta.

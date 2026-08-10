@@ -12,7 +12,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 9 ementas mais utilizadas
 
 > **Como usar:** dada uma narrativa do AFT, varra os "Gatilhos" abaixo para localizar a ementa. Se mais de uma bater, escolha a mais específica. Se nenhuma bater, consulte `ementario-completo.md` (as ~79 ementas da NR-01) e, em último caso, o fallback NotebookLM.
 
-> **NR-01 nunca fundamenta interdição ou embargo.** Nenhuma ementa deste catálogo, isoladamente, caracteriza risco grave e iminente. Se a narrativa sugerir GIR, o fundamento virá de outra NR (ex.: NR-12, NR-18, NR-35) — encaminhe à consultora específica e ao `/aft-rt-rgi`.
+> **NR-01 nunca fundamenta interdição ou embargo.** Nenhuma ementa deste catálogo, isoladamente, caracteriza risco grave e iminente. Se a narrativa sugerir GIR, o fundamento virá de outra NR (ex.: NR-12, NR-18, NR-35) — encaminhe à consultora específica e ao `/aft-embargo-interdicao`.
 
 ---
 
@@ -98,7 +98,7 @@ Catálogo curado pelo AFT Ricardo (Goiânia/GO) com as 9 ementas mais utilizadas
 - **Itens NR-01 violados:** 1.4.3.1
 - **Capitulação:** Art. 157, inciso I, da CLT, c/c item 1.4.3.1 da NR-01, com redação da Portaria SEPRT/ME nº 6.730/2020.
 - **Gradação:** I4
-- **Observação:** a situação de grave e iminente risco subjacente é caracterizada por outra NR (e a eventual interdição/embargo é do `/aft-rt-rgi`, fundamentada nessa NR). Esta ementa pune a conduta do empregador de exigir o retorno sem as medidas corretivas — inclusive após interrupção de atividade pelo trabalhador (direito de recusa, item 1.4.3).
+- **Observação:** a situação de grave e iminente risco subjacente é caracterizada por outra NR (e a eventual interdição/embargo é do `/aft-embargo-interdicao`, fundamentada nessa NR). Esta ementa pune a conduta do empregador de exigir o retorno sem as medidas corretivas — inclusive após interrupção de atividade pelo trabalhador (direito de recusa, item 1.4.3).
 - **Gatilhos:** "obrigou a voltar ao trabalho", "exigiu retorno", "mandou retomar a atividade", "retorno sem correção do risco", "voltaram a operar a máquina interditada", "direito de recusa desrespeitado".
 - **Texto-base:**
 

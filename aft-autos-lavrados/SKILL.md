@@ -75,7 +75,7 @@ Cenários típicos:
 2. Para cada pasta, descubra o **identificador** (CNPJ/CPF) do autuado, nesta ordem:
    - regex `^(.+) (\d{11,14})$` sobre o nome da pasta (14 díg. = CNPJ, 11 = CPF/CAEPF);
    - senão, o campo `cnpj:` (ou `**CNPJ:**`/`**CPF:**`) do `memory.md` da OS;
-   - **se ainda assim não houver identificador** (OS aberta com nome livre, sem CNPJ — permitido desde a atualização do `/aft-nova-os`), veja o passo 5.
+   - **se ainda assim não houver identificador** (OS aberta com nome livre, sem CNPJ — permitido desde a atualização do `/aft-nova-auditoria`), veja o passo 5.
 3. **Se o usuário forneceu argumento:**
    - 11 ou 14 dígitos (limpando pontuação) → match exato por CNPJ/CPF.
    - exatamente 8 dígitos → o AFT já informou o prefixo direto; use-o como está.
