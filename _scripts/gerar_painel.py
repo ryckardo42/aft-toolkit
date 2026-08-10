@@ -1541,9 +1541,14 @@ def main() -> int:
                 elif dd <= 7:
                     n_urgentes += 1
 
-    # Ordena: vencidos primeiro, depois por dias-restantes; sem-prazo ao fim.
+    # Ordena: cadastro mais recente primeiro (data_inicio do memory.md,
+    # gravada pela /aft-nova-os); OS sem data ao fim, desempate por nome.
+    # (Até 10/08/2026 a ordem era por urgência de DET — a agenda "Próximos
+    # vencimentos", no rodapé, continua cobrindo os prazos.)
     def chave(o):
-        return (o["dias_top"] is None, o["dias_top"] if o["dias_top"] is not None else 0)
+        return (o["data_inicio"] is None,
+                -o["data_inicio"].toordinal() if o["data_inicio"] else 0,
+                (o["empregador"] or "").lower())
     oss.sort(key=chave)
 
     venc = coletar_vencimentos(oss, hoje)
