@@ -80,10 +80,12 @@ Antes de redigir, consolide os fatos extraídos e **sinalize divergências e lac
 solicitado e não apresentado). Resolva o que puder com os documentos; o que não, registre
 como lacuna e, quando for decisão do AFT, pergunte.
 
-Opcional, para fundamentar a metodologia: consulte o NotebookLM **guia-analise-acidentes**
-(ver seção "NotebookLM" abaixo) sobre a Árvore de Causas e a classificação dos fatores. A
-análise **não depende** do NotebookLM — se a sessão expirar, oriente `/aft-notebooklm-login` e
-siga assim mesmo.
+**Consulta obrigatória à metodologia.** Antes de redigir as Seções 4, 5 e 6, consulte o
+NotebookLM **guia-analise-acidentes** (ver seção "NotebookLM" abaixo) sobre a Árvore de
+Causas, a classificação dos fatores causais e a Instrução Normativa de regência. O roteiro
+das seções deriva do guia e da IN — não redija a análise só a partir do texto desta skill
+ou de conhecimento geral. Se a sessão do NotebookLM estiver expirada, **interrompa** e
+oriente `/aft-notebooklm-login`; só prossiga para a Fase 2 depois que a consulta funcionar.
 
 ---
 
@@ -121,9 +123,14 @@ houve) e as **informações prestadas pelos trabalhadores** (se colhidas). Em se
 **análise dos fatores causais**, dividida em três níveis — aqui sim com o juízo técnico da
 auditoria, sempre sistêmico:
 
-  - **A) Fatores Imediatos** — causas mais próximas e evidentes no momento do evento:
-    *atos inseguros* (comportamentos que elevam o risco) e *condições inseguras* (situações
-    do ambiente: equipamento defeituoso, falta de proteção, piso, iluminação, etc.).
+  - **A) Fatores Imediatos** — os fatos constatados no momento do evento, enunciados de
+    forma objetiva e verificável: o que a tarefa exigia, que meios e ferramentas a
+    organização forneceu, que condições existiam no ambiente e no equipamento, que medida
+    de prevenção estava ausente. **Não classifique conduta do trabalhador como "ato
+    inseguro", "erro", "falha humana", "desatenção" ou equivalente, e não rotule o
+    ambiente como "inseguro":** a norma violada e a medida ausente já dizem o necessário.
+    O fato é enunciado; o juízo técnico vem da correlação com as normas e com os fatores
+    de gestão (subitens B e C e mapeamento SFIT).
   - **B) Fatores Subjacentes** — causas menos óbvias que alimentam os imediatos, ligadas à
     gestão e organização: falhas de comunicação, pressão por produção, treinamento
     inadequado, manutenção deficiente, supervisão inadequada.
@@ -205,17 +212,17 @@ documentos faltantes (ex.: PCMSO, laudo necroscópico do IML) via **DET**.
 ## NotebookLM
 
 Notebook de metodologia: **guia-analise-acidentes** (`notebook_id`
-`aefa56af-5eb5-4558-8454-827173be228c`). Use-o para fundamentar a Árvore de Causas e a
-classificação dos fatores. Os notebooks de NR e de ementário entram **só** na etapa de
-autos (delegada à `/aft-auditoria-geral`). Consulta padrão:
+`aefa56af-5eb5-4558-8454-827173be228c`). A consulta a ele é **obrigatória e prévia** à
+redação das Seções 4, 5 e 6 (ver Fase 1): é do guia e da Instrução Normativa de regência
+que o roteiro da análise deriva. Os notebooks de NR e de ementário entram **só** na etapa
+de autos (delegada à `/aft-auditoria-geral`). Consulta padrão:
 
 ```bash
 notebooklm ask "<pergunta genérica de metodologia, sem PII>" --notebook aefa56af-5eb5-4558-8454-827173be228c --json
 ```
 
-Se vier erro de autenticação/expiração, avise e oriente `/aft-notebooklm-login`; depois siga.
-A análise **nunca trava** por falta de NotebookLM — a metodologia (3 níveis + tabela SFIT)
-já está nesta skill.
+Se vier erro de autenticação/expiração, **interrompa a redação**, avise e oriente
+`/aft-notebooklm-login`; retome a análise somente depois que a consulta funcionar.
 
 ---
 
@@ -225,6 +232,11 @@ já está nesta skill.
   pessoas/empresas. Lacuna é lacuna: aponte-a.
 - **Seção 4 sem juízo**; análise causal só na Seção 5.
 - **Não atribua culpa exclusiva ao trabalhador.**
+- **Vedado o par de Heinrich.** Não use "ato inseguro" nem "condição insegura" para
+  classificar fator causal, e não recorra a "falha humana", "erro do trabalhador" ou
+  "desatenção". Essas categorias só podem ser mencionadas para serem criticadas. Os
+  fatores são enunciados como fatos objetivos e mapeados nas famílias de gestão da
+  tabela SFIT (251 a 260).
 - **Privacidade:** processamento local; ao NotebookLM, só descrição genérica.
 - **Saída em .docx**, com acentuação completa em português.
 - A skill **não** redige os autos (isso é `/aft-auditoria-geral`) nem empacota o TXT (isso é
