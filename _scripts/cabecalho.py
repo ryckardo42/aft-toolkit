@@ -120,12 +120,17 @@ PREFIXO_MEDIA = "aft-cabecalho-"   # nome das imagens dentro do .docx
 
 # --------------------------------------------------------------- a lotacao
 def _frontmatter(texto: str) -> dict:
-    """Campos simples (chave: valor) do front-matter do aft-config.md."""
+    """Campos simples (chave: valor) do front-matter do aft-config.md.
+
+    O aft-config.md traz comentario na mesma linha do valor (`uorg: "015000000"
+    # cod_4 do TXT`), entao o comentario sai antes de ler o valor.
+    """
     campos = {}
     for linha in texto.splitlines():
         if linha.strip() == "---" and campos:
             break
-        m = re.match(r'\s*([a-z_]+)\s*:\s*"?([^"#]*?)"?\s*$', linha)
+        linha = re.sub(r'\s+#.*$', "", linha)
+        m = re.match(r'\s*([a-z_]+)\s*:\s*"?([^"]*?)"?\s*$', linha)
         if m:
             campos[m.group(1)] = m.group(2).strip()
     return campos
