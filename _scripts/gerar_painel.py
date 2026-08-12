@@ -84,7 +84,10 @@ except ImportError:
 
 RE_FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 RE_TITULO = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
-RE_CNPJ_BODY = re.compile(r"\*\*CNPJ:\*\*\s*([\d./-]+)")
+# Identificador do empregador no corpo do memory.md. Pessoa física (produtor
+# rural, empregador doméstico) tem CPF/CAEPF no lugar do CNPJ — a linha vem
+# rotulada "**CPF:**", e sem isso o card ficava "CNPJ não informado".
+RE_CNPJ_BODY = re.compile(r"\*\*(?:CNPJ|CPF|CAEPF|CNPJ/CPF)\s*:\*\*\s*([\d./-]+)")
 RE_PRAZO = re.compile(
     r"(?:prazo|entrega\s+at[eé])[:\s]+(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})",
     re.IGNORECASE)
@@ -256,7 +259,7 @@ def parse_memory(path: Path) -> dict:
         m = RE_TITULO.search(corpo)
         empregador = m.group(1).strip() if m else pasta
 
-    cnpj = parse_fm(fm, "cnpj")
+    cnpj = parse_fm(fm, "cnpj") or parse_fm(fm, "cpf") or parse_fm(fm, "caepf")
     if not cnpj:
         m = RE_CNPJ_BODY.search(corpo)
         cnpj = re.sub(r"\D", "", m.group(1)) if m else ""
@@ -1240,7 +1243,7 @@ function abre(i){
  const o=DATA.os[i],st=stageOS(o);ABERTA=o.pasta||null;
  let h='<div class="topo"><button class="voltar" onclick="fecha()">← voltar ao painel</button>'+
   '<span class="status-pill">'+esc((o.status||'').replace(/_/g,' '))+'</span></div>';
- const meta=[esc(o.cnpj_fmt||'CNPJ não informado'),esc(o.municipio),
+ const meta=[esc(o.cnpj_fmt||'CNPJ/CPF não informado'),esc(o.municipio),
   o.ri?'<b>RI '+esc(o.ri)+'</b>':'',
   o.inicio?'Início '+esc(o.inicio)+' ('+esc(o.ha_dias)+')':'',
   o.vencimento?'Vence '+esc(o.vencimento):'',
@@ -1714,7 +1717,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         cards.append(f"""
 <div class="card {classe}" onclick="abre({i})">
   <h2>{html.escape(o["empregador"])}</h2>
-  <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
+  <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ/CPF não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
   <span class="badge {classe}">{html.escape(rotulo)}</span>
   <div class="chips">{chips}</div>
   <div class="rodape-card">

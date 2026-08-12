@@ -426,7 +426,9 @@ def identificadores(texto: str, pasta: str) -> tuple[str, str]:
         v = c.group(1).strip().strip('"').strip("'")
         return "" if v in ("null", "~") else v
 
-    cnpj = re.sub(r"\D", "", campo("cnpj"))
+    # Empregador pessoa física (rural, doméstico) é identificado por CPF/CAEPF:
+    # aceita as três chaves, o valor é sempre só dígitos.
+    cnpj = re.sub(r"\D", "", campo("cnpj") or campo("cpf") or campo("caepf"))
     if not cnpj:
         m2 = re.search(r"(\d{11,14})\s*$", pasta)
         cnpj = m2.group(1) if m2 else ""

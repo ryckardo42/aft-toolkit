@@ -120,7 +120,9 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 
 Nome da pasta (padrão do toolkit): `<NOME_DA_AUDITORIA>` — exatamente o nome dado no Passo
 1, em CAIXA ALTA (com ou sem CNPJ/CPF embutido, conforme o AFT informou). Se o CNPJ/CPF foi
-informado, grave-o também no `memory.md` (`**CNPJ:**` ou `**CPF:**`); se não, deixe vazio —
+informado, grave-o no front-matter `cnpj:` (só dígitos — é o campo que o painel e o sync do
+DET leem, valendo tanto para CNPJ quanto para CPF/CAEPF) e no corpo (`**CNPJ:**` ou `**CPF:**`);
+se não, deixe vazio —
 quando o CNPJ for informado futuramente (no `/aft-gera-ai`, tipicamente), a pasta é renomeada
 lá, com o CNPJ **na frente** do nome original (`<CNPJ> <NOME_DA_AUDITORIA>`). O `/aft-nova-auditoria`
 não faz esse rename — só o `/aft-gera-ai`, quando o CNPJ é finalmente coletado.
@@ -148,7 +150,7 @@ mantêm, e que o `/aft-painel` lê:
 ```markdown
 ---
 empregador: <NOME_DA_AUDITORIA>
-cnpj: "<14 dígitos, ou vazio se ainda não informado>"
+cnpj: "<só dígitos: CNPJ 14 díg. OU CPF/CAEPF 11 díg. do empregador pessoa física; vazio se ainda não informado>"
 municipio: <município ou vazio>
 ri: "<9 dígitos, ou vazio se ainda não informado>"
 trabalhadores: <N, ou vazio>
@@ -159,6 +161,8 @@ status: em_andamento
 # <NOME_DA_AUDITORIA>
 
 **CNPJ:** <CNPJ formatado XX.XXX.XXX/XXXX-XX, ou "_(ainda não informado — obrigatório no /aft-gera-ai)_">
+<!-- empregador pessoa física (rural, doméstico): troque o rótulo por **CPF:** e escreva XXX.XXX.XXX-XX;
+     o front-matter `cnpj:` continua sendo o campo do identificador (só os 11 dígitos) -->
 **Endereço:** <endereço completo com CEP e ponto de referência — só se conhecido>
 **Telefone:** <telefone da empresa — só se conhecido>
 **OS (SFIT):** <nº da OS> · **Demanda:** <nº da demanda>   <!-- só quando lidos de um PDF do SFIT -->
