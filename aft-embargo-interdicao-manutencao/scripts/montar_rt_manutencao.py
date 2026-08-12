@@ -51,9 +51,17 @@ import random
 import re
 import sys
 import zipfile
+from pathlib import Path
 from xml.dom.minidom import parseString
 
-RPR = '<w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Tahoma"/><w:sz w:val="22"/><w:szCs w:val="22"/>'
+try:  # cabeçalho com a lotação do AFT (ver _scripts/cabecalho.py)
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
+    from cabecalho import template_personalizado
+except Exception:  # sem ele o RT sai com o cabeçalho neutro do template
+    def template_personalizado(caminho, lotacao=None):
+        return str(caminho)
+
+RPR ='<w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Tahoma"/><w:sz w:val="22"/><w:szCs w:val="22"/>'
 
 
 def pid():
@@ -158,7 +166,7 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("uso: montar_rt_manutencao.py spec.json")
     spec = json.load(open(sys.argv[1], encoding="utf-8"))
-    tpl_path = os.path.expanduser(spec["template"])
+    tpl_path = template_personalizado(os.path.expanduser(spec["template"]))
     out_path = os.path.expanduser(spec["output"])
 
     zin = zipfile.ZipFile(tpl_path)

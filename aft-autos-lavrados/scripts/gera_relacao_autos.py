@@ -6,7 +6,8 @@ Uso:
     python3 gera_relacao_autos.py <autos-lavrados.md> [pasta_saida]
 
 - Usa o template `template-relacao-autos.docx` (mesma pasta deste script).
-  O cabeçalho do template (logos SIT/AFT) NUNCA é alterado.
+  O cabeçalho institucional (com a lotação do AFT) vem do
+  `_scripts/cabecalho.py`; este script nunca escreve no cabeçalho.
 - Design padrão: título e datas centralizados entre filetes navy, barra
   lateral navy nos títulos dos autos, texto sempre justificado, fonte Times
   New Roman 12pt em todo o documento.
@@ -49,6 +50,12 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
 from docx_pack import empacotar          # noqa: E402
 from docx_unpack import desempacotar     # noqa: E402
+
+try:  # cabeçalho com a lotação do AFT (ver _scripts/cabecalho.py)
+    from cabecalho import template_personalizado
+except Exception:  # sem ele a relação sai com o cabeçalho neutro do template
+    def template_personalizado(caminho, lotacao=None):
+        return str(caminho)
 
 NAVY = "103B5A"  # cor do logo AFT no cabeçalho
 TNR = "Times New Roman"
@@ -175,7 +182,7 @@ def gerar_docx(md_path: Path, out_docx: Path):
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
-        desempacotar(TEMPLATE, tmp / "doc")
+        desempacotar(Path(template_personalizado(TEMPLATE)), tmp / "doc")
         doc_xml = (tmp / "doc/word/document.xml").read_text(encoding="utf-8")
 
         body = build_body(empresa, insc_fmt, grupos)

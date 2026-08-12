@@ -383,6 +383,46 @@ grep -q "aviso_pendencias" "$(python ~/.claude/skills/_scripts/pasta_aft.py --pa
     mesmo `python_path`/pasta de OS ATIVAS) e grave `aviso_pendencias: "08:00"` (ou o
     horário escolhido) no `aft-config.md`.
 
+## Passo 2k — Lotação no cabeçalho dos documentos (pergunta única)
+
+Todo `.docx` do toolkit passou a sair com o cabeçalho institucional completo — brasão,
+"Ministério do Trabalho e Emprego", "Secretaria de Inspeção do Trabalho", **a lotação do
+AFT** e os logos SIT/AFT. Quem instalou o toolkit antes disso não tem a linha da lotação
+no `aft-config.md`. Confira (você roda):
+
+```bash
+python ~/.claude/skills/_scripts/cabecalho.py --status
+```
+
+O JSON traz `lotacao` e `origem`:
+
+- **`origem: "config"`** → o AFT já confirmou a redação; nada a perguntar.
+- **`origem: "uorg"`** → a linha foi deduzida da tabela oficial de UORGs pelo código que
+  ele já tinha. **Pergunte uma única vez**, mostrando a linha exatamente como sairá
+  impressa: *"Novidade: seus documentos agora levam a sua unidade no cabeçalho. Ficaria
+  assim: '\<lotacao\>'. Confere, ou quer corrigir o texto?"* A tabela de UORGs tem nomes
+  antigos (muitas unidades ainda constam como "do Trabalho", sem "e Emprego") e grafias
+  com erro, por isso a conferência importa. Grave **o que o AFT responder** no campo
+  `lotacao:` do `aft-config.md` — nunca corrija o nome da unidade por conta própria.
+- **`origem: "ausente"`** → não há nem código de UORG. Pergunte a lotação por extenso, do
+  jeito que deve aparecer no cabeçalho, e grave em `lotacao:`.
+
+Se o AFT preferir **não** ter a unidade no cabeçalho, grave `lotacao: ""` (campo vazio):
+os documentos saem só com as duas linhas fixas e ninguém pergunta de novo.
+
+Depois de gravar (ou se já estava em dia), prepare as cópias personalizadas dos templates:
+
+```bash
+python ~/.claude/skills/_scripts/cabecalho.py --preparar
+```
+
+Mencione no resumo do Passo 4, em uma linha: *"Seus documentos agora saem com o cabeçalho
+da sua unidade; deixei também um 'Template com cabeçalho.docx' na sua pasta AFT."* Se o
+JSON trouxer `template_avulso: "preservado"`, é porque já existe um arquivo com esse nome
+**com texto escrito dentro** — o script não sobrescreve documento do AFT; diga isso a ele
+e ofereça gravar o modelo novo com outro nome. Falha aqui **não é bloqueante**: os
+documentos continuam saindo, só sem a linha da lotação.
+
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
 Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve

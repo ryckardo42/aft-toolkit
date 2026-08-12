@@ -175,8 +175,10 @@ Ao terminar a redação, apresente o conteúdo ao AFT para revisão antes de ger
 
 A saída é sempre **.docx** (preferência do AFT; nunca entregue só .md). Não reescreva a
 formatação manualmente — use o script padrão `scripts/gerar_relatorio_docx.py`, que recebe
-um JSON de conteúdo e cuida de margens, fonte, cabeçalho, tabela de identificação, seções,
-subtítulos, bullets e blocos de fator SFIT.
+um JSON de conteúdo e cuida de margens, fonte, tabela de identificação, seções, subtítulos,
+bullets e blocos de fator SFIT. O cabeçalho institucional (brasão, Ministério do Trabalho e
+Emprego, Secretaria de Inspeção do Trabalho, **lotação do AFT** e logos SIT/AFT) entra
+sozinho, igual ao dos demais documentos do toolkit — nunca escreva essas linhas no corpo.
 
 1. Monte um JSON com `saida` (caminho do .docx na pasta do caso), `titulo`, `subtitulo`,
    `identificacao` (linhas da capa) e `secoes` (cada uma com `titulo` e `blocos`). Tipos de

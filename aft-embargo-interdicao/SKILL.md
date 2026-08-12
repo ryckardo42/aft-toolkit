@@ -40,11 +40,16 @@ description: >
 
 Gerar um **Relatório Técnico para Interdição e/ou Embargo** em formato `.docx`, baseado no
 modelo oficial incluído no toolkit (`~/.claude/skills/aft-embargo-interdicao/template.docx`,
-modelo **universal**: cabeçalho, cidade/UF e data já vêm como placeholder genérico,
-qualquer AFT de qualquer SRTE pode usar sem adaptação). O documento mantém
-TODO o conteúdo fixo do modelo (cabeçalho, logotipos, textos legais, citações doutrinárias,
-tabelas NR-3, instruções de suspensão, nota sobre SEI) e preenche apenas as partes variáveis
-com os dados fornecidos pelo AFT.
+modelo **universal**: cidade/UF e data já vêm como placeholder genérico, qualquer AFT de
+qualquer SRTE pode usar sem adaptação). O documento mantém TODO o conteúdo fixo do modelo
+(textos legais, citações doutrinárias, tabelas NR-3, instruções de suspensão, nota sobre
+SEI) e preenche apenas as partes variáveis com os dados fornecidos pelo AFT.
+
+O **cabeçalho** é a única exceção ao "modelo intocado": ele é trocado pelo cabeçalho
+institucional do toolkit (brasão, Ministério do Trabalho e Emprego, Secretaria de Inspeção
+do Trabalho, a **lotação do AFT** e os logos SIT/AFT), montado pelo `_scripts/cabecalho.py`
+a partir do campo `lotacao` do `aft-config.md`. A troca é cirúrgica — mexe só na parte de
+cabeçalho do arquivo; corpo, rodapé e estilos do template continuam intactos.
 
 ---
 

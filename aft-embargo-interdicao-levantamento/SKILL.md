@@ -187,8 +187,9 @@ python3 ~/.claude/skills/aft-embargo-interdicao-levantamento/scripts/montar_rt_l
 ```
 
 - `template`: `~/.claude/skills/aft-embargo-interdicao/template.docx` (instalado com a skill
-  aft-embargo-interdicao do toolkit; se não existir, instale-a primeiro). O script preserva o
-  cabeçalho institucional (logos MTE/SIT), a fonte e os espaçamentos do template
+  aft-embargo-interdicao do toolkit; se não existir, instale-a primeiro). O script usa o
+  cabeçalho institucional com a lotação do AFT (`_scripts/cabecalho.py`), preserva a
+  fonte e os espaçamentos do template
   e **descarta** o bloco fixo "DO PEDIDO DE SUSPENSÃO" + instruções do SEI — com
   o levantamento total a medida se encerra e essas instruções perdem o objeto;
 - `output`: `<pasta-OS>/interdicao-embargo/RT_Levantamento_[TERMO].docx` — crie a

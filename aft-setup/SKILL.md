@@ -265,8 +265,19 @@ sempre 9 dígitos).
    - `local_uorg` = `BAIRRO` (se vazio ou lixo tipo `.`, pergunte ao AFT)
    - `cep_uorg` = `CEP` (se `99999999`, pergunte ao AFT)
    - `municipio` = `MUNICIPIO` · `uf` = `UF`
+   - `lotacao` = `NOME` com as maiúsculas arrumadas, mais ` - UF`
+     (ex.: `Gerência Regional do Trabalho em Nova Iguaçú - RJ`)
 4. **Eco de confirmação** antes de gravar: mostre código, nome da unidade,
    bairro/local, CEP, município/UF e pergunte se confere.
+
+   **Confirme a `lotacao` à parte, porque ela vai impressa no cabeçalho de todo
+   documento .docx do toolkit** (relatórios, RT de interdição, relação de autos).
+   A tabela de UORGs é a oficial do Sistema Auditor, mas tem nomes antigos — a
+   maioria ainda diz "do Trabalho" onde hoje se lê "do Trabalho e Emprego", e há
+   grafias com erro. Mostre a linha exatamente como sairá no papel e pergunte:
+   *"É assim que sua unidade deve aparecer no cabeçalho dos documentos? Pode
+   corrigir o texto se quiser."* Grave **o que o AFT disser** — não corrija o
+   nome por conta própria (nunca invente o nome de uma unidade).
 5. **Fallback**: se a lotação não aparecer na tabela (unidade nova/renomeada),
    peça o código de 9 dígitos diretamente ao AFT — ou aceite deixar em branco
    por enquanto (o Sistema Auditor permite confirmar pela lupa), recomendando
@@ -309,6 +320,8 @@ local_uorg: "SETOR SUL"    # cod_6 do TXT
 cep_uorg: "74080010"       # cod_7 do TXT
 municipio: "Goiânia"
 uf: "GO"
+# 3a linha do cabecalho de todo .docx do toolkit (confirmada pelo AFT no Passo 3):
+lotacao: "Superintendência Regional do Trabalho e Emprego em Goiás - GO"
 # Prefixo Windows da pasta de trabalho (para os anexos do Sistema Auditor):
 path_windows: "C:\\Users\\joao\\Documents\\AFT"
 # Caminho completo do interpretador Python (resolvido no Passo 6; evita o atalho
@@ -406,6 +419,24 @@ e comprime anexos grandes; `pypdf` lê os autos lavrados (`/aft-autos-lavrados`)
 `python-docx` gera e edita o Relatório Técnico (.docx) da interdição (`/aft-embargo-interdicao`);
 `pdfplumber` extrai texto de PDFs de fiscalização (termos, autos-modelo);
 `pillow-heif` lê fotos HEIC/HEIF do iPhone (opcional, só se houver esse formato).
+
+**6c. Carimbar a lotação no cabeçalho dos documentos.** Com a `lotacao` já gravada no
+`aft-config.md`, prepare as cópias personalizadas dos templates (você roda):
+
+```bash
+python ~/.claude/skills/_scripts/cabecalho.py --preparar
+```
+
+O script devolve um JSON com a `lotacao` em uso e os templates preparados. A partir daí,
+**todo `.docx` do toolkit** sai com o cabeçalho institucional: brasão, "Ministério do
+Trabalho e Emprego", "Secretaria de Inspeção do Trabalho", a lotação do AFT e os logos
+SIT/AFT. Ele também grava, na pasta de trabalho, um `Template com cabeçalho.docx` já com
+a lotação — para quando o AFT quiser escrever um documento à mão no Word.
+
+Diga em uma frase: *"Seus documentos agora saem com o cabeçalho da sua unidade — deixei
+também um modelo em branco na sua pasta AFT, caso queira escrever direto no Word."* Se o
+comando falhar, **não é bloqueante**: os documentos saem com o cabeçalho sem a linha da
+lotação; registre no resumo do Passo 8.
 
 ## Passo 7 — NotebookLM (recomendado, pode pular)
 
