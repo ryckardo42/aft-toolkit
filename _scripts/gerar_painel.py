@@ -912,7 +912,34 @@ font-size:13px;z-index:20;display:none}
 .autos-rodape .alerta{background:#F5EEDD;border:1px solid #E4D5AE;border-left:5px solid var(--ochre)}
 .autos-rodape .alerta h4{color:#7C5A1E}
 .autos-rodape p{margin:0 0 5px;font-size:12.5px;line-height:1.55;color:var(--t2)}
+/* ---- Zonas de escrita (rebaixo + campo + CTA) ---- */
+.entrada{background:var(--cream);border:1px solid var(--bds);border-radius:10px;
+  padding:14px 16px;margin-top:12px}
+.entrada.acento{border-left:4px solid var(--coral-deep)}
+.entrada > label{display:block;margin-bottom:8px;font-family:var(--sans);font-size:11px;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t2)}
+.entrada input[type=text],.entrada textarea{width:100%;box-sizing:border-box;
+  min-height:42px;padding:10px 14px;font-family:var(--serif);font-size:15px;line-height:1.5;
+  color:var(--t1);background:var(--paper);border:1px solid #C9C3B2;border-radius:8px}
+.entrada input::placeholder,.entrada textarea::placeholder{color:var(--t3);opacity:1}
+.entrada input:focus,.entrada textarea:focus{outline:none;border-color:var(--coral-deep);
+  box-shadow:0 0 0 3px rgba(176,89,62,.18)}
+.entrada .cta{height:42px;padding:0 20px;font-family:var(--serif);font-size:15px;font-weight:600;
+  color:var(--paper);background:var(--coral-deep);border:1px solid var(--coral-deep);
+  border-radius:8px;cursor:pointer}
+.entrada .cta:hover{background:var(--coral);border-color:var(--coral)}
+.entrada .cta:disabled{background:#E2DECF;border-color:var(--bd);color:var(--t3);cursor:default}
+.entrada .linha{display:flex;gap:10px;align-items:stretch}
+.entrada .rodape{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.entrada .dica{font-family:var(--sans);font-size:11.5px;color:var(--t3)}
 @media (prefers-color-scheme: dark){
+  .entrada{background:#1E1C1A}
+  .entrada input[type=text],.entrada textarea{background:#2A2722;border-color:#4A463C}
+  .entrada input:focus,.entrada textarea:focus{border-color:#E9A891;
+    box-shadow:0 0 0 3px rgba(233,168,145,.25)}
+  .entrada .cta{background:#C8694A;border-color:#C8694A;color:#191917}
+  .entrada .cta:hover{background:#E09070;border-color:#E09070}
+  .entrada .cta:disabled{background:#2E2B25;border-color:#3A372F;color:var(--t3)}
   #detalhe .cab,.stepper-os,.autos-solo-cab{border-color:#34302A}
   .hero-passo{background:#3D2521;border-color:#5A3327}
   .det-item:hover,.auto-card:hover{background:#26241F}
@@ -1054,6 +1081,9 @@ function agCal(j){const v=DATA.venc[j];
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agDetVisto(i,k){const o=DATA.os[i];api({acao:'det_visto',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
+// CTA das zonas de escrita: ativo somente com texto no campo.
+function cta(el){const b=el.closest('.entrada').querySelector('.cta');
+ if(b)b.disabled=!el.value.trim()}
 function agAnot(i,k){const o=DATA.os[i];api({acao:'anotacao_ok',pasta:o.pasta,texto:o.anotacoes[k]})}
 function agAnotAdd(i){const el=document.getElementById('anot-txt');const v=(el.value||'').trim();
  if(!v){aviso('Escreva a anotação antes');return}api({acao:'anotacao_add',pasta:DATA.os[i].pasta,texto:v})}
@@ -1157,10 +1187,11 @@ function cartaoAnotacoes(o,i){
   (ATIVO&&o.pasta?'<button class="mini" onclick="agAnot('+i+','+k+')">tratada</button>':'')+
   '</li>').join('')+'</ul>';
  else h+='<p class="vazio">nenhuma anotação em aberto</p>';
- if(ATIVO&&o.pasta)h+='<div class="acoes" style="margin:8px 0 0;border:none;background:none;padding:0">'+
-  '<span style="flex:1"><input id="anot-txt" style="width:100%" placeholder="anotar constatação (SESMT mal dimensionado, ASO faltando...)" '+
-  'onkeydown="if(event.key===&quot;Enter&quot;)agAnotAdd('+i+')">'+
-  '<button class="mini" onclick="agAnotAdd('+i+')">anotar</button></span></div>';
+ if(ATIVO&&o.pasta)h+='<div class="entrada">'+
+  '<label for="anot-txt">Nova anotação</label><div class="linha">'+
+  '<input id="anot-txt" type="text" placeholder="ex.: SESMT mal dimensionado, ASO faltando..." '+
+  'oninput="cta(this)" onkeydown="if(event.key===&quot;Enter&quot;)agAnotAdd('+i+')">'+
+  '<button class="cta" disabled onclick="agAnotAdd('+i+')">anotar</button></div></div>';
  return h+'</div>'}
 function cartaoInspecao(o){
  return '<div class="cartao"><h3>Inspeção física'+
@@ -1185,9 +1216,11 @@ function cartaoAcoes(o,i){
   '<span><label>embargo/interdição </label>'+
   '<button class="mini" onclick="agEmbargo('+i+',0)">vigente</button>'+
   '<button class="mini" onclick="agEmbargo('+i+',1)">suspenso</button></span>'+
-  '<span><input id="ativ-txt" placeholder="registrar atividade de hoje..." '+
-  'onkeydown="if(event.key===&quot;Enter&quot;)agAtiv('+i+')">'+
-  '<button class="mini" onclick="agAtiv('+i+')">registrar</button></span></div></div>'}
+  '</div>'+
+  '<div class="entrada"><label for="ativ-txt">Registrar atividade</label><div class="linha">'+
+  '<input id="ativ-txt" type="text" placeholder="ex.: análise do PGR entregue pela empresa" '+
+  'oninput="cta(this)" onkeydown="if(event.key===&quot;Enter&quot;)agAtiv('+i+')">'+
+  '<button class="cta" disabled onclick="agAtiv('+i+')">registrar</button></div></div></div>'}
 function cartaoComandosPorFase(o,i){
  return '<div class="cartao"><h3>Comandos para o Claude Code</h3>'+
   FASES.map(f=>'<div class="fase"><span class="frot">'+esc(f[0])+'</span><div class="cmds">'+
