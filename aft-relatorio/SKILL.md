@@ -164,7 +164,7 @@ Entregue:
    python3 ~/.claude/skills/aft-relatorio/scripts/gera_relatorio_docx.py "<pasta-OS>/Relatórios de Fiscalização/<base>.json"
    ```
    O script constrói o documento com a biblioteca do **padrão visual do toolkit** (skill
-   `/aft-modelo-docx` — template oficial com o cabeçalho da auditoria, Times New Roman 12,
+   `/aft-modelo-docx` — cabeçalho institucional com a lotação do AFT, Times New Roman 12,
    paleta azul institucional, corpo justificado 1,15), monta os autos em **tabela zebrada**
    com uma linha de subcabeçalho azul por tema, e o embaraço/fraude na caixa de destaque.
 

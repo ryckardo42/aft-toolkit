@@ -26,7 +26,11 @@ Especificação: Times New Roman 12 em tudo; página A4 com margens sup/inf/dir
 #2E5496 (subtítulos, subcabeçalhos); zebra #EBF3FB/#F5F5F5; bordas #AAAAAA
 finas; entrelinhas 1,15; espaço-depois: título 12pt, subtítulo 6pt, corpo
 10pt, lista 6pt, capa 4pt; espaço-antes: título 18pt, subtítulo 6pt.
-O cabeçalho do template NUNCA é alterado.
+
+O cabeçalho institucional (brasão, Ministério do Trabalho e Emprego, Secretaria
+de Inspeção do Trabalho, lotação do AFT e logos SIT/AFT) é montado pelo
+`_scripts/cabecalho.py`, que personaliza o template com a lotação do
+aft-config.md. Este módulo NUNCA escreve no cabeçalho por conta própria.
 """
 
 try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
@@ -42,7 +46,15 @@ try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-er
 except Exception:
     pass
 
+import sys
 from pathlib import Path
+
+try:  # cabeçalho com a lotação do AFT (ver _scripts/cabecalho.py)
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
+    from cabecalho import template_personalizado
+except Exception:  # sem ele o documento sai com o cabeçalho neutro do template
+    def template_personalizado(caminho, lotacao=None):
+        return str(caminho)
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -81,12 +93,12 @@ def rgb(hexa: str) -> RGBColor:
 
 # ---------------------------------------------------------------- fundação
 def novo_documento(template=None) -> Document:
-    """Documento novo sobre o template oficial (cabeçalho AFT/SIT preservado),
-    margens e estilo Normal (Times 12) já aplicados."""
+    """Documento novo sobre o template oficial (cabeçalho institucional com a
+    lotação do AFT), margens e estilo Normal (Times 12) já aplicados."""
     tpl = Path(template) if template else TEMPLATE
     if not tpl.exists():
         raise FileNotFoundError(f"template do modelo-docx não encontrado: {tpl}")
-    doc = Document(str(tpl))
+    doc = Document(template_personalizado(tpl))
     sec = doc.sections[0]
     sec.top_margin = Cm(2)
     sec.bottom_margin = Cm(2)

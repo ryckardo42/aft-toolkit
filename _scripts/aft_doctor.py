@@ -279,6 +279,26 @@ else:
         "aft-config.md nao existe (seus dados de CIF/UORG)",
         "Rode /aft-setup para informar nome, CIF e lotacao uma unica vez.")
 
+# 7a. Lotacao no cabecalho dos .docx -----------------------------------------
+try:
+    sys.path.insert(0, str(SKILLS_DIR / "_scripts"))
+    from cabecalho import lotacao_configurada  # noqa: E402
+
+    _lot, _origem = lotacao_configurada()
+    if _origem == "config":
+        add("Lotacao no cabecalho dos documentos", "ok",
+            _lot or "sem a linha da unidade (escolha do AFT)")
+    else:
+        add("Lotacao no cabecalho dos documentos", "aviso",
+            f"sugerida pela tabela de UORGs: {_lot}" if _lot
+            else "nenhuma lotacao configurada",
+            "Os .docx do toolkit levam a sua unidade no cabecalho, abaixo de "
+            "'Ministerio do Trabalho e Emprego' e 'Secretaria de Inspecao do "
+            "Trabalho'. Rode /aft-atualizar (ou /aft-setup) para confirmar como "
+            "o nome da sua unidade deve aparecer impresso.")
+except Exception:
+    pass  # checagem acessoria: nunca derruba o diagnostico
+
 # 7b. Planilhas de CAT (base do historico de acidentes) ----------------------
 # Mesma resolucao da /aft-relatorio-acidentes: `pasta_cats:` do aft-config.md
 # quando aponta para pasta existente; senao <PASTA_AFT>/CATs (ou CAT).

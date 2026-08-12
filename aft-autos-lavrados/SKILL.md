@@ -293,7 +293,7 @@ python3 ~/.claude/skills/aft-autos-lavrados/scripts/gera_relacao_autos.py "<past
 
 O script:
 - cria (se não existir) a pasta `<pasta-OS>/AUTOS/Relacao de autos/` (em OS ainda não migradas, sem a caixa `AUTOS/`, usa o lugar antigo `<pasta-OS>/Relacao de autos/`);
-- gera `relacao-autos.docx` a partir do template oficial (`scripts/template-relacao-autos.docx`) — cabeçalho com os logos SIT/AFT **nunca é alterado**; corpo com EMPREGADOR + INSCRIÇÃO, autos agrupados por data (mais antigo → mais recente, ordem do MD preservada), fonte Times New Roman 12pt, texto sempre justificado.
+- gera `relacao-autos.docx` a partir do template oficial (`scripts/template-relacao-autos.docx`) — cabeçalho institucional com a lotação do AFT (montado pelo `_scripts/cabecalho.py`, igual ao dos demais documentos do toolkit); corpo com EMPREGADOR + INSCRIÇÃO, autos agrupados por data (mais antigo → mais recente, ordem do MD preservada), fonte Times New Roman 12pt, texto sempre justificado.
 
 O `.docx` é o documento final — **a skill não gera PDF** e não depende de LibreOffice nem do Word. Se o AFT pedir um PDF, oriente-o a abrir o `.docx` no Word e usar **Arquivo > Salvar como... > PDF**.
 

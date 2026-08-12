@@ -621,7 +621,7 @@ Próximos passos:
 - Chama `/aft-nr24-dimensionamento` (FASE 3.6) para as instalações sanitárias, mictórios, lavatórios e bebedouros devidos, a partir dos homens e mulheres da Relação de Vínculos — sem os flags de exposição, para que o documento de campo traga também os cenários condicionais. Sendo canteiro de obras (CNAE 41/42/43 ou "SPE" no nome), a mesma skill aplica a NR-18 no lugar da NR-24, e o `.docx` diz em que sinal se baseou.
 - Trata a Relação de Vínculos Ativos do SFIT com o próprio `vinculos_ativos.py` (FASE 3.1), inteiramente local: nem o PDF nem a lista nominal entram no contexto do modelo.
 - Chama `/aft-relatorio-acidentes` (FASE 4.5) para o histórico de CATs do CNPJ — o script dela processa tudo localmente e grava em `Acidentes/`; a preparação usa só os agregados.
-- Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho oficial AFT/SIT.
+- Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho institucional da lotação do AFT.
 - Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
 - Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).
 - Sucede naturalmente para `/aft-inspecao-fisica` depois da visita (fora do escopo desta skill).

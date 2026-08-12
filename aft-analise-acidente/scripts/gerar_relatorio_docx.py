@@ -6,7 +6,10 @@ Uso:
     python gerar_relatorio_docx.py conteudo.json
 
 O JSON descreve o relatorio; este script cuida da formatacao (margens, fonte, cores,
-cabecalho, tabela de identificacao, secoes, subtitulos, bullets e blocos de fator SFIT).
+tabela de identificacao, secoes, subtitulos, bullets e blocos de fator SFIT). O
+cabecalho institucional - brasao, Ministerio do Trabalho e Emprego, Secretaria de
+Inspecao do Trabalho, lotacao do AFT e logos SIT/AFT - vem do _scripts/cabecalho.py,
+o mesmo dos demais .docx do toolkit.
 A skill /aft-analise-acidente preenche o conteudo; a formatacao fica padronizada aqui.
 
 Esquema do JSON:
@@ -43,9 +46,17 @@ except Exception:
     pass
 
 import sys, os, json, re
+from pathlib import Path
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+try:  # cabecalho institucional com a lotacao do AFT (ver _scripts/cabecalho.py)
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
+    from cabecalho import aplicar_no_arquivo
+except Exception:  # sem ele o relatorio sai sem cabecalho, como antes
+    def aplicar_no_arquivo(caminho, lotacao=None):
+        pass
 
 AZUL = RGBColor(0x1F, 0x3A, 0x5F)
 
@@ -81,11 +92,12 @@ def main(json_path):
         return p
 
     # ---- cabecalho ----
-    c = doc.add_paragraph(); c.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = c.add_run('MINISTÉRIO DO TRABALHO E EMPREGO'); r.bold = True; r.font.size = Pt(12)
-    c2 = doc.add_paragraph(); c2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = c2.add_run('Inspeção do Trabalho - Auditoria-Fiscal do Trabalho'); r.font.size = Pt(10)
-    doc.add_paragraph()
+    # O cabecalho institucional (brasao, MTE, SIT, lotacao do AFT e logos) entra
+    # depois de gravar, pelo _scripts/cabecalho.py; aqui so criamos a parte de
+    # cabecalho do arquivo, para ele ter onde entrar.
+    for s in doc.sections:
+        s.header.is_linked_to_previous = False
+
     tt = doc.add_paragraph(); tt.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r = tt.add_run(d.get('titulo', 'RELATORIO DE ANALISE DE ACIDENTE DO TRABALHO'))
     r.bold = True; r.font.size = Pt(15); r.font.color.rgb = AZUL
@@ -138,6 +150,7 @@ def main(json_path):
     saida = d['saida']
     os.makedirs(os.path.dirname(saida), exist_ok=True) if os.path.dirname(saida) else None
     doc.save(saida)
+    aplicar_no_arquivo(saida)
     print('SALVO:', saida)
 
 if __name__ == '__main__':

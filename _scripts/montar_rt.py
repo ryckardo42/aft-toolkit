@@ -119,6 +119,12 @@ except Exception:
 AQUI = Path(__file__).resolve().parent
 TEMPLATE = AQUI.parent / "aft-embargo-interdicao" / "template.docx"
 
+try:  # cabecalho com a lotacao do AFT (ver _scripts/cabecalho.py)
+    from cabecalho import template_personalizado
+except Exception:  # sem ele o RT sai com o cabecalho neutro do template
+    def template_personalizado(caminho, lotacao=None):
+        return str(caminho)
+
 RE_PARAGRAFO = re.compile(r"<w:p\b[^>]*>.*?</w:p>|<w:p\b[^>]*/>", re.S)
 RE_TEXTO = re.compile(r"(<w:t\b[^>]*>)(.*?)(</w:t>)", re.S)
 RE_CHAVE = re.compile(r"\{\{\s*([A-Za-z0-9_-]+)\s*\}\}")
@@ -733,7 +739,7 @@ def montar(dados, destino):
     if tmp.exists():
         shutil.rmtree(tmp)
     tmp.mkdir(parents=True)
-    shutil.copy(TEMPLATE, tmp / "template.docx")
+    shutil.copy(template_personalizado(TEMPLATE), tmp / "template.docx")
     r = subprocess.run([sys.executable, str(AQUI / "docx_unpack.py"),
                         str(tmp / "template.docx"), str(tmp / "unpacked")],
                        capture_output=True, text=True)

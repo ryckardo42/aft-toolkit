@@ -17,11 +17,26 @@ description: >
 
 ## O que é
 
-Todo `.docx` gerado pelo toolkit sai com a mesma identidade visual: o cabeçalho oficial da
-auditoria (logos AFT e SIT) e a formatação institucional do modelo "Relatório de
-Fiscalização / Indícios". Esta skill fornece a biblioteca Python que implementa esse padrão
-(`scripts/modelo_docx.py`) e o template com o cabeçalho (`scripts/template-cabecalho.docx`,
-cópia de `Template/Template com cabeçalho.docx` do toolkit).
+Todo `.docx` gerado pelo toolkit sai com a mesma identidade visual: o cabeçalho
+institucional e a formatação do modelo "Relatório de Fiscalização / Indícios". Esta skill
+fornece a biblioteca Python que implementa esse padrão (`scripts/modelo_docx.py`) e o
+template (`scripts/template-cabecalho.docx`, cópia de `Template/Template com
+cabeçalho.docx` do toolkit).
+
+O cabeçalho traz o brasão da República, três linhas de texto e os logos SIT e AFT:
+
+```
+Ministério do Trabalho e Emprego
+Secretaria de Inspeção do Trabalho
+<lotação do AFT>            (ex.: Gerência Regional do Trabalho e Emprego
+                             em Nova Iguaçu - RJ)
+```
+
+As duas primeiras linhas são fixas; a terceira vem do campo `lotacao` do `aft-config.md`
+(perguntado pelo `/aft-setup`). Quem monta esse cabeçalho é o `_scripts/cabecalho.py` —
+os templates do repositório são neutros e ganham a lotação numa cópia local, refeita
+sozinha quando a lotação muda. Sem lotação configurada, o documento sai com as duas
+linhas fixas, nunca com a unidade de outra pessoa.
 
 **Quando usar:** qualquer `.docx` sem template oficial próprio — em especial os documentos
 avulsos que o AFT pede fora das skills (regra do perfil do auditor) e as saídas `.docx` de
@@ -79,7 +94,7 @@ rode `_scripts/checar_arquivo_aberto.py` e faça backup com `_scripts/backup_arq
 |---|---|
 | Fonte | Times New Roman 12pt em tudo (corpo, títulos, tabelas) |
 | Página | A4 · margens: sup/inf/dir 2 cm, esq 2,5 cm |
-| Cabeçalho | o do template oficial (logos AFT/SIT) — **nunca alterado** |
+| Cabeçalho | institucional: brasão, Ministério do Trabalho e Emprego, Secretaria de Inspeção do Trabalho, lotação do AFT e logos SIT/AFT — montado pelo `_scripts/cabecalho.py`, **nunca escrito à mão** |
 | Capa | centralizada: título negrito #1F3864 · subtítulo itálico #444444 · unidade itálico preto · data #555555 · 4pt depois |
 | Título de seção ("1. ...") | negrito #1F3864, à esquerda, 18pt antes / 12pt depois |
 | Subtítulo ("2.1 ...") | negrito #2E5496, à esquerda, 6pt antes / 6pt depois |
