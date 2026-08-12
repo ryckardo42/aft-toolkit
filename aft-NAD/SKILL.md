@@ -218,3 +218,12 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Respeite o teto de 1000 caracteres** por campo do DET (cada item e o campo de observações). Conte e mostre a contagem na apresentação; se estourar, resolva com o AFT antes de entregar.
 - Encoding **UTF-8** em todo o pipeline.
 - Esta skill **não** lavra auto, **não** clica no DET e **não** define prazos no texto — apenas redige a notificação de documentos.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-NAD"
+```

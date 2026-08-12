@@ -183,7 +183,7 @@ _(vazio)_
 ## Registro de atividades
 | Data | Ação | Detalhes |
 |------|------|----------|
-| <dd/mm/aaaa> | OS cadastrada | via /aft-nova-auditoria |
+| <dd/mm/aaaa> | [A] OS cadastrada | via /aft-nova-auditoria |
 ```
 
 > **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor. As linhas `**Endereço:**`, `**Telefone:**`, `**OS (SFIT):**`/`**Demanda:**` e `**Vencimento da OS:**` também são opcionais — só entram quando conhecidas (tipicamente lidas dos PDFs do SFIT, Passo 0; o vencimento existe só na Ordem de Serviço); omita a linha inteira quando não houver o dado. O vencimento da OS fica FORA da seção `## Notificações DET` — assim o painel não o confunde com prazo de DET.

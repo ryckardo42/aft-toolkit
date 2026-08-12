@@ -208,3 +208,15 @@ entra na minuta.
   tokens `[[TRAB_NN]]`/`[[CPF_NN]]`.
 - Se o pedido for de lavratura/medida (auto, RT de interdição, notificação), **redirecione** para
   a skill correta (`/aft-auditoria-geral`, `/aft-embargo-interdicao`, `/aft-tn-nco`) — esta skill só subsidia.
+
+## Diário de atividades (automático)
+
+Se a consulta disser respeito a **uma empresa com OS aberta** (pasta em OS ATIVAS) —
+enquadramento de situação de fato, ementa para uma constatação daquela fiscalização —,
+registre o dia trabalhado no diário da OS ao concluir, sem perguntar (dedupe automático):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "consulta técnica via /aft-consulta"
+```
+
+Dúvida genérica (estudo de NR, ementa sem empresa definida) NÃO entra no diário.

@@ -585,6 +585,24 @@ próxima vez que você fechar e reabrir o app."* Se falhar, não é bloqueante �
 resumo e siga (o `/aft-atualizar` tenta de novo). Quem não quiser o automático pede
 "remover o vigia de sessões" a qualquer momento.
 
+## Passo 7e-bis — Gancho do diário de atividades (parte padrão da instalação)
+
+O **diário de atividades** registra, no `## Registro de atividades` de cada OS, os dias
+trabalhados e o tipo de atividade (letras A-F da tela 2.1 do RI — ver `/aft-diario` e a
+aba Calendário do painel). As skills registram sozinhas; o **gancho** é a rede de
+segurança que anota o dia trabalhado sempre que o Claude editar um `memory.md` de OS
+ATIVAS, mesmo fora de skill. **Instale sem perguntar**:
+
+```bash
+python ~/.claude/skills/_scripts/instalar_hook_diario.py instalar <python_path>
+```
+
+Confira o JSON de saída (`"ok": true`). Informe em uma linha: *"O diário de atividades
+anota sozinho os dias trabalhados em cada auditoria; no fim do mês, o /aft-diario monta a
+agenda mensal e a lista pronta para a tela de atividades do RI."* O gancho vale a partir
+da próxima abertura do app. Se falhar, não é bloqueante — registre no resumo e siga (o
+`/aft-atualizar` tenta de novo). Quem não quiser pede "remover o gancho do diário".
+
 ## Passo 7f — Aviso semanal de pendências (opcional)
 
 Ofereça, em uma frase: *"Quer receber toda segunda-feira de manhã uma notificação do
@@ -626,6 +644,8 @@ Apresente:
 📊 Painel diário:      [instalado, roda às HH:MM / não instalado — peça a qualquer hora]
 🖥️ Painel interativo:  sempre ligado (sobe sozinho no login; só na sua máquina — peça
                        "remover o painel sempre ligado" se não quiser)
+📔 Diário de atividades: [gancho instalado — dias trabalhados anotados sozinhos; agenda
+                       mensal via /aft-diario / falhou — skills seguem registrando]
 📅 Google Calendar:    [prazos de DET sincronizando via /aft-agenda-det / não ativado —
                        peça a qualquer hora]
 

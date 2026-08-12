@@ -180,3 +180,12 @@ Anexos repetidos incluídos só na primeira menção: <N> (<resumo: "PGR em 5 au
   anexo — cite só o AI e a contagem de páginas nesses casos.
 - Nunca enviar o PDF (nem os autos) a serviço externo — compressão é sempre
   local.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-autos-pdf-reunidos"
+```

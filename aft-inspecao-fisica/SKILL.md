@@ -226,3 +226,24 @@ Depois de salvar, ofereça o próximo passo natural do toolkit:
 - **Conferência antes de salvar:** o eco do Passo 4 não é opcional quando há nomes, datas ou
   valores em jogo.
 - **O arquivo fica local:** nunca cole o conteúdo do `inspecao-fisica.md` em serviços externos.
+
+## Diário de atividades (automático)
+
+Registre no diário da OS, sem perguntar nada ao AFT (o script deduplica por
+data+letra; repetir é inofensivo):
+
+1. **Na(s) data(s) em que o AFT disse ter feito a inspeção** (a data narrada, não a de
+   hoje) — letra **C**; inclua **B** junto quando esta foi a PRIMEIRA visita da
+   fiscalização (início da fiscalização):
+
+   ```bash
+   python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos BC --data <dd/mm/aaaa da visita> --detalhe "inspeção narrada via /aft-inspecao-fisica"
+   ```
+
+2. **Hoje** (dia em que a narrativa foi registrada e o relato gravado) — letra **E**
+   (lançamento de dados). Pule se hoje for a própria data da visita e a letra E não
+   fizer sentido isolada:
+
+   ```bash
+   python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "registro do relato de campo"
+   ```

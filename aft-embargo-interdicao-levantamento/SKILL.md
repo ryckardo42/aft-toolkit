@@ -252,3 +252,12 @@ ainda guarda um `.bak` automático do arquivo anterior.
 | `.docx` de saída aberto no Word | `checar_arquivo_aberto.py` acusa ABERTO → pedir para fechar e rodar de novo |
 | Script acusa "RELATÓRIO TÉCNICO não encontrado" | O template.docx mudou — avisar o usuário (é defeito do toolkit, não do AFT) em vez de forçar |
 | AFT quer destacar algo | Item 2 (fatos da análise/inspeção) ou item 7 (conclusão), a critério dele |
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-embargo-interdicao-levantamento"
+```

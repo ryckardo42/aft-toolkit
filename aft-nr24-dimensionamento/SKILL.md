@@ -303,3 +303,12 @@ nunca como capitulação final.
   NR-15 no mesmo local.
 - Saída informativa para apoio à fiscalização; a versão certificada da norma
   prevalece.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-nr24-dimensionamento"
+```

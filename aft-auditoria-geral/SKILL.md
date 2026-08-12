@@ -558,3 +558,12 @@ Para autos CLT art. 41 + art. 29:
 - **Tokens em vez de PII**: depois de registrar um trabalhador no de-para, nunca mais ecoe o nome/CPF real no chat — use `[[TRAB_NN]]`/`[[CPF_NN]]`.
 - Se o auditor pedir para empacotar o TXT diretamente, oriente que use `/aft-gera-ai` após esta skill.
 - Se o auditor pedir análise de imagem, identifique o equipamento/situação e correlacione com a NR aplicável. Se inconclusivo, peça esclarecimentos.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-auditoria-geral"
+```

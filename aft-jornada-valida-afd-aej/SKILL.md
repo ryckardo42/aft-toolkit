@@ -162,3 +162,12 @@ Ajustes de calibração (leiaute teórico × arquivo certificado):
   quando `tpMarc='E'` e `seqEntSaida='1'`, mas o REP certificado legitimamente o
   omite em parte das marcações. Por ser regra de **completude de jornada** (não
   de integridade), o validador **não sinaliza** essa ausência.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-jornada-valida-afd-aej"
+```

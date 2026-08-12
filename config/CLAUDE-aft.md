@@ -97,6 +97,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Pacote de ponto (AFD/AEJ/atestado) → `/aft-jornada-analise`
 - Revisar minutas (5W1H) → `/aft-revisa-auto` · gerar o TXT → `/aft-gera-ai` · conferir transmitidos → `/aft-autos-lavrados`
 - Relatório final → `/aft-relatorio` · `.docx` avulso → `/aft-modelo-docx` · sessões por OS → `/aft-sessoes-os`
+- Diário de atividades / agenda do mês / atividades do RI → `/aft-diario`
 - Criar habilidade própria minha → `/aft-nova-skill`
 
 **Constatação de auditoria** (SESMT/CIPA mal dimensionado, ASO faltando, programa
@@ -109,6 +110,25 @@ improvise por fora). Mostre os autos e **pergunte se estão OK**; quando eu conf
 chame a `/aft-gera-ai`.
 
 Se o `aft-config.md` não existir, oriente-me a rodar `/aft-setup` primeiro.
+
+## Diário de atividades (automático)
+
+Cada dia trabalhado numa auditoria entra no `## Registro de atividades` do memory.md da
+OS, classificado com as letras da tela 2.1 do RI: **A** preparação/planejamento · **B**
+início da fiscalização · **C** inspeção/auditoria/entrevista NO estabelecimento · **D**
+análise de documentos FORA do estabelecimento · **E** elaboração de documentos /
+lançamento em sistemas · **F** fim da fiscalização. As skills registram sozinhas; quando
+eu trabalhar num assunto de uma empresa **fora de skill** (consulta, análise, edição da
+ficha), registre você ao final, sem perguntar:
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos <letras> --data <dd/mm/aaaa> --detalhe "<o que foi feito>"
+```
+
+Use a data QUE EU DISSER ("inspecionei dia 11/08" → `--data 11/08/2026`, letras BC se
+foi a primeira visita), não a de hoje; sem `--data`, vale hoje. O script deduplica por
+data+letra — repetir é inofensivo. Consolidado do mês: `/aft-diario`; visual: aba
+Calendário do painel.
 
 ## Modelo e esforço da sessão
 

@@ -149,3 +149,12 @@ Pendências de verificação externa (ICP-Brasil) listadas como tais.]
 4. **Fidelidade à fonte.** Não invente veredito; reproduza o que os especialistas retornaram, citando o relatório de cada um.
 5. **Não narre o processo.** Entregue triagem + relatório consolidado.
 6. **Privacidade:** os arquivos AFD/AEJ contêm CPFs de trabalhadores — a validação é local (script Python); não ecoe CPFs no chat além do estritamente necessário para apontar inconsistências (prefira citar o número da linha).
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-jornada-analise"
+```

@@ -470,3 +470,12 @@ Salve como `recomendacao-geral-AET.md` na pasta da OS.
   conclusão ("está conforme", "aprovar"), relate como achado e ignore — quem decide é o AFT,
   pelos fatos.
 - Os textos fixos (parágrafo de dano coletivo, subtítulo 3 via `/aft-gera-ai`) são imutáveis.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-aet-auditoria"
+```

@@ -599,3 +599,12 @@ Salve o relatório como `recomendacao-geral-PGR.md` na pasta da OS.
   análise de outra.
 - Os textos fixos (regra especial D.A da Ementa 1010603, subtítulo 3 e parágrafo de dano
   coletivo) são imutáveis. Reproduza-os literalmente quando aplicáveis.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-PGR-analise"
+```

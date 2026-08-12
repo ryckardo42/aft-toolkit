@@ -382,3 +382,12 @@ Use `⚠` para linhas com pendentes > 0, com autos `revisar` não decididos, ou 
 - Em modo batch, falha em uma OS **não trava** as outras — registra o erro na linha e continua.
 - Não ecoar no chat nome/CPF de trabalhador extraído dos PDFs — só a descrição da irregularidade.
 - **Nunca descarte um auto por conta própria.** Só saem do rol de válidos os que o script marcou `cancelado_presumido` (regra determinística) ou os que o AFT escolheu excluir num caso `revisar`. Na dúvida, mantenha e sinalize.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-autos-lavrados"
+```

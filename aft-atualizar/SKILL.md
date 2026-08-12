@@ -284,6 +284,27 @@ python ~/.claude/skills/_scripts/instalar_vigia_sessoes.py status
   app — sem perguntar nada.
 - **Falhou** → registre no resumo do Passo 4; não é bloqueante.
 
+## Passo 2f-bis — Gancho do diário de atividades (garantir instalado, sem perguntar)
+
+O **diário de atividades** (dias trabalhados por auditoria, letras A-F — ver
+`/aft-diario`) tem uma rede de segurança: um gancho do Claude Code que anota o dia
+trabalhado sempre que um `memory.md` de OS ATIVAS é editado. É parte padrão da
+instalação. Confira e garanta:
+
+```bash
+python ~/.claude/skills/_scripts/instalar_hook_diario.py status
+```
+
+- **"NÃO instalado"** → instale **sem perguntar**:
+  ```bash
+  python ~/.claude/skills/_scripts/instalar_hook_diario.py instalar <python_path>
+  ```
+  e mencione no resumo do Passo 4: *"O diário de atividades agora anota sozinho os dias
+  trabalhados em cada auditoria — vale a partir da próxima vez que você abrir o app."*
+- **Instalado** → nada a fazer.
+- **Falhou** → registre no resumo do Passo 4; não é bloqueante (o diário continua
+  funcionando pelos registros das skills, só perde a rede de segurança).
+
 ## Passo 2g — Sincronizar os agentes do toolkit
 
 Os **agentes** (`agents/*.md` do repositório — hoje o revisor de autos e a varredura do

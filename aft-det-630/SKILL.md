@@ -205,3 +205,12 @@ Em seguida, mostre o texto completo do auto em um bloco de código para o usuár
 
 - Rodar 2× sobrescreve `auto-det630-<CODIGO>.md` (com aviso).
 - A linha em `## Autos lavrados` é checada por código antes de adicionar (não duplica).
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-det-630"
+```

@@ -134,3 +134,12 @@ providências diferem conforme seja a bancada eleita (processo eleitoral) ou a d
   estabelecimento/contratante e demais disposições do corpo da NR-05 estão fora do
   escopo do script.
 - Saída informativa para apoio à fiscalização; a versão certificada da norma prevalece.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-cipa-nr05-dimensionamento"
+```

@@ -550,3 +550,12 @@ _(vazio)_
 - **`.depara_[CNPJ].json` contém PII** — tratar como sensível: não exibir no chat, não compartilhar, não commitar. A cópia `*.tokenized.txt` é a única segura para compartilhar.
 - **Após a FASE 2.5, não reimprima** razão social real nem nome de trabalhador no chat — use sempre os tokens.
 - **Nunca peça CPF do trabalhador prejudicado** — não é necessário para a lavratura do AI. O campo CPF da linha tipo 4 fica sempre vazio no TXT. (Não confundir com o CPF/CAEPF do autuado pessoa física, que é o identificador legal e continua sendo coletado normalmente.)
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-gera-ai"
+```

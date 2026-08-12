@@ -292,3 +292,12 @@ parecer_atestado_[tipo]_[empresa_curto].md
 Exemplos:
 - `parecer_atestado_repc_acme.md`
 - `parecer_atestado_ptrp_worktime.md`
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-jornada-atestado"
+```

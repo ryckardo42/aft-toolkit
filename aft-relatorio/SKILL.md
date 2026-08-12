@@ -340,3 +340,13 @@ Se nada: "Nenhuma pendência identificada."]
 | Auto de embaraço/fraude (art. 630 CLT) | Detalhar na caixa de destaque COMO impediu/dificultou/negou; manter também na tabela de autos |
 | AFT indica info extra (Passo 4) | Vai para "Outras Ocorrências Relevantes"; se não indicar nada, seção omitida |
 | Destino do arquivo | Sempre `<pasta-OS>/Relatórios de Fiscalização/`; avisar o caminho ao AFT |
+
+## Diário de atividades (automático)
+
+Ao concluir o relatório final, registre o dia no diário da OS — sem perguntar (dedupe
+automático). O **F** marca o fim da fiscalização; o **E** cobre a elaboração do
+documento:
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos EF --detalhe "relatório final via /aft-relatorio"
+```

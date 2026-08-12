@@ -876,3 +876,12 @@ Competência delegada pela Portaria 1719/2014...
 | Medidas ou documentos com "A)", "B)" digitados | Remover: a numeração das alíneas é automática no Word e o script insere os itens como lista real |
 | Texto gerado sai em fonte diferente do resto | O estilo `Normal` do template é Verdana e o corpo só fica em Tahoma porque cada run declara a fonte. O `montar_rt.py` detecta a fonte dominante e a aplica no que gera — se ainda assim divergir, conferir se o placeholder novo tem `rFonts` |
 | Imagem do template repetida N vezes | Placeholder com figura ancorada no mesmo parágrafo. O script mantém a imagem só na primeira cópia — conferir se a contagem de imagens do RT bate com a do template |
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-embargo-interdicao"
+```

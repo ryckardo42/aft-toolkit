@@ -104,3 +104,12 @@ de 4.000, fração acima de 2.000).
   ME/EPP com somatório de metade dos trabalhadores) alteram a **base de cálculo de N**,
   não a tabela: defina N conforme o corpo da NR-04 antes de rodar o script.
 - Saída informativa para apoio à fiscalização; a versão certificada da norma prevalece.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-dimensionamento-sesmt-nr04"
+```

@@ -234,3 +234,12 @@ encontrada, o template mudou de verdade: avise o usuário em vez de forçar.
   desta skill: avise o usuário e ajuste a seção 2 e a conclusão indicando expressamente
   quais objetos permanecem (nos moldes: "o embargo fica mantido para [objetos/situações],
   conforme item 2 deste relatório").
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-embargo-interdicao-manutencao"
+```

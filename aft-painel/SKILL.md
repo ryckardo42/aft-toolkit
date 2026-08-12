@@ -26,6 +26,12 @@ arquivos `memory.md` e `autos-lavrados.md` de cada OS — esta skill apenas os l
 página HTML. **Nunca escreve nos memory.md** (quem cadastra/atualiza é o `/aft-nova-auditoria` e as
 demais skills).
 
+O painel tem duas abas: **Auditorias** (os cards) e **Calendário** — o espelho do
+diário de atividades (`/aft-diario`): grade do mês com as empresas trabalhadas e as
+letras A-F de cada dia, contador de dias trabalhados, dias úteis sem registro marcados
+com pontilhado, e (no modo interativo) o botão "Registrar dia trabalhado". O calendário
+inclui OS encerradas e arquivadas — é histórico, não retrato do que está em andamento.
+
 ## Passo 0 — Resolver a pasta das OS
 
 **Não pergunte nada e não presuma `~/Documents/AFT`** — o AFT pode ter mudado a pasta de

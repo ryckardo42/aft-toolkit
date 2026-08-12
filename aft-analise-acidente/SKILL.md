@@ -241,3 +241,12 @@ Se vier erro de autenticação/expiração, **interrompa a redação**, avise e 
 - **Saída em .docx**, com acentuação completa em português.
 - A skill **não** redige os autos (isso é `/aft-auditoria-geral`) nem empacota o TXT (isso é
   `/aft-gera-ai`): ela produz a **análise** e encadeia, mediante confirmação do AFT.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D --detalhe "via /aft-analise-acidente"
+```

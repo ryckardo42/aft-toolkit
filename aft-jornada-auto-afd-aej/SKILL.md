@@ -217,3 +217,12 @@ Depois, mostre o(s) bloco(s) completo(s) num bloco de código para revisão.
 4. **Texto puro** no que vai para `/aft-gera-ai` (sem negrito/itálico).
 5. **Não valide o arquivo aqui** nem empacote o TXT — delegue à `aft-jornada-valida-afd-aej` e ao `/aft-gera-ai`.
 6. **Não invente** códigos de ementa, capitulação, datas ou validador.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-jornada-auto-afd-aej"
+```

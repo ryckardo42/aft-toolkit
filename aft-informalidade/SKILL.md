@@ -357,3 +357,12 @@ ocupacional prévio.
 - Fidelidade total ao template dos 3 subtítulos.
 - Nunca gere texto fora do corpo dos autos.
 - Após registrar os trabalhadores no de-para, não ecoe mais nome/CPF real no chat.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-informalidade"
+```

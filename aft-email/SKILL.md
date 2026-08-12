@@ -391,3 +391,12 @@ Depois de gravar:
 - Encoding UTF-8, acentuação completa. O e-mail não vai ao Sistema Auditor, então
   travessão e aspas curvas não quebram nada — mas prefira pontuação simples, que é o que
   sobrevive a qualquer cliente de e-mail.
+
+## Diário de atividades (automático)
+
+Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+
+```bash
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-email"
+```

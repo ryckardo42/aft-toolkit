@@ -14,7 +14,12 @@ por duplo-clique, sem servidor) no estilo dashboard:
   - clique no card abre o DETALHE da auditoria: DETs com estado, todos os
     autos de infração lavrados (Nº do AI, ementa, constatação, data), autos
     substituídos, pendências, registro de atividades e notificações de DET
-    encontradas na pasta mas ainda sem registro no memory.md.
+    encontradas na pasta mas ainda sem registro no memory.md;
+  - aba CALENDÁRIO: o diário de atividades (letras A-F da tela 2.1 do RI —
+    ver /aft-diario e diario_registrar.py) numa grade mensal, com empresas e
+    letras por dia, dias úteis sem registro e, no modo interativo, o
+    "registrar dia trabalhado". Inclui OS encerradas e OS ARQUIVADAS (o
+    calendário é histórico) e as anotações do gancho (.diario-auto.jsonl).
 
 É um leitor: NUNCA altera os memory.md nem o Sistema Auditor. (Quem edita é
 o modo interativo — servir_painel.py — que serve este mesmo HTML por
@@ -114,6 +119,13 @@ RE_NR = re.compile(r"NR[-\s]?0?(\d{1,2})\b", re.IGNORECASE)
 
 # Blocos do autos-lavrados.md (formato da skill /aft-autos-lavrados).
 RE_BLOCO_AI = re.compile(r"^###\s+N[ºo°]?\s*([\d.\-]+)\s*$", re.MULTILINE)
+
+# Diário de atividades: prefixo de letras [A-F] na coluna Ação do Registro de
+# atividades (ver _scripts/diario_registrar.py) e sidecar do gancho automático.
+RE_TIPOS_PREFIXO = re.compile(r"^((?:\[[A-F]\])+)\s*")
+RE_TIPOS_LETRAS = re.compile(r"\[([A-F])\]")
+SIDECAR_DIARIO = ".diario-auto.jsonl"
+DIARIO_JANELA_DIAS = 400  # calendário do painel mostra até ~13 meses p/ trás
 
 # Detecção de notificações DET não cadastradas -------------------------------
 # Código de notificação do DET: 12–16 caracteres alfanuméricos maiúsculos com
@@ -314,12 +326,19 @@ def parse_memory(path: Path) -> dict:
             if texto_an:
                 anotacoes.append(texto_an)
 
-    # Registro de atividades (tabela markdown).
+    # Registro de atividades (tabela markdown). Linhas do diário de atividades
+    # começam com letras [A-F] na coluna Ação (tipos da tela 2.1 do RI — ver
+    # diario_registrar.py); linhas antigas sem letra seguem valendo (tipos="").
     atividades = []
     for linha in extrair_secao(corpo, "Registro de atividades").splitlines():
         celulas = [c.strip() for c in linha.strip().strip("|").split("|")]
         if len(celulas) >= 2 and parse_data(celulas[0]):
-            atividades.append({"data": celulas[0], "acao": celulas[1],
+            acao = celulas[1]
+            m_t = RE_TIPOS_PREFIXO.match(acao)
+            tipos = "".join(RE_TIPOS_LETRAS.findall(m_t.group(1))) if m_t else ""
+            if m_t:
+                acao = acao[m_t.end():].strip()
+            atividades.append({"data": celulas[0], "acao": acao, "tipos": tipos,
                                "detalhe": celulas[2] if len(celulas) > 2 else ""})
 
     # Seção de autos do memory.md (fallback p/ chips de NR quando não há
@@ -901,6 +920,76 @@ font-size:13px;z-index:20;display:none}
   .autos-rodape .alerta{background:#332C1B;border-color:#4A3F22}
   #detalhe .status-pill{background:#233530;color:#8FBCAC}
 }
+/* ---- Abas (Auditorias | Calendário) ---- */
+.abas{display:flex;gap:8px;margin:0 0 18px}
+.aba{font:600 13px var(--sans);background:var(--paper);border:1px solid var(--bd);
+border-radius:20px;padding:7px 18px;cursor:pointer;color:var(--t2)}
+.aba:hover{border-color:var(--coral);color:var(--coral-deep)}
+.aba.ativa{background:var(--coral-deep);border-color:var(--coral-deep);color:#FAF9F5}
+/* ---- Calendário de trabalho (diário de atividades) ---- */
+.cal-topo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.cal-topo h2{font:500 22px var(--serif);margin:0 10px 0 0}
+.cal-topo .mini{margin:0}
+.cal-cont{margin-left:auto;font:13px var(--sans);color:var(--t2)}
+.cal-cont b{color:var(--teal);font-size:16px}
+.cal-wrap{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(270px,1fr);
+gap:16px;align-items:start}
+.cal-grade{background:var(--paper);border:1px solid var(--bds);border-radius:12px;
+overflow:hidden}
+.cal-sem{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--bds)}
+.cal-sem span{font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;
+color:var(--t3);text-align:center;padding:9px 4px}
+.cal-corpo{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-dia{min-height:88px;border-top:1px solid var(--bds);border-left:1px solid var(--bds);
+padding:6px 7px;cursor:pointer;overflow:hidden}
+.cal-corpo .cal-dia:nth-child(7n+1){border-left:none}
+.cal-dia:hover{background:var(--cream)}
+.cal-dia .n{font:600 12.5px var(--sans);color:var(--t2)}
+.cal-dia.fora{opacity:.35;cursor:default}
+.cal-dia.fora:hover{background:transparent}
+.cal-dia.fds .n{color:var(--t3)}
+.cal-dia.hoje .n{background:var(--coral-deep);color:#FAF9F5;border-radius:50%;
+display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center}
+.cal-dia.sel{background:#F1E6D8}
+.cal-dia.vago .n{border-bottom:2px dotted var(--coral)}
+.cal-ev{font:11px var(--sans);color:var(--t2);margin-top:4px;display:flex;
+align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev .pt-ev{width:6px;height:6px;border-radius:50%;background:var(--teal);flex:none}
+.cal-ev.auto .pt-ev{background:var(--bd)}
+.cal-ev b{font:700 10px var(--sans);color:var(--coral-deep);letter-spacing:.5px}
+.cal-mais{font:10.5px var(--sans);color:var(--t3);margin-top:3px}
+.cal-lado{background:var(--paper);border:1px solid var(--bds);border-radius:12px;
+padding:16px 18px}
+.cal-lado h3{font:700 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;
+color:var(--t3);margin:0 0 4px;border:none;padding:0}
+.cal-lado h2{font:500 20px var(--serif);margin:0 0 12px}
+.cal-item{border:1px solid var(--bds);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.cal-item .emp{font:600 13px var(--sans)}
+.cal-item .tipos{margin:5px 0 2px}
+.tipo-tag{display:inline-block;font:700 10.5px var(--sans);background:#EFE2D5;
+color:var(--coral-deep);border-radius:5px;padding:2px 7px;margin:0 4px 3px 0}
+.tipo-tag.gen{background:var(--bds);color:var(--t3)}
+.cal-item .txt{font-size:12.5px;color:var(--t2);line-height:1.45;margin-top:2px}
+.cal-legenda{margin-top:14px;font:11.5px var(--sans);color:var(--t3);display:flex;
+flex-wrap:wrap;gap:6px 14px}
+.cal-legenda b{color:var(--coral-deep)}
+.cal-legenda .pt-ev{display:inline-block;width:6px;height:6px;border-radius:50%;
+background:var(--bd)}
+.cal-form{border-top:1px solid var(--bds);margin-top:12px;padding-top:10px}
+.cal-form label{font:11.5px var(--sans);color:var(--t3);display:block;margin:9px 0 3px}
+.cal-form select,.cal-form input[type=text]{width:100%;font:13px var(--serif);
+background:var(--cream);border:1px solid var(--bd);border-radius:6px;padding:5px 8px;
+color:var(--t1)}
+.cal-tipos label{display:flex;align-items:flex-start;gap:6px;margin:0 0 3px;
+font:12px var(--serif);color:var(--t1);cursor:pointer}
+.cal-tipos b{font:700 11px var(--sans);color:var(--coral-deep)}
+@media (max-width:900px){.cal-wrap{grid-template-columns:1fr}}
+@media (prefers-color-scheme: dark){
+.aba.ativa{color:#191917}
+.cal-dia.hoje .n{color:#191917}
+.cal-dia.sel{background:#2E2820}
+.tipo-tag{background:#3A2C22}
+}
 """
 
 JS = """
@@ -912,12 +1001,13 @@ function aviso(t){let a=document.getElementById('aviso-copiado');
  if(!a){a=document.createElement('div');a.id='aviso-copiado';document.body.appendChild(a)}
  a.textContent=t;a.style.display='block';clearTimeout(a._t);
  a._t=setTimeout(()=>a.style.display='none',2200)}
-async function api(p){
+async function api(p,semReabrir){
  try{const r=await fetch('/api/acao',{method:'POST',
   headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
   const j=await r.json();
   if(!j.ok){aviso('Erro: '+(j.erro||'?'));return}
-  sessionStorage.setItem('painel-reabrir',p.pasta);location.reload();
+  if(!semReabrir)sessionStorage.setItem('painel-reabrir',p.pasta);
+  location.reload();
  }catch(e){aviso('Servidor do painel não respondeu — abra pelo http://127.0.0.1:8347')}}
 function copia(t){
  const fim=()=>aviso('Copiado — cole no Claude Code: '+t);
@@ -1207,6 +1297,128 @@ if(ATIVO){let carimbo=null;
   if(P.classList.contains('aberto')&&ABERTA)sessionStorage.setItem('painel-reabrir',ABERTA);
   location.reload();
  }catch(e){}},4000)}
+// ---- Calendário de trabalho (diário de atividades) --------------------------
+// Dados: DATA.diario = entradas {d (ISO), emp, os (pasta), t (letras A-F),
+// acao, det, auto (gancho automático), arq (OS arquivada)}. As letras seguem
+// a tela 2.1 do RI; ver /aft-diario e _scripts/diario_registrar.py.
+const DIARIO=DATA.diario||[];
+const TIPOS_ROT={A:'Preparação/planejamento da fiscalização',B:'Início da fiscalização',
+ C:'Inspeção/auditoria/entrevista no estabelecimento',
+ D:'Análise de documentos fora do estabelecimento',
+ E:'Elaboração de documentos / lançamento em sistemas',F:'Fim da fiscalização'};
+const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho',
+ 'agosto','setembro','outubro','novembro','dezembro'];
+const porDia={};DIARIO.forEach(e=>{(porDia[e.d]=porDia[e.d]||[]).push(e)});
+let calAno,calMes,calSel=null;
+(function(){const h=(DATA.hoje||'').split('-');calAno=+h[0]||2026;calMes=(+h[1]||1)-1;
+ try{const j=JSON.parse(sessionStorage.getItem('painel-cal')||'null');
+  if(j){if(j.ano)calAno=j.ano;if(j.mes!=null)calMes=j.mes;calSel=j.sel||null}}catch(e){}})();
+function salvaCal(){sessionStorage.setItem('painel-cal',
+ JSON.stringify({ano:calAno,mes:calMes,sel:calSel}))}
+function mudaVista(v){
+ document.getElementById('vista-painel').style.display=v==='cal'?'none':'';
+ document.getElementById('vista-cal').style.display=v==='cal'?'':'none';
+ document.getElementById('aba-painel').classList.toggle('ativa',v!=='cal');
+ document.getElementById('aba-cal').classList.toggle('ativa',v==='cal');
+ sessionStorage.setItem('painel-vista',v);
+ if(v==='cal')desenhaCal()}
+function calNav(n){calMes+=n;if(calMes<0){calMes=11;calAno--}
+ if(calMes>11){calMes=0;calAno++}salvaCal();desenhaCal()}
+function calHoje(){const h=(DATA.hoje||'').split('-');calAno=+h[0];calMes=+h[1]-1;
+ calSel=DATA.hoje;salvaCal();desenhaCal()}
+function isoDe(a,m,d){return a+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function calSelDia(a,m,d){calSel=isoDe(a,m,d);salvaCal();desenhaCal()}
+function resumoLetras(es){const s=new Set();
+ es.forEach(e=>(e.t||'').split('').forEach(l=>s.add(l)));
+ return [...s].sort().join('·')}
+function desenhaCal(){
+ const alvo=document.getElementById('vista-cal');if(!alvo)return;
+ const ini=new Date(calAno,calMes,1).getDay(); // 0 = domingo
+ const nDias=new Date(calAno,calMes+1,0).getDate();
+ const chaveMes=calAno+'-'+String(calMes+1).padStart(2,'0');
+ const diasTrab=new Set(DIARIO.filter(e=>e.d.slice(0,7)===chaveMes).map(e=>e.d)).size;
+ let h='<div class="cal-topo"><h2>'+MESES[calMes]+' de '+calAno+'</h2>'+
+  '<button class="mini" onclick="calNav(-1)">‹ anterior</button>'+
+  '<button class="mini" onclick="calNav(1)">próximo ›</button>'+
+  '<button class="mini" onclick="calHoje()">hoje</button>'+
+  '<span class="cal-cont"><b>'+diasTrab+'</b> dia'+(diasTrab===1?'':'s')+
+  ' trabalhado'+(diasTrab===1?'':'s')+' neste mês</span></div>';
+ h+='<div class="cal-wrap"><div><div class="cal-grade">';
+ h+='<div class="cal-sem">'+['dom','seg','ter','qua','qui','sex','sáb']
+  .map(d=>'<span>'+d+'</span>').join('')+'</div><div class="cal-corpo">';
+ const antes=new Date(calAno,calMes,0).getDate();
+ for(let i=0;i<ini;i++)
+  h+='<div class="cal-dia fora"><span class="n">'+(antes-ini+1+i)+'</span></div>';
+ for(let d=1;d<=nDias;d++){
+  const iso=isoDe(calAno,calMes,d),es=porDia[iso]||[];
+  const dow=new Date(calAno,calMes,d).getDay(),fds=dow===0||dow===6;
+  const cls=['cal-dia'];if(fds)cls.push('fds');
+  if(iso===DATA.hoje)cls.push('hoje');if(iso===calSel)cls.push('sel');
+  if(!es.length&&!fds&&iso<DATA.hoje)cls.push('vago');
+  const por={};es.forEach(e=>{(por[e.emp]=por[e.emp]||[]).push(e)});
+  const emps=Object.keys(por);let evs='';
+  emps.slice(0,3).forEach(emp=>{const g=por[emp],letras=resumoLetras(g);
+   evs+='<div class="cal-ev'+(g.every(e=>e.auto)?' auto':'')+'">'+
+    '<span class="pt-ev"></span>'+esc(emp.slice(0,22))+
+    (letras?' <b>'+letras+'</b>':'')+'</div>'});
+  if(emps.length>3)evs+='<div class="cal-mais">+'+(emps.length-3)+' empresa(s)</div>';
+  h+='<div class="'+cls.join(' ')+'" onclick="calSelDia('+calAno+','+calMes+','+d+')">'+
+   '<span class="n">'+d+'</span>'+evs+'</div>'}
+ const resto=(7-(ini+nDias)%7)%7;
+ for(let i=1;i<=resto;i++)
+  h+='<div class="cal-dia fora"><span class="n">'+i+'</span></div>';
+ h+='</div></div>';
+ h+='<div class="cal-legenda">'+Object.keys(TIPOS_ROT).map(l=>
+  '<span><b>'+l+'</b> '+esc(TIPOS_ROT[l])+'</span>').join('')+
+  '<span><span class="pt-ev"></span> dia anotado sozinho, sem classificação · '+
+  'pontilhado = dia útil sem registro</span></div></div>';
+ h+=ladoCal();
+ alvo.innerHTML=h+'</div>'}
+function ladoCal(){
+ let h='<div class="cal-lado"><h3>Dia selecionado</h3>';
+ if(!calSel)h+='<p class="vazio">clique num dia do calendário</p>';
+ else{const p=calSel.split('-');
+  h+='<h2>'+(+p[2])+' de '+MESES[+p[1]-1]+'</h2>';
+  const es=porDia[calSel]||[];
+  if(!es.length)h+='<p class="vazio">nenhum trabalho registrado neste dia</p>';
+  else{const por={};es.forEach(e=>{(por[e.emp]=por[e.emp]||[]).push(e)});
+   for(const emp in por){
+    h+='<div class="cal-item"><div class="emp">'+esc(emp)+
+     (por[emp][0].arq?' <span class="selo">OS arquivada</span>':'')+'</div>';
+    por[emp].forEach(e=>{
+     const tags=(e.t||'').split('').filter(Boolean).map(l=>
+      '<span class="tipo-tag">'+l+' · '+esc(TIPOS_ROT[l]||'')+'</span>').join('');
+     h+='<div class="tipos">'+(tags||'<span class="tipo-tag gen">'+
+      (e.auto?'anotado sozinho, sem classificação':'sem classificação')+'</span>')+'</div>';
+     if(e.acao&&!e.auto)h+='<div class="txt">'+esc(e.acao)+
+      (e.det?' — '+esc(e.det):'')+'</div>'});
+    h+='</div>'}}}
+ if(ATIVO)h+=formCal();
+ return h+'</div>'}
+function formCal(){
+ const oss=DATA.os.filter(o=>o.pasta);if(!oss.length)return '';
+ const base=calSel||DATA.hoje||'';
+ const dbr=base?base.split('-').reverse().join('/'):'';
+ return '<div class="cal-form"><h3>Registrar dia trabalhado</h3>'+
+  '<label>auditoria</label><select id="cal-os">'+oss.map(o=>
+   '<option value="'+esc(o.pasta)+'">'+esc(o.empregador)+'</option>').join('')+'</select>'+
+  '<label>data</label><input type="text" id="cal-data" value="'+esc(dbr)+'">'+
+  '<label>atividades (cumulativas)</label><div class="cal-tipos">'+
+  Object.keys(TIPOS_ROT).map(l=>'<label><input type="checkbox" class="cal-tp" value="'+l+
+   '"> <b>'+l+'</b> '+esc(TIPOS_ROT[l])+'</label>').join('')+'</div>'+
+  '<label>detalhe (opcional)</label>'+
+  '<input type="text" id="cal-det" placeholder="ex.: análise do PGR">'+
+  '<button class="mini" style="margin:10px 0 0" onclick="calRegistrar()">registrar</button></div>'}
+function calRegistrar(){
+ const pasta=document.getElementById('cal-os').value;
+ const data=(document.getElementById('cal-data').value||'').trim();
+ const tipos=[...document.querySelectorAll('.cal-tp:checked')].map(c=>c.value).join('');
+ const det=(document.getElementById('cal-det').value||'').trim();
+ if(!tipos){aviso('Marque pelo menos uma atividade (A-F)');return}
+ if(!/^[0-9]{2}[/][0-9]{2}[/][0-9]{4}$/.test(data)){aviso('Data no formato dd/mm/aaaa');return}
+ api({acao:'atividade',pasta:pasta,texto:det,data:data,tipos:tipos},true)}
+// Restaura a vista (Auditorias | Calendário) escolhida antes do reload.
+(function(){if(sessionStorage.getItem('painel-vista')==='cal')mudaVista('cal')})();
 """
 
 
@@ -1309,6 +1521,73 @@ def coletar_vencimentos(oss: list[dict], hoje: datetime.date) -> list[dict]:
     return itens
 
 
+def ler_sidecar_diario(pasta: Path) -> list[str]:
+    """Datas ISO anotadas pelo gancho automático do diário (1 por dia)."""
+    arq = pasta / SIDECAR_DIARIO
+    if not arq.exists():
+        return []
+    datas = []
+    try:
+        for linha in arq.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                d = (json.loads(linha) or {}).get("data") or ""
+            except json.JSONDecodeError:
+                continue
+            if RE_DATA_ISO.fullmatch(d):
+                datas.append(d)
+    except OSError:
+        return []
+    return datas
+
+
+def coletar_diario(oss: list[dict], base: Path, hoje: datetime.date) -> list[dict]:
+    """DIÁRIO DE ATIVIDADES consolidado, para a aba Calendário: uma entrada por
+    (dia, OS, linha do Registro de atividades), com as letras [A-F] da tela 2.1
+    do RI. Inclui TODAS as OS de OS ATIVAS (mesmo encerradas — calendário é
+    histórico) e também OS ARQUIVADAS (OS arquivada no meio do mês não pode
+    sumir da agenda mensal). O sidecar do gancho (.diario-auto.jsonl) entra
+    como "dia trabalhado sem classificação" apenas nos dias em que a OS não tem
+    linha registrada na tabela."""
+    piso = hoje - datetime.timedelta(days=DIARIO_JANELA_DIAS)
+    fontes = [(o, False) for o in oss]
+    arq_dir = base.parent / "OS ARQUIVADAS"
+    if arq_dir.exists():
+        for mem in sorted(arq_dir.glob("*/memory.md")):
+            try:
+                fontes.append((parse_memory(mem), True))
+            except Exception:
+                continue  # ficha arquivada ruim não derruba o painel
+    entradas = []
+    for o, arquivada in fontes:
+        emp = o.get("empregador") or o.get("pasta") or "?"
+        pasta = o.get("pasta") or ""
+        dias_na_tabela = set()
+        for a in o.get("atividades") or []:
+            d = parse_data(a["data"])
+            if not d or d < piso or d > hoje + datetime.timedelta(days=60):
+                continue
+            dias_na_tabela.add(d.isoformat())
+            entradas.append({"d": d.isoformat(), "emp": emp, "os": pasta,
+                             "ri": o.get("ri") or "",
+                             "t": a.get("tipos") or "", "acao": a["acao"],
+                             "det": datas_para_br(a.get("detalhe") or ""),
+                             "auto": False, "arq": arquivada})
+        try:
+            datas_auto = ler_sidecar_diario(Path(o["caminho"]))
+        except Exception:
+            datas_auto = []
+        for d_iso in sorted(set(datas_auto)):
+            d = parse_data(d_iso)
+            if not d or d < piso or d_iso in dias_na_tabela:
+                continue
+            entradas.append({"d": d_iso, "emp": emp, "os": pasta,
+                             "ri": o.get("ri") or "",
+                             "t": "", "acao": "trabalho na auditoria (anotado sozinho)",
+                             "det": "", "auto": True, "arq": arquivada})
+    entradas.sort(key=lambda e: (e["d"], e["emp"].lower()))
+    return entradas
+
+
 def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> list[dict]:
     out = []
     for o in oss:
@@ -1359,6 +1638,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "anotacoes": ([datas_para_br(a) for a in o.get("anotacoes", [])]
                           if com_pasta else []),
             "atividades": [{"data": datas_para_br(a["data"]), "acao": a["acao"],
+                            "tipos": a.get("tipos") or "",
                             "detalhe": datas_para_br(a["detalhe"])}
                            for a in o["atividades"][-12:][::-1]],
         })
@@ -1419,7 +1699,7 @@ def render_pendencias(oss: list[dict]) -> str:
             + "".join(grupos) + "</div>")
 
 
-def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
+def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
                  com_pasta: bool, artifact: bool) -> str:
     cards = []
     for i, o in enumerate(oss):
@@ -1446,7 +1726,11 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
     grade = ("".join(cards) if cards else
              '<div class="aviso-vazio">Nenhuma OS encontrada em OS ATIVAS. '
              'Use /aft-nova-auditoria para cadastrar a primeira.</div>')
-    dados = {"os": montar_json_os(oss, hoje, com_pasta), "venc": venc}
+    # Sem com_pasta (Artifact publicado), o nome da pasta sai também do diário.
+    diario_pub = diario if com_pasta else [{**e, "os": ""} for e in diario]
+    dias_mes = len({e["d"] for e in diario if e["d"][:7] == hoje.strftime("%Y-%m")})
+    dados = {"os": montar_json_os(oss, hoje, com_pasta), "venc": venc,
+             "diario": diario_pub, "hoje": hoje.isoformat()}
     json_js = json.dumps(dados, ensure_ascii=False).replace("</", "<\\/")
     titulo_art = "<title>Painel AFT</title>\n" if artifact else ""
     rodape = ("AFT Toolkit · painel publicado como artefato · snapshot de "
@@ -1458,24 +1742,32 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
     return f"""{titulo_art}<style>{CSS}</style>
 <h1>Painel <em>AFT</em></h1>
 <p class="sub">Gerado em {hoje.strftime("%d/%m/%Y")} a partir das fichas locais (memory.md) · clique num card para o detalhe da auditoria</p>
+<div class="abas">
+  <button id="aba-painel" class="aba ativa" onclick="mudaVista('painel')">Auditorias</button>
+  <button id="aba-cal" class="aba" onclick="mudaVista('cal')">Calendário</button>
+</div>
+<div id="vista-painel">
 <div class="contadores">
   <div class="contador"><b>{len(oss)}</b><span>OS ativas</span></div>
   <div class="contador{' alerta' if n_venc else ''}"><b>{n_venc}</b><span>DETs vencidos</span></div>
   <div class="contador{' alerta' if n_urg else ''}"><b>{n_urg}</b><span>vencendo em ≤ 7 dias</span></div>
   <div class="contador{' alerta' if n_novas else ''}"><b>{n_novas}</b><span>notif. sem registro</span></div>
   <div class="contador"><b>{n_autos}</b><span>autos lavrados</span></div>
+  <div class="contador"><b>{dias_mes}</b><span>dias trabalhados no mês</span></div>
 </div>
 <div class="grid">{grade}</div>
 {render_vencimentos(venc)}
 {render_pendencias(oss)}
+</div>
+<div id="vista-cal" style="display:none"></div>
 <div id="veu"></div><div id="detalhe"></div>
 <footer>{rodape}</footer>
 <script>const DATA={json_js};{JS}</script>
 """
 
 
-def render_html(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc) -> str:
-    miolo = render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc,
+def render_html(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario) -> str:
+    miolo = render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
                          com_pasta=True, artifact=False)
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -1528,6 +1820,7 @@ def main() -> int:
     # só oculta; arquivar é organização de disco, feita à parte quando o AFT
     # quiser.
     n_encerradas = sum(1 for o in oss if o.get("status") == "encerrada")
+    oss_todas = list(oss)  # diário/calendário é histórico: inclui encerradas
     if not quer_todas():
         oss = [o for o in oss if o.get("status") != "encerrada"]
 
@@ -1581,8 +1874,11 @@ def main() -> int:
     oss.sort(key=chave)
 
     venc = coletar_vencimentos(oss, hoje)
+    diario = coletar_diario(oss_todas, base, hoje)
+    dias_mes = len({e["d"] for e in diario if e["d"][:7] == hoje.strftime("%Y-%m")})
 
-    html_out = render_html(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos, venc)
+    html_out = render_html(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos,
+                           venc, diario)
     destino = saida_html(base)
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(html_out, encoding="utf-8")
@@ -1592,7 +1888,7 @@ def main() -> int:
         destino_art.parent.mkdir(parents=True, exist_ok=True)
         destino_art.write_text(
             render_miolo(oss, hoje, n_vencidos, n_urgentes, n_novas, n_autos, venc,
-                         com_pasta=False, artifact=True),
+                         diario, com_pasta=False, artifact=True),
             encoding="utf-8")
 
     # Resumo no stdout (a skill /aft-painel usa isto para responder em texto).
@@ -1605,6 +1901,7 @@ def main() -> int:
         "dets_vencendo_7d": n_urgentes,
         "notificacoes_nao_cadastradas": n_novas,
         "autos_lavrados": n_autos,
+        "dias_trabalhados_no_mes": dias_mes,
         "scan_ao_vivo": {"pedido": scan, "os_com_scan_ok": n_scan_ok},
         # Agenda consolidada de prazos (DETs — inclusive checados, para o
         # /aft-agenda-det marcar ✓ no calendário — e pendências datadas).

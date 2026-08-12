@@ -72,6 +72,7 @@ MAX_BODY = 64_000
 # CORS restrito ao site do DET: é de lá que a extensão dispara o fetch.
 sys.path.insert(0, str(AQUI))
 import det_sync  # noqa: E402
+import diario_registrar  # noqa: E402  (diário de atividades — letras A-F)
 
 ORIGEM_DET = "https://auditor-det.sit.trabalho.gov.br"
 CORS_DET = {
@@ -264,6 +265,25 @@ def acao_anotacao_add(texto: str, descricao: str) -> tuple[str, str]:
     return "".join(linhas), "anotação registrada"
 
 
+def acao_atividade_tipada(texto: str, p: dict) -> tuple[str, str]:
+    """Registro do DIÁRIO DE ATIVIDADES (aba Calendário): letras A-F + data da
+    atividade (que pode ser passada). Delega ao diario_registrar, que deduplica
+    por (data, letra); o texto livre do formulário vai na coluna Detalhes."""
+    tipos = (p.get("tipos") or "").strip().upper()
+    data = (p.get("data") or "").strip() or \
+        datetime.date.today().strftime("%d/%m/%Y")
+    descricao = " ".join((p.get("texto") or "").split())
+    novo, resumo = diario_registrar.registrar_em_texto(
+        texto, data, tipos, detalhe=descricao, origem="painel")
+    if novo == texto:
+        return texto, (f"{resumo['tipos_ja_registrados']} já registrado(s) "
+                       f"em {data} — nada a fazer")
+    msg = f"atividade registrada: {resumo['tipos_novos']} em {data}"
+    if resumo["tipos_ja_registrados"]:
+        msg += f" (já havia: {resumo['tipos_ja_registrados']})"
+    return novo, msg
+
+
 def acao_atividade(texto: str, descricao: str) -> tuple[str, str]:
     """Acrescenta uma linha na tabela Registro de atividades (data de hoje)."""
     descricao = " ".join(descricao.split())
@@ -334,7 +354,8 @@ ACOES = {
     "pendencia": lambda t, p: acao_pendencia(t, p.get("texto", "")),
     "anotacao_ok": lambda t, p: acao_anotacao_ok(t, p.get("texto", "")),
     "anotacao_add": lambda t, p: acao_anotacao_add(t, p.get("texto", "")),
-    "atividade": lambda t, p: acao_atividade(t, p.get("texto", "")),
+    "atividade": lambda t, p: (acao_atividade_tipada(t, p) if p.get("tipos")
+                               else acao_atividade(t, p.get("texto", ""))),
     "status": lambda t, p: acao_status(t, p.get("valor", "")),
     "embargo": lambda t, p: acao_embargo(t, p.get("estado", "")),
 }
