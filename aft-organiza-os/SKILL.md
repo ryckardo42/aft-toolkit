@@ -287,6 +287,16 @@ _(vazio)_
    PYTHONIOENCODING=utf-8 python ~/.claude/skills/_scripts/checar_pii.py "<pasta da OS>/memory.md"
    ```
 
+4. **Grave o `CLAUDE.md` de contexto em cada pasta de OS** — o arquivo curto que faz o
+   assistente "saber quem é" ao abrir a conversa naquela pasta (ler o `memory.md`
+   primeiro, registrar constatação nas Anotações da auditoria, privacidade). Uma passada
+   cobre todas as OS e **nunca sobrescreve** um arquivo existente:
+   ```bash
+   python ~/.claude/skills/_scripts/contexto_os.py "<pasta OS ATIVAS>"
+   ```
+   Não renomeie o arquivo: `CLAUDE.md` é o nome que os assistentes leem como contexto de
+   pasta, e ele não depende da sincronização de sessões.
+
 ## FASE 5 — Encadeamento obrigatório: /aft-autos-lavrados + painel
 
 Depois de organizar tudo:

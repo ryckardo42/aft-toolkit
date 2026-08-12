@@ -203,6 +203,22 @@ Regras:
 - CNPJ no front-matter: só dígitos, entre aspas (ou string vazia `""` se ainda não
   informado). No corpo (`**CNPJ:**`): formatado, ou o aviso de pendência se vazio.
 
+## Passo 3.5 — Gravar o contexto da pasta (CLAUDE.md)
+
+Com o `memory.md` no lugar, grave o `CLAUDE.md` de contexto da auditoria — o arquivo
+curto que faz o assistente "saber quem é" ao abrir a conversa naquela pasta: ler a ficha
+primeiro, registrar constatação nas `## Anotações da auditoria`, classificar documento
+novo, privacidade. Você roda, sem perguntar:
+
+```bash
+python ~/.claude/skills/_scripts/contexto_os.py --os "<OS_ATIVAS>/<NOME_DA_AUDITORIA>"
+```
+
+Nunca sobrescreve um `CLAUDE.md` que já exista — o AFT pode ter personalizado o dele.
+**Não renomeie o arquivo:** `CLAUDE.md` é o nome que os assistentes leem como contexto
+de pasta. Ele não depende da sincronização de sessões: é um arquivo de texto na pasta,
+lido por qualquer assistente que abra ali.
+
 ## Passo 4 — Confirmar e encadear
 
 Mostre um resumo curto e ofereça o próximo passo:
