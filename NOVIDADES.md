@@ -7,6 +7,30 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 12/08/2026
+<!-- commit: contexto-os -->
+
+**O arquivo de contexto de cada auditoria deixou de depender das sessões do aplicativo.**
+Cada pasta de OS tem um `CLAUDE.md` — o bilhete curto que faz o assistente "saber quem é"
+ao abrir a conversa naquela pasta: ler o `memory.md` primeiro, registrar suas constatações
+nas Anotações da auditoria, classificar documento novo, privacidade. Até agora quem
+escrevia esse bilhete era a sincronização de sessões da barra lateral. Isso era frágil:
+se a sincronização estivesse desligada ou com problema, uma auditoria nova podia ficar sem
+o contexto dela, e o assistente abria a conversa "sem saber" de que empresa se tratava.
+
+Agora quem grava o bilhete são a **`/aft-nova-auditoria`** (na hora de criar a OS) e a
+**`/aft-organiza-os`** (que passa por todas de uma vez). O que muda para você:
+
+- **Auditoria nova já nasce com o contexto**, sem depender de fechar e reabrir o aplicativo.
+- **Nada do que você escreveu se perde**: o bilhete que já existe nunca é sobrescrito. Se
+  você personalizou o de alguma empresa, ele fica exatamente como está.
+- **O nome do arquivo continua `CLAUDE.md`** de propósito. Não renomeie: é o nome que os
+  assistentes procuram como contexto da pasta.
+
+Nada a fazer da sua parte — as auditorias que já têm o arquivo seguem iguais.
+
+---
+
+## 12/08/2026
 <!-- commit: rt-por-objeto -->
 
 **O Relatório Técnico de interdição/embargo agora sai em dois formatos: por TÓPICO ou por OBJETO.**
