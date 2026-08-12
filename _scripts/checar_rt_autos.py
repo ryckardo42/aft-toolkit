@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-checar_rt_autos.py - coerencia entre a Secao 4 do RT (.docx) e os autos (autos.md).
+checar_rt_autos.py - coerencia entre as irregularidades do RT (.docx) e os autos
+(autos.md). Cobre o RT nos dois formatos do montar_rt.py: "topico" (secao 4
+unica) e "objeto" (um bloco de irregularidades por objeto interditado).
 
 Ao editar o RT (trocar ementas por itens da NR, tirar/incluir irregularidades), o RT e
 o autos.md podem desalinhar. Este verificador compara os dois e SINALIZA divergencias
@@ -68,36 +70,68 @@ def eh_legenda(texto):
 
 
 def ler_secao4_rt(rt_path):
-    """Retorna (itens_da_secao4, texto_completo_da_secao4).
+    """Retorna (itens_de_irregularidade, texto_dos_blocos_de_irregularidade).
 
-    Aceita os dois formatos de template:
-      - atual: os titulos usam numeracao AUTOMATICA do Word, entao o texto e so
-        "IRREGULARIDADE(S):" (sem o "4.") e as irregularidades sao paragrafos de
-        prosa ANTES do bloco fixo da metodologia da NR-3;
-      - anterior: titulos com "4." digitado e ementas em lista (numPr) DEPOIS do
-        bloco da metodologia.
-    Em ambos, as tabelas 3.1/3.2/3.3 ficam de fora: doc.paragraphs nao inclui o
+    Aceita os tres layouts de RT:
+      - topico atual: os titulos usam numeracao AUTOMATICA do Word, entao o
+        texto e so "IRREGULARIDADE(S):" (sem o "4.") e as irregularidades sao
+        paragrafos de prosa ANTES do bloco fixo da metodologia da NR-3;
+      - topico anterior: titulos com "4." digitado e ementas em lista (numPr)
+        DEPOIS do bloco da metodologia;
+      - POR OBJETO (formato "objeto" do montar_rt.py): nao ha secao 4; cada
+        objeto tem seu rotulo "IRREGULARIDADE(S):" seguido das ementas, ate o
+        rotulo "FATOR(ES) DE RISCO...". Detectado por haver MAIS DE UM rotulo
+        de irregularidade; as ementas de todos os objetos sao somadas.
+    Em todos, as tabelas 3.1/3.2/3.3 ficam de fora: doc.paragraphs nao inclui o
     conteudo de tabelas.
     """
     import docx
     doc = docx.Document(rt_path)
     paras = doc.paragraphs
-    ini = fim = metodologia = None
-    for i, p in enumerate(paras):
-        t = p.text.strip().upper()
+
+    def eh_titulo_irregularidade(t):
+        return "IRREGULARIDADE" in t and len(t) < 40
+
+    def eh_titulo_fator(t):
+        return ("FATOR" in t or "RISCO" in t) and "RELACIONADO" in t
+
+    titulos = [i for i, p in enumerate(paras)
+               if eh_titulo_irregularidade(p.text.strip().upper())]
+    if not titulos:
+        return None, None
+
+    if len(titulos) > 1:                       # RT por objeto
+        itens, textos = [], []
+        for ini in titulos:
+            for j in range(ini + 1, len(paras)):
+                t = paras[j].text.strip()
+                if eh_titulo_fator(t.upper()):
+                    break
+                textos.append(paras[j].text)
+                if t and not eh_legenda(t):
+                    itens.append(t)
+        # ementa que atinge mais de um objeto se repete no bloco de cada um,
+        # mas rende UM auto so (regra 7.1 da skill) - deduplica para a contagem
+        vistos, unicos = set(), []
+        for t in itens:
+            m = CODE_RE.search(t)
+            chave = m.group(0) if m else t
+            if chave not in vistos:
+                vistos.add(chave)
+                unicos.append(t)
+        return unicos, "\n".join(textos)
+
+    ini = titulos[0]
+    fim = metodologia = None
+    for i in range(ini + 1, len(paras)):
+        t = paras[i].text.strip().upper()
         if not t:
-            continue
-        if ini is None:
-            if "IRREGULARIDADE" in t and len(t) < 40:      # linha de titulo
-                ini = i
             continue
         if metodologia is None and t.startswith("METODOLOGIA PRESCRITA"):
             metodologia = i
-        if ("FATOR" in t or "RISCO" in t) and "RELACIONADO" in t:
+        if eh_titulo_fator(t):
             fim = i
             break
-    if ini is None:
-        return None, None
 
     sec = paras[ini + 1:(fim if fim is not None else len(paras))]
     texto = "\n".join(p.text for p in sec)
@@ -139,7 +173,7 @@ def main():
 
     itens_rt, texto_rt = ler_secao4_rt(rt_path)
     if itens_rt is None:
-        print("ERRO: nao encontrei a 'Secao 4 - IRREGULARIDADE(S)' no RT.", file=sys.stderr)
+        print("ERRO: nao encontrei bloco de 'IRREGULARIDADE(S)' no RT.", file=sys.stderr)
         sys.exit(2)
     autos, texto_autos = ler_autos(autos_path)
 
@@ -151,13 +185,13 @@ def main():
     print("=" * 64)
     print("  COERENCIA RT  x  autos.md")
     print("=" * 64)
-    print(f"Secao 4 do RT : {len(itens_rt)} irregularidade(s)")
-    print(f"autos.md      : {len(autos)} auto(s)")
+    print(f"Irregularidades no RT : {len(itens_rt)}")
+    print(f"autos.md              : {len(autos)} auto(s)")
     if len(itens_rt) != len(autos):
         div.append(f"Contagem divergente: RT={len(itens_rt)} x autos={len(autos)}.")
 
-    print("\nNRs na Secao 4 do RT : " + (", ".join(f"NR-{n:02d}" for n in sorted(nrs_rt)) or "-"))
-    print("NRs nos autos        : " + (", ".join(f"NR-{n:02d}" for n in sorted(nrs_au)) or "-"))
+    print("\nNRs no RT     : " + (", ".join(f"NR-{n:02d}" for n in sorted(nrs_rt)) or "-"))
+    print("NRs nos autos : " + (", ".join(f"NR-{n:02d}" for n in sorted(nrs_au)) or "-"))
     so_rt = nrs_rt - nrs_au
     so_au = nrs_au - nrs_rt
     if so_rt:
@@ -181,7 +215,7 @@ def main():
     print("\n--- Autos (autos.md) ---")
     for i, (c, d) in enumerate(autos, 1):
         print(f"  {i:>2}. {c}  {d[:70]}")
-    print("\n--- Irregularidades (Secao 4 do RT) ---")
+    print("\n--- Irregularidades (RT) ---")
     for i, t in enumerate(itens_rt, 1):
         print(f"  {i:>2}. {t[:80]}")
 

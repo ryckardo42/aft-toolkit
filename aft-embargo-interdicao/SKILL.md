@@ -9,7 +9,10 @@ description: >
   a máquina". Logo após o RT, redige obrigatoriamente os
   autos derivados das ementas da seção 4. Acione TAMBÉM quando o AFT ANEXAR
   um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta skill
-  que os redige, nunca improvisar por fora. Acione AINDA quando o AFT
+  que os redige, nunca improvisar por fora. Gera o RT em dois formatos: por
+  TÓPICO (padrão, seções temáticas) ou por OBJETO ("RT por objeto": cada objeto
+  interditado com suas irregularidades, riscos, medidas e documentos); com
+  objetos de tipos diferentes, pergunta ao AFT qual usar. Acione AINDA quando o AFT
   descrever uma situação encontrada na inspeção e perguntar se cabe
   interdição/embargo ("isso é grave e iminente?", "devo interditar?"): a
   skill consulta precedentes reais de interdição e sugere — quem decide é
@@ -118,6 +121,55 @@ e, no item 8, "suspensão da interdição" → "do embargo", "Termo de Interdiç
 > não pode sair chamado de interdição (NR-03, 3.2.2.1). Todo o resto dos itens
 > 1, 2 e 8 permanece literal.
 
+### 0-bis. Escolher o FORMATO do RT: por TÓPICO ou por OBJETO
+
+O conteúdo é o mesmo; muda a organização das seções 4 a 7:
+
+- **Por TÓPICO (padrão):** o layout do template — seções temáticas
+  (4. Irregularidades, 5. Fatores de Risco, 6. Medidas, 7. Documentos), cada uma
+  cobrindo todos os objetos de uma vez. É o formato de sempre da skill.
+- **Por OBJETO:** as seções 4 a 7 deixam de existir como seções; **cada objeto**
+  da seção 3 ganha seus próprios sub-blocos (Irregularidades, Fatores de Risco,
+  Medidas de Proteção, Documentos Solicitados), e a Conclusão renumera sozinha
+  para o item 4. Alguns AFTs preferem assim no Sistema Auditor quando os objetos
+  são de naturezas diferentes — a leitura fica "um objeto, um dossiê".
+
+**Regra de decisão:**
+
+1. Conte os **tipos** de objeto da medida (as 4 hipóteses do subitem 3.2.2.2 da
+   NR-03: máquina/equipamento, atividade, setor de serviço, estabelecimento —
+   MÁQUINA e EQUIPAMENTO contam como UM tipo só; no embargo, OBRA).
+2. **Tipos heterogêneos** (ex.: 1 máquina + 1 setor de serviço; atividade +
+   setor; máquina + atividade + estabelecimento): **pergunte OBRIGATORIAMENTE ao
+   AFT** — "Os objetos são de tipos diferentes. Prefere o RT por TÓPICO (seções
+   temáticas, padrão) ou por OBJETO (cada objeto com suas irregularidades,
+   riscos, medidas e documentos)?" — e formate como ele decidir. Não escolha em
+   silêncio.
+3. **Tipos homogêneos** (só máquinas, só uma obra...): siga no formato por
+   tópico **sem perguntar** — a menos que o AFT peça "por objeto".
+4. No **Modo B** (RT já anexado) não há o que decidir: o RT não é refeito.
+
+**Consequências práticas do formato por objeto** (o `montar_rt.py` cuida de tudo
+ao receber `"formato": "objeto"` no JSON):
+
+- as quatro listas (irregularidades, fatores_risco, medidas_protecao,
+  documentos_solicitados) saem do nível de cima do JSON e entram **dentro de
+  cada objeto**;
+- o bloco fixo da metodologia da NR-3 (com as Tabelas 3.1/3.2/3.3), que no
+  template vive na seção 4, **migra para o fim da seção 2** — precisa vir antes
+  da análise por objeto;
+- a alínea fixa "Requerimento expresso..." do item 6 é **dispensada** neste
+  formato: a mesma exigência já consta do bloco fixo DO PEDIDO DE SUSPENSÃO
+  (incisos I a III), que permanece intacto;
+- irregularidades, medidas e documentos de cada objeto saem como **lista com
+  marcador** (sem alíneas A/B/C — elas não reiniciariam a cada objeto).
+
+**No formato por tópico com MAIS DE UM objeto**, abra cada item das seções 4, 6
+e 7 com a referência ao objeto — `Objeto 1 - ...`, `Objetos 2 e 3 - ...` — e, no
+item 5, cite o objeto na `descricao` do fator (ex.: "... na operação do Objeto
+1."). Sem isso o leitor não sabe qual irregularidade pertence a qual objeto.
+Com objeto único, nada de prefixo.
+
 ### 1. Coletar os dados necessários
 
 Os campos são os do **Dicionário de campos do template** (logo abaixo do passo 2).
@@ -206,6 +258,7 @@ preserva o texto fixo. Os passos 2-alt a 5 ficam abaixo só como **fallback**.
 ```json
 {
   "modo": "embargo",
+  "formato": "topico",
   "numero_termo": "0012345-6",
   "empregador": "RAZÃO SOCIAL LTDA",
   "cnpj": "00.000.000/0000-00",
@@ -228,10 +281,34 @@ preserva o texto fixo. Os passos 2-alt a 5 ficam abaixo só como **fallback**.
   "medidas_protecao": ["medida 1", "medida 2"],
   "documentos_solicitados": ["documento 1", "documento 2"],
 
+  "conclusao": "texto da conclusão (opcional; sem ele a seção fica em branco para o AFT)",
+
   "cidade": "Goiânia", "uf": "GO", "data": "29/07/2026",
   "auditor_fiscal": "NOME DO AUDITOR"
 }
 ```
+
+`"formato"` é opcional (ausente = `"topico"`). No **formato por objeto**
+(`"formato": "objeto"`, decidido no passo 0-bis), as quatro listas saem do nível
+de cima e entram **dentro de cada objeto** — os demais campos não mudam:
+
+```json
+"objetos": [
+  {"numero_objeto": "1", "tipo_objeto": "MÁQUINA",
+   "tipo_paralisacao": "TOTAL", "objetos": "descrição...",
+   "irregularidades": ["ementa + capitulação do objeto 1"],
+   "fatores_risco": [
+     {"fator_de_risco": "...", "descricao": "...",
+      "fundamentacao_risco_atual": "...", "fundamentacao_risco_referencia": "..."}
+   ],
+   "medidas_protecao": ["medida do objeto 1"],
+   "documentos_solicitados": ["documento do objeto 1"]}
+]
+```
+
+> No formato por objeto, ementa que atinge mais de um objeto se **repete** no
+> bloco de cada objeto atingido — mas continua rendendo **um único auto** no
+> passo 7 (regra 7.1).
 
 2. Rode:
 
@@ -251,8 +328,9 @@ nenhum outro texto:** os itens 1, 2 e 8, a metodologia da NR-3 e as Tabelas
 
 **Item 3 — objetos.** Lista de objetos; o bloco inteiro se repete para cada um:
 - `numero_objeto` — ordinal no Termo (1, 2...);
-- `tipo_objeto` — caixa alta: ATIVIDADE | MÁQUINA | EQUIPAMENTO | SETOR | SERVIÇO
-  (e OBRA, no embargo);
+- `tipo_objeto` — caixa alta, pelas hipóteses do subitem 3.2.2.2 da NR-03:
+  ATIVIDADE | MÁQUINA | EQUIPAMENTO | SETOR DE SERVIÇO | ESTABELECIMENTO
+  (e OBRA, no embargo — subitem 3.2.2.1);
 - `tipo_paralisacao` — caixa alta: TOTAL | PARCIAL;
 - `objetos` — descrição: identificação física, localização, nº de série/patrimônio
   quando houver, e o que exatamente ficou paralisado. Prosa objetiva, 1 a 3
@@ -284,7 +362,8 @@ pretérito, verificável. **Não antecipar as medidas corretivas** (item 6).
 **Item 6 — `medidas_protecao`.** Uma medida por item, no infinitivo, cada uma
 vinculada à irregularidade e ao dispositivo correspondentes, verificáveis
 documentalmente. A alínea fixa "Requerimento expresso..." do template permanece
-como **último item** da lista — o script cuida disso.
+como **último item** da lista — o script cuida disso (no formato por objeto ela
+é dispensada; ver passo 0-bis).
 
 **Item 7 — `documentos_solicitados`.** Os documentos que comprovarão as medidas do
 item 6: ART/laudos, projetos, manuais, ordens de serviço, PGR/PCMSO, certificados
@@ -368,6 +447,10 @@ adequação **de cada uma** delas. O que **não** se agrupa: documento que não 
 (procedimento de segurança, certificado de capacitação, ordem de serviço) vai em item
 próprio.
 
+**Item 8 — `conclusao`** (opcional). Texto da seção CONCLUSÃO/OBSERVAÇÃO. Sem o
+campo, a seção sai em branco para o AFT preencher no Word — antes o script nem
+tinha como preenchê-la.
+
 **Fecho** — `cidade`, `uf` (sigla), `data`, `auditor_fiscal` (nome completo, caixa
 alta).
 
@@ -428,6 +511,8 @@ embargo** no texto fixo. Se um placeholder sumir do template, ele **para com err
 
 > Só use os passos 2-alt a 5 se o `montar_rt.py` não servir (template diferente,
 > seção que ele não cobre). Caso contrário, vá do passo 2 direto ao 4-bis.
+> O fallback manual cobre apenas o formato por TÓPICO; o formato por objeto
+> depende do `montar_rt.py` (a reorganização das seções é cirurgia de XML).
 
 ```bash
 mkdir -p /tmp/RT_temp
@@ -542,7 +627,9 @@ Informe o caminho ao AFT — ele revisa o `.docx` no Word.
 Esta fase é parte integrante do fluxo — **não é opcional**, **não perguntar ao usuário se
 deseja gerá-los**. O RT acabou de ser produzido e tem todas as informações necessárias: data
 da inspeção, objetos interditados (seção 3) e ementas com código + descrição + capitulação
-(seção 4). Reaproveite esses dados sem nova consulta ao NotebookLM.
+(seção 4 no formato por tópico; blocos de irregularidades de cada objeto no formato por
+objeto). Reaproveite esses dados sem nova consulta ao NotebookLM. **O formato do RT não
+muda os autos em nada**: as regras 7.1 a 7.6 valem iguais para os dois.
 
 #### 7.1. Regras de agrupamento ementa × objeto
 
@@ -661,9 +748,11 @@ Na mesma pasta `interdicao-embargo/` criada no passo 6, salve:
 
 #### 7.5. Conferir a coerência RT x autos (obrigatório)
 
-A Seção 4 do RT e o `autos.md` precisam bater. Eles podem desalinhar quando o RT é
+As irregularidades do RT e o `autos.md` precisam bater. Eles podem desalinhar quando o RT é
 editado (trocar ementas por itens de NR, tirar/incluir irregularidade — ex.: NR-01/NR-35).
-Rode o verificador comparando o `.docx` do RT com o `autos.md`:
+Rode o verificador comparando o `.docx` do RT com o `autos.md` (ele reconhece os dois
+formatos do RT e, no formato por objeto, conta uma ementa repetida em vários objetos
+uma vez só, como a regra 7.1 manda):
 
 ```bash
 python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[caminho do autos.md]"
@@ -708,6 +797,7 @@ TERMO DE INTERDIÇÃO Nº [NÚMERO]
 EMPREGADOR: [NOME]
 CNPJ: [CNPJ]
 
+FORMATO POR TÓPICO (padrão):
 1. OBJETIVO — fixo + frase da data da inspeção física
 2. DA AÇÃO FISCAL — fixo (adaptar NR citada se necessário)
 3. OBJETOS INTERDITADO — OBJETO: N – TIPO — Paralisação: TOTAL/PARCIAL
@@ -716,6 +806,14 @@ CNPJ: [CNPJ]
 6. MEDIDAS DE PROTEÇÃO A ADOTAR — preencher
 7. DOCUMENTOS SOLICITADOS — preencher
 8. CONCLUSÃO/OBSERVAÇÃO — preencher
+
+FORMATO POR OBJETO:
+1. OBJETIVO — fixo
+2. DA AÇÃO FISCAL — fixo + metodologia NR-3 fixa (migra da seção 4)
+3. OBJETOS INTERDITADO — para CADA objeto:
+   OBJETO: N – TIPO — Paralisação: TOTAL/PARCIAL + descrição
+   Irregularidade(s) · Fatores de Risco · Medidas de Proteção · Documentos
+4. CONCLUSÃO/OBSERVAÇÃO — preencher (renumeração automática do Word)
 
 [DO PEDIDO DE SUSPENSÃO DA INTERDIÇÃO — fixo]
 [Instruções SEI — fixas]
@@ -745,6 +843,11 @@ Competência delegada pela Portaria 1719/2014...
 | Situação | Ação |
 |---|---|
 | Múltiplos objetos interditados | Replicar a estrutura da seção 3 para cada objeto |
+| Objetos de TIPOS diferentes (máquina + setor, atividade + setor...) | Perguntar OBRIGATORIAMENTE ao AFT: RT por TÓPICO ou por OBJETO (passo 0-bis) — nunca escolher em silêncio |
+| Objetos todos do mesmo tipo | Formato por tópico, sem perguntar — a menos que o AFT peça por objeto |
+| AFT pede "RT por objeto" | `"formato": "objeto"` no JSON, com as 4 listas dentro de cada objeto (passo 0-bis) |
+| Formato por objeto: ementa atinge mais de um objeto | Repetir a ementa no bloco de cada objeto atingido; no passo 7 continua rendendo 1 auto só |
+| Formato por tópico com mais de um objeto | Prefixar os itens das seções 4, 6 e 7 com `Objeto N - ...` e citar o objeto na descrição do item 5 |
 | NR diferente da NR-12 | Ajustar a referência legal na seção 2 e na seção 4 |
 | Paralisação parcial | Indicar "Paralisação: PARCIAL" com especificação do escopo |
 | Ausência de algum dado | Inserir `[A PREENCHER]` e listar os campos pendentes ao usuário |

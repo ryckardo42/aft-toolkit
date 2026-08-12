@@ -9,6 +9,19 @@ que se repetem (objetos e fatores de risco), monta as listas reais do Word
 (medidas e documentos) e preserva TODO o texto fixo - itens 1, 2 e 8, a
 metodologia da NR-3 e as Tabelas 3.1/3.2/3.3 sao juridicamente vinculados.
 
+Dois FORMATOS de RT (campo "formato" do JSON):
+  - "topico" (padrao): o layout do template - secoes 4 a 7 tematicas
+    (irregularidades, fatores de risco, medidas, documentos), cada uma cobrindo
+    todos os objetos de uma vez;
+  - "objeto": as secoes 4 a 7 deixam de existir como secoes; cada objeto da
+    secao 3 ganha seus proprios sub-blocos (Irregularidade(s), Fator(es) de
+    Risco, Medida(s) de Protecao, Documento(s) Solicitado(s)). O bloco fixo da
+    metodologia da NR-3 (com as Tabelas 3.1/3.2/3.3) migra para o fim da
+    secao 2, antes da lista de objetos; a alinea fixa "Requerimento expresso..."
+    do item 6 e dispensada (a exigencia ja consta do item fixo DO PEDIDO DE
+    SUSPENSAO, incisos I a III); e a CONCLUSAO renumera sozinha para o item 4
+    (a numeracao dos titulos e automatica no Word).
+
 Pontos que ele resolve sozinho:
   - placeholder partido entre runs (o Word quebra {{chave}} em varios pedacos ao
     editar): a substituicao e feita no nivel dos runs, preservando a formatacao;
@@ -28,6 +41,7 @@ viram lixo quando interpolados na linha de comando do Windows). Formato:
 
 {
   "modo": "interdicao" | "embargo",
+  "formato": "topico" | "objeto",       // opcional; ausente = "topico"
   "numero_termo": "0012345-6",
   "empregador": "RAZAO SOCIAL LTDA",
   "cnpj": "00.000.000/0000-00",
@@ -49,9 +63,26 @@ viram lixo quando interpolados na linha de comando do Windows). Formato:
   "medidas_protecao": ["medida 1", "medida 2"],
   "documentos_solicitados": ["documento 1", "documento 2"],
 
+  "conclusao": "texto da conclusao/observacao",   // opcional nos dois formatos
+
   "cidade": "Goiania", "uf": "GO", "data": "29/07/2026",
   "auditor_fiscal": "NOME DO AUDITOR"
 }
+
+No formato "objeto", as quatro listas (irregularidades, fatores_risco,
+medidas_protecao, documentos_solicitados) saem do nivel de cima e entram DENTRO
+de cada objeto:
+
+  "objetos": [
+    {"numero_objeto": "1", "tipo_objeto": "MAQUINA",
+     "tipo_paralisacao": "TOTAL", "objetos": "descricao...",
+     "irregularidades": ["..."],
+     "fatores_risco": [{"fator_de_risco": "...", "descricao": "...",
+                        "fundamentacao_risco_atual": "...",
+                        "fundamentacao_risco_referencia": "..."}],
+     "medidas_protecao": ["..."],
+     "documentos_solicitados": ["..."]}
+  ]
 
 Nao digite "A)", "B)", "3." nem marcadores (-, *) nos textos: a numeracao e
 automatica no Word. Depois de montar, use o inserir_foto_docx.py para as fotos.
@@ -118,8 +149,16 @@ ABSTRACT_LETRAS = "1"    # abstractNum da lista A) B) C) (upperLetter, "%1)")
 
 OBRIGATORIOS = ("modo", "numero_termo", "empregador", "cnpj",
                 "Contexto-da-inspecao-fisica", "objetos",
-                "irregularidades", "fatores_risco", "medidas_protecao",
-                "documentos_solicitados", "cidade", "uf", "data", "auditor_fiscal")
+                "cidade", "uf", "data", "auditor_fiscal")
+
+# As quatro listas de conteudo: no formato "topico" ficam no nivel de cima do
+# JSON; no formato "objeto" entram dentro de cada objeto.
+LISTAS_CONTEUDO = ("irregularidades", "fatores_risco",
+                   "medidas_protecao", "documentos_solicitados")
+
+# numPr que DESLIGA a numeracao herdada do estilo (usado nos rotulos que o
+# formato "objeto" clona dos titulos de secao).
+NUMPR_DESLIGADO = '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/></w:numPr>'
 
 # Trocas do modo embargo: o template e redigido para interdicao.
 TROCAS_EMBARGO = (
@@ -502,15 +541,191 @@ def remover_vazio_apos(xml, chave):
     return xml[:m.start()] + xml[m.end():]
 
 
+def titulos_de_secao(xml):
+    """Localiza os titulos de secao (estilo Ttulo1) por palavra-chave.
+
+    Os titulos nao carregam o numero no texto ("IRREGULARIDADE(S):", sem o
+    "4.") - a numeracao vem da lista automatica do Word. Por isso, remover um
+    titulo renumera sozinho os seguintes.
+    """
+    achados = {}
+    for m in RE_PARAGRAFO.finditer(xml):
+        p = m.group(0)
+        if 'w:val="Ttulo1"' not in p:
+            continue
+        t = texto_do_paragrafo(p).upper()
+        if "IRREGULARIDADE" in t:
+            achados["irregularidades"] = m
+        elif "FATOR" in t and "RELACIONADO" in t:
+            achados["fatores"] = m
+        elif "MEDIDA" in t:
+            achados["medidas"] = m
+        elif "DOCUMENTO" in t:
+            achados["documentos"] = m
+        elif "CONCLUS" in t:
+            achados["conclusao"] = m
+        elif "OBJETO(S)" in t:
+            achados["objetos"] = m
+    return achados
+
+
+def inserir_conclusao(xml, texto, fonte):
+    """Poe o texto da conclusao no paragrafo vazio apos o titulo CONCLUSAO.
+
+    O template nao tem placeholder ali - o paragrafo e vazio. O texto entra no
+    padrao do corpo (justificado, entrelinha 1,5, recuo de primeira linha).
+    """
+    tit = titulos_de_secao(xml).get("conclusao")
+    if not tit:
+        erro("titulo CONCLUSAO/OBSERVACAO nao encontrado no template", 3)
+    m = RE_PARAGRAFO.match(xml, tit.end())
+    if not m or texto_do_paragrafo(m.group(0)).strip():
+        return xml  # sem paragrafo vazio logo apos: nao arrisca sobrescrever
+    p = m.group(0)
+    t_novo = '<w:t xml:space="preserve">' + esc(texto) + "</w:t>"
+    if "</w:r>" in p:
+        # o <w:t> entra no fim do run (depois do <w:rPr>, exigencia do schema)
+        novo = p.replace("</w:r>", t_novo + "</w:r>", 1)
+    elif "</w:p>" in p:
+        novo = p.replace("</w:p>", "<w:r>" + t_novo + "</w:r></w:p>")
+    else:  # paragrafo autofechado <w:p .../>
+        novo = p[:-2].rstrip() + "><w:r>" + t_novo + "</w:r></w:p>"
+    novo = como_corpo(novo, recuo=True)
+    novo = garantir_fonte(novo, fonte)
+    return xml[:m.start()] + novo + xml[m.end():]
+
+
+def montar_por_objeto(xml, dados, fonte):
+    """Formato "objeto": aninha irregularidades, fatores, medidas e documentos
+    dentro de cada objeto da secao 3 e remove as secoes tematicas 4 a 7.
+
+    O bloco fixo da metodologia da NR-3 (com as Tabelas 3.1/3.2/3.3), que no
+    template vive dentro da secao 4, migra para o fim da secao 2 - ele
+    fundamenta a caracterizacao do GIR e precisa vir antes da analise por
+    objeto. A alinea fixa "Requerimento expresso..." do item 6 e dispensada
+    neste formato: a mesma exigencia ja consta do item fixo DO PEDIDO DE
+    SUSPENSAO (incisos I a III).
+    """
+    titulos = titulos_de_secao(xml)
+    faltam = [k for k in ("objetos", "irregularidades", "fatores",
+                          "medidas", "documentos", "conclusao") if k not in titulos]
+    if faltam:
+        erro("titulos de secao nao encontrados no template: " + ", ".join(faltam)
+             + f". Confira {TEMPLATE}", 3)
+    h3, h4 = titulos["objetos"], titulos["irregularidades"]
+    h5, h6 = titulos["fatores"], titulos["medidas"]
+    h7, h8 = titulos["documentos"], titulos["conclusao"]
+
+    # moldes (extraidos com os placeholders ainda no lugar)
+    obj_ini, obj_fim = _span_do_bloco(xml, BLOCO_OBJETOS)
+    molde_obj = xml[obj_ini:obj_fim]
+
+    ps_irr = paragrafos_com_chave(xml, "irregularidades")
+    if not ps_irr:
+        erro("placeholder {{irregularidades}} nao encontrado no template. "
+             f"Confira {TEMPLATE}", 3)
+    molde_irr = ps_irr[0].group(0)
+    metodologia = xml[ps_irr[0].end():h5.start()]
+
+    sec5 = xml[h5.start():h6.start()]
+    f_ini, f_fim = _span_do_bloco(sec5, BLOCO_FATORES)
+    molde_fator = sec5[f_ini:f_fim]
+
+    ps_med = paragrafos_com_chave(xml, "medidas_protecao")
+    ps_doc = paragrafos_com_chave(xml, "documentos_solicitados")
+    for chave, ps in (("medidas_protecao", ps_med), ("documentos_solicitados", ps_doc)):
+        if not ps:
+            erro(f"placeholder {{{{{chave}}}}} nao encontrado no template. "
+                 f"Confira {TEMPLATE}", 3)
+    molde_med, molde_doc = ps_med[0].group(0), ps_doc[0].group(0)
+
+    # rotulos dos sub-blocos: o proprio titulo da secao, sem a numeracao
+    rotulos = {k: ajustar_ppr(titulos[k].group(0), numpr=NUMPR_DESLIGADO)
+               for k in ("irregularidades", "fatores", "medidas", "documentos")}
+
+    def com_paraid(bloco):
+        return re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
+                      lambda _: f'w14:paraId="{novo_paraid()}"', bloco)
+
+    primeira_copia = set()   # moldes cuja 1a copia mantem a imagem ancorada
+
+    def preparar(molde, rotulo_molde, formatar):
+        if rotulo_molde in primeira_copia:
+            molde = remover_desenhos(molde)
+        else:
+            primeira_copia.add(rotulo_molde)
+        molde = formatar(molde)
+        return com_paraid(garantir_fonte(molde, fonte))
+
+    blocos = []
+    for i, obj in enumerate(dados["objetos"], 1):
+        faltando = [c for c in BLOCO_OBJETOS if c not in obj]
+        if faltando:
+            erro(f"objeto #{i}: faltam os campos {', '.join(faltando)}")
+        for c in LISTAS_CONTEUDO:
+            if not isinstance(obj.get(c), list) or not obj[c]:
+                erro(f'objeto #{i}: no formato "objeto", cada objeto precisa da '
+                     f'lista "{c}" (nao vazia) dentro dele')
+
+        blocos.append(preparar(
+            substituir_no_bloco(molde_obj, {c: obj[c] for c in BLOCO_OBJETOS}),
+            "obj", lambda b: por_paragrafo(b, como_corpo)))
+
+        blocos.append(com_paraid(rotulos["irregularidades"]))
+        for t in obj["irregularidades"]:
+            blocos.append(preparar(
+                substituir_no_paragrafo(molde_irr, {"irregularidades": t}),
+                "irr", lambda b: virar_lista(b, NUMID_BULLET)))
+
+        blocos.append(com_paraid(rotulos["fatores"]))
+        for f in obj["fatores_risco"]:
+            faltando = [c for c in BLOCO_FATORES if c not in f]
+            if faltando:
+                erro(f"objeto #{i}, fator de risco: faltam os campos "
+                     + ", ".join(faltando))
+            blocos.append(preparar(
+                substituir_no_bloco(molde_fator, f),
+                "fator", lambda b: por_paragrafo(b, como_corpo)))
+
+        blocos.append(com_paraid(rotulos["medidas"]))
+        for t in obj["medidas_protecao"]:
+            blocos.append(preparar(
+                substituir_no_paragrafo(molde_med, {"medidas_protecao": t}),
+                "med", lambda b: virar_lista(b, NUMID_BULLET)))
+
+        blocos.append(com_paraid(rotulos["documentos"]))
+        for t in obj["documentos_solicitados"]:
+            blocos.append(preparar(
+                substituir_no_paragrafo(molde_doc, {"documentos_solicitados": t}),
+                "doc", lambda b: virar_lista(b, NUMID_BULLET)))
+
+    composto = "".join(blocos)
+
+    # cirurgia de tras para frente (os offsets anteriores continuam validos)
+    xml = xml[:h4.start()] + xml[h8.start():]        # remove as secoes 4 a 7
+    xml = xml[:obj_ini] + composto + xml[obj_fim:]   # objetos com sub-blocos
+    xml = xml[:h3.start()] + metodologia + xml[h3.start():]  # metodologia -> fim da secao 2
+    return xml
+
+
 def montar(dados, destino):
     faltando = [c for c in OBRIGATORIOS if c not in dados]
     if faltando:
         erro("campos ausentes no JSON: " + ", ".join(faltando))
     if dados["modo"] not in ("interdicao", "embargo"):
         erro('campo "modo" deve ser "interdicao" ou "embargo"')
-    for campo in ("objetos", "fatores_risco", "medidas_protecao", "documentos_solicitados"):
-        if not isinstance(dados[campo], list) or not dados[campo]:
-            erro(f'campo "{campo}" deve ser uma lista nao vazia')
+    formato = dados.get("formato", "topico")
+    if formato not in ("topico", "objeto"):
+        erro('campo "formato" deve ser "topico" ou "objeto" (ausente = "topico")')
+    if not isinstance(dados["objetos"], list) or not dados["objetos"]:
+        erro('campo "objetos" deve ser uma lista nao vazia')
+    if formato == "topico":
+        faltando = [c for c in LISTAS_CONTEUDO if c not in dados]
+        if faltando:
+            erro('no formato "topico", faltam no JSON: ' + ", ".join(faltando))
+        for campo in ("fatores_risco", "medidas_protecao", "documentos_solicitados"):
+            if not isinstance(dados[campo], list) or not dados[campo]:
+                erro(f'campo "{campo}" deve ser uma lista nao vazia')
     if not TEMPLATE.is_file():
         erro(f"template nao encontrado: {TEMPLATE}", 3)
 
@@ -533,26 +748,40 @@ def montar(dados, destino):
     if dados["modo"] == "embargo":
         xml = aplicar_embargo(xml)
 
-    # blocos repetiveis primeiro (o molde ainda tem os placeholders)
-    xml = repetir_bloco(xml, BLOCO_OBJETOS, dados["objetos"], "objeto", fonte,
-                        formatar=como_corpo)
-    xml = repetir_bloco(xml, BLOCO_FATORES, dados["fatores_risco"], "fator de risco",
-                        fonte, formatar=como_corpo)
+    if formato == "objeto":
+        xml = montar_por_objeto(xml, dados, fonte)
+        irregs = [t for o in dados["objetos"] for t in o["irregularidades"]]
+        n_fatores = sum(len(o["fatores_risco"]) for o in dados["objetos"])
+        n_medidas = sum(len(o["medidas_protecao"]) for o in dados["objetos"])
+        n_docs = sum(len(o["documentos_solicitados"]) for o in dados["objetos"])
+    else:
+        # blocos repetiveis primeiro (o molde ainda tem os placeholders)
+        xml = repetir_bloco(xml, BLOCO_OBJETOS, dados["objetos"], "objeto", fonte,
+                            formatar=como_corpo)
+        xml = repetir_bloco(xml, BLOCO_FATORES, dados["fatores_risco"], "fator de risco",
+                            fonte, formatar=como_corpo)
 
-    # item 4: um paragrafo por irregularidade
-    irregs = dados["irregularidades"]
-    if isinstance(irregs, str):
-        irregs = [irregs]
-    xml = expandir_paragrafos(
-        xml, "irregularidades", irregs, fonte,
-        formatar=lambda pg: virar_lista(pg, NUMID_BULLET))
+        # item 4: um paragrafo por irregularidade
+        irregs = dados["irregularidades"]
+        if isinstance(irregs, str):
+            irregs = [irregs]
+        xml = expandir_paragrafos(
+            xml, "irregularidades", irregs, fonte,
+            formatar=lambda pg: virar_lista(pg, NUMID_BULLET))
 
-    # itens 6 e 7: listas reais do Word
-    xml = remover_vazio_apos(xml, "medidas_protecao")
-    xml = expandir_lista(xml, "medidas_protecao", dados["medidas_protecao"],
-                         NUMID_MEDIDAS, fonte)
-    xml = expandir_lista(xml, "documentos_solicitados",
-                         dados["documentos_solicitados"], NUMID_DOCUMENTOS, fonte)
+        # itens 6 e 7: listas reais do Word
+        xml = remover_vazio_apos(xml, "medidas_protecao")
+        xml = expandir_lista(xml, "medidas_protecao", dados["medidas_protecao"],
+                             NUMID_MEDIDAS, fonte)
+        xml = expandir_lista(xml, "documentos_solicitados",
+                             dados["documentos_solicitados"], NUMID_DOCUMENTOS, fonte)
+        n_fatores = len(dados["fatores_risco"])
+        n_medidas = len(dados["medidas_protecao"])
+        n_docs = len(dados["documentos_solicitados"])
+
+    # conclusao (opcional nos dois formatos)
+    if dados.get("conclusao"):
+        xml = inserir_conclusao(xml, dados["conclusao"], fonte)
 
     # item 2: contexto da inspecao no padrao do corpo (justificado, com recuo)
     xml = expandir_paragrafos(xml, "Contexto-da-inspecao-fisica",
@@ -584,10 +813,10 @@ def montar(dados, destino):
         erro(f"falha ao empacotar o DOCX: {r.stdout.strip()} {r.stderr.strip()}", 3)
 
     print(f"OK: {destino}")
-    print(f"     modo {dados['modo']} | {len(dados['objetos'])} objeto(s), "
-          f"{len(irregs)} irregularidade(s), {len(dados['fatores_risco'])} fator(es), "
-          f"{len(dados['medidas_protecao'])} medida(s), "
-          f"{len(dados['documentos_solicitados'])} documento(s)")
+    print(f"     modo {dados['modo']} | formato {formato} | "
+          f"{len(dados['objetos'])} objeto(s), "
+          f"{len(irregs)} irregularidade(s), {n_fatores} fator(es), "
+          f"{n_medidas} medida(s), {n_docs} documento(s)")
     return destino
 
 
