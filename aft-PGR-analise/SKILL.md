@@ -564,7 +564,10 @@ remove o hífen no cod_3):
   2) Quando ele tratar de anexos, informe o PDF do PGR como documento pronto —
      ele será renomeado para AI_[N]_[CNPJ]_PGR.PDF e vinculado a TODOS os autos
      (cada AI precisa do PGR como evidência).
-  3) Se o PGR tiver mais de 10 MB, o /aft-gera-ai comprime com o script do toolkit.
+  3) O limite de 10 MB é a soma dos anexos de CADA auto (não de cada arquivo):
+     repetir o mesmo PGR em todos os autos não é problema, desde que ele caiba
+     nesse orçamento junto com as fotos daquele auto. Se não couber, o
+     /aft-gera-ai comprime com o script do toolkit.
 ```
 
 ### 2) Relatório de recomendação geral para a empresa

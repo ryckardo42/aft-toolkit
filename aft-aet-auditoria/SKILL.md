@@ -428,12 +428,17 @@ remove o hífen no cod_3):
   2) Quando ele tratar de anexos, informe o PDF da AET como documento pronto —
      ele será renomeado para AI_[N]_[CNPJ]_AET.PDF e vinculado a TODOS os autos
      (cada AI precisa da AET como evidência).
-  3) Se a AET tiver mais de 10 MB, o /aft-gera-ai comprime com o script do toolkit antes de anexar.
+  3) O limite de 10 MB é a soma dos anexos de CADA auto (não de cada arquivo):
+     repetir a mesma AET em todos os autos não é problema, desde que ela caiba
+     nesse orçamento junto com as fotos daquele auto. Se não couber, o
+     /aft-gera-ai comprime com o script do toolkit antes de anexar.
 ```
 
 > **A AET é sempre anexada a cada auto** (decisão do AFT): é a prova material da auditoria.
 > Convenção de nome obrigatória: `AI_[NUM_AUTOS]_[CNPJ]_AET.PDF` (extensão `.PDF` MAIÚSCULA).
-> Compressão (se > 10 MB) é responsabilidade do `/aft-gera-ai`.
+> Compressão é responsabilidade do `/aft-gera-ai` — o teto de 10 MB vale para a **soma dos
+> anexos de cada auto**, não para cada arquivo; como a AET vai em todos, ela pesa no
+> orçamento de cada um deles.
 
 ### 2) Relatório de recomendação geral para a empresa
 

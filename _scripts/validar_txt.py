@@ -4,7 +4,8 @@ validar_txt.py — validacao pre-importacao do TXT do Sistema Auditor (skill /af
 
 Confere o arquivo .txt ANTES de o AFT tentar importar no Sistema Auditor, pegando
 em segundos os erros que, de outro modo, so apareceriam como "AI RECUSADO" la dentro
-(ex.: CEP vazio, numero de campos errado, ementa malformada, anexo inexistente).
+(ex.: CEP vazio, numero de campos errado, ementa malformada, anexo inexistente,
+anexos de um auto somando mais de 10 MB).
 
 Roda sobre o TXT REAL (latin-1) ja re-hidratado. Tambem aceita o .tokenized.txt
 (UTF-8) para uma checagem estrutural antecipada — nesse caso campos com tokens
@@ -42,6 +43,11 @@ except Exception:
 
 TOKEN = re.compile(r"\[\[[A-Z0-9_]+\]\]")
 
+# O Sistema Auditor limita os anexos a 10 MB por AUTO DE INFRACAO, somando os
+# anexos daquele auto — nao por arquivo. Estourou num auto, a importacao e recusada.
+# O mesmo PDF anexado a varios autos e permitido: pesa 1 vez no orcamento de cada um.
+LIMITE_ANEXOS_MB = 10.0
+
 
 def is_filled(v):
     """Campo preenchido: nao-vazio ou contendo token (sera re-hidratado)."""
@@ -52,14 +58,15 @@ def only_digits(v):
     return re.sub(r"\D", "", v or "")
 
 
-def anexo_no_disco(anexo):
-    """O TXT carrega o path Windows absoluto (exigencia do Sistema Auditor). Em
-    macOS/Linux esse path nunca existe literalmente: traduz o prefixo
-    `path_windows` do aft-config.md para a pasta AFT local antes de checar."""
+def resolver_anexo(anexo):
+    """Devolve o caminho local do anexo (ou None se nao existir). O TXT carrega o
+    path Windows absoluto (exigencia do Sistema Auditor). Em macOS/Linux esse path
+    nunca existe literalmente: traduz o prefixo `path_windows` do aft-config.md
+    para a pasta AFT local antes de checar."""
     if os.path.isfile(anexo):
-        return True
+        return anexo
     if os.name == "nt":
-        return False
+        return None
     try:
         from pasta_aft import pasta_aft, pasta_os_ativas
         base = str(pasta_aft())
@@ -71,16 +78,18 @@ def anexo_no_disco(anexo):
                     pw = m.group(1).strip().replace("\\\\", "\\")
                     break
         if not pw or not anexo.lower().startswith(pw.lower()):
-            return False
+            return None
         resto = anexo[len(pw):].replace("\\", "/")
         if os.path.isfile(base + resto):
-            return True
+            return base + resto
         # `pasta_os:` pode redirecionar OS ATIVAS para fora da pasta AFT
         if resto.lower().startswith("/os ativas/"):
-            return os.path.isfile(str(pasta_os_ativas()) + resto[len("/OS ATIVAS"):])
+            alt = str(pasta_os_ativas()) + resto[len("/OS ATIVAS"):]
+            if os.path.isfile(alt):
+                return alt
     except Exception:
-        return False
-    return False
+        return None
+    return None
 
 
 def main():
@@ -120,6 +129,9 @@ def main():
 
     n_tipo1 = 0
     n_tipo6 = 0
+    # anexos agrupados por auto: [(rotulo, [(anexo, caminho_local_ou_None), ...]), ...]
+    anexos_por_auto = []
+    anexos_do_auto = None
     bloco_atual = None  # (cnpj, ementa) para rotular erros do AI corrente
 
     for ln, linha in enumerate(linhas, start=1):
@@ -132,6 +144,8 @@ def main():
             ementa = campos[12] if len(campos) > 12 else "?"
             bloco_atual = (ident or "?", ementa)
             rotulo = f"AI CNPJ/CPF:{ident or '?'} Ementa:{ementa}"
+            anexos_do_auto = []
+            anexos_por_auto.append((rotulo, anexos_do_auto))
 
             if len(campos) != 23:
                 erros.append(f"{rotulo} -> linha tipo 1 com {len(campos)} campos "
@@ -170,7 +184,12 @@ def main():
                              f"({len(campos)} campos, esperado 3).")
             else:
                 anexo = campos[1]
-                if not TOKEN.search(anexo) and not anexo_no_disco(anexo):
+                local = None if TOKEN.search(anexo) else resolver_anexo(anexo)
+                if anexos_do_auto is None:  # linha tipo 5 antes de qualquer tipo 1
+                    anexos_do_auto = []
+                    anexos_por_auto.append((rotulo, anexos_do_auto))
+                anexos_do_auto.append((anexo, local))
+                if not TOKEN.search(anexo) and not local:
                     erros.append(f"{rotulo} -> Erro: anexo nao encontrado no disco: {anexo}")
                 if not anexo.upper().endswith(".PDF"):
                     avisos.append(f"{rotulo} -> anexo nao termina em .PDF maiusculo: {anexo}")
@@ -197,6 +216,35 @@ def main():
                 erros.append(f"Linha tipo 6 (CIF) invalida: '{campos[1] if len(campos)>1 else ''}' "
                              f"(esperado 6 digitos).")
 
+    # Limite de 10 MB do Sistema Auditor: vale para a SOMA dos anexos DE CADA AUTO.
+    # O mesmo PDF em varios autos e normal (PGR, AET) — pesa 1 vez no orcamento de cada um.
+    linha_anexos = ""
+    com_anexo = [(rot, itens) for rot, itens in anexos_por_auto if itens]
+    if com_anexo:
+        somas = []      # (rotulo, itens, mb_do_auto)
+        sem_medir = 0
+        for rotulo, itens in com_anexo:
+            medidos = [p for _, p in itens if p]
+            sem_medir += len(itens) - len(medidos)
+            somas.append((rotulo, medidos,
+                          sum(os.path.getsize(p) for p in medidos) / (1024 * 1024)))
+        total_anexos = sum(len(itens) for _, itens in com_anexo)
+        linha_anexos = (f"Anexos: {total_anexos} em {len(com_anexo)} auto(s); maior soma por "
+                        f"auto: {max(m for _, _, m in somas):.1f} MB "
+                        f"(limite {LIMITE_ANEXOS_MB:.0f} MB por auto)")
+        if sem_medir:
+            linha_anexos += f" - {sem_medir} anexo(s) nao medido(s): soma parcial"
+        for rotulo, medidos, mb_auto in somas:
+            if mb_auto > LIMITE_ANEXOS_MB:
+                detalhe = "; ".join(f"{os.path.basename(p)} "
+                                    f"{os.path.getsize(p)/(1024*1024):.1f} MB" for p in medidos)
+                erros.append(f"{rotulo} -> Erro: os anexos deste auto somam {mb_auto:.1f} MB, "
+                             f"acima do limite de {LIMITE_ANEXOS_MB:.0f} MB por auto de "
+                             f"infracao. O limite vale para a SOMA dos anexos do auto, nao "
+                             f"por arquivo - a importacao do TXT seria recusada. Comprima com "
+                             f"_scripts/comprimir_pdf.py (o TXT nao precisa ser regerado, os "
+                             f"nomes nao mudam) ou tire anexos deste auto. Tamanhos: {detalhe}")
+
     if n_tipo1 == 0:
         erros.append("Nenhuma linha tipo 1 (auto) encontrada.")
     if n_tipo6 != 1:
@@ -205,6 +253,8 @@ def main():
 
     print(f"Arquivo: {path}")
     print(f"Autos (linhas tipo 1): {n_tipo1}")
+    if linha_anexos:
+        print(linha_anexos)
     if avisos:
         print(f"\nAVISOS ({len(avisos)}):")
         for a in avisos:

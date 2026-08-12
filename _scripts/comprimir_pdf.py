@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 """
-comprimir_pdf.py — comprime um PDF para caber no limite de anexo do Sistema
-Auditor (10 MB). Multiplataforma.
+comprimir_pdf.py — comprime um PDF de anexo do Sistema Auditor. Multiplataforma.
+
+O limite de 10 MB do Sistema Auditor vale para a SOMA dos anexos de CADA auto de
+infracao, nao por arquivo: use `limite_mb` para passar o alvo DESTE arquivo dentro
+do orcamento do auto (ex.: 3 anexos no mesmo auto -> alvo de ~3 MB cada). Sem o
+argumento, assume 10 MB (so serve quando o auto tem um anexo so).
 
 Uso:
     python comprimir_pdf.py <entrada.pdf> <saida.PDF> [limite_mb]
+
+<saida.PDF> pode ser o proprio <entrada.pdf> (comprimir no lugar um anexo que ja
+esta com o nome AI_...).
 
 Estratégia:
   1. Se houver Ghostscript no PATH (gs / gswin64c / gswin32c), usa /ebook
@@ -30,6 +37,7 @@ try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-er
 except Exception:
     pass
 
+import atexit
 import os
 import shutil
 import subprocess
@@ -74,6 +82,14 @@ def main():
     if not os.path.isfile(entrada):
         fail(f"arquivo não encontrado: {entrada}")
 
+    # Comprimir no lugar (entrada == saida): trabalha sobre uma cópia, para nunca
+    # ler e gravar o mesmo arquivo. A cópia é apagada ao final (é dado sensível).
+    if os.path.abspath(entrada) == os.path.abspath(saida):
+        copia = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False).name
+        shutil.copyfile(entrada, copia)
+        atexit.register(lambda: os.path.exists(copia) and os.remove(copia))
+        entrada = copia
+
     if mb(entrada) <= limite:
         shutil.copyfile(entrada, saida)
         print(f"OK: {saida} ({mb(saida):.1f} MB, já abaixo de {limite:.0f} MB)")
@@ -81,17 +97,24 @@ def main():
 
     gs = find_gs()
     if gs:
+        melhor = None  # so grava em `saida` um PDF que o Ghostscript gerou de fato
         for preset in ("/ebook", "/screen"):
             tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False).name
             try:
                 gs_compress(gs, entrada, tmp, preset)
             except subprocess.CalledProcessError:
+                os.remove(tmp)
                 continue
+            if melhor:
+                os.remove(melhor)
+            melhor = tmp
             if mb(tmp) <= limite:
                 shutil.move(tmp, saida)
                 print(f"OK: {saida} ({mb(saida):.1f} MB via Ghostscript {preset})")
                 return
-        shutil.move(tmp, saida)
+        if melhor is None:
+            fail(f"Ghostscript não conseguiu processar o PDF: {sys.argv[1]}")
+        shutil.move(melhor, saida)
     else:
         try:
             import pikepdf
@@ -105,8 +128,9 @@ def main():
             return
 
     print(
-        f"AVISO: {saida} ficou com {mb(saida):.1f} MB, ainda acima de "
-        f"{limite:.0f} MB. Considere dividir o PDF ou anexar manualmente.",
+        f"AVISO: {saida} ficou com {mb(saida):.1f} MB, ainda acima do alvo de "
+        f"{limite:.1f} MB. Considere dividir o PDF, reduzir o número de anexos "
+        f"(o limite de 10 MB é a soma dos anexos de cada auto) ou anexar manualmente.",
         file=sys.stderr,
     )
     sys.exit(2)

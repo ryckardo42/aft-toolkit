@@ -235,9 +235,9 @@ Quando o auditor fornece um PDF pronto como anexo (petição, relatório, laudo,
 
 1. **Copie** o PDF para a pasta da lavratura (`[PASTA_LAVRATURA]/`).
 2. **Renomeie** seguindo a convenção: `AI_[NUM_AUTOS]_[CNPJ]_doc[N].PDF`.
-3. Se o PDF tiver **mais de 10 MB**, comprima antes:
+3. **Tamanho:** os 10 MB do Sistema Auditor são o teto da **soma dos anexos de cada auto** (bloco abaixo), não de cada arquivo. Se este PDF vai para um auto que também recebe fotos, comprima ao copiar, passando o alvo **deste** arquivo em MB:
    ```bash
-   python ~/.claude/skills/_scripts/comprimir_pdf.py "[original.pdf]" "[PASTA_LAVRATURA]/AI_..._doc1.PDF"
+   python ~/.claude/skills/_scripts/comprimir_pdf.py "[original.pdf]" "[PASTA_LAVRATURA]/AI_..._doc1.PDF" [alvo_mb]
    ```
    (Nunca use compressores online — o documento contém dados sensíveis.)
 4. **Gere as linhas tipo 5** correspondentes no TXT (uma por auto que recebe o anexo).
@@ -246,7 +246,7 @@ Quando o auditor fornece um PDF pronto como anexo (petição, relatório, laudo,
 ### Protocolo para fotos de evidência
 
 1. Pergunte: **"Deseja anexar fotos de evidência aos autos? (sim/não)"**
-   - Se **não** → pule para a FASE 2.5.
+   - Se **não** → pule para o bloco do limite de 10 MB (logo abaixo); sem nenhum anexo, vá direto para a FASE 2.5.
 2. Instrua: **"Arraste as fotos no chat agora. Pode mandar todas de uma vez ou em mensagens separadas. Quando terminar, diga 'pronto'."**
 3. Para cada imagem detectada (drag-drop reescreve o filename, então NÃO confie no nome):
    - Liste numericamente: `Foto N: [caminho_temp] — [formato] [tamanho aproximado]`
@@ -259,6 +259,26 @@ Quando o auditor fornece um PDF pronto como anexo (petição, relatório, laudo,
    - Fotos HEIC/HEIF (iPhone) exigem `pip install pillow-heif`; o script avisa se faltar.
 
 Registre em memória `{auto_id: [lista_de_filenames_pdf]}` para usar na FASE 3.
+
+### Limite de 10 MB — vale para a SOMA dos anexos DE CADA AUTO
+
+> **ATENÇÃO — não é 10 MB por arquivo.** O limite é o total de anexos **de um mesmo auto de infração**: 3 anexos de 4 MB no mesmo auto somam 12 MB e o Sistema Auditor recusa a importação, mesmo com nenhum arquivo isolado acima de 10 MB.
+>
+> **O mesmo PDF em vários autos não é problema** (é o caso do PGR, da AET, do relatório do DET): ele pesa uma vez no orçamento de **cada** auto que o recebe. A conta que importa é a de cada auto isolado, não a da pasta.
+
+Depois de gerar **todos** os anexos (documentos + fotos), antes da FASE 2.5:
+
+1. **Para cada auto**, some os anexos que vão nele — o dict `{auto_id: [lista_de_filenames_pdf]}` da FASE 2 já diz o que vai em quem.
+2. Se algum auto passar de 10 MB, **comprima** os maiores anexos **daquele** auto, com alvo por arquivo de aproximadamente `10 ÷ nº de anexos do auto` MB (o script aceita entrada e saída iguais, comprimindo o anexo no lugar; o nome não muda, então o TXT não precisa ser regerado):
+   ```bash
+   python ~/.claude/skills/_scripts/comprimir_pdf.py \
+     "[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ]_doc1.PDF" \
+     "[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ]_doc1.PDF" [alvo_mb]
+   ```
+   Comprimir um PDF compartilhado (PGR, AET) alivia de uma vez todos os autos que o recebem.
+3. Se nem comprimindo couber, **avise o AFT** e ofereça as saídas: reduzir as fotos daquele auto (manter as que efetivamente provam o fato), redistribuir fotos entre os autos que elas cobrem, ou anexar o documento maior manualmente no Sistema Auditor, depois da importação. **Nunca** entregue um auto acima de 10 MB dizendo que está pronto.
+
+O validador da FASE 3 confere auto a auto e **reprova** o TXT se algum estourar — mas conferir aqui evita ter de voltar.
 
 ---
 
@@ -441,12 +461,12 @@ linha 6 (CIF)
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
    O script aborta (sem gerar o TXT) se faltar valor no de-para, se algum CPF não tiver 11 dígitos, se sobrar token órfão `[[...]]`, ou se houver caractere fora do latin-1. Se abortar, corrija a causa e rode de novo — **não** preencha o TXT à mão.
-6. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, caractere fora do latin-1):
+6. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, **anexos de um auto somando mais de 10 MB**, caractere fora do latin-1):
    ```bash
    python ~/.claude/skills/_scripts/validar_txt.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
    - **APROVADO** (exit 0) → siga para as instruções de importação.
-   - **REPROVADO** (exit 1) → corrija a causa apontada (ex.: CEP vazio → preencher com `cep_uorg`), regenere o tokenizado, re-hidrate e valide de novo. **Nunca** entregue ao AFT um TXT que não passou no validador.
+   - **REPROVADO** (exit 1) → corrija a causa apontada (ex.: CEP vazio → preencher com `cep_uorg`), regenere o tokenizado, re-hidrate e valide de novo. Reprovação por **soma dos anexos de um auto** se resolve só comprimindo os PDFs daquele auto (mesmos nomes, mesma pasta) e rodando o validador outra vez — o TXT não precisa ser regerado. **Nunca** entregue ao AFT um TXT que não passou no validador.
 
 ### Instruções de importação
 
@@ -544,6 +564,7 @@ _(vazio)_
 - **Não redija** o texto dos autos. Esta skill empacota autos já redigidos. Se o auditor pedir redação, oriente a usar `/aft-auditoria-geral` (ou skill específica) antes.
 - **Preserve a acentuação** em TODO texto português. O latin-1 suporta todos os caracteres acentuados.
 - **A extensão dos anexos é `.PDF` MAIÚSCULA** (o Sistema Auditor é case-sensitive na extensão).
+- **O limite de 10 MB dos anexos é por AUTO DE INFRAÇÃO** — soma dos anexos daquele auto, nunca por arquivo. O mesmo PDF pode ir em vários autos: conta uma vez no orçamento de cada um. Estourou em um auto, o Sistema Auditor recusa a importação do TXT inteiro.
 - **Antes de sobrescrever** qualquer arquivo existente, confirme com o auditor.
 - **Re-hidratação é SEMPRE via `rehydrate.py`** (string-replace determinístico), nunca digitada pelo modelo — é documento legal, um nome trocado é inaceitável.
 - **O identificador (CNPJ 14 díg. ou CPF/CAEPF 11 díg. do autuado) nunca é tokenizado** — fica real em pasta, anexos, `memory.md` e TXT. Nos nomes de arquivo `AI_[NUM_AUTOS]_[CNPJ]...`, `[CNPJ]` é esse identificador (11 ou 14 dígitos).
