@@ -6,6 +6,26 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 12/08/2026
+
+<!-- commit: effort-revisao-45-skills -->
+
+**Ajuste fino no "nível de esforço" das skills — menos tokens, mesmo resultado.** O
+nível de esforço diz ao Claude quanto ele deve "pensar" antes de responder. Revisamos as
+45 skills contra a documentação nova da Anthropic e fizemos quatro acertos:
+
+- **`/aft-preparacao-acao-fiscal`, `/aft-jornada-analise` e `/aft-relatorio-acidentes`**
+  passam a rodar em esforço **médio**: são skills de extração, triagem e montagem de
+  relatório — não precisam do raciocínio máximo, e agora gastam menos.
+- **`/aft-email`** perdeu um ajuste que não fazia efeito nenhum (o modelo dela, Haiku,
+  ignora o nível de esforço). Nada muda no uso.
+
+As 5 análises pesadas (PGR, AET, acidente, laudo NR-12, manutenção de interdição) e as
+skills de enquadramento e redação de autos **continuam no esforço máximo da sessão** —
+ali qualidade vem antes de economia.
+
+---
+
 ## 10/08/2026 (8)
 <!-- commit: email-reserva-deliberada -->
 

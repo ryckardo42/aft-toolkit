@@ -1,6 +1,7 @@
 ---
 name: aft-jornada-analise
 model: sonnet
+effort: medium
 description: >
   Use quando o AFT receber do empregador um PACOTE de documentos de jornada
   (arquivos AFD e AEJ + Atestados Técnicos e Termos de Responsabilidade do

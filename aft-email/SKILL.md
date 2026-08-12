@@ -1,7 +1,6 @@
 ---
 name: aft-email
 model: haiku
-effort: medium
 description: >
   Use quando o AFT quiser redigir (ou melhorar) um e-mail formal da
   fiscalização para a empresa auditada, advogado, contador ou preposto.

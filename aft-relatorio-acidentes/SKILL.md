@@ -1,6 +1,7 @@
 ---
 name: aft-relatorio-acidentes
 model: sonnet
+effort: medium
 description: >
   Use quando o AFT quiser o RELATÓRIO DE ACIDENTES (histórico de CATs) de um
   CNPJ — a listagem cronológica das Comunicações de Acidente de Trabalho da
