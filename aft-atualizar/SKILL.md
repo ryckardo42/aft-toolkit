@@ -265,6 +265,11 @@ Aja conforme a **única linha** de saída:
 
 ## Passo 2f — Vigia de sessões (garantir instalado, sem perguntar)
 
+> **No Codex, pule os Passos 2f, 2f-bis e 2g** (vigia de sessões, gancho do diário e
+> agentes só existem no app do Claude). No lugar deles, confira em uma linha se os dois
+> atalhos continuam de pé — `~/.agents/skills` → `~/.claude/skills` e `~/.codex/AGENTS.md`
+> → `~/.claude/CLAUDE.md` — e recrie o que faltar (ver Passo 0 do `/aft-setup`).
+
 As sessões por empresa (grupo "OS ATIVAS" do menu lateral) são automáticas via **vigia de
 sessões** — parte padrão da instalação. Confira e garanta:
 

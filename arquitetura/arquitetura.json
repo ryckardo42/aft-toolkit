@@ -1,13 +1,13 @@
 {
-  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code (Windows)",
+  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code e Codex (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-08-10",
-  "resumo": "Repositório de distribuição que transforma o Claude Code (app desktop, Windows) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega: 45 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
+  "data": "2026-08-14",
+  "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 45,
-    "scripts": 35,
+    "skills": 46,
+    "scripts": 40,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 10/08/2026"
+    "commit": "ver `git log -1` — atualizado em 14/08/2026"
   },
   "atores": [
     {
@@ -98,6 +98,10 @@
     {
       "who": "/aft-setup",
       "act": "Cria as pastas de trabalho, coleta nome/CIF/lotação (basta a cidade — o toolkit resolve o código de 9 dígitos da UORG via uorgs.csv), instala dependências, o perfil CLAUDE.md e a deny-list de segurança (settings-aft.json)."
+    },
+    {
+      "who": "Codex: dois atalhos (opcional)",
+      "act": "Quem usa o Codex — no lugar do Claude ou junto com ele — não instala nada diferente: cria ~/.agents/skills -> ~/.claude/skills (as skills) e ~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md (o perfil do auditor). Atalho, nunca cópia: o /aft-atualizar reescreve o CLAUDE.md por dentro, então o link se mantém em dia sozinho. Windows: mklink /J para a pasta e mklink /H para o arquivo (nenhum dos dois pede administrador). O Passo 0 do /aft-setup cria; o /aft-doctor confere; o roteiro para o AFT está em COMO-INSTALAR.md."
     }
   ],
   "camadas": [
@@ -107,12 +111,12 @@
       "skills": [
         {
           "nome": "/aft-setup",
-          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global (bloco gerenciado com marcadores versionados — Passo 5b), deny-list de segurança, dependências, NotebookLM. Instala POR PADRÃO o servidor do painel interativo sempre ligado (Passo 7c, instalar_servidor_painel.py) e oferece (opt-in) a rotina diária do painel (7b) e os prazos de DET no Google Calendar (7d, /aft-agenda-det).",
+          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global (bloco gerenciado com marcadores versionados — Passo 5b), deny-list de segurança, dependências, NotebookLM. Instala POR PADRÃO o servidor do painel interativo sempre ligado (Passo 7c, instalar_servidor_painel.py) e oferece (opt-in) a rotina diária do painel (7b) e os prazos de DET no Google Calendar (7d, /aft-agenda-det). Passo 0: descobre em qual assistente está — no Codex cria os dois atalhos (~/.agents/skills e ~/.codex/AGENTS.md) e pula agentes, deny-list, vigia de sessões e gancho do diário.",
           "tech": "winget · pipx · uorgs.csv · model: sonnet"
         },
         {
           "nome": "/aft-doctor",
-          "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta. Não altera arquivos, com UMA exceção: cria a pasta de trabalho (via pasta_aft.py) se faltar — e, se detectar que ela está fora da Documentos real (instalação anterior à correção de 22/07/2026), oferece migrar com consentimento (--mover), sem sobrescrever nada.",
+          "role": "Verificação pós-instalação: confere Python, Git, descoberta das skills, config, perfil, pasta de trabalho, bibliotecas, NotebookLM e a saúde das skills (frontmatter, campo model contra models-validos.json e teste ao vivo dos modelos pinados via claude -p) — e diz em linguagem simples o que falta. Não altera arquivos, com UMA exceção: cria a pasta de trabalho (via pasta_aft.py) se faltar — e, se detectar que ela está fora da Documentos real (instalação anterior à correção de 22/07/2026), oferece migrar com consentimento (--mover), sem sobrescrever nada. Reconhece também o assistente em uso: com o Codex na máquina confere os dois atalhos e, se não houver rastro de uso do Claude Code, rebaixa a informativo os três itens que só existem naquele app (agentes, deny-list e vigia de sessões).",
           "tech": "aft_doctor.py · model: sonnet"
         },
         {
@@ -604,6 +608,10 @@
   ],
   "decisoes": [
     {
+      "topico": "O toolkit deixa de ser só do Claude Code: AGENTS.md e os dois atalhos do Codex (14/08/2026)",
+      "txt": "O contexto de agente passou a morar em AGENTS.md (nome que Claude Code, Codex e outros leem), com o CLAUDE.md ao lado como mero ponteiro @AGENTS.md — uma informação, dois nomes. A instalação ganhou os dois caminhos de Codex: quem já usa o Claude cria dois atalhos e passa a ter os dois assistentes sobre os MESMOS arquivos; quem começa do zero no Codex faz a instalação de sempre com três trocas. A decisão de fundo é que a pasta física das skills continua sendo ~/.claude/skills mesmo para quem nunca abrir o Claude: esse caminho está escrito dentro de 45 SKILL.md e de 8 scripts, e duplicar a pasta seria garantir divergência. Quatro integrações são exclusivas do app do Claude — agentes de ~/.claude/agents, deny-list do settings.json, vigia de sessões e o gancho PostToolUse do diário — e o /aft-setup (Passo 0) e o /aft-atualizar agora as pulam quando estão no Codex. O /aft-doctor deduz o assistente pelos rastros que o app deixa em ~/.claude (projects, .claude.json, statsig, history.jsonl): sem sinal de Claude e com ~/.codex presente, esses três itens viram informativo em vez de aviso, e entra a checagem 'Atalhos do Codex' (samefile, que reconhece symlink, junction e hardlink). Quem usa os dois continua vendo os avisos, porque para ele são pendências de verdade."
+    },
+    {
       "topico": "Renomeação de 5 skills: auditoria, embargo/interdição e informalidade (10/08/2026)",
       "txt": "Os nomes passaram a descrever a tarefa do auditor, não a sigla interna. (1) /aft-nova-os -> /aft-nova-auditoria: uma Ordem de Serviço pode gerar VÁRIOS Relatórios de Inspeção — num mesmo estabelecimento convivem dois, três ou mais CNPJs, e o AFT abre uma auditoria (um RI) para cada empresa; o que a skill cadastra é a auditoria, não a OS. A pasta de trabalho continua se chamando 'OS ATIVAS'/'OS ARQUIVADAS' (nada foi movido no disco) e o front-matter ri: do memory.md segue sendo o identificador da auditoria. (2) /aft-rt-rgi -> /aft-embargo-interdicao, /aft-rt-manutencao -> /aft-embargo-interdicao-manutencao e /aft-levantamento-total -> /aft-embargo-interdicao-levantamento: 'RGI' só é legível para quem já conhece a sigla, e o prefixo comum faz as três aparecerem juntas ao digitar /aft-embargo. (3) /aft-registro -> /aft-informalidade, que é o tema real da skill (falta de registro, CTPS e exame admissional). Renomeação de pastas + referências (git mv, sem tocar no conteúdo das skills): o template.docx do RT foi junto com a pasta e os três montadores apontam para o novo caminho. O NOVIDADES.md guarda a tabela de-para; entradas antigas do changelog mantêm os nomes da época, de propósito. O perfil do auditor (config/CLAUDE-aft.md) foi para v13 — é o que leva os nomes novos às máquinas já instaladas."
     },
@@ -793,6 +801,7 @@
     "/aft-atualizar atualiza o notebooklm-py automaticamente, sem perguntar antes — é uma dependência de terceiro (teng-lin/notebooklm-py) fora do controle de versão do toolkit.",
     "As skills com model: claude-opus-4-8[1m] dependem do plano do AFT ter acesso ao modelo — o /aft-doctor testa e explica em linguagem simples se faltar.",
     "A detecção de notificações DET do /aft-painel é heurística (pode dar falso positivo) — o AFT confere antes de cadastrar.",
-    "Validação end-to-end de /aft-NR12, /aft-NR18, /aft-tn-nco e do fluxo de Artifact do /aft-painel depende de interação e de máquina real com o app logado; testar no Windows real."
+    "Validação end-to-end de /aft-NR12, /aft-NR18, /aft-tn-nco e do fluxo de Artifact do /aft-painel depende de interação e de máquina real com o app logado; testar no Windows real.",
+    "No Codex o model: de cada skill é ignorado (lá o modelo vale para a conversa inteira): as skills que julgam documento da empresa — PGR, AET, acidente, laudo de NR-12 e manutenção de interdição — avisam em uma linha que pedem o modelo mais forte e esperam o AFT trocar com /model."
   ]
 }
