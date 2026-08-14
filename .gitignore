@@ -10,3 +10,7 @@ __pycache__/
 # ficam no 1o nivel (o Claude Code as enxerga), nunca sao versionadas no repo
 # oficial e sobrevivem a qualquer atualizacao (git pull). Ver /nova-skill.
 minha-*/
+# Atalho .agents/skills -> .claude/skills. E da maquina, nao do projeto: cada
+# pessoa cria o seu (link simbolico no Mac/Linux, junction no Windows). Versionar
+# um atalho quebraria na maquina dos outros.
+.agents/skills

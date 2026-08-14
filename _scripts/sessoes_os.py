@@ -550,7 +550,7 @@ def modelo_sessao(sessoes):
     raise SystemExit("ERRO: nenhuma sessão existente para usar de molde.")
 
 
-# O CLAUDE.md de contexto de cada pasta de OS mudou de casa: agora e do
+# O AGENTS.md de contexto de cada pasta de OS mudou de casa: agora e do
 # contexto_os.py, chamado pela /aft-nova-auditoria e pela /aft-organiza-os. Ele nao
 # tem nada a ver com sessao de barra lateral (e um arquivo de texto numa pasta,
 # lido por qualquer assistente que abra ali) e nao pode depender deste modulo,
@@ -775,7 +775,7 @@ def vigia():
     while True:
         time.sleep(atraso)
         try:
-            # o CLAUDE.md de contexto das pastas de OS não depende do app estar
+            # o AGENTS.md de contexto das pastas de OS não depende do app estar
             # fechado — garante em todo ciclo (barato: só cria o que falta)
             garantir_contexto(ler_oss(pasta_os_ativas()))
             if app_aberto():
@@ -853,7 +853,7 @@ def main():
             return 0
         if "--contexto" in args:
             n = garantir_contexto(ler_oss(pasta_os_ativas(pasta)))
-            log(f"Contexto: {n} CLAUDE.md criado(s) nas pastas de OS.")
+            log(f"Contexto: {n} AGENTS.md criado(s) nas pastas de OS.")
             return 0
         if "--vigia" in args:
             return vigia()
