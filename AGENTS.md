@@ -60,9 +60,19 @@ como trocar (`/model`), e siga só depois que ele decidir. Para `sonnet` e `haik
 interrompa. O `model:` do cabeçalho é a única fonte: nunca copie essa informação para
 outro lugar.
 
-## O atalho das skills (máquina, não repositório)
+## Os dois atalhos do Codex (máquina, não repositório)
 
-`~/.agents/skills` é um atalho para `~/.claude/skills` — uma pasta só, dois endereços,
-para que Codex e Claude Code enxerguem as mesmas skills. É da máquina de cada um, está no
-`.gitignore` e nunca é versionado. No Mac/Linux: `ln -s ../.claude/skills ~/.agents/skills`;
-no Windows: `mklink /J %USERPROFILE%\.agents\skills %USERPROFILE%\.claude\skills`.
+São **dois** atalhos, os dois na máquina de cada um — nunca versionados:
+
+- `~/.agents/skills` → `~/.claude/skills`: uma pasta só, dois endereços, para que Codex e
+  Claude Code enxerguem as mesmas skills. A pasta física é sempre `~/.claude/skills`,
+  inclusive para quem não usa o Claude — é o caminho escrito dentro dos SKILL.md.
+- `~/.codex/AGENTS.md` → `~/.claude/CLAUDE.md`: o perfil do auditor, para o Codex saber
+  que o usuário é AFT e não programador.
+
+Mac/Linux: `ln -s ../.claude/skills ~/.agents/skills` e
+`ln -s ../.claude/CLAUDE.md ~/.codex/AGENTS.md`. Windows: `mklink /J` para a pasta e
+`mklink /H` para o arquivo (nenhum dos dois pede administrador). **Atalho, nunca cópia:**
+o `/aft-atualizar` reescreve o `CLAUDE.md` por dentro, então o link se mantém em dia
+sozinho. Quem instala é o Passo 0 do `/aft-setup`; o roteiro para o AFT está em
+`COMO-INSTALAR.md`.

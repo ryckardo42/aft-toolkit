@@ -35,6 +35,7 @@ except Exception:
     pass
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -49,6 +50,35 @@ HOME = Path.home()
 # o import falhar - no Windows com OneDrive ele costuma estar errado.
 AFT_DIR = HOME / "Documents" / "AFT"
 OS_DIR = None  # idem; a checagem 15 so roda se a 6 tiver resolvido
+
+# Assistente em uso (Claude Code ou Codex) -----------------------------------
+# O toolkit roda nos dois. A pasta FISICA das skills e sempre ~/.claude/skills
+# (e o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo
+# atalho ~/.agents/skills e le o perfil do auditor pelo atalho
+# ~/.codex/AGENTS.md. Tres coisas so existem no app do Claude - agentes,
+# deny-list do settings.json e vigia de sessoes. Para quem so usa o Codex elas
+# nao sao pendencia nenhuma: seriam tres avisos assustadores sem nada a fazer,
+# por isso viram informativo. Detectamos "uso do Claude" por rastros que o app
+# deixa na primeira conversa (o ~/.claude/skills existe sempre, ate no Codex).
+CLAUDE_DIR = SKILLS_DIR.parent
+ATALHO_SKILLS = HOME / ".agents" / "skills"
+ATALHO_PERFIL = HOME / ".codex" / "AGENTS.md"
+# Os sinais sao do APP (sempre em ~/.claude), nao da pasta do repositorio: um
+# clone fora do lugar nao pode fazer o doutor achar que o Claude nunca rodou.
+_SINAIS_CLAUDE = (HOME / ".claude" / "projects", HOME / ".claude.json",
+                  HOME / ".claude" / "statsig", HOME / ".claude" / "history.jsonl")
+USA_CLAUDE = any(p.exists() for p in _SINAIS_CLAUDE)
+USA_CODEX = (HOME / ".codex").is_dir()
+SO_CODEX = USA_CODEX and not USA_CLAUDE
+
+
+def mesmo_arquivo(a, b):
+    """True se a e b sao o MESMO arquivo/pasta - symlink, junction ou hardlink."""
+    try:
+        return a.exists() and b.exists() and os.path.samefile(str(a), str(b))
+    except OSError:
+        return False
+
 
 checks = []
 
@@ -110,6 +140,31 @@ else:
         "Provavel clone aninhado (ex.: ~/.claude/skills/aft-toolkit/...). "
         "O repositorio precisa SER a pasta ~/.claude/skills.")
 
+# 3a-bis. Atalhos do Codex ----------------------------------------------------
+# So aparece na maquina de quem tem o Codex. Sao os dois enderecos que fazem o
+# Codex enxergar a MESMA pasta de skills e o MESMO perfil do auditor - atalho,
+# nunca copia (o /aft-atualizar reescreve o CLAUDE.md por dentro, entao o link
+# se mantem em dia sozinho). Ver Passo 0 do /aft-setup.
+if USA_CODEX:
+    _skills_ok = mesmo_arquivo(ATALHO_SKILLS, SKILLS_DIR)
+    _perfil_alvo = CLAUDE_DIR / "CLAUDE.md"
+    _perfil_ok = mesmo_arquivo(ATALHO_PERFIL, _perfil_alvo)
+    _faltam = []
+    if not _skills_ok:
+        _faltam.append("~/.agents/skills (o Codex nao acha as skills)")
+    if not _perfil_ok and _perfil_alvo.is_file():
+        _faltam.append("~/.codex/AGENTS.md (o Codex nao le o seu perfil de AFT)")
+    if not _faltam:
+        add("Atalhos do Codex", "ok",
+            "~/.agents/skills e ~/.codex/AGENTS.md apontam para os arquivos certos")
+    else:
+        add("Atalhos do Codex", "aviso",
+            "Atalho faltando ou apontando para o lugar errado: " + "; ".join(_faltam),
+            "Peca 'crie os atalhos do Codex' (Passo 0 do /aft-setup). No Mac: "
+            "ln -s ../.claude/skills ~/.agents/skills e "
+            "ln -s ../.claude/CLAUDE.md ~/.codex/AGENTS.md. No Windows: "
+            "mklink /J para a pasta e mklink /H para o arquivo.")
+
 # 3b. Agentes do toolkit (~/.claude/agents) ----------------------------------
 # As skills /aft-revisa-auto e /aft-autos-lavrados despacham o trabalho pesado
 # para agentes isolados. O repositorio os traz em skills/agents/, mas o Claude
@@ -118,7 +173,11 @@ else:
 # quebra (as skills degradam para o modo inline), por isso severidade aviso.
 agents_src = SKILLS_DIR / "agents"
 agents_dst = SKILLS_DIR.parent / "agents"
-if agents_src.is_dir():
+if SO_CODEX:
+    add("Agentes do toolkit", "ok",
+        "nao se aplica no Codex - as skills que usariam agentes rodam em modo "
+        "inline, com o mesmo resultado")
+elif agents_src.is_dir():
     fontes_ag = sorted(agents_src.glob("*.md"))
     pendentes_ag = []
     for f in fontes_ag:
@@ -172,7 +231,12 @@ if settings_json.is_file():
         deny_list = (_data.get("permissions") or {}).get("deny") or []
     except (OSError, json.JSONDecodeError):
         deny_list = []
-if MARCO_DENY in deny_list:
+if SO_CODEX and MARCO_DENY not in deny_list:
+    add("Deny-list de seguranca", "ok",
+        "nao se aplica no Codex - ele nao le o settings.json do Claude",
+        "No Codex quem faz esse papel e o modo de aprovacao/sandbox do proprio "
+        "app: mantenha a aprovacao por comando ligada.")
+elif MARCO_DENY in deny_list:
     add("Deny-list de seguranca", "ok",
         f"{settings_json} ({len(deny_list)} regras de bloqueio)")
 elif settings_json.is_file():
@@ -779,7 +843,11 @@ elif sys.platform.startswith("win"):
 else:
     _vigia_ok = None
 
-if _vigia_ok is True:
+if SO_CODEX and _vigia_ok is not True:
+    add("Vigia de sessoes", "ok",
+        "nao se aplica no Codex - as sessoes por empresa sao do menu lateral do "
+        "app do Claude")
+elif _vigia_ok is True:
     add("Vigia de sessoes", "ok",
         "instalado - as sessoes por empresa (grupo OS ATIVAS) sao criadas "
         "sozinhas quando o app fecha")

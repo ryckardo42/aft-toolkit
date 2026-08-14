@@ -30,6 +30,35 @@ pela primeira vez. Explique o que cada passo faz em uma frase, sem jargão.
 
 ---
 
+## Passo 0 — Em qual assistente você está? (você resolve sozinho, sem perguntar)
+
+O toolkit roda no **Claude Code** e no **Codex**. Você sabe em qual está rodando — não
+pergunte ao AFT, e não faça disso um assunto. Só o que muda:
+
+| | Claude Code | Codex |
+|---|---|---|
+| Pasta física das skills | `~/.claude/skills` | `~/.claude/skills` (a mesma — os comandos das skills apontam para lá) |
+| Atalho das skills | não precisa | `~/.agents/skills` → `~/.claude/skills` |
+| Perfil do auditor | `~/.claude/CLAUDE.md` (Passo 5b) | o mesmo arquivo + atalho `~/.codex/AGENTS.md` → `~/.claude/CLAUDE.md` |
+| Passos 2b (agentes), 5c (deny-list), 7e (vigia) e 7e-bis (gancho do diário) | instale | **pule** — só existem no app do Claude |
+
+**No Codex**, garanta os dois atalhos antes de seguir (idempotente; no Windows use
+`mklink /J` para a pasta e `mklink /H` para o arquivo — nenhum dos dois pede
+administrador):
+
+```bash
+mkdir -p ~/.agents ~/.codex
+[ -e ~/.agents/skills ] || ln -s ../.claude/skills ~/.agents/skills
+```
+
+O atalho do perfil (`~/.codex/AGENTS.md`) só depois do Passo 5b, quando o
+`~/.claude/CLAUDE.md` já existir. Se o AFT já tiver um `~/.codex/AGENTS.md` escrito por
+ele, **não apague**: mostre o que há lá e pergunte se junta os dois textos.
+
+> Por que atalho e não cópia: o `/aft-atualizar` reescreve o `~/.claude/CLAUDE.md` por
+> dentro para manter o perfil em dia — com atalho, o Codex recebe na hora; com cópia,
+> ficaria para trás sem ninguém perceber.
+
 ## Passo 1 — Verificar e completar pré-requisitos (você instala, não o AFT)
 
 Rode e interprete:
@@ -217,6 +246,10 @@ autorizado ou prefere não conectar conta nenhuma:
 
 ## Passo 2b — Instalar os agentes do toolkit
 
+> **No Codex, pule este passo.** Os agentes são um recurso do app do Claude; as duas
+> skills que os usam (`/aft-revisa-auto` e `/aft-autos-lavrados`) rodam em modo inline,
+> com o mesmo resultado.
+
 Além das skills, o toolkit traz **agentes** — ajudantes que trabalham numa conversa
 isolada, sem entulhar a principal (hoje: o revisor de autos `aft-revisor-autos` e a
 varredura do Sistema Auditor `aft-autos-lavrados`). Eles vêm no repositório em
@@ -340,6 +373,12 @@ que o AFT pedir.
 
 ## Passo 5b — Instalar o perfil do auditor (CLAUDE.md global)
 
+> **No Codex**, o arquivo é o mesmo (`~/.claude/CLAUDE.md`) — o que muda é que, logo
+> depois de gravá-lo, você cria o atalho que o Codex lê:
+> `ln -s ../.claude/CLAUDE.md ~/.codex/AGENTS.md` (Windows:
+> `mklink /H "%USERPROFILE%\.codex\AGENTS.md" "%USERPROFILE%\.claude\CLAUDE.md"`).
+> Sem ele, o Codex enxerga as skills mas trata o AFT como programador.
+
 O toolkit traz um perfil pronto que diz ao Claude, em toda conversa, quem é o usuário
 (um AFT, não um programador), como tratar dados sensíveis e quais skills usar. Ele vai
 em `~/.claude/CLAUDE.md`:
@@ -364,6 +403,10 @@ em `~/.claude/CLAUDE.md`:
 > mais preciso rodar `/aft-setup` de novo só para atualizar o CLAUDE.md).
 
 ## Passo 5c — Instalar a deny-list de segurança (settings.json)
+
+> **No Codex, pule este passo** — esse arquivo não é lido. Diga ao AFT, em uma frase, que
+> no Codex quem faz esse papel é o modo de aprovação/sandbox do próprio app, e que ele deve
+> **manter a aprovação por comando ligada**.
 
 O toolkit traz uma lista de **bloqueios de segurança** que impede o Claude de ler
 arquivos de credencial (`~/.ssh`, `~/.aws`, `.env`), de ler os mapas `.depara_*.json`
@@ -601,6 +644,9 @@ login único do Google, feito com segurança pela interface do Claude."*
 
 ## Passo 7e — Vigia de sessões (parte padrão da instalação)
 
+> **No Codex, pule este passo** — as sessões por empresa são do menu lateral do app do
+> Claude e não existem lá.
+
 As sessões por empresa no menu lateral (grupo "OS ATIVAS") são **automáticas**: um
 serviço em segundo plano — o **vigia de sessões** — observa as pastas de `OS ATIVAS/` e,
 toda vez que o app do Claude é fechado, cria as sessões que faltam (título = empresa,
@@ -617,6 +663,10 @@ resumo e siga (o `/aft-atualizar` tenta de novo). Quem não quiser o automático
 "remover o vigia de sessões" a qualquer momento.
 
 ## Passo 7e-bis — Gancho do diário de atividades (parte padrão da instalação)
+
+> **No Codex, pule este passo** — o gancho é um recurso do app do Claude. As skills
+> continuam registrando o diário sozinhas e o `/aft-diario` monta o mês igual; o que se
+> perde é só a anotação automática do dia quando o AFT edita um `memory.md` fora de skill.
 
 O **diário de atividades** registra, no `## Registro de atividades` de cada OS, os dias
 trabalhados e o tipo de atividade (letras A-F da tela 2.1 do RI — ver `/aft-diario` e a
@@ -658,6 +708,11 @@ fica na seção 'Pendências por auditoria' do painel."*
 ## Passo 8 — Resumo final
 
 Apresente:
+
+> **No Codex**, tire do resumo as linhas de agentes, proteção e sessões por empresa
+> (não foram instaladas) e troque a linha do perfil por: `👤 Perfil do auditor:
+> ~/.claude/CLAUDE.md (o Codex lê pelo atalho ~/.codex/AGENTS.md)`. Acrescente uma linha
+> só: `🔗 Atalhos do Codex: ~/.agents/skills e ~/.codex/AGENTS.md [ok]`.
 
 ```
 ✅ AFT Toolkit configurado!
