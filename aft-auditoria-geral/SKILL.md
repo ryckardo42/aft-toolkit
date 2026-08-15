@@ -562,8 +562,10 @@ Para autos CLT art. 41 + art. 29:
 ## Diário de atividades (automático)
 
 Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —
-sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo):
+sem perguntar nada ao AFT (o script deduplica por data+letra; repetir é inofensivo).
+São duas letras: **D** porque a skill analisa documentos/achados do empregador, **E**
+porque redige os autos:
 
 ```bash
-python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos E --detalhe "via /aft-auditoria-geral"
+python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos DE --detalhe "via /aft-auditoria-geral"
 ```
