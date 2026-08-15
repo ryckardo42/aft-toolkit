@@ -364,6 +364,7 @@ COLS_B = {  # campo do relatorio -> nome exato da coluna nas planilhas
     "municipio_a": "Município do local do acidente",
     "municipio_b": "UF do local do acidente",
     "tratamento": "Duração estimada do tratamento, em dias",
+    "internacao": "Indicativo de internação",
     "obs": "Observações da CAT",
     "obito": "Indicativo de óbito",
     "dt_obito": "Data do óbito",
@@ -614,6 +615,40 @@ def _dias_tratamento(r):
     return int(t) if t and so_digitos(t) == t else 0
 
 
+# A duracao do tratamento e declarada pelo empregador e vem 0 na maior parte das
+# CATs - sozinha nao ordena nada. Estes dois criterios vem da propria CAT e sao
+# preenchidos sempre: houve internacao, e qual a natureza da lesao.
+NATUREZA_GRAVIDADE = (
+    (r"amputa|enuclea", 5),
+    (r"fratura", 4),
+    (r"queimadura|escaldadura", 3),
+    (r"corte|lacera|punctura", 2),
+    (r"luxa|distens|tor[çc]", 1),
+)
+
+
+def _peso_natureza(r):
+    natureza = (r.get("lesao") or "").lower()
+    for padrao, peso in NATUREZA_GRAVIDADE:
+        if re.search(padrao, natureza):
+            return peso
+    return 0
+
+
+def _houve_internacao(r):
+    return (r.get("internacao") or "").strip().upper().startswith("S")
+
+
+def _obs_legivel(txt):
+    """As Observacoes da CAT quase sempre vem em CAIXA ALTA do eSocial, o que
+    cansa a leitura no meio do relatorio. Converte para minusculas quando as
+    maiusculas dominam; texto ja digitado em caixa mista fica como esta."""
+    letras = [c for c in txt if c.isalpha()]
+    if letras and sum(1 for c in letras if c.isupper()) / len(letras) >= 0.7:
+        return txt.lower()
+    return txt
+
+
 def _recorte_desde(registros, ano):
     """So acidentes com data valida >= 01/01/<ano>. Registro sem data nao tem
     como pertencer ao recorte - fica fora e e contado para o aviso."""
@@ -624,14 +659,14 @@ def _recorte_desde(registros, ano):
 
 
 def _selecao_economica(registros, n):
-    """Os n mais graves: obito sempre entra (e o acidente mais grave que
-    existe, mesmo sem dias de afastamento declarados); depois, maior tempo de
-    tratamento; empate decidido pelo mais recente. A lista escolhida volta em
-    ordem cronologica, como o resto do relatorio."""
+    """Os n mais graves, nesta ordem: obito; internacao; natureza da lesao
+    (amputacao > fratura > queimadura > corte > luxacao/distensao); maior tempo
+    de tratamento declarado; empate decidido pelo mais recente. A lista
+    escolhida volta em ordem cronologica, como o resto do relatorio."""
     def chave(r):
         d = _data(r.get("dt"))
-        return (not _eh_obito(r), -_dias_tratamento(r),
-                -(d.toordinal() if d else 0))
+        return (not _eh_obito(r), not _houve_internacao(r), -_peso_natureza(r),
+                -_dias_tratamento(r), -(d.toordinal() if d else 0))
     return _ordenar(sorted(registros, key=chave)[:n])
 
 
@@ -659,9 +694,13 @@ def _linhas_acidente(r):
     lesao += f" — CID: {_ou_ni(r.get('cid'))}"
     if r.get("complesao"):
         lesao += f' - "{r["complesao"]}"'
-    trat = r.get("tratamento")
-    trat = f"{trat} dias" if trat and so_digitos(trat) == trat and trat != "0" \
-        else _ou_ni("" if trat in ("", "0") else trat)
+    trat = (r.get("tratamento") or "").strip()
+    if trat == "0":
+        trat = "0 dias (assim declarado na CAT)"
+    elif trat and so_digitos(trat) == trat:
+        trat = f"{trat} dias"
+    else:
+        trat = _ou_ni(trat)
     pares = [
         ("Dia", _data_fmt(r.get("dt"))),
         ("Trabalhador", _ou_ni(r.get("trab"))),
@@ -674,10 +713,12 @@ def _linhas_acidente(r):
          (f"Município: {r['municipio']}" if r.get("municipio") else NAO_INFORMADO)),
         ("Tratamento", trat),
     ]
+    if _houve_internacao(r):
+        pares.append(("Internação", "Sim"))
     if _data(r.get("dt_obito")):
         pares.append(("Data do óbito", _data_fmt(r["dt_obito"])))
     if r.get("obs"):
-        pares.append(("Obs. CAT", r["obs"]))
+        pares.append(("Obs. CAT", _obs_legivel(r["obs"])))
     return pares
 
 
@@ -695,6 +736,9 @@ def _estatisticas(registros):
             if v:
                 cont[v] = cont.get(v, 0) + 1
         e[chave] = cont
+    e["internacoes"] = sum(1 for r in registros if _houve_internacao(r))
+    e["trat_zero"] = sum(1 for r in registros
+                         if (r.get("tratamento") or "").strip() == "0")
     if set(e["cats"]) <= {"Inicial"}:  # so vale a pena mostrar se ha reabertura etc.
         e["cats"] = {}
     return e
@@ -720,6 +764,11 @@ def gerar_md(caminho, empresa, cnpj14, registros, fonte, est):
           f"- Total de CATs: {est['total']}",
           f"- CATs com óbito: {est['obitos']}",
           f"- Período dos acidentes: {est['periodo']}"]
+    if est.get("internacoes"):
+        L.append(f"- CATs com internação: {est['internacoes']}")
+    if est.get("trat_zero"):
+        L.append(f"- Duração do tratamento declarada como 0 dia: "
+                 f"{est['trat_zero']} de {est['total']} CATs")
     if est["tipos"]:
         L.append("- Por tipo: " + " · ".join(f"{k}: {v}" for k, v in
                                              sorted(est["tipos"].items())))
@@ -762,6 +811,11 @@ def gerar_docx(caminho, empresa, cnpj14, registros, fonte, est):
     linhas = [("Total de CATs", str(est["total"])),
               ("CATs com óbito", str(est["obitos"])),
               ("Período dos acidentes", est["periodo"])]
+    if est.get("internacoes"):
+        linhas.append(("CATs com internação", str(est["internacoes"])))
+    if est.get("trat_zero"):
+        linhas.append(("Duração do tratamento declarada como 0 dia",
+                       f"{est['trat_zero']} de {est['total']} CATs"))
     if est["tipos"]:
         linhas.append(("Por tipo de acidente", " · ".join(
             f"{k}: {v}" for k, v in sorted(est["tipos"].items()))))
@@ -980,8 +1034,9 @@ def main():
     ap.add_argument("--desde", type=int, metavar="AAAA",
                     help="recorte temporal: so acidentes a partir de 01/01/AAAA")
     ap.add_argument("--limite", type=int, metavar="N",
-                    help="modo economico: lista so os N mais graves (obitos sempre; "
-                         "depois maior afastamento; empate = mais recente)")
+                    help="modo economico: lista so os N mais graves (obito, "
+                         "internacao, natureza da lesao, duracao do tratamento; "
+                         "empate = mais recente)")
     ap.add_argument("--auto-economico", action="store_true",
                     help=f"aplica --limite {LIMITE_ECONOMICO} sozinho quando ha mais que isso")
     ap.add_argument("--doencas", action="store_true",
@@ -1004,7 +1059,8 @@ def main():
         if base:
             origem = "aft-config.md" if cfg and cfg.is_dir() else "convenção <PASTA_AFT>/CATs"
             print(f"pasta_cats: {base}   [{origem}]")
-            print(f"planilhas: {len(list(base.glob('*.xlsx')))} .xlsx")
+            print("planilhas: %d .xlsx" % len(
+                [x for x in base.glob("*.xlsx") if not x.name.startswith("~$")]))
             if cfg and not cfg.is_dir():
                 print(f"AVISO: o aft-config.md aponta para uma pasta que não existe "
                       f"({cfg}) — ignorada em favor da convenção. Apague a linha "
@@ -1133,6 +1189,7 @@ def main():
         print("CONTAGEM " + json.dumps({
             "total": len(registros),
             "obitos": sum(1 for r in registros if _eh_obito(r)),
+            "internacoes": sum(1 for r in registros if _houve_internacao(r)),
             "por_ano": dict(sorted(anos.items())),
             "sem_data": sem_data,
             "limite_economico": LIMITE_ECONOMICO,
@@ -1170,9 +1227,10 @@ def main():
         listados = _selecao_economica(registros, limite)
         est["notas"].append(
             f"Modo econômico: a relação abaixo traz somente os {limite} acidentes "
-            f"mais graves (óbitos sempre incluídos; depois, maior tempo de "
-            f"afastamento; empate decidido pelo mais recente) de um total de "
-            f"{est['total']}. O resumo acima considera todos.")
+            f"mais graves de um total de {est['total']}, nesta ordem: óbito; "
+            f"internação; natureza da lesão (amputação, fratura, queimadura, "
+            f"corte, luxação/distensão); maior duração de tratamento declarada; "
+            f"empate decidido pelo mais recente. O resumo acima considera todos.")
 
     saida = Path(args.saida).expanduser()
     saida.mkdir(parents=True, exist_ok=True)
