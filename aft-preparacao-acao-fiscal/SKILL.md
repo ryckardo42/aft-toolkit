@@ -317,9 +317,10 @@ quantos bebedouros aquele local deve ter, e contar no percurso.
 
 1. **Chame a `/aft-nr24-dimensionamento`** com os homens e mulheres da Relação de Vínculos
    (ou informados pelo AFT). **Rode sem os flags de exposição**: antes da visita não se
-   sabe se há poeira, agente químico ou troca de uniforme, e a skill devolve, além do
-   cenário base, o que cada hipótese mudaria — é essa tabela condicional que serve em
-   campo. Não pergunte ao AFT sobre exposição, uniforme ou alojamento nesta fase.
+   sabe se há poeira, agente químico ou troca de uniforme. A skill devolve o cenário
+   base e uma linha lembrando o que a exposição mudaria; confirmada alguma em campo, o
+   dimensionamento se refaz com o flag e sai exato. Não pergunte ao AFT sobre
+   exposição, uniforme ou alojamento nesta fase.
 1b. **Sendo obra, é NR-18, não NR-24.** Em canteiro de obras a norma setorial prevalece e
    os números mudam bastante (chuveiro 1:10 em vez de 1:20, bebedouro 1:25 em vez de
    1:50, vestiário sempre obrigatório). Trate como obra quando o **CNAE for da seção F**
@@ -341,11 +342,11 @@ quantos bebedouros aquele local deve ter, e contar no percurso.
    vestiário) e alojamento (item 24.7, dimensionamento próprio).
 5. **Vestiário e armários entram como lembrete, não como pergunta.** O `.docx` traz um
    bloco "Vestiário e armários — o que conferir" com as medidas mínimas dos três tipos
-   de armário (item 24.4.6 e 24.4.6.1), a regra do uso rotativo e do trancamento, e as
-   três dispensas que a empresa costuma invocar (higienização diária, guarda-volumes e
-   escaninho do 24.4.8). **Não pergunte ao AFT** se há higienização diária ou
-   guarda-volumes na preparação: são fatos de campo. Os flags `--higienizacao-diaria` e
-   `--guarda-volumes` servem depois da visita, quando ele já sabe.
+   de armário (item 24.4.6 e 24.4.6.1) e a regra do trancamento. **Não pergunte ao AFT**
+   se há higienização diária ou guarda-volumes na preparação: são fatos de campo. Os
+   flags `--higienizacao-diaria` e `--guarda-volumes` servem depois da visita, quando
+   ele já sabe; as dispensas do 24.4.5.1, 24.4.7 e 24.4.8 estão detalhadas na
+   `/aft-nr24-dimensionamento`, que é onde se decide o enquadramento.
 
 Sem a divisão por sexo (o AFT deu só o total, sem Relação de Vínculos), **peça-a uma vez**;
 se ele não tiver, pule a fase e registre em `## Pendências` "Levantar homens e mulheres do
@@ -618,7 +619,7 @@ Próximos passos:
 
 - Chama `/aft-nova-auditoria` (FASE 1) para resolver/criar a OS — não duplica essa lógica.
 - Chama `/aft-cnae-grau-risco-nr04`, `/aft-dimensionamento-sesmt-nr04` e `/aft-cipa-nr05-dimensionamento` (FASE 3.5) para o grau de risco, o SESMT e a CIPA devidos — os cálculos são dos scripts delas, nunca de cabeça.
-- Chama `/aft-nr24-dimensionamento` (FASE 3.6) para as instalações sanitárias, mictórios, lavatórios e bebedouros devidos, a partir dos homens e mulheres da Relação de Vínculos — sem os flags de exposição, para que o documento de campo traga também os cenários condicionais. Sendo canteiro de obras (CNAE 41/42/43 ou "SPE" no nome), a mesma skill aplica a NR-18 no lugar da NR-24, e o `.docx` diz em que sinal se baseou.
+- Chama `/aft-nr24-dimensionamento` (FASE 3.6) para as instalações sanitárias, mictórios, lavatórios e bebedouros devidos, a partir dos homens e mulheres da Relação de Vínculos — sem os flags de exposição, com uma linha no documento sobre o que a exposição mudaria. Sendo canteiro de obras (CNAE 41/42/43 ou "SPE" no nome), a mesma skill aplica a NR-18 no lugar da NR-24, e o `.docx` diz em que sinal se baseou.
 - Trata a Relação de Vínculos Ativos do SFIT com o próprio `vinculos_ativos.py` (FASE 3.1), inteiramente local: nem o PDF nem a lista nominal entram no contexto do modelo.
 - Chama `/aft-relatorio-acidentes` (FASE 4.5) para o histórico de CATs do CNPJ — o script dela processa tudo localmente e grava em `Acidentes/`; a preparação usa só os agregados.
 - Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho institucional da lotação do AFT.
