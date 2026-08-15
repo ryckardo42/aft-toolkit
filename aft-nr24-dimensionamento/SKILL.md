@@ -64,10 +64,11 @@ python ~/.claude/skills/aft-nr24-dimensionamento/scripts/dimensionar_nr24.py \
 | `--frente-trabalho` | **frente de trabalho** da construção | aplica o item 18.5.7 da NR-18 |
 | `--json` | integração | saída só em JSON |
 
-**Sem os flags de exposição, o script devolve o cenário base E o que cada hipótese
-mudaria.** É esse o formato certo **antes da visita**, quando o AFT ainda não sabe
-o que vai encontrar: ele leva impresso o "se houver poeira, os lavatórios passam de
-7 para 14".
+**Sem os flags de exposição, o script entrega o cenário base** e uma linha de aviso
+lembrando que poeira, agente químico, esforço ou calor fazem subir lavatórios e
+chuveiros. É o formato certo **antes da visita**, quando ainda não se sabe o que se
+vai encontrar; confirmada a exposição em campo, roda-se de novo com o flag e o
+número sai exato — melhor do que carregar quatro cenários hipotéticos.
 
 ## Regra de ouro nº 2 — a base é o TURNO COM MAIOR CONTINGENTE
 
@@ -200,7 +201,7 @@ contagem de armários e devolve a obrigação do 24.4.8 no lugar.
 2. **Pergunte só o que muda o cálculo**, numa rodada só, e apenas quando o AFT
    estiver conferindo o que existe (uso fiscal): data de construção, exposição a
    agentes ou poeira, esforço/calor, uniforme, alojamento. **Antes da visita, não
-   pergunte nada disso** — rode sem os flags e entregue os cenários.
+   pergunte nada disso** — rode sem os flags e entregue o cenário base.
 3. **Execute o script.**
 4. **Apresente o resultado** no formato padrão abaixo, com a memória de cálculo.
 5. **Verificação fiscal** (o AFT conta o que existe no local): confronte item a
@@ -250,8 +251,9 @@ exatamente a divisão por sexo que a NR-24 exige, e ela já vem pronta do SFIT.
 
 Nesse uso:
 
-- rode **sem os flags de exposição** e entregue o cenário base + os cenários
-  condicionais: antes da visita ninguém sabe se há poeira ou troca de uniforme;
+- rode **sem os flags de exposição** e entregue o cenário base: antes da visita
+  ninguém sabe se há poeira ou troca de uniforme, e o script já avisa numa linha o
+  que a exposição mudaria;
 - deixe explícito que o número da Relação é o **efetivo total**, não o maior turno;
 - o resultado vai para o `preparacao.docx`, que o AFT leva impresso — o documento
   vira a régua para contar bacias, mictórios e bebedouros no percurso pelo

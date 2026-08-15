@@ -662,21 +662,31 @@ def imprime_obra(r, aloj):
           "base exata — confirme o maior turno em campo.")
 
 
+def medida_curta(medida: str) -> str:
+    """De "0,40 m (altura) x 0,30 m (largura) x 0,40 m (profundidade)" para
+    "0,40x0,30x0,40 m" — a medida por extenso só cabe no .docx."""
+    n = [t for t in medida.replace("x", " ").split()
+         if "," in t and t[0].isdigit()]
+    return "x".join(n[:3]) + " m"
+
+
 def imprime_vestiario(v):
+    """Vestiário em três linhas: se é devido, quanto, e a medida do armário.
+
+    A checklist de campo (trancamento, uso rotativo, dispensas do 24.4) vive no
+    .docx que o AFT leva na visita — aqui ela só afasta o número da vista."""
     rotulo = {True: "SIM", False: "NÃO", None: "A VERIFICAR"}[v["exigido"]]
     print(f"VESTIÁRIO — exigido: {rotulo} ({v['motivo']})")
     if v["exigido"] is not False:
-        print(f"  Área mínima: {dec(v['area_minima_m2']['feminino'])} m² (feminino) · "
-              f"{dec(v['area_minima_m2']['masculino'])} m² (masculino)")
-    print(f"  Armários: {v['armarios']['feminino']} (feminino) · "
-          f"{v['armarios']['masculino']} (masculino)")
-    print(f"  Tipo: {v['tipo_armario']}")
-    print("  Dimensões mínimas (item 24.4.6 e 24.4.6.1):")
-    for nome, medida, item in v["dimensoes_minimas"]:
-        print(f"    · {nome}: {medida} [{item}]")
-    print("  A conferir em campo:")
-    for chk in v["verificacoes"]:
-        print(f"    · {chk}")
+        print(f"  Sendo devido: {dec(v['area_minima_m2']['feminino'])} m² (F) e "
+              f"{dec(v['area_minima_m2']['masculino'])} m² (M) · "
+              f"{v['armarios']['feminino']} armários (F) e "
+              f"{v['armarios']['masculino']} (M), individuais e com trancamento "
+              '(24.4.3 "e")')
+    medidas = " · ".join(
+        f"{' '.join(nome.replace('—', ' ').replace('divisão', ' ').split()).lower()}"        f" {medida_curta(medida)}"
+        for nome, medida, _ in v["dimensoes_minimas"])
+    print(f"  Armário (24.4.6 e 24.4.6.1): {medidas}")
     print()
 
 
@@ -695,52 +705,45 @@ def imprime_alojamento(aloj):
     print()
 
 
+def linha_quadro(rotulo, fem, masc, item):
+    print(f"  {rotulo:<38}{fem:>9}{masc:>11}   {item}")
+
+
 def imprime(r, aloj, cen):
+    """Quadro do que e devido, e so.
+
+    O AFT le isto para contar bacia, mictorio e bebedouro no percurso: o numero
+    tem de estar visivel de relance. Memoria de calculo so onde a conta nao e
+    obvia (mictorio progressivo); cenarios de exposicao viram uma linha, porque
+    antes da visita sao hipotese — confirmada alguma, roda-se de novo com o flag."""
     e = r["entrada"]
     construida = ("a partir de 24/09/2019" if e["construcao"] == "apos-24-09-2019"
                   else "até 23/09/2019")
-    print(f"NR-24 — dimensionamento para {e['total']} trabalhadores "
-          f"({e['homens']} homens, {e['mulheres']} mulheres)")
-    print(f"Base: turno com maior contingente (item 24.1.1) · estabelecimento "
-          f"construído {construida}")
-    print()
+    ins, lav, mic = r["instalacoes_sanitarias"], r["lavatorios"], r["mictorios"]
+    chu = r["chuveiros"]
 
-    ins = r["instalacoes_sanitarias"]
-    print("INSTALAÇÕES SANITÁRIAS (bacia sifonada com assento e tampo + lavatório)")
-    for linha in ins["memoria"]:
-        print(f"  · {linha}")
-    print(f"  Feminino: {ins['feminino']} bacia(s) sanitária(s)")
-    print(f"  Masculino: {ins['masculino']} bacia(s) sanitária(s)")
+    print(f"NR-24 — {e['total']} trabalhadores ({e['homens']} homens, "
+          f"{e['mulheres']} mulheres) · construído {construida}")
+    print("Base: turno com maior contingente (item 24.1.1)")
     print()
-
-    lav = r["lavatorios"]
-    print(f"LAVATÓRIOS — {lav['regra']}")
-    print(f"  Feminino: {lav['feminino']}   ·   Masculino: {lav['masculino']}")
+    print(f"  {'':<38}{'Feminino':>9}{'Masculino':>11}   Item")
+    linha_quadro("Bacias sanitárias (assento e tampo)", ins["feminino"],
+                 ins["masculino"], "24.2.1 e 24.2.2")
+    linha_quadro("Lavatórios", lav["feminino"], lav["masculino"], "24.2.1")
+    linha_quadro("Mictórios",
+                 "—", mic["exigidos"] if mic["exigidos"] is not None else "existir",
+                 "24.2.1.1")
+    linha_quadro("Chuveiros", chu["feminino"], chu["masculino"], "24.3.5")
+    linha_quadro("Bebedouros (total do turno)", "", r["bebedouros"]["quantidade"],
+                 "24.9.1.1")
     print()
-
-    mic = r["mictorios"]
-    print(f"MICTÓRIOS (instalação sanitária masculina) — {mic['regra']}")
     for linha in mic["memoria"]:
-        print(f"  · {linha}")
-    if mic["exigidos"] is not None:
-        print(f"  Masculino: {mic['exigidos']} mictório(s)")
-    else:
-        print("  Masculino: sem quantidade a apurar — exige-se a EXISTÊNCIA de "
-              "mictório, não uma proporção")
+        print(f"  {linha}")
     if mic["alerta"]:
         print(f"  !! {mic['alerta']}")
     print()
 
-    chu = r["chuveiros"]
-    print(f"CHUVEIROS — {chu['regra']}")
-    print(f"  Feminino: {chu['feminino']}   ·   Masculino: {chu['masculino']}")
-    print()
-
     imprime_vestiario(r["vestiario"])
-
-    print(f"BEBEDOUROS — {r['bebedouros']['regra']}")
-    print(f"  {r['bebedouros']['quantidade']} bebedouro(s) para o total de {e['total']}")
-    print()
 
     ref = r["local_refeicoes"]
     print(f"LOCAL PARA REFEIÇÕES — {ref['regime']}")
@@ -751,25 +754,10 @@ def imprime(r, aloj, cen):
         imprime_alojamento(aloj)
 
     if cen:
-        print("SE HOUVER EXPOSIÇÃO (o que muda) — confirmar em campo:")
-        for chave, d in cen.items():
-            if chave == "vestiario":
-                continue
-            lv = d["lavatorios"]
-            lv_txt = (f"lavatórios {lv['feminino']}F/{lv['masculino']}M"
-                      if isinstance(lv, dict) else "lavatórios sem alteração")
-            cv = d["chuveiros"]
-            print(f"  · {d['hipotese']}")
-            print(f"      {lv_txt} · chuveiros {cv['feminino']}F/{cv['masculino']}M "
-                  f"· armários: {d['armarios']}")
-        vv = cen["vestiario"]
-        print(f"  · {vv['hipotese']}")
-        print(f"      área mínima {dec(vv['area_minima_m2']['feminino'])} m² (F) e "
-              f"{dec(vv['area_minima_m2']['masculino'])} m² (M) · "
-              f"{vv['armarios']['feminino']} armários (F) e "
-              f"{vv['armarios']['masculino']} (M)")
-        print()
-
+        print("  !! Havendo exposição a agente infectante/químico, poeira que impregne "
+              "pele e roupas, esforço físico ou calor intenso, sobem os lavatórios e "
+              "passam a ser exigidos chuveiros (24.2.2.1 e 24.3.5). Confirmado em "
+              "campo, rode de novo com --agentes, --poeira ou --esforco-calor.")
     for a in r["avisos"]:
         print(f"  !! {a}")
     print("  !! O dimensionamento é do TURNO COM MAIOR CONTINGENTE (24.1.1). Se o "
@@ -827,8 +815,6 @@ def main():
             print(json.dumps(r, ensure_ascii=False, indent=2))
             return
         imprime_obra(r, aloj)
-        print()
-        print(json.dumps(r, ensure_ascii=False))
         return
 
     r = dimensionar(a.homens, a.mulheres, a.construcao, a.agentes, a.poeira,
@@ -846,8 +832,6 @@ def main():
         print(json.dumps(r, ensure_ascii=False, indent=2))
         return
     imprime(r, aloj, cen)
-    print()
-    print(json.dumps(r, ensure_ascii=False))
 
 
 if __name__ == "__main__":

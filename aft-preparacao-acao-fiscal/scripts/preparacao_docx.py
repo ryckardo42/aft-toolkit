@@ -461,17 +461,11 @@ def bloco_vestiario(doc, vest, sempre_exigido=False):
     for nome, medida, item in vest["dimensoes_minimas"]:
         m.linha_dados(t, [nome, medida, item])
 
-    for chk in vest["verificacoes"]:
-        m.marcador(doc, chk)
-
     m.paragrafo(doc,
-                "Três dispensas que a empresa costuma invocar — e o que exigir de cada "
-                "uma: higienização diária das vestimentas ou vestimenta descartável "
-                "dispensa o armário DUPLO, mas não o simples (24.4.5.1); serviço de "
-                "guarda-volumes dispensa os armários (24.4.7); e estabelecimento "
-                "desobrigado de vestiário ainda deve garantir escaninho, gaveta com "
-                "tranca ou similar (24.4.8). Nenhuma delas se prova por declaração "
-                "verbal.")
+                "Todos os armários são individuais e com sistema de trancamento "
+                "(item 24.4.3 \"e\"): armário sem tranca não atende, ainda que "
+                "individual. Meça um de cada tipo — a irregularidade de dimensão é "
+                "frequente e só aparece com trena.")
 
 
 def secao_nr18(doc, n, nr18, vinc, motivo):
@@ -587,34 +581,19 @@ def secao_nr24(doc, n, nr24, vinc):
 
     cen = nr24.get("cenarios")
     if cen:
-        m.subtitulo(doc, "Se houver exposição — o que muda")
+        # Antes da visita a exposição é hipótese. A tabela dos quatro cenários
+        # ocupava meia página com números que só valem se confirmados em campo —
+        # confirmado algum, o dimensionamento se refaz com o flag correspondente.
         m.paragrafo(doc,
-                    "As proporções acima são o piso, sem exposição. Confirmado em campo "
-                    "qualquer dos cenários abaixo, o número sobe:")
-        tc = m.nova_tabela(doc, ["Se houver", "Lavatórios", "Chuveiros", "Armários"],
-                           larguras_cm=(6.4, 3.0, 3.0, 4.1))
-        rotulos = {
-            "exposicao_agentes": "Material infectante, substância tóxica, irritante "
-                                 "ou aerodispersóide que impregne pele e roupas",
-            "deposicao_de_poeiras": "Poeiras que impregnem pele e roupas",
-            "esforco_fisico_ou_calor_intenso": "Esforço físico ou calor intenso",
-        }
-        for chave, rotulo in rotulos.items():
-            d = cen[chave]
-            lv = d["lavatorios"]
-            lv_txt = (f"{lv['feminino']}F / {lv['masculino']}M"
-                      if isinstance(lv, dict) else "sem alteração")
-            cv = d["chuveiros"]
-            arm = ("duplos" if "dupl" in str(d["armarios"]) else "sem alteração")
-            m.linha_dados(tc, [rotulo, [lv_txt],
-                               [f"{cv['feminino']}F / {cv['masculino']}M"], [arm]])
-        v = cen["vestiario"]
-        m.paragrafo(doc,
-                    "Vestiário (item 24.4.1): obrigatório se houver troca de vestimenta "
-                    "ou uniforme trocado no local, ou se o estabelecimento tiver de "
-                    "disponibilizar chuveiro. Nesse caso, área mínima de "
-                    f"{m2(v['area_minima_m2']['feminino'])} m² (feminino) e "
-                    f"{m2(v['area_minima_m2']['masculino'])} m² (masculino).")
+                    "As proporções acima são o piso, sem exposição. Havendo agente "
+                    "infectante ou químico, poeira que impregne pele e roupas, esforço "
+                    "físico ou calor intenso, os lavatórios sobem e passam a ser "
+                    "exigidos chuveiros (24.2.2.1 e 24.3.5); e a troca de vestimenta ou "
+                    "uniforme no local obriga o vestiário (24.4.1), com área mínima de "
+                    f"{m2(cen['vestiario']['area_minima_m2']['feminino'])} m² (feminino) "
+                    f"e {m2(cen['vestiario']['area_minima_m2']['masculino'])} m² "
+                    "(masculino). Confirmado qualquer deles, refaça o dimensionamento "
+                    "pela /aft-nr24-dimensionamento com o cenário real.")
     else:
         m.paragrafo(doc,
                     f"Chuveiros: {chu['feminino']} (feminino) e {chu['masculino']} "

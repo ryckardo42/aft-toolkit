@@ -63,9 +63,10 @@ ESPACO = 1.5        # lacuna (pt) que separa palavras — no PDF não há glifo 
 LINHA = 2.5         # tolerância vertical (pt) para agrupar caracteres na mesma linha
 
 RE_DATA = re.compile(r"^\d{2}/\d{2}/\d{4}$")
+# Numeros do quadro-resumo vem com ponto de milhar a partir de 1.000 ("1.151").
 RE_RESUMO = re.compile(
     r"^(A\s*partir\s*de\s*18|Abaixo\s*de\s*18|Total)\s+"
-    r"(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$", re.I)
+    + r"\s+".join([r"([\d.]+)"] * 5) + r"\s*$", re.I)
 RE_CNPJ = re.compile(r"CNPJ/CPF:\s*([\d./-]{11,20})")
 RE_RAZAO = re.compile(r"Raz[ãa]o\s*Social:\s*(.+?)\s*$")
 RE_EMISSAO = re.compile(r"Data\s*de\s*Emiss[ãa]o:\s*(\d{2}/\d{2}/\d{4})")
@@ -169,10 +170,10 @@ def le_pdf(caminho: Path):
                 m = RE_RESUMO.match(texto)
                 if m:
                     faixa = sem_acento(m.group(1)).replace(" ", "_")
+                    n = [int(g.replace(".", "")) for g in m.groups()[1:]]
                     resumo[faixa] = {
-                        "homens": int(m.group(2)), "mulheres": int(m.group(3)),
-                        "pcd": int(m.group(4)), "aprendizes": int(m.group(5)),
-                        "aprendizes_pcd": int(m.group(6))}
+                        "homens": n[0], "mulheres": n[1], "pcd": n[2],
+                        "aprendizes": n[3], "aprendizes_pcd": n[4]}
                     continue
                 if RE_LIMITE.search(texto):
                     rodape.append(texto)
