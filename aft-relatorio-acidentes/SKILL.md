@@ -169,8 +169,11 @@ Sai `CONTAGEM {"total": ..., "obitos": ..., "por_ano": {...}, ...}`.
 - **Total > 25** → mostre ao AFT os números (total, óbitos, distribuição por
   ano) e pergunte, **uma única vez**, como ele quer o relatório:
   1. **Completo** — todos os acidentes;
-  2. **Econômico** — só os **25 mais graves** (óbitos sempre entram; depois,
-     maior tempo de afastamento; empate vai para o mais recente). O resumo
+  2. **Econômico** — só os **25 mais graves**, nesta ordem: óbito; internação;
+     natureza da lesão (amputação, fratura, queimadura, corte,
+     luxação/distensão); maior duração de tratamento declarada; empate vai para
+     o mais recente. A duração do tratamento sozinha não ordena nada — o
+     empregador declara `0` na maior parte das CATs. O resumo
      estatístico continua cobrindo todos;
   3. **Recorte temporal** — só os acidentes a partir de um ano que ele escolher
      (a distribuição por ano ajuda: "desde 2024 são 18"). Pode combinar com o
