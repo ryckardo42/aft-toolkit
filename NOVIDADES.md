@@ -179,6 +179,47 @@ do RI no SFIT-WEB, já com o texto oficial de cada opção. Como funciona:
 - OS **arquivada no meio do mês** continua aparecendo na agenda mensal; o consolidado
   varre OS ATIVAS e OS ARQUIVADAS.
 
+## 15/08/2026
+<!-- commit: agenda-det-rotina-diaria -->
+
+**A sincronização dos prazos de DET com o Google Calendar agora pode rodar sozinha — se
+você quiser.** Até aqui, o `/aft-setup` até perguntava se você queria a sincronização
+diária, mas parava na pergunta: anotava a resposta e não instalava nada. Na prática, só
+funcionava sob demanda, quando você pedia `/aft-agenda-det`. Agora, quando você responde
+que quer, o toolkit cria de fato uma tarefa agendada do Claude, que roda toda manhã
+(sugestão: 07h15, logo depois da rotina do painel) e espelha os prazos.
+
+**Continua sendo escolha sua, em duas perguntas separadas:** primeiro se quer os prazos
+no Google Calendar; depois, só se disse que sim, se prefere sob demanda ou todo dia. Quem
+não quiser não instala nada, e quem mudar de ideia pede para apagar a tarefa. Nada é
+instalado sem você pedir, e a skill nunca apaga eventos do seu calendário.
+
+Uma limitação importante, avisada na hora da instalação: a tarefa **só roda com o
+aplicativo do Claude aberto**. Se o computador estiver desligado no horário, ela não se
+perde — roda na próxima vez que você abrir o app.
+
+## 15/08/2026
+<!-- commit: painel-ordem-cards -->
+
+**A ordem dos cards do painel foi corrigida, e agora dá para ordenar por prazo de DET.**
+Os cards estavam saindo fora de ordem porque o painel usava a data de criação do
+*arquivo* `memory.md` para saber quando cada auditoria nasceu — e essa data muda sozinha
+quando a pasta é copiada, restaurada ou recriada por sincronização, além de sair idêntica
+para várias OS criadas no mesmo lote (aí o desempate caía no nome, em ordem alfabética).
+Agora o painel lê a data de dentro da própria ficha: a linha **"OS cadastrada"** do
+Registro de atividades. Para auditorias antigas, que não têm essa linha, ele usa a data
+mais antiga entre o início da fiscalização e a primeira atividade registrada — e só
+recorre ao carimbo do arquivo se a ficha não tiver nada disso.
+
+Junto veio um seletor **"ordenar por"**, acima dos cards, com duas opções:
+
+- **auditoria mais recente** (padrão) — a ordem de sempre, agora correta;
+- **prazo de DET mais urgente** — quem está mais perto de vencer, ou já vencido, aparece
+  primeiro; auditorias sem prazo em aberto vão para o fim.
+
+A escolha fica guardada no navegador: se você prefere ver por prazo, o painel abre assim
+nas próximas vezes. A troca é instantânea, sem regerar a página.
+
 ## 12/08/2026
 <!-- commit: painel-zonas-de-escrita -->
 

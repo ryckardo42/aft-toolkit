@@ -638,9 +638,15 @@ login único do Google, feito com segurança pela interface do Claude."*
      **Configurações → Conectores → Google Calendar → Conectar** (na CLI, `/mcp`) —
      nenhuma senha passa pelo toolkit.
   2. Rode a primeira sincronização seguindo a skill `/aft-agenda-det` (Passos 1–3).
-  3. Ofereça a rotina diária do Passo 4 da `/aft-agenda-det` (tarefas agendadas do Claude
-     Code, se disponíveis) e grave `agenda_det: "diario"` ou `agenda_det: "manual"` no
-     `aft-config.md`, conforme a escolha.
+  3. **Pergunte se ele quer também a rotina diária** — sincronizar sozinho é uma segunda
+     escolha, separada da primeira, e o padrão é não ter: *"Quer que isso rode sozinho
+     toda manhã, ou prefere pedir quando precisar? A tarefa diária só roda com o
+     aplicativo do Claude aberto — se o computador estiver desligado na hora, ela roda na
+     próxima vez que você abrir."*
+     - **Sob demanda** → grave `agenda_det: "manual"` e diga que basta pedir
+       `/aft-agenda-det` (ex.: junto do `/aft-painel` da manhã).
+     - **Todo dia** → siga o **Passo 4 da `/aft-agenda-det`** (cria a tarefa agendada,
+       confere que ficou de pé) e grave `agenda_det: "diario"`.
 
 ## Passo 7e — Vigia de sessões (parte padrão da instalação)
 

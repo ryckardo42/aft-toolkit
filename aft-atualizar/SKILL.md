@@ -207,8 +207,10 @@ grep -q "agenda_det" "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/af
   - **Não** → grave `agenda_det: ""` no `aft-config.md` e siga (lembre que o painel tem
     o botão "agendar no Google Calendar", sem login).
   - **Sim** → siga exatamente o Passo 7d do `/aft-setup` (conector Google Calendar +
-    primeira sincronização pela `/aft-agenda-det`) e grave `agenda_det: "diario"` ou
-    `"manual"` conforme a escolha.
+    primeira sincronização pela `/aft-agenda-det`). Lá dentro há uma **segunda pergunta**,
+    que não pode ser pulada: sob demanda (`agenda_det: "manual"`) ou todo dia
+    (`agenda_det: "diario"`, que cria a tarefa agendada pelo Passo 4 da
+    `/aft-agenda-det`). Nunca instale a rotina diária sem o AFT pedir.
 
 ## Passo 2e — Re-sincronizar o perfil do auditor (CLAUDE.md)
 

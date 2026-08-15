@@ -645,6 +645,33 @@ def varrer_notificacoes_novas(pasta: Path, memoria: str) -> list[dict]:
     return novos
 
 
+def data_criacao(o: dict, criado_em: float) -> datetime.date:
+    """Quando a auditoria foi criada, na ordem de confiança das fontes.
+
+    O carimbo de criação do arquivo (`criado_em`) é o último recurso: ele muda
+    quando a pasta é copiada, restaurada ou recriada por sincronização, e sai
+    igual para todas as OS criadas no mesmo lote. As fontes de dentro da ficha
+    sobrevivem a isso.
+    """
+    # 1. linha "OS cadastrada" do Registro de atividades (escrita pela
+    #    /aft-nova-auditoria no dia do cadastro).
+    for a in o.get("atividades") or []:
+        if re.match(r"\s*(\[[A-F]\]\s*)?OS cadastrada", a.get("acao") or "", re.I):
+            d = parse_data(a.get("data") or "")
+            if d:
+                return d
+    # 2. OS antiga, sem essa linha: o mais cedo entre o início da fiscalização
+    #    e a primeira atividade registrada.
+    cands = [d for d in (parse_data((a.get("data") or ""))
+                         for a in o.get("atividades") or []) if d]
+    if o.get("data_inicio"):
+        cands.append(o["data_inicio"])
+    if cands:
+        return min(cands)
+    # 3. sem nada dentro da ficha: o carimbo do arquivo.
+    return datetime.date.fromtimestamp(criado_em) if criado_em else datetime.date.min
+
+
 def classifica(dias: int | None) -> str:
     if dias is None:
         return "sem-prazo"
@@ -683,6 +710,13 @@ color:var(--t3);margin:0 0 8px}
 .venc ul{margin:0;padding-left:18px;font-size:13.5px}
 .venc li{margin-bottom:5px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.ordena{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.ordena label{font:11px var(--sans);font-weight:700;letter-spacing:.08em;
+text-transform:uppercase;color:var(--t3)}
+.ordena select{font:13px var(--serif);color:var(--t1);background:var(--paper);
+border:1px solid var(--bd);border-radius:8px;padding:5px 10px;cursor:pointer}
+.ordena select:focus{outline:none;border-color:var(--coral-deep);
+box-shadow:0 0 0 3px rgba(176,89,62,.18)}
 .card{background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
 border-radius:10px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s}
 .card:hover{box-shadow:0 3px 14px rgba(20,20,19,.10)}
@@ -1453,6 +1487,16 @@ function calRegistrar(){
  if(!tipos){aviso('Marque pelo menos uma atividade (A-F)');return}
  if(!/^[0-9]{2}[/][0-9]{2}[/][0-9]{4}$/.test(data)){aviso('Data no formato dd/mm/aaaa');return}
  api({acao:'atividade',pasta:pasta,texto:det,data:data,tipos:tipos},true)}
+// Ordem dos cards. A grade nasce por data de criação da auditoria; a opção
+// "prazo de DET" só reposiciona os mesmos cards (cada um carrega a sua posição
+// em data-det), sem regerar a página. A escolha vale para as próximas aberturas.
+function ordena(v){
+ document.querySelectorAll('.grid .card').forEach(c=>{
+  c.style.order=v==='det'?(c.dataset.det||0):''});
+ localStorage.setItem('painel-ordem',v)}
+(function(){const sel=document.getElementById('ordem');if(!sel)return;
+ const v=localStorage.getItem('painel-ordem')||'criada';
+ sel.value=v;ordena(v)})();
 // Restaura a vista (Auditorias | Calendário) escolhida antes do reload.
 (function(){if(sessionStorage.getItem('painel-vista')==='cal')mudaVista('cal')})();
 """
@@ -1748,7 +1792,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
                      if pend else "")
         cards.append(f"""
-<div class="card {classe}" onclick="abre({i})">
+<div class="card {classe}" data-det="{o.get('ord_det', i)}" onclick="abre({i})">
   <h2>{html.escape(o["empregador"])}</h2>
   <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ/CPF não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
   <span class="badge {classe}">{html.escape(rotulo)}</span>
@@ -1790,6 +1834,13 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
   <div class="contador{' alerta' if n_novas else ''}"><b>{n_novas}</b><span>notif. sem registro</span></div>
   <div class="contador"><b>{n_autos}</b><span>autos lavrados</span></div>
   <div class="contador"><b>{dias_mes}</b><span>dias trabalhados no mês</span></div>
+</div>
+<div class="ordena">
+  <label for="ordem">ordenar por</label>
+  <select id="ordem" onchange="ordena(this.value)">
+    <option value="criada">auditoria mais recente</option>
+    <option value="det">prazo de DET mais urgente</option>
+  </select>
 </div>
 <div class="grid">{grade}</div>
 {render_vencimentos(venc)}
@@ -1901,13 +1952,24 @@ def main() -> int:
                 elif dd <= 7:
                     n_urgentes += 1
 
-    # Ordena: auditoria criada mais recentemente no painel primeiro (data de
-    # criação do memory.md — vale para toda OS, com ou sem data_inicio);
-    # desempate por nome. (Até 10/08/2026 a ordem era por urgência de DET —
-    # a agenda "Próximos vencimentos", no rodapé, continua cobrindo os prazos.)
-    def chave(o):
-        return (-o.get("criado_em", 0.0), (o["empregador"] or "").lower())
-    oss.sort(key=chave)
+    # Ordem padrão dos cards: auditoria criada mais recentemente primeiro.
+    # (Até 10/08/2026 era por urgência de DET; hoje a urgência é a outra opção
+    # do seletor "ordenar por", e a agenda do rodapé continua cobrindo prazos.)
+    for os_ in oss:
+        os_["criada"] = data_criacao(os_, os_.get("criado_em", 0.0))
+    oss.sort(key=lambda o: (-o["criada"].toordinal(),
+                            -o.get("criado_em", 0.0),
+                            (o["empregador"] or "").lower()))
+
+    # Posição de cada OS na ordem por urgência de DET: prazo aberto mais
+    # próximo de vencer (ou já vencido) primeiro; OS sem prazo aberto no fim,
+    # preservando entre elas a ordem por criação. O seletor do painel troca de
+    # uma para a outra sem regerar a página.
+    por_det = sorted(range(len(oss)),
+                     key=lambda k: (oss[k]["prazo_top"] is None,
+                                    oss[k]["prazo_top"] or datetime.date.max, k))
+    for pos, k in enumerate(por_det):
+        oss[k]["ord_det"] = pos
 
     venc = coletar_vencimentos(oss, hoje)
     diario = coletar_diario(oss_todas, base, hoje)

@@ -116,14 +116,36 @@ Se nada mudou, uma frase basta ("calendário já estava em dia — N eventos con
 
 ## Passo 4 — (Opcional) Rotina diária
 
-Se o AFT quiser que isso rode sozinho ("sincroniza todo dia", oferecido também no
-`/aft-setup`/`/aft-atualizar`): use o recurso de **tarefas agendadas do Claude Code**
-(se disponível nesta instalação) para rodar `/aft-agenda-det` toda manhã (sugestão: 07:15,
-depois da rotina do painel). Grave `agenda_det: "diario"` no front-matter do
-`aft-config.md` (ou `agenda_det: "manual"` se preferir só sob demanda) — é o registro
-de que a oferta já foi feita. Se o recurso de tarefas agendadas não existir na
-instalação, explique que basta pedir `/aft-agenda-det` quando quiser (ex.: junto do
-`/aft-painel` da manhã).
+**Nunca instale a rotina sem o AFT pedir.** A sincronização mexe na agenda pessoal dele;
+sob demanda é o padrão, e diária é opção. Só siga este passo se ele responder "sim" à
+oferta (feita aqui, no `/aft-setup` Passo 7d ou no `/aft-atualizar` Passo 2d).
+
+A automação depende de **tarefas agendadas do Claude Code** — é o Claude que precisa
+acordar, porque o acesso ao calendário é do conector dele, não do toolkit. Não adianta
+rotina do sistema (LaunchAgent/Agendador do Windows): ela roda scripts, não o conector.
+
+1. **Diga a limitação antes de criar** (uma frase, sem jargão): *"A tarefa só roda com o
+   aplicativo do Claude aberto — se o computador estiver desligado na hora, ela roda na
+   próxima vez que você abrir. Serve para quem usa o Claude quase todo dia."*
+2. Crie a tarefa agendada com a ferramenta de tarefas agendadas da instalação:
+   - identificador: `aft-agenda-det-diaria`
+   - horário: **07:15 todo dia** (`15 7 * * *`), depois da rotina do painel — ou o
+     horário que o AFT preferir;
+   - instrução (a tarefa roda numa sessão nova, sem memória desta conversa, então tem
+     que se bastar): *"Rode a skill /aft-agenda-det: espelhe no Google Calendar os prazos
+     das notificações DET de todas as OS ativas do AFT Toolkit, pelo conector Google
+     Calendar. Siga a skill (Passos 1 a 3). Nunca apague eventos. Se o conector não
+     estiver conectado, apenas relate e pare."*
+3. **Confira que ficou de pé** (liste as tarefas agendadas) e diga ao AFT o horário.
+4. Grave `agenda_det: "diario"` no front-matter do `aft-config.md`.
+
+Se a instalação não tiver tarefas agendadas, explique que a automação não é possível ali
+e que basta pedir `/aft-agenda-det` quando quiser (ex.: junto do `/aft-painel` da manhã);
+grave `agenda_det: "manual"`.
+
+**Para desligar depois** (o AFT pode mudar de ideia): apague a tarefa `aft-agenda-det-diaria`
+e grave `agenda_det: "manual"`. Os eventos já criados **não** são apagados — quem manda
+no calendário é o AFT.
 
 ## Regras
 
