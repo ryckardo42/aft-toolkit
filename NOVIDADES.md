@@ -6,6 +6,24 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 17/08/2026
+<!-- commit: cat-trabalhador-skill -->
+
+**Nova habilidade: o dossiê de CATs de um trabalhador (`/aft-cat-trabalhador`).** Até
+agora dava para levantar os acidentes de uma **empresa** (pelo CNPJ). Mas às vezes a
+fiscalização gira em torno de uma **pessoa**: um acidente grave, uma denúncia, um óbito
+— e você precisa de todos os dados da comunicação de acidente daquele trabalhador.
+Agora basta pedir "puxa as CATs do trabalhador" com o **CPF ou o nome**: o assistente
+varre as mesmas planilhas estaduais de CAT que você já tem e entrega um **PDF pronto**,
+no leiaute do formulário CAT do eSocial — uma capa com a identificação do trabalhador
+e a relação cronológica dos acidentes, seguida de uma ficha completa por CAT
+(empregador, acidente, lesão, CID, atestado médico, médico que atendeu).
+
+Se a busca por nome encontrar mais de uma pessoa, o assistente mostra a lista (nome,
+nascimento, empregadores) e pergunta qual é — nunca escolhe sozinho. E a privacidade
+continua a de sempre: tudo processado no seu computador, nada vai para a internet, e o
+CPF aparece na conversa sempre mascarado (completo, só dentro do PDF gravado na pasta).
+
 ## 15/08/2026
 <!-- commit: relatorio-acidentes-gravidade-e-obs -->
 
