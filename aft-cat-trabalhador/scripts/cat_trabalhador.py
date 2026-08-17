@@ -7,7 +7,7 @@ planilhas de CAT contem nome, CPF e dados de saude de trabalhadores, e nada
 disso sai da maquina. O script varre a base estadual de CATs (as mesmas
 planilhas .xlsx da /aft-relatorio-acidentes), junta todas as CATs do
 trabalhador e gera um PDF no leiaute do formulario CAT do eSocial - uma ficha
-completa por CAT, precedida de uma capa-resumo. Na tela sai apenas o nome, o
+completa por CAT, em ordem cronologica. Na tela sai apenas o nome, o
 CPF MASCARADO e numeros agregados.
 
 Uso:
@@ -222,10 +222,7 @@ def _eh_obito(r):
 # ---------------------------------------------------------------------------
 # PDF no leiaute do formulario CAT do eSocial (reportlab)
 # ---------------------------------------------------------------------------
-NOTA_RODAPE = (
-    "Documento de trabalho gerado pelo AFT Toolkit (/aft-cat-trabalhador) a "
-    "partir da base estadual de CATs (eSocial). Reproduz o que foi declarado "
-    "nas comunicações; não substitui o formulário oficial da CAT.")
+NOTA_RODAPE = "Documento gerado a partir dos dados enviados pela empresa ao eSocial."
 
 
 def _v(r, coluna):
@@ -400,7 +397,7 @@ def _secoes_cat(r):
     ]
 
 
-def gerar_pdf(caminho, cpf11, registros, fonte):
+def gerar_pdf(caminho, cpf11, registros):
     try:
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
@@ -424,8 +421,6 @@ def gerar_pdf(caminho, cpf11, registros, fonte):
                                leading=12)
     est_titulo = ParagraphStyle("tit", fontName="Helvetica-Bold", fontSize=14,
                                 leading=17)
-    est_sub = ParagraphStyle("sub", fontName="Helvetica-Bold", fontSize=11,
-                             leading=14)
     est_nota = ParagraphStyle("nota", fontName="Helvetica-Oblique", fontSize=7,
                               leading=9, textColor=colors.HexColor("#444444"))
 
@@ -468,41 +463,11 @@ def gerar_pdf(caminho, cpf11, registros, fonte):
     doc.addPageTemplates([PageTemplate(id="pagina", frames=[frame],
                                        onPage=rodape)])
 
-    elems = [Paragraph("CAT - Comunicação de Acidente de Trabalho", est_titulo),
-             Paragraph("Dossiê do trabalhador", est_sub),
-             Spacer(1, 4 * mm)]
-
-    # Capa: identificacao + relacao das CATs
-    obitos = sum(1 for r in registros if _eh_obito(r))
-    ident = [("Nome", nome_trab),
-             ("CPF", cpf_fmt(cpf11)),
-             ("NIS", r0.get("NIS") or TRACO),
-             ("Data de nascimento", r0.get("Data de nascimento") or TRACO),
-             ("Sexo", r0.get("Sexo") or TRACO),
-             ("Total de CATs no dossiê",
-              str(len(registros)) + (f" (óbito: {obitos})" if obitos else "")),
-             ("Gerado em", datetime.now().strftime("%d/%m/%Y")),
-             ("Fonte", fonte)]
-    elems.append(tabela_secao("TRABALHADOR", ident))
-    elems.append(Spacer(1, 3 * mm))
-
-    resumo = []
+    # Uma ficha completa por CAT, cada uma comecando em pagina propria
+    elems = []
     for i, r in enumerate(registros, 1):
-        marca = " (ÓBITO)" if _eh_obito(r) else ""
-        resumo.append(
-            (f"CAT {i} - {r.get('Data do acidente') or 'sem data'}{marca}",
-             " | ".join(x for x in (
-                 r.get("Tipo de acidente"),
-                 r.get("Razão social do empregador"),
-                 r.get("Natureza da lesão"),
-                 r.get("Parte do corpo atingida")) if x) or TRACO))
-    elems.append(tabela_secao("RELAÇÃO DAS CATs (ordem cronológica)", resumo))
-    elems.append(Spacer(1, 3 * mm))
-    elems.append(Paragraph(NOTA_RODAPE, est_nota))
-
-    # Uma ficha completa por CAT, cada uma em pagina propria
-    for i, r in enumerate(registros, 1):
-        elems.append(PageBreak())
+        if i > 1:
+            elems.append(PageBreak())
         marca = " - ÓBITO" if _eh_obito(r) else ""
         elems.append(Paragraph(
             f"CAT {i} de {len(registros)} - "
@@ -560,8 +525,8 @@ def main():
     if not base.is_dir():
         raise SystemExit(f"ERRO: a pasta da base não existe: {base}")
 
-    registros, fonte, descartados = ler_base(base, cpf_alvo=args.cpf,
-                                             nome_alvo=args.nome)
+    registros, _fonte, descartados = ler_base(base, cpf_alvo=args.cpf,
+                                              nome_alvo=args.nome)
     if not registros:
         alvo = (f"CPF {cpf_mascarado(args.cpf)}" if args.cpf
                 else f'nome "{args.nome}"')
@@ -607,7 +572,7 @@ def main():
     saida.mkdir(parents=True, exist_ok=True)
     pdf_path = saida / f"Dossie-CAT-{cpf11}.pdf"
     backup = ra._backup(pdf_path)
-    gerar_pdf(pdf_path, cpf11, registros, fonte)
+    gerar_pdf(pdf_path, cpf11, registros)
 
     # Resumo para o chat: nome e agregados; CPF sempre mascarado, nada da CAT.
     obitos = sum(1 for r in registros if _eh_obito(r))

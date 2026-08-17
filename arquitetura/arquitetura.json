@@ -355,7 +355,7 @@
         },
         {
           "nome": "/aft-cat-trabalhador",
-          "role": "Dossiê individual de CATs de UM trabalhador, buscado por CPF ou nome, varrendo a mesma base estadual de CATs: PDF pronto no leiaute do formulário CAT do eSocial, com capa-resumo e uma ficha completa por CAT. Busca por nome ambígua devolve a lista para o AFT escolher; no chat o CPF sai sempre mascarado.",
+          "role": "Dossiê individual de CATs de UM trabalhador, buscado por CPF ou nome, varrendo a mesma base estadual de CATs: PDF pronto no leiaute do formulário CAT do eSocial, com uma ficha completa por CAT em ordem cronológica. Busca por nome ambígua devolve a lista para o AFT escolher; no chat o CPF sai sempre mascarado.",
           "tech": "cat_trabalhador.py (openpyxl + reportlab) · reusa a base e a configuração da /aft-relatorio-acidentes · model: sonnet"
         },
         {

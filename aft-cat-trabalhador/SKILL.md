@@ -9,7 +9,8 @@ description: >
   de [nome]", "a CAT do trabalhador X", "histórico de acidentes do
   trabalhador". Varre a base estadual de CATs (as mesmas planilhas .xlsx do
   eSocial da /aft-relatorio-acidentes) e gera um PDF pronto no leiaute do
-  formulário CAT do eSocial: capa-resumo + uma ficha completa por CAT. NÃO
+  formulário CAT do eSocial: uma ficha completa por CAT, em ordem
+  cronológica. NÃO
   confundir com /aft-relatorio-acidentes (histórico da EMPRESA, por CNPJ) nem
   com /aft-analise-acidente (análise de mérito de UM acidente, IN 2/2022).
 compatibility: macOS e Windows (Git Bash). Requer Python 3 com openpyxl (leitura) e reportlab (PDF). Requer a skill aft-relatorio-acidentes instalada (mesma base de CATs).
@@ -31,10 +32,10 @@ compatibility: macOS e Windows (Git Bash). Requer Python 3 com openpyxl (leitura
 ## Objetivo
 
 Reunir **todas as CATs de um trabalhador** — buscado por **CPF** ou por
-**nome** — num **PDF pronto**, no leiaute do formulário CAT do eSocial: uma
-capa com a identificação do trabalhador e a relação cronológica das CATs,
-seguida de **uma ficha completa por CAT** (identificação, empregador,
-acidentado, acidente ou doença, atestado médico). Serve para instruir a
+**nome** — num **PDF pronto**, no leiaute do formulário CAT do eSocial:
+**uma ficha completa por CAT**, em ordem cronológica (identificação,
+empregador, acidentado, acidente ou doença, atestado médico), cada uma
+começando em página própria. Serve para instruir a
 fiscalização quando o caso gira em torno de uma pessoa: acidente grave,
 denúncia, reincidência, óbito.
 
