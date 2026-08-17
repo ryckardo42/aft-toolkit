@@ -47,6 +47,12 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # 11 dígitos, cada um podendo ser seguido de um separador comum (. - espaço).
 # As âncoras (?<!\d) e (?!\d) impedem capturar 11 dígitos de dentro de um
 # CNPJ (14 dígitos) ou de qualquer número mais longo.

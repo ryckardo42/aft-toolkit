@@ -34,6 +34,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 NOME_TAREFA = "Painel AFT"
 LABEL_LAUNCHD = "br.aft.painel"
 
