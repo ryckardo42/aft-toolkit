@@ -314,8 +314,8 @@ python ~/.claude/skills/_scripts/instalar_hook_diario.py status
 
 ## Passo 2g — Sincronizar os agentes do toolkit
 
-Os **agentes** (`agents/*.md` do repositório — hoje o revisor de autos e a varredura do
-Sistema Auditor) precisam de uma cópia em `~/.claude/agents/`, e o `git pull` sozinho
+Os **agentes** (`agents/*.md` do repositório — hoje o revisor de autos, a varredura do
+Sistema Auditor e o extrator de PGR) precisam de uma cópia em `~/.claude/agents/`, e o `git pull` sozinho
 não a atualiza. Rode **sem perguntar** (idempotente, só copia o que mudou):
 
 ```bash
