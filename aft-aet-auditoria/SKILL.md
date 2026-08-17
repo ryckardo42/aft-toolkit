@@ -90,9 +90,63 @@ find "<pasta-OS>" -iname "*AET*.pdf" -o -iname "*ergonom*.pdf" -o -iname "*anali
 - **Nenhum:** solicite a AET (anexo no chat ou caminho do arquivo). Pode chegar como PDF ou
   texto colado; um anexo/texto fornecido explicitamente tem **precedência** sobre a busca.
 
-Leia o conteúdo integral da AET usando as ferramentas de leitura de PDF disponíveis. **Anote
-a página/folha de cada trecho relevante** — essa rastreabilidade será reaproveitada nos autos
-e a empresa pode contestar a autuação se não localizar a evidência.
+#### Leitura do documento: delegue ao agente extrator
+
+AET costuma ser documento longo, com muita tabela de posto de trabalho. Lida direto na
+conversa, ela consome o contexto e o limite de uso do AFT, e é **recobrada a cada turno** da
+análise. Por isso a leitura é feita fora da conversa, por um agente próprio.
+
+Descubra primeiro o tamanho do documento:
+
+```bash
+"<python_path>" ~/.claude/skills/_scripts/pdf_texto_paginado.py "<caminho do documento>" --so-resumo
+```
+
+O script informa quantas páginas há e faz a triagem de confiabilidade de cada uma:
+páginas **sem texto** (escaneadas), com **texto suspeito** (OCR ruim já embutido) e com
+**ordem embaralhada** (tabela virada na extração).
+
+- **Mais de 20 páginas:** **delegue ao agente `aft-extrator-documento`**, passando no
+  prompt: o tipo de documento (AET), o caminho do PDF, o caminho de saída
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/aet-extrato.md`, o `python_path` e - obrigatoriamente - o
+  **roteiro de extração**:
+
+  > As cinco ementas na ordem deste skill: 117244-1 (conteúdo e etapas da AET),
+  > 117248-4 (oitiva dos trabalhadores), 117249-2 (aspectos da organização do trabalho),
+  > 117250-6 (medidas para sobrecarga muscular) e 117251-4 (medidas de prevenção à
+  > exposição contínua/repetitiva). Peça também, na seção de identificação, a organização
+  > e o(s) profissional(is) que realizaram a AET, com as qualificações profissionais.
+
+- **Até 20 páginas:** leia direto, sem delegar - o ganho não compensa a ida e volta.
+- **Documento sem camada de texto** (escaneado; o script avisa em destaque):
+  **delegue mesmo que seja curto.** Sem texto, cada página precisa ser lida como imagem, o
+  que pesa na conversa muito mais do que o número de páginas sugere. Avise o AFT em uma
+  linha, porque muda o que ele pode esperar do resultado:
+
+  > "Este documento veio escaneado, sem texto pesquisável. Vou lê-lo página por página, o
+  > que demora mais; o que ficar ilegível fica sinalizado no extrato para você conferir no
+  > original."
+
+
+Avise o AFT em uma linha antes de delegar (é uma etapa que demora vários minutos):
+
+> "O documento tem [N] páginas. Vou extraí-lo em segundo plano antes de analisar, para não
+> estourar o limite da sua conversa. Um instante."
+
+#### Analise sobre o extrato
+
+Feita a extração, **a análise corre sobre o extrato**, não sobre o PDF. Ele traz a
+transcrição literal e a página de cada trecho, que é o que a citação obrigatória exige.
+
+- **O extrato não julga.** "LOCALIZADO" ali significa apenas que o documento trata do
+  assunto - nunca que o tratamento é adequado. O juízo continua sendo seu, sobre as
+  transcrições.
+- **Volte ao original quando for decisivo.** Se um ponto ficar limítrofe, ou se o extrato
+  registrar incerteza na seção "Limites desta extração", abra **aquelas páginas** do PDF
+  com o Read (parâmetro `pages`) antes de concluir.
+
+**Anote a página/folha de cada trecho relevante** — essa rastreabilidade será reaproveitada
+nos autos e a empresa pode contestar a autuação se não localizar a evidência.
 
 Na leitura inicial, extraia e registre:
 

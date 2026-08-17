@@ -166,8 +166,8 @@ if USA_CODEX:
             "mklink /J para a pasta e mklink /H para o arquivo.")
 
 # 3b. Agentes do toolkit (~/.claude/agents) ----------------------------------
-# As skills /aft-revisa-auto e /aft-autos-lavrados despacham o trabalho pesado
-# para agentes isolados. O repositorio os traz em skills/agents/, mas o Claude
+# As skills /aft-revisa-auto, /aft-autos-lavrados e /aft-PGR-analise despacham o
+# trabalho pesado para agentes isolados. O repositorio os traz em skills/agents/, mas o Claude
 # Code so os descobre em ~/.claude/agents/ - a copia e feita pelo
 # instalar_agentes.py (via /aft-setup ou /aft-atualizar). Sem a copia nada
 # quebra (as skills degradam para o modo inline), por isso severidade aviso.

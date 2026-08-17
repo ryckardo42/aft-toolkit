@@ -106,10 +106,65 @@ nome, ou estar dentro de uma pasta com `PGR` no nome. Procure na pasta da OS (e 
 O PGR também pode chegar como PDF anexado ou como texto colado. Um anexo/texto fornecido
 explicitamente pelo AFT tem **precedência** sobre a busca na pasta.
 
-Faça uma leitura inicial completa antes de começar a análise por ementa. Localize, na
-medida do possível, as seções correspondentes a: metodologia de GRO, identificação de
-perigos, avaliação de riscos, Inventário de Riscos, Plano de Ação, ergonomia (NR-17),
-aft-consulta/comunicação com trabalhadores.
+**Prefira sempre o arquivo na pasta da OS.** PGR arrastado para o chat já entra inteiro no
+contexto da conversa e anula a economia descrita abaixo. Se o AFT anexar um PGR grande,
+grave-o na pasta da OS e siga por lá.
+
+#### Leitura do PGR: delegue ao agente extrator
+
+PGR costuma passar de cem páginas. Lido direto na conversa, ele consome o contexto e o
+limite de uso do AFT, e é **recobrado a cada turno** da análise - o que estoura o plano no
+meio do trabalho. Por isso a leitura é feita fora da conversa, por um agente próprio.
+
+Descubra primeiro o tamanho do documento:
+
+```bash
+"<python_path>" ~/.claude/skills/_scripts/pdf_texto_paginado.py "<caminho do PGR>" --so-resumo
+```
+
+- **Mais de 20 páginas** (o caso comum): **delegue ao agente `aft-extrator-documento`**, passando
+  no prompt o tipo de documento (PGR), o caminho do PGR, o caminho de saída
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/pgr-extrato.md`, o `python_path` e - obrigatoriamente - o
+  **roteiro de extração**, que são as sete ementas na ordem deste skill: 1010590 (evitar
+  perigos / metodologia de GRO), 1010603 (identificação de perigos), 1010611 (avaliação e
+  nível de risco), 1010646 (condições da NR-17), 1010743 (Plano de Ação), 1010794
+  (Inventário de Riscos) e 1011154 (consulta e comunicação com os trabalhadores). O agente lê o documento
+  inteiro no contexto dele e devolve um extrato fiel, organizado pelas sete ementas, com
+  transcrição literal e número de página.
+- **Até 20 páginas:** leia direto, sem delegar - o ganho não compensa a ida e volta.
+- **Documento sem camada de texto** (escaneado; o script avisa em destaque):
+  **delegue mesmo que seja curto.** Sem texto, cada página precisa ser lida como imagem, o
+  que pesa na conversa muito mais do que o número de páginas sugere. Avise o AFT em uma
+  linha, porque muda o que ele pode esperar do resultado:
+
+  > "Este documento veio escaneado, sem texto pesquisável. Vou lê-lo página por página, o
+  > que demora mais; o que ficar ilegível fica sinalizado no extrato para você conferir no
+  > original."
+
+
+Avise o AFT em uma linha antes de delegar (é uma etapa que demora):
+
+> "O PGR tem [N] páginas. Vou extraí-lo em segundo plano antes de analisar, para não
+> estourar o limite da sua conversa. Um instante."
+
+#### Analise sobre o extrato
+
+Feita a extração, **a análise das sete ementas corre sobre o `pgr-extrato.md`**, não sobre
+o PDF. O extrato traz a transcrição literal e a página de cada trecho, que é o que a
+citação obrigatória exige.
+
+Duas regras ao usar o extrato:
+
+- **O extrato não julga.** "LOCALIZADO" ali significa apenas que o documento trata do
+  assunto - nunca que o tratamento é adequado. O juízo de cada ementa continua sendo seu,
+  sobre as transcrições.
+- **Volte ao original quando for decisivo.** Se um ponto ficar limítrofe, ou se o extrato
+  registrar incerteza na seção "Limites desta extração", abra **aquelas páginas** do PDF
+  com o Read (parâmetro `pages`) antes de concluir. O extrato é o padrão; o original
+  continua ao alcance.
+
+Se o extrato apontar páginas sem texto extraível que sustentem alguma ementa, confira-as
+visualmente antes de concluir por infração.
 
 ### Etapa 3: Detectar gatilhos contextuais
 
