@@ -26,8 +26,13 @@ Quadro I.** A tabela original tem células vazias e colunas que induzem erro de
 alinhamento. Todo cálculo DEVE ser feito pelo script determinístico:
 
 ```bash
-python3 scripts/dimensionar_cipa.py <grau_de_risco> <num_empregados> [--json]
+python ~/.claude/skills/aft-cipa-nr05-dimensionamento/scripts/dimensionar_cipa.py <grau_de_risco> <num_empregados> [--json]
 ```
+
+> O `python` acima é o `python_path` do `aft-config.md` (nunca `python3` solto: no
+> Windows costuma ser o atalho vazio da Microsoft Store). Se o interpretador falhar,
+> tente outro, mas **nunca** responda sem rodar o script. O caminho é absoluto de
+> propósito: funciona a partir de qualquer diretório de trabalho.
 
 - `<grau_de_risco>`: 1, 2, 3 ou 4 (Anexo I da NR-04, pelo CNAE — o mesmo GR do SESMT);
 - `<num_empregados>`: número de empregados do estabelecimento;
