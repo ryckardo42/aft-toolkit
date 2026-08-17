@@ -487,6 +487,11 @@ const ARCH = {
           "tech": "relatorio_acidentes.py (openpyxl) · planilhas em <PASTA_AFT>/CATs (sincronizar_cats.py) · .docx pelo /aft-modelo-docx · model: sonnet"
         },
         {
+          "nome": "/aft-cat-trabalhador",
+          "role": "Dossiê individual de CATs de UM trabalhador, buscado por CPF ou nome, varrendo a mesma base estadual de CATs: PDF pronto no leiaute do formulário CAT do eSocial, com uma ficha completa por CAT em ordem cronológica. Busca por nome ambígua devolve a lista para o AFT escolher; no chat o CPF sai sempre mascarado.",
+          "tech": "cat_trabalhador.py (openpyxl + reportlab) · reusa a base e a configuração da /aft-relatorio-acidentes · model: sonnet"
+        },
+        {
           "nome": "/aft-modelo-docx",
           "role": "Padrão visual de todo .docx do toolkit: template com cabeçalho AFT·SIT, Times 12, azul institucional, tabelas zebradas.",
           "tech": "biblioteca modelo_docx.py (python-docx) + template-cabecalho.docx · usada pelo /aft-relatorio e docs avulsos · model: sonnet"

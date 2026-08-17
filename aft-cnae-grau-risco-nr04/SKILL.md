@@ -26,14 +26,19 @@ dois parâmetros do dimensionamento do SESMT — o segundo é o número de traba
 
 ```bash
 # Por código CNAE (aceita qualquer formato: 01.15-6, 0115-6/00, 1011-2/01, 01156...)
-python3 scripts/enquadrar_cnae.py <cnae>
+python ~/.claude/skills/aft-cnae-grau-risco-nr04/scripts/enquadrar_cnae.py <cnae>
 
 # Por descrição da atividade (busca textual, sem acentos, todas as palavras)
-python3 scripts/enquadrar_cnae.py --busca "termo"
+python ~/.claude/skills/aft-cnae-grau-risco-nr04/scripts/enquadrar_cnae.py --busca "termo"
 
 # Saída estruturada
-python3 scripts/enquadrar_cnae.py <cnae> --json
+python ~/.claude/skills/aft-cnae-grau-risco-nr04/scripts/enquadrar_cnae.py <cnae> --json
 ```
+
+> O `python` acima é o `python_path` do `aft-config.md` (nunca `python3` solto: no
+> Windows costuma ser o atalho vazio da Microsoft Store). Se o interpretador falhar,
+> tente outro, mas **nunca** responda sem rodar o script. O caminho é absoluto de
+> propósito: funciona a partir de qualquer diretório de trabalho.
 
 A base `scripts/cnae_gr.json` contém os **673 códigos** do Anexo I, validada
 integralmente contra o PDF oficial (zero divergências). O Anexo I opera em nível de

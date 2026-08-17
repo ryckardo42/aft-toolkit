@@ -26,8 +26,13 @@ Anexo II.** A tabela original tem células vazias e colunas que induzem erro de
 alinhamento. Todo cálculo DEVE ser feito pelo script determinístico:
 
 ```bash
-python3 scripts/dimensionar_sesmt.py <grau_de_risco> <num_trabalhadores> [--saude] [--json]
+python ~/.claude/skills/aft-dimensionamento-sesmt-nr04/scripts/dimensionar_sesmt.py <grau_de_risco> <num_trabalhadores> [--saude] [--json]
 ```
+
+> O `python` acima é o `python_path` do `aft-config.md` (nunca `python3` solto: no
+> Windows costuma ser o atalho vazio da Microsoft Store). Se o interpretador falhar,
+> tente outro, mas **nunca** responda sem rodar o script. O caminho é absoluto de
+> propósito: funciona a partir de qualquer diretório de trabalho.
 
 - `<grau_de_risco>`: 1, 2, 3 ou 4 (conforme Anexo I da NR-04, pelo CNAE);
 - `<num_trabalhadores>`: número total de trabalhadores do estabelecimento;

@@ -58,6 +58,52 @@ a você decidir se exige o documento de novo.
 Uma recomendação prática: **prefira deixar o documento na pasta da OS** a arrastá-lo para
 o chat. PDF arrastado para a conversa já entra inteiro no contexto e anula a economia.
 
+<!-- commit: cat-trabalhador-skill -->
+
+**Nova habilidade: o dossiê de CATs de um trabalhador (`/aft-cat-trabalhador`).** Até
+agora dava para levantar os acidentes de uma **empresa** (pelo CNPJ). Mas às vezes a
+fiscalização gira em torno de uma **pessoa**: um acidente grave, uma denúncia, um óbito
+— e você precisa de todos os dados da comunicação de acidente daquele trabalhador.
+Agora basta pedir "puxa as CATs do trabalhador" com o **CPF ou o nome**: o assistente
+varre as mesmas planilhas estaduais de CAT que você já tem e entrega um **PDF pronto**,
+no leiaute do formulário CAT do eSocial — uma ficha completa por CAT, em ordem
+cronológica (empregador, acidente, lesão, CID, atestado médico, médico que atendeu).
+
+Se a busca por nome encontrar mais de uma pessoa, o assistente mostra a lista (nome,
+nascimento, empregadores) e pergunta qual é — nunca escolhe sozinho. E a privacidade
+continua a de sempre: tudo processado no seu computador, nada vai para a internet, e o
+CPF aparece na conversa sempre mascarado (completo, só dentro do PDF gravado na pasta).
+
+## 17/08/2026
+<!-- commit: skills-calculo-caminho-absoluto -->
+
+**Os três cálculos automáticos voltaram a funcionar fora do Claude Code.** As skills que
+calculam SESMT (`/aft-dimensionamento-sesmt-nr04`), CIPA
+(`/aft-cipa-nr05-dimensionamento`) e grau de risco por CNAE
+(`/aft-cnae-grau-risco-nr04`) mandavam rodar o script por um caminho *encurtado*, que só
+acertava se o assistente já estivesse "parado" dentro da pasta da própria skill. No
+Claude Code isso acontece por acaso e funcionava; em outros assistentes (o Hermes, e
+possivelmente o Codex e o Antigravity), o assistente está parado na pasta da sua
+auditoria — e o comando falhava com "arquivo não encontrado".
+
+**Por que isso era grave.** Ao ver o comando falhar, o assistente não avisava: ele
+desistia do script e ia ler a tabela do Anexo II *por conta própria*, que é exatamente o
+que a regra de ouro dessas três skills proíbe. O resultado saía com cara de certo e
+número errado. Num caso real de 17/08/2026, um dimensionamento de SESMT veio com o
+número de profissionais trocado. São justo as três skills em que a conta é fechada e
+verificável — e um número errado aí pode sustentar uma autuação indevida.
+
+**O que mudou.** As três passaram a usar o caminho completo do script, o mesmo padrão
+que as outras 47 skills do toolkit já usavam. Agora o comando roda a partir de qualquer
+pasta, em qualquer assistente. De quebra, cada uma ganhou um lembrete de que o
+interpretador Python é o do seu `aft-config.md` (o `python3` solto costuma ser um atalho
+vazio no Windows) e de que, se ainda assim algo falhar, o assistente deve dizer — e
+**nunca** responder o cálculo de cabeça.
+
+Você não precisa fazer nada: o `/aft-atualizar` já traz a correção.
+
+---
+
 ## 15/08/2026
 <!-- commit: relatorio-acidentes-gravidade-e-obs -->
 
