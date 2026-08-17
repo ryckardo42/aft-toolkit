@@ -96,9 +96,65 @@ find "<pasta-OS>" -iname "*laudo*" -o -iname "*aprecia*" -o -iname "*risco*" | g
 - Vários → liste e pergunte.
 - Nenhum → peça o documento.
 
-Leia o documento **integralmente** antes de julgar (PDF: use as ferramentas de leitura de
-PDF; escaneado sem camada de texto: leia como imagem). Se vier mais de um documento (ex.:
-um laudo por máquina), analise todos — o checklist é aplicado a cada máquina.
+#### Leitura do documento: delegue ao agente extrator
+
+Laudo de adequação costuma ser longo e cheio de tabela e foto de máquina. Lido direto na
+conversa, ele consome o contexto e o limite de uso do AFT, e é **recobrado a cada turno** do
+julgamento. Por isso a leitura é feita fora da conversa, por um agente próprio.
+
+Descubra primeiro o tamanho do documento:
+
+```bash
+"<python_path>" ~/.claude/skills/_scripts/pdf_texto_paginado.py "<caminho do documento>" --so-resumo
+```
+
+O script informa quantas páginas há e faz a triagem de confiabilidade de cada uma:
+páginas **sem texto** (escaneadas), com **texto suspeito** (OCR ruim já embutido) e com
+**ordem embaralhada** (tabela virada na extração).
+
+- **Mais de 20 páginas:** **delegue ao agente `aft-extrator-documento`**, passando no
+  prompt: o tipo de documento (laudo de NR-12), o caminho do PDF, o caminho de saída
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/laudo-extrato.md`, o `python_path` e - obrigatoriamente - o
+  **roteiro de extração**:
+
+  > Os seis blocos do checklist deste skill, na ordem: Bloco 1 (método de estimativa de
+  > riscos, ABNT NBR ISO 12100), Bloco 2 (HRN), Bloco 3 (categoria de segurança, NBR
+  > 14153), Bloco 4 (requisitos da NR-12 dependentes da apreciação de riscos), Bloco 5
+  > (documentação e responsabilidade técnica, PLH) e Bloco 6 (interface de segurança:
+  > relés e CLP de segurança). Se o laudo cobrir mais de uma máquina, peça o roteiro
+  > aplicado **a cada máquina**, separadamente.
+
+- **Até 20 páginas:** leia direto, sem delegar - o ganho não compensa a ida e volta.
+- **Documento sem camada de texto** (escaneado; o script avisa em destaque):
+  **delegue mesmo que seja curto.** Sem texto, cada página precisa ser lida como imagem, o
+  que pesa na conversa muito mais do que o número de páginas sugere. Avise o AFT em uma
+  linha, porque muda o que ele pode esperar do resultado:
+
+  > "Este documento veio escaneado, sem texto pesquisável. Vou lê-lo página por página, o
+  > que demora mais; o que ficar ilegível fica sinalizado no extrato para você conferir no
+  > original."
+
+
+Avise o AFT em uma linha antes de delegar (é uma etapa que demora vários minutos):
+
+> "O documento tem [N] páginas. Vou extraí-lo em segundo plano antes de analisar, para não
+> estourar o limite da sua conversa. Um instante."
+
+#### Analise sobre o extrato
+
+Feita a extração, **a análise corre sobre o extrato**, não sobre o PDF. Ele traz a
+transcrição literal e a página de cada trecho, que é o que a citação obrigatória exige.
+
+- **O extrato não julga.** "LOCALIZADO" ali significa apenas que o documento trata do
+  assunto - nunca que o tratamento é adequado. O juízo continua sendo seu, sobre as
+  transcrições.
+- **Volte ao original quando for decisivo.** Se um ponto ficar limítrofe, ou se o extrato
+  registrar incerteza na seção "Limites desta extração", abra **aquelas páginas** do PDF
+  com o Read (parâmetro `pages`) antes de concluir.
+
+Se vier mais de um documento (ex.: um laudo por máquina), trate todos — o checklist é
+aplicado a cada máquina. Laudo escaneado sem camada de texto o agente lê como imagem, e
+sinaliza no extrato as páginas em que fez isso.
 
 ### Etapa 2 — Identificação (alimenta a saída W)
 
