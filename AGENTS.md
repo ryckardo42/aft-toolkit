@@ -17,6 +17,8 @@ e nunca manda o AFT ao terminal.
   o que o AFT escreve fora deles é preservado.
 - `agents/` — subagentes do Claude Code (formato próprio dele), copiados para
   `~/.claude/agents/` pelo `/aft-atualizar`.
+- `novidades/` — o changelog em pedaços: um arquivo por mudança. O `NOVIDADES.md` da raiz
+  é **montado** a partir daqui, nunca editado à mão.
 - `arquitetura/`, `Template/`, `COMO-INSTALAR.md`, `README.md` — documentação e modelos.
 
 ## Regras da casa
@@ -24,8 +26,9 @@ e nunca manda o AFT ao terminal.
 - **Uma informação, um lugar.** Contexto de agente mora em `AGENTS.md`; onde existir um
   `CLAUDE.md` ao lado, ele é só o ponteiro `@AGENTS.md`. Nunca duplicar o texto: duas
   cópias sempre divergem. Vale para as pastas de auditoria e para este repositório.
-- **`NOVIDADES.md` é obrigatório** em toda mudança que o AFT sinta no uso — escrita para
-  ele, sem jargão de programador, não só na mensagem do commit.
+- **Changelog é obrigatório** em toda mudança que o AFT sinta no uso — escrito para ele,
+  sem jargão de programador, não só na mensagem do commit. **Nunca edite o `NOVIDADES.md`
+  direto:** ele é montado. Escreva um arquivo novo em `novidades/` (ver "Publicar").
 - **Skill mexida, documentação em dia** — nota técnica no cofre + arquitetura. Não é
   opcional nem se pede: ver a seção "Documentação obrigatória" abaixo.
 - **Namespace `minha-*` é reservado** às skills pessoais do AFT: nunca versionar, nunca
@@ -40,6 +43,65 @@ e nunca manda o AFT ao terminal.
   (nunca dentro de `python -c "..."`), e declare UTF-8 nos scripts gerados.
 - **Testar fora das pastas de fiscalização reais.** Script novo se prova em pasta de
   mentira antes de tocar em `OS ATIVAS/`.
+
+## Publicar: do ramo até a máquina do AFT
+
+O AFT trabalha em **várias sessões ao mesmo tempo**, cada uma no seu worktree
+(`.claude/worktrees/`). Quatro regras mantêm isso sem embaralhar — as três primeiras
+evitam conflito, a quarta evita algo pior, que é trabalho sumir sem erro nenhum.
+
+**1. Traga o main antes de juntar.** Antes de abrir o PR e de novo antes de mergear:
+
+```bash
+git fetch origin main && git merge origin/main
+```
+
+Conflito resolvido no seu ramo é barato; no main, atrapalha todo mundo. Se o merge do PR
+falhar por conflito, é isto que faltou.
+
+**2. Changelog: um arquivo por mudança, nunca o `NOVIDADES.md`.** Todas as sessões
+escreviam a entrada nova na **mesma linha** (o topo do arquivo) — era, de longe, a maior
+fonte de conflito do repositório. Agora cada mudança tem o seu próprio arquivo:
+
+```
+novidades/AAAA-MM-DD-NN-assunto.md      ex.: novidades/2026-08-18-01-cat-trabalhador.md
+```
+
+`NN` é a ordem dentro do dia (`01` é a primeira). O conteúdo é a entrada como ela sai no
+changelog, começando pelo cabeçalho de data, e terminando com uma linha `---`:
+
+```markdown
+## 18/08/2026
+<!-- commit: cat-trabalhador-skill -->
+
+**Título em negrito.** O texto para o AFT, sem jargão de programador...
+
+---
+```
+
+O `NOVIDADES.md` é montado a partir dessa pasta (`_scripts/montar_novidades.py`), na hora
+de publicar. Não commite o `NOVIDADES.md` no seu ramo.
+
+**3. Arquitetura: edite só o `.json`.** O `arquitetura.html` guarda uma **cópia** do JSON
+no bloco `const ARCH` (ele precisa dela porque a página abre como arquivo local, e o
+navegador proíbe buscar o `.json` ao lado). O `.json` é a fonte; o `.html` é derivado:
+
+```bash
+python _scripts/nota_historico.py --sincronizar-arquitetura
+```
+
+**4. A pasta instalada sai sempre do main — worktree não publica.** Depois do merge:
+
+```bash
+python _scripts/publicar.py            # ou --conferir, para só ver o que faria
+```
+
+Ele traz o main do GitHub para a cópia principal, remonta o changelog e a arquitetura
+(num lugar só, o que é o que impede duas sessões de colidirem nesses dois arquivos),
+copia para `~/.claude/skills` e reinstala os subagentes. **Nunca copie de um worktree**:
+ele pode estar de antes do que outra sessão publicou, e a mudança dela desaparece da
+pasta instalada sem dar erro — o repositório continua certo, e só a máquina do AFT
+regride.
 
 ## Documentação obrigatória (nota técnica + arquitetura)
 
