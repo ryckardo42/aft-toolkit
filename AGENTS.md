@@ -26,6 +26,8 @@ e nunca manda o AFT ao terminal.
   cópias sempre divergem. Vale para as pastas de auditoria e para este repositório.
 - **`NOVIDADES.md` é obrigatório** em toda mudança que o AFT sinta no uso — escrita para
   ele, sem jargão de programador, não só na mensagem do commit.
+- **Skill mexida, documentação em dia** — nota técnica no cofre + arquitetura. Não é
+  opcional nem se pede: ver a seção "Documentação obrigatória" abaixo.
 - **Namespace `minha-*` é reservado** às skills pessoais do AFT: nunca versionar, nunca
   editar, nunca propor commit delas.
 - **Nenhum dado real** de empresa, CNPJ ou trabalhador entra aqui — nem em exemplo, nem
@@ -38,6 +40,53 @@ e nunca manda o AFT ao terminal.
   (nunca dentro de `python -c "..."`), e declare UTF-8 nos scripts gerados.
 - **Testar fora das pastas de fiscalização reais.** Script novo se prova em pasta de
   mentira antes de tocar em `OS ATIVAS/`.
+
+## Documentação obrigatória (nota técnica + arquitetura)
+
+Skill **criada ou modificada** sai com três coisas em dia, no mesmo dia, sem que o AFT
+precise pedir:
+
+1. **`NOVIDADES.md`** — o que ele sente no uso (regra acima).
+2. **A nota técnica** no cofre `~/Documents/aft-toolkit-history/` — a história da decisão:
+   por que foi feito assim, o que se tentou antes, onde estão as armadilhas. É o que o
+   código não guarda.
+3. **A arquitetura** — `arquitetura/arquitetura.json` **e** `arquitetura/arquitetura.html`.
+   O `.html` traz uma **cópia embutida** do JSON no bloco `const ARCH = {...}`: alterar só
+   um dos dois faz a página mostrar coisa velha. Confira com
+   `python _scripts/nota_historico.py --checar-arquitetura`.
+
+### O padrão da nota
+
+Skill **nova** → nota nova, com esta ordem: título; citação inicial com a data e
+**"verificado no código"** listando os arquivos conferidos; o que a skill faz **em uma
+frase**; como funciona; o que mudou hoje e **por quê**; limites e pegadinhas; e
+`## Relação com outras notas` (o cofre é um Obsidian: cite as outras notas pelo nome do
+arquivo).
+
+Skill **já com nota** → **acrescente** uma seção `## Atualização (dd/mm/aaaa)` com o
+problema concreto, a correção e o porquê. **Nunca reescreva a nota**: o histórico da
+decisão é o valor dela.
+
+Duas regras duras, iguais às do resto do repositório: **confira no código, nada de
+memória** (a nota que descreve um toolkit que não existe mais é pior que nota nenhuma), e
+**nenhum dado real** de empresa ou trabalhador — nem em exemplo.
+
+Qual nota cobre qual skill não se adivinha (uma nota pode cobrir várias skills):
+
+```bash
+python _scripts/nota_historico.py --nota-de aft-<skill>
+```
+
+### O que garante que isso aconteça
+
+`_scripts/nota_historico.py` roda como gancho do Claude Code (instalado no
+`~/.claude/settings.json` da máquina, fora do repositório): anota as skills mexidas na
+sessão e, na hora de encerrar o turno, devolve a pendência ao assistente. Cada skill é
+cobrada **uma vez por sessão** — é lembrete, não camisa de força: se a mudança for pequena
+a ponto de não alterar nota nem arquitetura, diga isso ao AFT em uma linha e siga.
+
+Fora do Claude Code (Codex, Antigravity) não há gancho: vale esta seção, e a verificação
+manual é `python _scripts/nota_historico.py --verificar`.
 
 ## Modelo por skill
 
