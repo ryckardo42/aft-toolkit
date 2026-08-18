@@ -213,8 +213,38 @@ def checar_arquitetura(raiz):
         return False, ("o arquitetura.html está DESATUALIZADO: o bloco "
                        "`const ARCH` embutido nele não é igual ao "
                        "arquitetura.json (a página não vai mostrar a mudança). "
-                       "Replique a mesma alteração nos dois arquivos.")
+                       "Conserte com: python _scripts/nota_historico.py "
+                       "--sincronizar-arquitetura")
     return True, "arquitetura.json e o bloco ARCH do .html estão iguais"
+
+
+def sincronizar_arquitetura(raiz):
+    """Reescreve o bloco `const ARCH = {...}` do .html com o texto do .json.
+
+    O .html precisa da copia embutida porque a pagina abre como arquivo local
+    (file://) e o navegador proibe buscar o .json ao lado. Entao a fonte de
+    verdade e o .json, e o .html e derivado: edite so o .json e rode isto.
+    """
+    caminho_json = raiz / "arquitetura" / "arquitetura.json"
+    caminho_html = raiz / "arquitetura" / "arquitetura.html"
+    try:
+        texto_json = caminho_json.read_text(encoding="utf-8")
+        json.loads(texto_json)  # nunca gravar JSON quebrado dentro do .html
+    except (OSError, ValueError) as e:
+        return {"ok": False, "erro": f"arquitetura.json ilegível: {e}"}
+    try:
+        html = caminho_html.read_text(encoding="utf-8")
+    except OSError as e:
+        return {"ok": False, "erro": f"arquitetura.html ilegível: {e}"}
+    m = re.search(r"^const ARCH = (\{.*?^\});", html, re.S | re.M)
+    if not m:
+        return {"ok": False, "erro": "não achei o bloco `const ARCH = {...}` "
+                                     "no arquitetura.html"}
+    if m.group(1).strip() == texto_json.strip():
+        return {"ok": True, "mudou": False}
+    novo = html[:m.start(1)] + texto_json.strip() + html[m.end(1):]
+    caminho_html.write_text(novo, encoding="utf-8")
+    return {"ok": True, "mudou": True}
 
 
 def skills_na_arquitetura(raiz):
@@ -383,6 +413,8 @@ def main():
                     help="qual nota do cofre cobre esta skill")
     ap.add_argument("--checar-arquitetura", action="store_true",
                     help="compara o arquitetura.json com o bloco ARCH do .html")
+    ap.add_argument("--sincronizar-arquitetura", action="store_true",
+                    help="regera o bloco ARCH do .html a partir do .json")
     ap.add_argument("--repo", help="raiz do repositorio (padrao: a partir do cwd)")
     args = ap.parse_args()
 
@@ -396,6 +428,15 @@ def main():
         print("ERRO: não encontrei a raiz do AFT Toolkit (AGENTS.md + "
               "arquitetura/arquitetura.json) a partir daqui.")
         sys.exit(1)
+
+    if args.sincronizar_arquitetura:
+        r = sincronizar_arquitetura(raiz)
+        if not r["ok"]:
+            print("ERRO: " + r["erro"])
+            sys.exit(1)
+        print("arquitetura.html " + ("atualizado a partir do .json"
+                                     if r["mudou"] else "já estava em dia"))
+        sys.exit(0)
 
     if args.checar_arquitetura:
         ok, msg = checar_arquitetura(raiz)
