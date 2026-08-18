@@ -45,6 +45,7 @@ except Exception:
     pass
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -121,7 +122,17 @@ def rodar_script(raiz, nome, args, conferir):
                        capture_output=True, text=True, encoding="utf-8",
                        errors="replace")
     saida = (r.stdout or r.stderr).strip().splitlines()
-    return f"{nome}: " + (saida[-1] if saida else f"terminou ({r.returncode})")
+    ultima = saida[-1] if saida else f"terminou ({r.returncode})"
+    if ultima.startswith("{"):  # scripts que respondem em JSON (instalar_agentes)
+        try:
+            d = json.loads(ultima)
+            partes = [f"{len(d[k])} {k}" for k in
+                      ("instalados", "atualizados", "em_dia", "erros")
+                      if isinstance(d.get(k), list) and d[k]]
+            ultima = ", ".join(partes) or "nada a fazer"
+        except ValueError:
+            pass
+    return f"{nome}: {ultima}"
 
 
 def main():
@@ -209,16 +220,17 @@ def main():
                        errors="replace")
     if r.returncode != 0:
         raise SystemExit(f"ERRO ao copiar para {destino}:\n{r.stderr.strip()}")
-    # O rsync marca em cada linha o que mudou: 'c'/'s' = conteudo ou tamanho
-    # diferentes; so 't' = mesmo arquivo, outra data. Misturar os dois faria o
-    # relatorio dizer "148 atualizados" quando nada de fato mudou.
+    # O rsync marca em cada linha o que mudou: '+' = arquivo novo, 'c'/'s' =
+    # conteudo ou tamanho diferentes, so 't' = mesmo arquivo com outra data.
+    # Misturar os dois faria o relatorio dizer "148 atualizados" quando nada de
+    # fato mudou - e, pior, esconderia os arquivos novos entre os inalterados.
     conteudo, so_data = [], []
     for linha in r.stdout.splitlines():
         if not linha or linha.startswith(".d") or linha.endswith("/"):
             continue
         marca, _, nome = linha.partition(" ")
-        (conteudo if ("c" in marca[2:] or "s" in marca[2:]) else so_data
-         ).append(nome.strip())
+        mudou = any(c in marca[2:] for c in ("+", "c", "s"))
+        (conteudo if mudou else so_data).append(nome.strip())
     verbo = "seriam atualizados" if conferir else "atualizados"
     print(f"  {destino}: {len(conteudo)} arquivo(s) {verbo}"
           + (f" (+{len(so_data)} só com data/hora diferente)" if so_data else ""))
