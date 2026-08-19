@@ -103,6 +103,14 @@ RE_DET_ULTIMA = re.compile(r"[uú]ltima\s+entrega\s+(\d{2}/\d{2}/\d{4})", re.IGN
 # Flag do triângulo amarelo do DET ("Existe atualização pendente"): o item mais
 # acionável da sub-linha — pedido de prazo, dispensa, item não aberto.
 RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
+# Envelope laranja do DET: mensagem do empregador no canal de comunicação
+# esperando resposta do AFT (isPendenciaComunicacaoAuditor na API).
+RE_DET_MENSAGEM = re.compile(r"mensagem\s+no\s+canal", re.IGNORECASE)
+# Notificação cancelada pelo auditor no DET (status 2): sem efeito legal.
+# Aceita também o `status 2` cru — é como as sincronizações antigas gravaram a
+# sub-linha, antes de o sync conhecer o nome do status. Só casa dentro da
+# sub-linha de detalhes (escrita pela máquina), nunca no texto do AFT.
+RE_DET_CANCELADA = re.compile(r"CANCELADA\s+no\s+DET|status\s+2\b", re.IGNORECASE)
 # Notificação lavrada mas ainda sem ciência do empregador (ciência tácita em
 # até 15 dias) — o det_sync escreve "aguardando ciência" na sub-linha.
 RE_DET_AGUARDA = re.compile(r"aguardando\s+ci[eê]ncia", re.IGNORECASE)
@@ -296,7 +304,7 @@ def parse_memory(path: Path) -> dict:
         # Sub-linha de detalhes do det_sync, se presente logo abaixo do checkbox:
         # lavratura, ciência e última entrega vêm do próprio DET.
         lavrada = ciencia = ultima = None
-        pendente = aguarda = False
+        pendente = aguarda = mensagem = cancelada = False
         if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
             det = linhas_sec[idx + 1]
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
@@ -306,12 +314,15 @@ def parse_memory(path: Path) -> dict:
             ultima = parse_data(mu.group(1)) if mu else None
             pendente = bool(RE_DET_PENDENTE.search(det))
             aguarda = bool(RE_DET_AGUARDA.search(det))
+            mensagem = bool(RE_DET_MENSAGEM.search(det))
+            cancelada = bool(RE_DET_CANCELADA.search(det))
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
                      "linha": resto, "rotulo": rotulo, "notas": notas,
                      "lavrada": lavrada, "ciencia": ciencia,
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente,
-                     "aguardando_ciencia": aguarda})
+                     "aguardando_ciencia": aguarda, "mensagem_canal": mensagem,
+                     "cancelada": cancelada})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -735,6 +746,9 @@ border-radius:6px;padding:1px 7px;margin:0 4px 4px 0}
 font-size:12px;color:var(--t3)}
 .pend-card{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
 color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px}
+/* Mensagem do empregador no canal de comunicacao do DET, no mesmo molde */
+.msg-card{display:inline-block;font:700 11px var(--sans);background:#FCEBD8;
+color:#9A5B12;border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
 .aviso-vazio{background:var(--paper);border:1px dashed var(--bd);border-radius:10px;
 padding:26px;text-align:center;color:var(--t3)}
 /* Detalhe — modal central amplo */
@@ -829,6 +843,7 @@ font-size:13px;z-index:20;display:none}
 .badge{background:#233530}.chip{background:#3A2C22}
 .badge.vencido,.badge.urgente{background:#3D2521}
 .det-item .cod .pend,.pend-card{background:#3D2521;color:#E9A891}
+.det-item .cod .msg,.msg-card{background:#3B2E1B;color:#E8BE85}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
 }
 /* ---- Dossiê da OS (tela de detalhe) ---- */
@@ -896,6 +911,18 @@ font-size:13px;z-index:20;display:none}
 .det-item .campos .sep{color:var(--t3);opacity:.55}
 .det-item .notas{color:var(--t2);margin-top:2px}
 .det-item .selo{margin:3px 0 0}
+/* Envelope laranja do DET: mensagem do empregador aguardando resposta do AFT */
+.det-item .cod .msg{font:700 11px var(--sans);background:#FCEBD8;color:#9A5B12;
+  border-radius:20px;padding:2px 9px;margin-right:7px;vertical-align:1px;white-space:nowrap}
+/* Cancelada no DET: visível, mas apagada — não cobra nada do AFT */
+.det-item.cancelada{cursor:default;opacity:.6;background:repeating-linear-gradient(
+  135deg,transparent,transparent 7px,rgba(143,139,125,.06) 7px,rgba(143,139,125,.06) 14px)}
+.det-item.cancelada:hover{border-color:var(--bds);background:none}
+.det-item.cancelada .cod{text-decoration:line-through;color:var(--t3)}
+/* neutraliza o verde herdado do [x]: cancelada não é "checada pelo AFT" */
+.det-item.cancelada .cx{background:none;border:2px solid var(--bd);color:var(--t3);
+  font:700 11px/14px var(--sans);text-align:center}
+.selo.cancelada{background:var(--bds);color:var(--t3)}
 /* timeline */
 .tl{display:flex;gap:14px}
 .tl .eixo{display:flex;flex-direction:column;align-items:center;width:10px;flex:none}
@@ -1168,10 +1195,11 @@ function copiaPasso(i,k){const pp=proximoPasso(DATA.os[i]);
 const FASES=[['Campo',[0]],['Autuação',[1,2,3]],['DET / documentos',[4,5]],['Encerramento',[6,7]]];
 function stepperHTML(o,st){
  const venc=(o.dets||[]).filter(d=>!d.feito&&d.urg==='vencido').length;
+ const nDets=(o.dets||[]).filter(d=>!d.cancelada).length;
  const autos=o.autos||[],datas=autos.map(a=>a.data).filter(Boolean);
  const subs=[o.inicio||'—',
   (o.inspecao&&o.inspecao.data)||((o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)?'relato registrado':'sem relato de campo'),
-  (o.dets||[]).length?(o.dets.length+' DET'+(venc?' · '+venc+' vencido(s)':'')):'sem DET',
+  nDets?(nDets+' DET'+(venc?' · '+venc+' vencido(s)':'')):'sem DET',
   autos.length?(autos.length+' auto(s)'+(datas.length?' · '+datas[0]+(datas.length>1?'–'+datas[datas.length-1]:''):'')):'—',
   o.status==='encerrada'?'concluída':'—'];
  let h='<div class="stepper-os">';
@@ -1181,7 +1209,9 @@ function stepperHTML(o,st){
    '<span class="rot">'+esc(r)+'</span><span class="sub">'+esc(subs[k])+'</span></div>'});
  return h+'</div>'}
 function cartaoDets(o,i){
- let h='<div class="cartao"><h3>Notificações DET <span class="cont">'+(o.dets||[]).length+'</span></h3>';
+ // Contador só do que vale: cancelada no DET não é notificação viva.
+ const vivas=(o.dets||[]).filter(d=>!d.cancelada).length;
+ let h='<div class="cartao"><h3>Notificações DET <span class="cont">'+vivas+'</span></h3>';
  if(!(o.dets||[]).length)return h+'<p class="vazio">nenhuma registrada</p></div>';
  h+=o.dets.map((d,k)=>{
   // Datas em linha única (Lavratura · Ciência · entregas) — o texto do AFT
@@ -1190,15 +1220,18 @@ function cartaoDets(o,i){
     ['Próxima entrega',d.prox_entrega],['Última entrega',d.ultima_entrega]]
    .filter(c=>c[1]).map(c=>'<span class="det-campo"><span class="rot">'+c[0]+
     '</span> <span class="val">'+esc(c[1])+'</span></span>').join('<span class="sep">·</span>');
-  return '<div class="det-item'+(d.feito?' feito':'')+'"'+
-   (ATIVO&&o.pasta&&d.codigo?' onclick="agDet('+i+','+k+')" title="clique para '+
+  // Cancelada no DET: fica visível (o AFT precisa saber que foi cancelada),
+  // mas apagada e sem clique — não há o que marcar numa notificação sem efeito.
+  return '<div class="det-item'+(d.feito?' feito':'')+(d.cancelada?' cancelada':'')+'"'+
+   (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?' onclick="agDet('+i+','+k+')" title="clique para '+
     (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
-   '<span class="cx">'+(d.feito?'✓':'')+'</span><div><div class="cod">'+
-   (d.pendente?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
+   '<span class="cx">'+(d.cancelada?'✕':d.feito?'✓':'')+'</span><div><div class="cod">'+
+   (d.mensagem?'<span class="msg" title="o empregador mandou mensagem no canal de comunicação desta notificação e ela aguarda resposta sua — responda no DET">✉️ mensagem no DET</span> ':'')+
+   (d.pendente&&!d.cancelada?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
     ' style="cursor:pointer" title="clique se já viu esta atualização no DET — o alerta some e só volta se houver entrega nova"'+
     ' onclick="event.stopPropagation();agDetVisto('+i+','+k+')"':'')+
     '>⚠️ atualização pendente</span> ':'')+
-   (d.aguarda?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
+   (d.aguarda&&!d.cancelada?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
@@ -1522,6 +1555,13 @@ def dias_humano(d: datetime.date | None, hoje: datetime.date) -> str:
     return f"há {n} dias"
 
 
+def det_cobra_acao(d: dict) -> bool:
+    """Notificação que ainda pesa sobre o AFT: não checada e não cancelada.
+    Cancelada pelo auditor no DET (status 2) não tem efeito legal nenhum — não
+    conta prazo, não colore card, não vai para a agenda do Google Calendar."""
+    return not d["feito"] and not d.get("cancelada")
+
+
 def badge_os(os_: dict, hoje: datetime.date) -> tuple[str, str]:
     """(classe css, rótulo) do card: urgência do DET aberto + vencimento da OS."""
     if os_["data_vencimento"]:
@@ -1545,6 +1585,8 @@ def badge_os(os_: dict, hoje: datetime.date) -> tuple[str, str]:
 def selo_det(d: dict, hoje: datetime.date) -> tuple[str, str]:
     """(classe, rótulo) da urgência de UMA notificação DET, para o detalhe.
     A grade já mostra a urgência da OS; aqui o AFT vê de qual DET ela vem."""
+    if d.get("cancelada"):
+        return "cancelada", "cancelada no DET"
     if d["feito"]:
         return "ok", ""
     if not d["prazo"]:
@@ -1570,7 +1612,8 @@ def coletar_vencimentos(oss: list[dict], hoje: datetime.date) -> list[dict]:
     for o in oss:
         emp12 = o["empregador"][:12].strip()
         for d in o["dets"]:
-            if not d["prazo"]:
+            # Cancelada no DET não vira compromisso nem evento de calendário.
+            if not d["prazo"] or d.get("cancelada"):
                 continue
             itens.append({
                 "tipo": "det",
@@ -1704,6 +1747,8 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "prox_entrega": d["prazo"].strftime("%d/%m/%Y") if d["prazo"] else "",
                       "ultima_entrega": d["ultima_entrega"].strftime("%d/%m/%Y") if d.get("ultima_entrega") else "",
                       "pendente": bool(d.get("atualizacao_pendente")),
+                      "mensagem": bool(d.get("mensagem_canal")),
+                      "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
@@ -1787,8 +1832,18 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         chips = "".join(f'<span class="chip">{html.escape(nr)}</span>' for nr in o["nrs"])
         if o["embargo"]:
             chips += f'<span class="chip emb">⛔ {html.escape(o["embargo"][:42])}</span>'
-        dets_abertos = sum(1 for d in o["dets"] if not d["feito"])
-        pend = any(d.get("atualizacao_pendente") for d in o["dets"])
+        # Cancelada no DET nao conta como aberta nem carrega alerta: ela nao
+        # cobra nada do AFT (mesma regra do detalhe, ver det_cobra_acao).
+        dets_abertos = sum(1 for d in o["dets"] if det_cobra_acao(d))
+        vivas = [d for d in o["dets"] if not d.get("cancelada")]
+        # Mensagem do empregador no canal de comunicacao (envelope laranja do
+        # DET): aviso de primeira linha, tao acionavel quanto o triangulo, e
+        # antes so aparecia ao abrir a OS. Vem primeiro por exigir resposta.
+        n_msg = sum(1 for d in vivas if d.get("mensagem_canal"))
+        msg_selo = ('\n  <div class="msg-card" title="mensagem do empregador no canal '
+                    'de comunicacao do DET, aguardando resposta sua">✉️ mensagem no DET'
+                    + (f' · {n_msg}' if n_msg > 1 else '') + '</div>') if n_msg else ""
+        pend = any(d.get("atualizacao_pendente") for d in vivas)
         pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
                      if pend else "")
         cards.append(f"""
@@ -1800,7 +1855,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
   <div class="rodape-card">
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
-  </div>{pend_selo}
+  </div>{msg_selo}{pend_selo}
 </div>""")
 
     grade = ("".join(cards) if cards else
@@ -1940,12 +1995,12 @@ def main() -> int:
     # Prazo mais urgente por OS — só DETs em aberto ([ ]) contam para urgência.
     n_vencidos = n_urgentes = 0
     for os_ in oss:
-        prazos = [d["prazo"] for d in os_["dets"] if d["prazo"] and not d["feito"]]
+        prazos = [d["prazo"] for d in os_["dets"] if d["prazo"] and det_cobra_acao(d)]
         os_["prazo_top"] = min(prazos) if prazos else None
         os_["dias_top"] = (os_["prazo_top"] - hoje).days if prazos else None
         os_["classe"] = classifica(os_["dias_top"])
         for d in os_["dets"]:
-            if d["prazo"] and not d["feito"]:
+            if d["prazo"] and det_cobra_acao(d):
                 dd = (d["prazo"] - hoje).days
                 if dd < 0:
                     n_vencidos += 1

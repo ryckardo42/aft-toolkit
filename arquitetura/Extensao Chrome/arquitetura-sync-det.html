@@ -369,7 +369,7 @@ Content-Type: application/json</code></pre>
   <table>
     <tr><th>Campo</th><th>O que é</th><th>Uso</th></tr>
     <tr><td><code>codigo</code></td><td>código da notificação (ex.: S8MHKG82QO1T9I)</td><td>identidade da linha no memory.md</td></tr>
-    <tr><td><code>status</code></td><td>situação (1 = Confirmada)</td><td>filtro de elegibilidade</td></tr>
+    <tr><td><code>status</code></td><td>0 Em Elaboração · 1 Confirmada · 2 Cancelada</td><td>a cancelada nunca entra na ficha</td></tr>
     <tr><td><code>dataEnvio</code></td><td>data da lavratura</td><td>filtro + desempate de RI</td></tr>
     <tr><td><code>itemDataProximaEntrega</code></td><td>próximo prazo de entrega</td><td>o "— prazo dd/mm/aaaa" da linha</td></tr>
     <tr><td><code>ri</code></td><td>nº do Relatório de Inspeção</td><td>vínculo notificação × fiscalização</td></tr>
@@ -377,6 +377,7 @@ Content-Type: application/json</code></pre>
     <tr><td><code>dataCiencia</code></td><td>data da ciência do empregador</td><td>sub-linha de detalhes</td></tr>
     <tr><td><code>itemDataUltimaEntrega</code></td><td>última entrega do empregador</td><td>sub-linha + fingerprint do alerta dispensável</td></tr>
     <tr><td><code>itemAtualizado</code></td><td>triângulo "Existe atualização pendente"</td><td>alerta "⚠️" da sub-linha (dispensável)</td></tr>
+    <tr><td><code>isPendenciaComunicacaoAuditor</code></td><td>envelope laranja: mensagem do empregador no canal de comunicação, aguardando você</td><td>chip "✉️ mensagem no DET" no cartão</td></tr>
   </table>
   <p class="sub" style="margin:0"><strong>Constatado em produção (19–22/07/2026):</strong> a API
   pode continuar devolvendo <code>itemAtualizado=true</code> mesmo depois de o triângulo sumir da
@@ -384,6 +385,40 @@ Content-Type: application/json</code></pre>
   isso o alerta local é <em>dispensável</em>: um clique no painel grava
   <code>&lt;!-- visto: última entrega --&gt;</code> na sub-linha, e o alerta só reaparece se
   <code>itemDataUltimaEntrega</code> mudar (entrega nova = novidade real).</p>
+  <p class="sub" style="margin:10px 0 0"><strong>O envelope é diferente do triângulo:</strong> ele
+  some sozinho quando o AFT responde no DET, então não precisa (nem tem) dispensa por clique —
+  se ainda aparece, ainda há mensagem esperando.</p>
+  <p class="sub" style="margin:10px 0 0"><strong>Onde o aviso aparece:</strong> no cartão da
+  auditoria, no quadro inicial (ao lado do "⚠️ atualização pendente", com a contagem quando há
+  mais de uma), e no detalhe da OS, na notificação exata que tem a mensagem.</p>
+  <div class="note ok"><strong>Como conferir o significado de um campo, sem adivinhar.</strong>
+  O front do DET é um Angular SPA e os arquivos <code>.js</code> são públicos, sem login: baixe o
+  <code>index.html</code>, pegue o mapa de pedaços no <code>runtime.&lt;hash&gt;.js</code> e
+  procure o campo neles. Foi assim que se apurou, em 19/08/2026, tanto a tabela de status
+  (0/1/2) quanto o envelope — o componente <code>app-pendencia-comunicacao</code> só aparece
+  quando <code>isPendenciaComunicacaoAuditor</code> é verdadeiro, e é a coluna logo depois do
+  triângulo amarelo. Atenção: a tela de notificações fica num pedaço carregado sob demanda
+  (o nº 251 naquela data), <strong>não</strong> no <code>main.js</code> — procurar só no main dá
+  zero resultados e leva à conclusão errada de que a informação não existe. Os hashes mudam a
+  cada atualização do DET.</div>
+</div>
+
+<h2 id="canceladas">5b. Notificação cancelada pelo auditor</h2>
+<div class="card">
+  <p>Cancelar uma notificação é ato do próprio auditor, e a notificação cancelada
+  <strong>não tem efeito legal nenhum</strong>: não corre prazo, não cabe auto por omissão, não
+  é compromisso. Antes ela entrava na ficha como qualquer outra. Desde 19/08/2026:</p>
+  <ul>
+    <li><strong>Nunca é inserida</strong> no <code>memory.md</code>.</li>
+    <li><strong>Se já estava lá</strong> — porque foi cancelada depois de importada — não é
+        apagada em silêncio: a sub-linha passa a dizer <code>CANCELADA no DET</code> e o prazo
+        dela deixa de ser perseguido. Apagar linha de ficha automaticamente é precedente que o
+        toolkit não abre: o AFT pode ter escrito anotação nela. Quem apaga é ele.</li>
+    <li><strong>Volta no relatório</strong> da sincronização — um cancelamento inesperado é, em
+        si, informação.</li>
+    <li><strong>No painel</strong> ela aparece riscada e apagada, com o selo "cancelada no DET",
+        fora do contador, de todo cálculo de prazo e da agenda de vencimentos.</li>
+  </ul>
 </div>
 
 <h2>6. O filtro de RI — por que existe e como funciona</h2>
@@ -485,7 +520,8 @@ Content-Type: application/json</code></pre>
 <footer>
   Gerado em 19/07/2026 · atualizado em 22/07/2026 (RI estrito por front-matter · alerta
   dispensável · arquitetura do painel ativo · indicador do popup e RI do destino nuvem
-  corrigidos) · Sync DET v2.0.0 · acompanha
+  corrigidos) · atualizado em 19/08/2026 (notificação cancelada fora da ficha · envelope do
+  canal de comunicação no painel) · Sync DET v2.0.0 · acompanha
   <code>arquitetura-sync-det.json</code>
   (a mesma arquitetura em formato estruturado, para consumo por máquina).
 </footer>

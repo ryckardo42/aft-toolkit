@@ -130,6 +130,24 @@ def consultar_det(token: str, cnpj: str, ri: str) -> list[dict]:
     return dados.get("notificacoes") or []
 
 
+# Status da notificação no DET. Os três valores são os do enum do próprio
+# DET, lidos do código do site em 19/08/2026 (chunk 251 do front Angular):
+#   0 EM_ELABORACAO ("ainda em elaboração")
+#   1 CONFIRMADA    ("enviada para o empregador")
+#   2 CANCELADA     ("cancelada pelo auditor")
+# Confere com o caso MENINA TEIMOSA: a notificação que a tela do DET mostra
+# como "Cancelada" era a que a ficha registrava como `status 2`.
+STATUS_CONFIRMADA = 1
+STATUS_CANCELADA = 2
+
+
+def _flag(valor) -> bool:
+    """Booleano da API, tolerante a string ('false'/'N' são falsos)."""
+    if isinstance(valor, str):
+        return valor.strip().lower() in ("true", "s", "sim", "1")
+    return bool(valor)
+
+
 def elegiveis(notificacoes: list[dict]) -> list[dict]:
     """Toda notificação LAVRADA (com dataEnvio) entra — inclusive as que ainda
     aguardam ciência do empregador (que pode demorar até 15 dias, com ciência
@@ -244,27 +262,41 @@ def _linha_detalhe(n: dict, visto: str = "") -> str:
         partes.append(f"ciência {_data_br(n['dataCiencia'])}")
     if n.get("itemDataUltimaEntrega"):
         partes.append(f"última entrega {_data_br(n['itemDataUltimaEntrega'])}")
-    if n.get("status") == 1:
+    if n.get("status") == STATUS_CANCELADA:
+        partes.append("CANCELADA no DET")
+    elif n.get("status") == STATUS_CONFIRMADA:
         partes.append("Confirmada")
     elif not n.get("dataCiencia"):
         partes.append(f"aguardando ciência (status {n.get('status')})")
     else:
         partes.append(f"status {n.get('status')}")
-    atualizado = n.get("itemAtualizado")
-    if isinstance(atualizado, str):  # blindagem: "false"/"N" são falsos
-        atualizado = atualizado.strip().lower() in ("true", "s", "sim", "1")
-    if atualizado and _fingerprint(n) != visto:
+    if _flag(n.get("itemAtualizado")) and _fingerprint(n) != visto:
         partes.append("⚠️ atualização pendente")
+    # Envelope laranja da tela do DET: o componente app-pendencia-comunicacao
+    # do site só aparece quando `isPendenciaComunicacaoAuditor` é verdadeiro
+    # (lido do código do front em 19/08/2026) — é a coluna ao lado do triângulo
+    # amarelo. Significa mensagem no canal de comunicação da notificação
+    # esperando resposta do AFT. Diferente do triângulo, some sozinho quando o
+    # AFT responde no DET: por isso não é dispensável por clique.
+    if _flag(n.get("isPendenciaComunicacaoAuditor")):
+        partes.append("✉️ mensagem no canal de comunicação")
     linha = "  - " + " · ".join(partes)
     if visto:
         linha += f" <!-- visto: {visto} -->"
     return linha + "\n"
 
 
-def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int, int]:
+def aplicar_notificacoes(texto: str, notifs: list[dict]
+                         ) -> tuple[str, int, int, int, list[str]]:
     """Aplica as notificações elegíveis na seção ## Notificações DET.
-    Devolve (novo_texto, inseridas, prazos_atualizados, detalhes_atualizados).
-    Função pura."""
+    Devolve (novo_texto, inseridas, prazos_atualizados, detalhes_atualizados,
+    canceladas). Função pura.
+
+    Notificação CANCELADA pelo auditor no DET não tem efeito legal: nunca é
+    inserida na ficha (regra pedida em 19/08/2026, caso MENINA TEIMOSA). A que
+    já estava registrada — porque foi cancelada DEPOIS de importada — não é
+    apagada em silêncio: a sub-linha passa a dizer "CANCELADA no DET", o painel
+    a mostra riscada e ela deixa de contar prazo. Quem apaga a linha é o AFT."""
     linhas = texto.splitlines(keepends=True)
 
     ini = fim = -1
@@ -293,15 +325,21 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int,
             por_codigo[cod.group(1)] = i
 
     inseridas = atualizadas = detalhes = 0
+    canceladas: list[str] = []
     novas: list[str] = []
     inserir_detalhe: list[tuple[int, str]] = []  # (posição, linha) — aplicados no fim
     for n in notifs:
         codigo = (n.get("codigo") or "").strip()
         if not codigo:
             continue
+        cancelada = n.get("status") == STATUS_CANCELADA
+        if cancelada:
+            canceladas.append(codigo)
         prazo_iso = n.get("itemDataProximaEntrega")
         i = por_codigo.get(codigo)
         if i is None:
+            if cancelada:
+                continue  # nunca entra na ficha; volta no relatório
             prazo = _data_br(prazo_iso)
             novas.append(f"- [ ] {codigo}" + (f" — prazo {prazo}\n" if prazo else "\n"))
             novas.append(_linha_detalhe(n))
@@ -321,8 +359,9 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int,
         else:
             inserir_detalhe.append((i + 1, det))
             detalhes += 1
-        # Atualiza o prazo se mudou (preserva o formato da linha).
-        if not prazo_iso:
+        # Atualiza o prazo se mudou (preserva o formato da linha). Cancelada
+        # não tem prazo a perseguir: a sub-linha já a marcou, o resto fica.
+        if cancelada or not prazo_iso:
             continue
         ms = list(RE_PRAZO_LINHA.finditer(linhas[i]))
         if len(ms) == 1:
@@ -370,7 +409,7 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]) -> tuple[str, int, int,
                 pos += 1
             linhas[pos:pos] = novas
 
-    return "".join(linhas), inseridas, atualizadas, detalhes
+    return "".join(linhas), inseridas, atualizadas, detalhes, canceladas
 
 
 def preencher_ri(texto: str, ri: str) -> tuple[str, bool]:
@@ -442,7 +481,8 @@ def sincronizar_os(pasta_os: Path, token: str,
     """Sincroniza uma OS. `consultar` é injetável para testes."""
     r = {"os": pasta_os.name, "recebidas": 0, "inseridas": 0,
          "prazos_atualizados": 0, "detalhes_atualizados": 0,
-         "ri_preenchido": False, "ignoradas": [], "erro": None}
+         "ri_preenchido": False, "ignoradas": [], "canceladas": [],
+         "erro": None}
     mem = pasta_os / "memory.md"
     try:
         texto = mem.read_text(encoding="utf-8")
@@ -491,7 +531,7 @@ def sincronizar_os(pasta_os: Path, token: str,
         return r
 
     (novo, r["inseridas"], r["prazos_atualizados"],
-     r["detalhes_atualizados"]) = aplicar_notificacoes(texto, minhas)
+     r["detalhes_atualizados"], r["canceladas"]) = aplicar_notificacoes(texto, minhas)
     novo, r["ri_preenchido"] = preencher_ri(novo, ri_novo)
     if novo == texto:
         return r
@@ -505,6 +545,8 @@ def sincronizar_os(pasta_os: Path, token: str,
         partes.append(f"{r['detalhes_atualizados']} detalhe(s) atualizado(s)")
     if r["ri_preenchido"]:
         partes.append(f"RI {ri_novo} preenchido (notificação mais recente)")
+    if r["canceladas"]:
+        partes.append(f"{len(r['canceladas'])} cancelada(s) no DET")
     novo = registrar_atividade(novo, " · ".join(partes) or "sem mudanças")
 
     import os
@@ -526,6 +568,8 @@ def sincronizar_todas(base: Path, token: str, consultar=consultar_det) -> dict:
                   for mem in sorted(base.glob("*/memory.md"))]
     erros = [{"os": r["os"], "erro": r["erro"]} for r in resultados if r["erro"]]
     ignoradas = [{"os": r["os"], **ig} for r in resultados for ig in r["ignoradas"]]
+    canceladas = [{"os": r["os"], "codigo": c}
+                  for r in resultados for c in r["canceladas"]]
     return {
         "ok": True,
         "os_verificadas": len(resultados),
@@ -537,6 +581,10 @@ def sincronizar_todas(base: Path, token: str, consultar=consultar_det) -> dict:
         # De outra fiscalização do mesmo empregador — não importadas, relatadas.
         "ignoradas": len(ignoradas),
         "ignoradas_detalhe": ignoradas or None,
+        # Canceladas pelo auditor no DET: não entram na ficha, mas o AFT fica
+        # sabendo que existem (pode ser um cancelamento que ele não esperava).
+        "canceladas": len(canceladas),
+        "canceladas_detalhe": canceladas or None,
         "erros": erros or None,
     }
 

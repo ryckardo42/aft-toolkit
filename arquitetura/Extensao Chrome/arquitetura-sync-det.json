@@ -84,8 +84,8 @@
   "4. content.js → background.js → POST http://127.0.0.1:8347/api/det-sync com corpo {\"det_access_token\": \"...\"} — tudo dentro da máquina.",
   "5. servir_painel.py recebe e chama det_sync.py, que percorre cada OS de OS ATIVAS/ com memory.md.",
   "6. Para cada OS, det_sync.py consulta a API oficial do DET (por CNPJ/CPF; RI como fallback) com o token emprestado.",
-  "7. Filtros: só Confirmadas (status=1) com data de lavratura, e só do(s) RI(s) declarado(s) no campo `ri:` do front-matter — o identificador canônico da auditoria (aceita mais de um, separados por vírgula; endurecido em 22/07/2026, caso CONSORCIO SQ). RI alheio volta como 'ignorada', nunca em silêncio.",
-  "8. Escrita no memory.md (backup antes): nova → '- [ ] CÓDIGO — prazo dd/mm/aaaa' + sub-linha de detalhes (lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente]); prazo mudou → atualiza a linha; checkbox [ ]/[x] nunca é alterado. O alerta 'atualização pendente' é dispensável no painel (marcador <!-- visto: --> na sub-linha) e só volta se houver entrega nova.",
+  "7. Filtros: toda notificação com data de lavratura (inclusive a que ainda aguarda ciência — o SisOS é que exige status=1), EXCETO a cancelada (status=2), que nunca entra na ficha; e só do(s) RI(s) declarado(s) no campo `ri:` do front-matter — o identificador canônico da auditoria (aceita mais de um, separados por vírgula; endurecido em 22/07/2026, caso CONSORCIO SQ). RI alheio volta como 'ignorada', nunca em silêncio.",
+  "8. Escrita no memory.md (backup antes): nova → '- [ ] CÓDIGO — prazo dd/mm/aaaa' + sub-linha de detalhes (lavrada · ciência · última entrega · Confirmada|CANCELADA no DET [· ⚠️ atualização pendente] [· ✉️ mensagem no canal de comunicação]); prazo mudou → atualiza a linha; checkbox [ ]/[x] nunca é alterado. O alerta 'atualização pendente' é dispensável no painel (marcador <!-- visto: --> na sub-linha) e só volta se houver entrega nova.",
   "9. O resultado volta pelo mesmo caminho e vira toast na página do DET; o painel.html mostra os novos vencimentos."
  ],
  "api_det": {
@@ -108,15 +108,17 @@
   },
   "campos_usados_da_resposta": {
    "codigo": "código da notificação — identidade da linha no memory.md",
-   "status": "1 = Confirmada — filtro de elegibilidade",
+   "status": "enum do próprio DET (lido do bundle do front em 19/08/2026): 0 EM_ELABORACAO 'ainda em elaboração' · 1 CONFIRMADA 'enviada para o empregador' · 2 CANCELADA 'cancelada pelo auditor'. O painel local aceita toda notificação lavrada (não filtra por status=1, ao contrário do SisOS); a CANCELADA nunca é inserida na ficha e, se já estava lá, tem a sub-linha marcada 'CANCELADA no DET' e deixa de contar prazo",
    "dataEnvio": "data da lavratura — filtro + desempate de RI",
    "itemDataProximaEntrega": "próximo prazo — o '— prazo dd/mm/aaaa' da linha",
    "ri": "nº do Relatório de Inspeção — vínculo notificação × fiscalização",
    "situacaoRi": "situação da fiscalização — informativo no relatório de ignoradas",
    "dataCiencia": "data da ciência do empregador — sub-linha de detalhes",
    "itemDataUltimaEntrega": "última entrega do empregador — sub-linha + fingerprint do alerta dispensável",
-   "itemAtualizado": "triângulo amarelo 'Existe atualização pendente'. ATENÇÃO (constatado 19-22/07/2026): a API pode continuar devolvendo true depois de o triângulo sumir na tela; por isso o alerta local é dispensável (visto:) e só reaparece se itemDataUltimaEntrega mudar"
-  }
+   "itemAtualizado": "triângulo amarelo 'Existe atualização pendente'. ATENÇÃO (constatado 19-22/07/2026): a API pode continuar devolvendo true depois de o triângulo sumir na tela; por isso o alerta local é dispensável (visto:) e só reaparece se itemDataUltimaEntrega mudar",
+   "isPendenciaComunicacaoAuditor": "envelope laranja da grade do DET — mensagem do empregador no canal de comunicação daquela notificação, aguardando resposta do AFT. Confirmado no bundle do front (19/08/2026): o componente app-pendencia-comunicacao faz visible = notificacao.isPendenciaComunicacaoAuditor, e é a coluna logo depois do triângulo amarelo. Diferente do triângulo, some sozinho quando o AFT responde no DET — por isso NÃO é dispensável por clique"
+  },
+  "onde_conferir_um_campo": "O front do DET é um Angular SPA com os .js públicos (sem login): baixe o index.html, pegue o mapa de chunks no runtime.<hash>.js e procure o campo nos chunks. A tela de notificações fica num chunk preguiçoso (nº 251 em 19/08/2026), NÃO no main.js — procurar só no main dá zero e leva à conclusão errada de que a informação não existe. Os hashes mudam a cada deploy do DET."
  },
  "painel_local": {
   "servidor": {
@@ -133,11 +135,13 @@
   "motor": {
    "arquivo": "det_sync.py",
    "regras": [
-    "Elegível = status 1 (Confirmada) + dataEnvio (lavratura) presente.",
+    "Elegível = dataEnvio (lavratura) presente — filtro relaxado DE PROPÓSITO em relação ao SisOS, que exige status=1: a NAD recém-lavrada, ainda aguardando ciência (até 15 dias, com ciência tácita), já é fato relevante para o painel. O estado real vai na sub-linha e é atualizado a cada sync.",
+    "Cancelada (status 2) NUNCA é inserida na ficha. A que já estava registrada — porque foi cancelada depois de importada — não é apagada em silêncio: a sub-linha passa a dizer 'CANCELADA no DET' e o prazo dela deixa de ser perseguido. Quem apaga a linha é o AFT. Volta no relatório em canceladas_detalhe. (Por isso o bloqueio é na INSERÇÃO e não no elegiveis(): manter a cancelada passando pelo filtro é o que permite marcar a já registrada.)",
     "RIs 'desta OS' = SOMENTE o(s) do campo `ri:` do front-matter — identificador canônico da auditoria; aceita mais de um, separados por vírgula (`ri: \"320038432, 320199999\"`). Nada é inferido de códigos registrados na ficha (regra endurecida em 22/07/2026, caso CONSORCIO SQ, RI alheio 319969819 — a união antiga deixava um RI antigo 'contaminar' a OS).",
     "Sem RI no front-matter: adota o da notificação mais recente (dataEnvio) e preenche ri: — daí em diante vale a regra estrita.",
     "RI alheio: nunca importado, sempre reportado em ignoradas_detalhe.",
-    "Sub-linha de detalhes por notificação: lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente] [<!-- visto: X -->]. O alerta espelha itemAtualizado, mas é dispensável: clique no alerta no painel grava visto:=última entrega e ele só volta se a empresa fizer entrega nova.",
+    "Sub-linha de detalhes por notificação: lavrada · ciência · última entrega · Confirmada|CANCELADA no DET [· ⚠️ atualização pendente] [· ✉️ mensagem no canal de comunicação] [<!-- visto: X -->]. O alerta espelha itemAtualizado, mas é dispensável: clique no alerta no painel grava visto:=última entrega e ele só volta se a empresa fizer entrega nova. O ✉️ espelha isPendenciaComunicacaoAuditor e NÃO é dispensável: some sozinho quando o AFT responde no DET.",
+    "Retrocompatibilidade: os syncs anteriores a 19/08/2026 gravaram '· status 2' cru na sub-linha. O painel reconhece as duas formas ('CANCELADA no DET' e 'status 2'), senão a ficha só se corrigiria no sync seguinte. O regex roda só na sub-linha (escrita pela máquina), nunca no texto do AFT.",
     "Backup do memory.md antes de escrever (backup_arquivo.py → .backups/).",
     "Checkbox [ ]/[x] nunca alterado — 'respondida' é decisão do AFT.",
     "Linha com 2+ prazos escritos: ambígua — fica intocada.",
@@ -171,7 +175,8 @@
   },
   "dados_do_card": [
    "cabeçalho: empregador, CNPJ, município, RI, nº de trabalhadores, CNAE, grau de risco, início/vencimento, embargo",
-   "Notificações DET — código + rótulo (o tipo que o AFT escreveu na linha, ex.: 'NAD jornada/ponto'), datas do sync em linha única (lavratura · ciência · entregas), notas do AFT (observações da linha do memory.md, sem os fragmentos de data já estruturados) e alerta dispensável",
+   "card da grade (tela inicial): selo '✉️ mensagem no DET' (com a contagem quando há mais de uma) ao lado do '⚠️ atualização pendente' — o AFT vê de longe que a empresa aguarda resposta, sem abrir a OS. Notificação cancelada não conta como DET aberto nem carrega alerta",
+   "Notificações DET — código + rótulo (o tipo que o AFT escreveu na linha, ex.: 'NAD jornada/ponto'), datas do sync em linha única (lavratura · ciência · entregas), notas do AFT (observações da linha do memory.md, sem os fragmentos de data já estruturados), alerta dispensável e chip '✉️ mensagem no DET' (canal de comunicação aguardando resposta). Notificação CANCELADA no DET aparece riscada, hachurada e sem clique, com selo 'cancelada no DET': fica visível, mas fora do contador e de todo cálculo de prazo (det_cobra_acao) e fora da agenda de vencimentos",
    "Pendências ([ ] em aberto) · Anotações da auditoria ([ ] em aberto, com adicionar/resolver)",
    "Inspeção física (bullets do inspecao-fisica.md) · Registro de atividades (timeline)",
    "Autos de infração lavrados (autos-lavrados.md, seção do memory.md ou --scan do Sistema Auditor)",
