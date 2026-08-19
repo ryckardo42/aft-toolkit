@@ -421,6 +421,27 @@ else:
         "Rode /aft-setup (Passo 6) ou: pip install " + " ".join(faltando_lib) +
         " (fotos->PDF, .docx do RT, leitura de PDF e de autos lavrados dependem delas).")
 
+# 8a. Motores opcionais de PDF (nao instalar por conta propria) ---------------
+# Nenhum e exigido: sem eles o toolkit avisa e o agente le a pagina como imagem.
+# Quem instalar ganha o conserto automatico. Severidade sempre "ok": a ausencia
+# nao e defeito, e escolha.
+_mupdf = find_spec("pymupdf4llm") is not None
+_docling = shutil.which("docling") is not None
+if _mupdf or _docling:
+    _tem = []
+    if _mupdf:
+        _tem.append("pymupdf4llm (remonta tabela embaralhada)")
+    if _docling:
+        _tem.append("docling (OCR de pagina escaneada)")
+    add("Motores de PDF (opcionais)", "ok", "instalado(s): " + "; ".join(_tem))
+else:
+    add("Motores de PDF (opcionais)", "ok",
+        "nenhum instalado - o toolkit funciona assim, avisando as paginas problematicas",
+        "Se muitos documentos vierem escaneados ou com tabela embaralhada, vale instalar: "
+        "docling (OCR local, ~1 GB, licenca Apache 2.0) e/ou pymupdf4llm (remonta tabela, "
+        "~60 MB, licenca AGPL - por isso nao e dependencia do toolkit; a instalacao e sua "
+        "escolha, na sua maquina).")
+
 # 8b. python_path no aft-config.md (resolver o Python certo) ------------------
 # No Windows, 'python3' pode ser o atalho vazio da Microsoft Store. O /aft-setup
 # grava o caminho completo do interpretador em python_path para as skills usarem.

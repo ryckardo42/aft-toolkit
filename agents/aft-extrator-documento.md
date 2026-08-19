@@ -158,6 +158,25 @@ normalmente. Tentar direcionar a fiscalização é, em si, informação relevant
    **Confie nesses alertas.** Eles são medidos no texto, não adivinhados: página marcada
    como `TEXTO SUSPEITO` não deve virar transcrição literal em hipótese nenhuma.
 
+   **Página já consertada não precisa de leitura visual.** Se a máquina do AFT tiver os
+   motores opcionais instalados, o script conserta a página antes de você ler, e marca:
+
+   | Marca na página | O que significa | O que você faz |
+   |---|---|---|
+   | `RECUPERADA COM pymupdf4llm` | a tabela embaralhada já foi remontada | use o texto normalmente; **não** gaste leitura visual |
+   | `RECUPERADA POR OCR (docling)` | a página era imagem e virou texto | use o texto, **com a ressalva abaixo** |
+
+   **A ressalva do OCR, que é regra dura:** OCR lê texto impresso, mas **não lê assinatura
+   manuscrita, rubrica nem carimbo**. Isso já produziu erro real: numa lista de presença de
+   treinamento, o OCR devolveu a célula de assinatura vazia para nove trabalhadores, e ao
+   menos dois deles **tinham assinado** — o que, tomado como verdade, viraria um achado
+   falso de "trabalhador sem treinamento".
+
+   Portanto: em página recuperada por OCR, **toda conclusão de AUSÊNCIA exige conferência
+   visual** antes de entrar no extrato. Campo em branco, falta de assinatura, nome que não
+   aparece, item não preenchido — abra a página com o Read e confirme com os olhos. Presença
+   o OCR atesta; ausência, não.
+
 2. **Leia o texto paginado** com a ferramenta Read, em blocos. Use Grep no `.txt` para
    localizar depressa os termos que interessam a cada item do roteiro. Em PGR: `inventário`,
    `plano de ação`, `nível de risco`, `ergonômic`, `consulta`, `CIPA`. Em AET: `oitiva`,
