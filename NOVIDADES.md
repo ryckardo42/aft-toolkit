@@ -7,39 +7,6 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 19/08/2026
-<!-- commit: pdf-motores-opcionais -->
-
-**O toolkit agora conserta o PDF ruim, em vez de só avisar.** Até ontem, quando uma página
-vinha escaneada ou com a tabela embaralhada, o assistente avisava e lia aquela página como
-imagem — o caminho mais lento e mais caro. Agora, **se você tiver os programas opcionais
-instalados**, a página é consertada antes da leitura.
-
-São dois, e nenhum é obrigatório. O toolkit continua funcionando exatamente como antes
-para quem não instalar nada:
-
-- **`docling`** faz OCR de página escaneada, na sua máquina, sem mandar nada para fora.
-  Pesa cerca de 1 GB.
-- **`pymupdf4llm`** remonta tabela que sai embaralhada (aquela que vira sopa de letras).
-  Pesa cerca de 60 MB.
-
-O `/aft-doctor` passa a dizer quais você tem. **Não instale por conta própria** — peça ao
-assistente, que ele explica o peso e cuida do resto. Em máquina institucional, com
-antivírus e proxy, um download de 1 GB falha no meio com frequência.
-
-**Um aviso que vale ouro, e que nasceu de um caso real.** OCR lê texto impresso, mas
-**não lê assinatura de próprio punho**. Numa lista de presença de treinamento de NR-12, o
-OCR devolveu a coluna de assinatura vazia para nove trabalhadores — e pelo menos dois
-deles **tinham assinado**. Se aquilo tivesse virado achado, seria um auto indevido por
-"trabalhador sem treinamento".
-
-Por isso o toolkit passou a tratar isso como regra dura: em página lida por OCR, **toda
-conclusão de ausência exige conferir a imagem**. Campo em branco, falta de assinatura,
-nome que não aparece — o assistente abre a página e confere com os olhos antes de
-registrar. Presença o OCR atesta; ausência, não.
-
-**O repositório agora tem licença MIT.** Estava sem nenhuma, o que juridicamente significa
-"ninguém pode copiar" — o oposto do que se quer num kit feito para circular entre
-auditores. Agora está escrito: qualquer colega pode usar, adaptar e distribuir.
 
 <!-- commit: det-cancelada-e-canal-comunicacao -->
 
@@ -86,6 +53,49 @@ por semanas. Resultado: uma atualização do toolkit era instalada e simplesment
 valia**, sem erro nenhum, até o computador ser reiniciado. Foi o que aconteceu aqui: a
 sincronização rodou com o motor de quatro dias antes e gravou as fichas do jeito antigo.
 Agora a publicação de uma atualização reinicia esse serviço sozinha, no Mac e no Windows.
+
+---
+
+## 19/08/2026
+<!-- commit: skills-pessoais-protegidas -->
+
+**Suas skills próprias não podem mais ser apagadas por uma atualização.** Se você
+criou skills suas e guardou em `~/.claude/skills` junto com as do toolkit, elas
+corriam risco: só o prefixo `minha-` era protegido, e uma skill sua com qualquer
+outro nome era, para o git, apenas um arquivo "não rastreado" — o primeiro que a
+limpeza remove. Foi o que aconteceu com um AFT nesta data: onze skills pessoais
+sumiram numa atualização, sem backup e sem aviso.
+
+Agora a regra é a inversa e não depende de você acertar convenção nenhuma: o
+toolkit lista o que é **dele** e trata todo o resto como seu, intocável. Vale para
+qualquer nome — `cipa-atas`, `cowork-ingest`, `sisos-sync`, o que for.
+
+Três camadas, para o caso de uma falhar:
+
+- O toolkit ignora, no git, tudo que não é pasta oficial dele. Skill sua nunca é
+  removida por limpeza — e também nunca sobe por acidente para o repositório
+  público (as suas citam caminhos e rotinas da sua máquina).
+- Antes de mexer na pasta das skills, o toolkit tira um retrato das suas e guarda
+  em `~/.claude/skills-pessoais-backup/`, fora do alcance da atualização. Ficam os
+  5 retratos mais recentes.
+- Ao terminar, ele confere se alguma sumiu. Se sumiu, avisa e repõe com um comando.
+
+Quem decide o que é seu é uma lista real do que o toolkit instala, não um palpite
+pelo nome: uma skill pessoal chamada `aft-grant` parece oficial e ficaria de fora
+se a checagem fosse por prefixo.
+
+Se você quiser conferir agora quais skills o toolkit considera suas, peça ao
+Claude: ele roda `skills_pessoais.py --listar` e mostra a lista.
+
+---
+
+## 19/08/2026
+<!-- commit: rt-conclusao-e-paralisacao -->
+
+**Relatório Técnico de interdição/embargo: seção 3 mais enxuta e conclusão já preenchida.** Duas correções na `/aft-embargo-interdicao`, a partir de um RT feito na prática:
+
+- A descrição de cada objeto na seção 3 não repete mais a frase "Ficou paralisada a operação da máquina em sua totalidade". A paralisação já está declarada no cabeçalho do objeto (TOTAL ou PARCIAL) e é o próprio efeito do Termo: repetir isso em cada objeto só alongava o documento. Quando a paralisação for PARCIAL, a descrição continua dizendo qual parte parou.
+- A seção 8 (CONCLUSÃO/OBSERVAÇÃO) não sai mais como "[A PREENCHER PELO AFT]". Vem sempre com o parágrafo padrão que determina a interdição/embargo administrativo cautelar dos objetos da seção 3. Se o AFT quiser acrescentar observação própria, ela entra depois desse parágrafo.
 
 ---
 
