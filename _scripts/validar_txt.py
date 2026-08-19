@@ -48,6 +48,63 @@ TOKEN = re.compile(r"\[\[[A-Z0-9_]+\]\]")
 # O mesmo PDF anexado a varios autos e permitido: pesa 1 vez no orcamento de cada um.
 LIMITE_ANEXOS_MB = 10.0
 
+# Subtitulos fixos do texto de autuacao (campo 18), no formato romano da /aft-gera-ai.
+# Defeito ja observado: o subtitulo sai DUPLICADO ("I - DA FISCALIZACAO:#13#10 . #13#10
+# I - DA FISCALIZACAO:"), porque foi digitado de novo ao transcrever o autos.md. E erro
+# de forma que aparece no auto impresso, entao reprova.
+SUBTITULO = re.compile(
+    r"\bI{1,3}\s*-\s*(?:DA\s+FISCALIZA[CÇ][AÃ]O|IRREGULARIDADE|"
+    r"OBSERVA[CÇ][OÕ]ES)\s*:")
+
+# Comprimento minimo para tratar linha repetida como defeito (evita alarme com "a)",
+# numeros soltos e outras linhas curtas que podem legitimamente se repetir).
+MIN_LINHA_REPETIDA = 10
+
+
+def sem_acento(v):
+    tab = str.maketrans("ÁÀÂÃÉÊÍÓÔÕÚÇ", "AAAAEEIOOOUC")
+    return (v or "").translate(tab)
+
+
+def chave_subtitulo(v):
+    """Normaliza o subtitulo para comparacao: sem acento, espacos colapsados."""
+    return re.sub(r"\s+", " ", sem_acento(v).upper()).strip()
+
+
+def checar_texto_autuacao(texto, rotulo, erros):
+    """Campo 18: subtitulo repetido e linha repetida logo em seguida."""
+    contagem = {}
+    for m in SUBTITULO.finditer(texto):
+        k = chave_subtitulo(m.group(0))
+        contagem[k] = contagem.get(k, 0) + 1
+    for k, n in sorted(contagem.items()):
+        if n > 1:
+            erros.append(f"{rotulo} -> Erro: o subtitulo '{k}' aparece {n} vezes no texto "
+                         f"do auto (campo 18); deve aparecer UMA unica vez. Duplicado, ele "
+                         f"sai repetido no auto impresso. Apague a repeticao no "
+                         f".tokenized.txt e rode indenta_quebras.py + rehydrate.py de novo.")
+
+    # Padrao generico do mesmo erro: a linha volta identica logo depois, seja colada,
+    # seja separada so pelo marcador de linha em branco `#13#10 . #13#10`.
+    seg = [s.strip() for s in texto.split("#13#10")]
+    ja_visto = set()
+    for i, a in enumerate(seg[:-1]):
+        if len(a) < MIN_LINHA_REPETIDA or a == "." or a in ja_visto:
+            continue
+        if seg[i + 1] == a:
+            sep = "coladas"
+        elif i + 2 < len(seg) and seg[i + 1] == "." and seg[i + 2] == a:
+            sep = "separadas so por `#13#10 . #13#10`"
+        else:
+            continue
+        ja_visto.add(a)
+        if SUBTITULO.fullmatch(a):
+            continue  # ja reportado como subtitulo duplicado
+        trecho = a if len(a) <= 60 else a[:60] + "..."
+        erros.append(f"{rotulo} -> Erro: linha repetida duas vezes seguidas no texto do "
+                     f"auto (campo 18), {sep}: \"{trecho}\". Apague a repeticao no "
+                     f".tokenized.txt e rode indenta_quebras.py + rehydrate.py de novo.")
+
 
 def is_filled(v):
     """Campo preenchido: nao-vazio ou contendo token (sera re-hidratado)."""
@@ -167,6 +224,9 @@ def main():
                 if not re.fullmatch(r"\d{7}", cod3):
                     erros.append(f"{rotulo} -> Erro: codigo de ementa '{cod3}' invalido "
                                  f"(esperado 7 digitos, ementa sem hifen).")
+            # Texto do auto (campo 18): subtitulo/linha duplicados.
+            if len(campos) > 17:
+                checar_texto_autuacao(campos[17], rotulo, erros)
 
         elif tipo == "2":
             rotulo = (f"AI CNPJ/CPF:{bloco_atual[0]} Ementa:{bloco_atual[1]}"
@@ -260,7 +320,8 @@ def main():
         for a in avisos:
             print("  - " + a)
     if erros:
-        print(f"\nERROS ({len(erros)}) - o Sistema Auditor recusaria a importacao:")
+        print(f"\nERROS ({len(erros)}) - o Sistema Auditor recusaria a importacao "
+              f"ou o auto sairia com defeito de forma:")
         for e in erros:
             print("  X " + e)
         print("\nRESULTADO: REPROVADO. Corrija os erros acima antes de importar.")

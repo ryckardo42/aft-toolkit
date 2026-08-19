@@ -41,7 +41,79 @@ registrar. Presença o OCR atesta; ausência, não.
 "ninguém pode copiar" — o oposto do que se quer num kit feito para circular entre
 auditores. Agora está escrito: qualquer colega pode usar, adaptar e distribuir.
 
+<!-- commit: det-cancelada-e-canal-comunicacao -->
+
+**Notificação cancelada some dos prazos, e o painel passa a avisar quando o empregador
+te mandou mensagem no DET.** Duas mudanças no cartão de Notificações DET.
+
+**1. Notificação cancelada não vira mais prazo.** Quando você cancela uma notificação no
+DET, ela deixa de valer — não corre prazo, não cabe auto por omissão, não é compromisso
+nenhum. Mas o painel vinha tratando ela como qualquer outra: entrava na ficha da OS,
+contava no total e até ia parar na agenda de vencimentos.
+
+Agora **notificação cancelada nunca mais entra na ficha**. E a que já estava lá — porque
+foi cancelada *depois* de importada — **não é apagada**: ela continua aparecendo, mas
+riscada e apagadinha, com o selo "cancelada no DET". Sai do contador, sai de todo cálculo
+de prazo, sai da agenda. Fica visível porque você precisa saber que ela foi cancelada
+(às vezes o cancelamento é notícia), mas para de cobrar coisa nenhuma de você. Se quiser
+tirar a linha da ficha, é você quem decide — o toolkit não apaga linha sua sozinho.
+
+O relatório da sincronização também passou a dizer quantas canceladas encontrou.
+
+**2. O envelope laranja do DET agora aparece no painel.** Na tela de notificações do DET
+existe um ícone de carta laranja: quer dizer que o **empregador mandou mensagem no canal
+de comunicação daquela notificação e ela está esperando resposta sua**. Isso não aparecia
+em lugar nenhum do painel — só se você entrasse no DET e olhasse.
+
+Agora esse aviso aparece nos **dois lugares**: no quadro inicial, direto no cartão da
+auditoria (ao lado do "⚠️ atualização pendente", no mesmo estilo), e lá dentro, na
+notificação exata que tem a mensagem — assim você vê de longe que aquela empresa está
+esperando resposta, sem precisar abrir a OS. Se houver mais de uma notificação com
+mensagem, o selo do quadro inicial mostra quantas.
+
+O selo some sozinho quando você responde lá no DET, então não tem botão de dispensar: se ainda está ali, é
+porque a mensagem continua sem resposta. (Diferente do "⚠️ atualização pendente", que
+teima em não sumir e por isso tem o "já vi".)
+
+Nenhuma das duas exige atualizar a extensão do Chrome nem mexer em configuração: as
+informações já vinham do DET, só não estavam sendo aproveitadas — basta sincronizar uma
+vez para os selos aparecerem.
+
+**3. E um conserto silencioso, que você nunca teria como descobrir.** Ao testar as duas
+mudanças acima, apareceu um problema mais velho: o motor que conversa com o DET era
+carregado **uma única vez, quando o servidor do painel liga** — e o servidor fica ligado
+por semanas. Resultado: uma atualização do toolkit era instalada e simplesmente **não
+valia**, sem erro nenhum, até o computador ser reiniciado. Foi o que aconteceu aqui: a
+sincronização rodou com o motor de quatro dias antes e gravou as fichas do jeito antigo.
+Agora a publicação de uma atualização reinicia esse serviço sozinha, no Mac e no Windows.
+
+---
+
 ## 17/08/2026
+<!-- commit: validar-txt-subtitulo-duplicado -->
+
+**A conferência do TXT agora pega subtítulo repetido no texto do auto.** Apareceu num
+arquivo real: o texto do auto saiu com o subtítulo escrito **duas vezes seguidas** —
+"I - DA FISCALIZAÇÃO:" e, logo abaixo, "I - DA FISCALIZAÇÃO:" outra vez, e o mesmo com
+"II - IRREGULARIDADE:". Erro de forma bem visível no auto impresso, e a conferência
+automática deixou passar: dizia APROVADO, porque o Sistema Auditor de fato importa o
+arquivo assim mesmo.
+
+**O que muda.** A conferência que roda antes de entregar o TXT (a do `/aft-gera-ai`)
+passou a olhar o texto do auto e a **reprovar** quando: (a) qualquer um dos subtítulos
+— I - DA FISCALIZAÇÃO, II - IRREGULARIDADE, III - OBSERVAÇÕES, com ou sem acento —
+aparece mais de uma vez no mesmo auto; ou (b) uma linha qualquer se repete idêntica
+logo em seguida, que é o formato genérico desse mesmo defeito. Reprovado, o assistente
+é obrigado a corrigir e refazer o arquivo antes de te entregar.
+
+**E a causa.** A repetição nascia na hora em que o assistente copiava o auto já
+redigido para dentro do arquivo do Sistema Auditor: ele reescrevia o subtítulo que já
+estava no texto. A instrução do `/aft-gera-ai` ficou explícita nesse ponto — o
+subtítulo vem do texto de origem e não deve ser digitado de novo. A conferência
+continua como rede de segurança, para o caso de escapar.
+
+## 17/08/2026
+
 <!-- commit: extrator-documento-agente -->
 
 **Analisar PGR, AET e laudo de NR-12 não engole mais o seu limite de uso.** Até agora,
@@ -92,7 +164,6 @@ a você decidir se exige o documento de novo.
 
 Uma recomendação prática: **prefira deixar o documento na pasta da OS** a arrastá-lo para
 o chat. PDF arrastado para a conversa já entra inteiro no contexto e anula a economia.
-
 <!-- commit: cat-trabalhador-skill -->
 
 **Nova habilidade: o dossiê de CATs de um trabalhador (`/aft-cat-trabalhador`).** Até
@@ -199,7 +270,6 @@ pesa, o número aparecia vazio. Corrigido: agora o efetivo é lido normalmente. 
 nominal vier truncada pelo SFIT ("listagem limitada aos primeiros 200 trabalhadores"), o
 aviso continua aparecendo para você confirmar em campo.
 
-
 ## 15/08/2026
 <!-- commit: diario-auditoria-geral-DE -->
 
@@ -244,6 +314,47 @@ Tabela de fatores SFIT, script do .docx e o encadeamento para `/aft-auditoria-ge
 `/aft-gera-ai` continuam exatamente como eram.
 
 ---
+
+## 15/08/2026
+<!-- commit: agenda-det-rotina-diaria -->
+
+**A sincronização dos prazos de DET com o Google Calendar agora pode rodar sozinha — se
+você quiser.** Até aqui, o `/aft-setup` até perguntava se você queria a sincronização
+diária, mas parava na pergunta: anotava a resposta e não instalava nada. Na prática, só
+funcionava sob demanda, quando você pedia `/aft-agenda-det`. Agora, quando você responde
+que quer, o toolkit cria de fato uma tarefa agendada do Claude, que roda toda manhã
+(sugestão: 07h15, logo depois da rotina do painel) e espelha os prazos.
+
+**Continua sendo escolha sua, em duas perguntas separadas:** primeiro se quer os prazos
+no Google Calendar; depois, só se disse que sim, se prefere sob demanda ou todo dia. Quem
+não quiser não instala nada, e quem mudar de ideia pede para apagar a tarefa. Nada é
+instalado sem você pedir, e a skill nunca apaga eventos do seu calendário.
+
+Uma limitação importante, avisada na hora da instalação: a tarefa **só roda com o
+aplicativo do Claude aberto**. Se o computador estiver desligado no horário, ela não se
+perde — roda na próxima vez que você abrir o app.
+
+## 15/08/2026
+<!-- commit: painel-ordem-cards -->
+
+**A ordem dos cards do painel foi corrigida, e agora dá para ordenar por prazo de DET.**
+Os cards estavam saindo fora de ordem porque o painel usava a data de criação do
+*arquivo* `memory.md` para saber quando cada auditoria nasceu — e essa data muda sozinha
+quando a pasta é copiada, restaurada ou recriada por sincronização, além de sair idêntica
+para várias OS criadas no mesmo lote (aí o desempate caía no nome, em ordem alfabética).
+Agora o painel lê a data de dentro da própria ficha: a linha **"OS cadastrada"** do
+Registro de atividades. Para auditorias antigas, que não têm essa linha, ele usa a data
+mais antiga entre o início da fiscalização e a primeira atividade registrada — e só
+recorre ao carimbo do arquivo se a ficha não tiver nada disso.
+
+Junto veio um seletor **"ordenar por"**, acima dos cards, com duas opções:
+
+- **auditoria mais recente** (padrão) — a ordem de sempre, agora correta;
+- **prazo de DET mais urgente** — quem está mais perto de vencer, ou já vencido, aparece
+  primeiro; auditorias sem prazo em aberto vão para o fim.
+
+A escolha fica guardada no navegador: se você prefere ver por prazo, o painel abre assim
+nas próximas vezes. A troca é instantânea, sem regerar a página.
 
 ## 14/08/2026
 <!-- commit: instalar-no-codex -->
@@ -417,47 +528,6 @@ do RI no SFIT-WEB, já com o texto oficial de cada opção. Como funciona:
   completar manualmente.
 - OS **arquivada no meio do mês** continua aparecendo na agenda mensal; o consolidado
   varre OS ATIVAS e OS ARQUIVADAS.
-
-## 15/08/2026
-<!-- commit: agenda-det-rotina-diaria -->
-
-**A sincronização dos prazos de DET com o Google Calendar agora pode rodar sozinha — se
-você quiser.** Até aqui, o `/aft-setup` até perguntava se você queria a sincronização
-diária, mas parava na pergunta: anotava a resposta e não instalava nada. Na prática, só
-funcionava sob demanda, quando você pedia `/aft-agenda-det`. Agora, quando você responde
-que quer, o toolkit cria de fato uma tarefa agendada do Claude, que roda toda manhã
-(sugestão: 07h15, logo depois da rotina do painel) e espelha os prazos.
-
-**Continua sendo escolha sua, em duas perguntas separadas:** primeiro se quer os prazos
-no Google Calendar; depois, só se disse que sim, se prefere sob demanda ou todo dia. Quem
-não quiser não instala nada, e quem mudar de ideia pede para apagar a tarefa. Nada é
-instalado sem você pedir, e a skill nunca apaga eventos do seu calendário.
-
-Uma limitação importante, avisada na hora da instalação: a tarefa **só roda com o
-aplicativo do Claude aberto**. Se o computador estiver desligado no horário, ela não se
-perde — roda na próxima vez que você abrir o app.
-
-## 15/08/2026
-<!-- commit: painel-ordem-cards -->
-
-**A ordem dos cards do painel foi corrigida, e agora dá para ordenar por prazo de DET.**
-Os cards estavam saindo fora de ordem porque o painel usava a data de criação do
-*arquivo* `memory.md` para saber quando cada auditoria nasceu — e essa data muda sozinha
-quando a pasta é copiada, restaurada ou recriada por sincronização, além de sair idêntica
-para várias OS criadas no mesmo lote (aí o desempate caía no nome, em ordem alfabética).
-Agora o painel lê a data de dentro da própria ficha: a linha **"OS cadastrada"** do
-Registro de atividades. Para auditorias antigas, que não têm essa linha, ele usa a data
-mais antiga entre o início da fiscalização e a primeira atividade registrada — e só
-recorre ao carimbo do arquivo se a ficha não tiver nada disso.
-
-Junto veio um seletor **"ordenar por"**, acima dos cards, com duas opções:
-
-- **auditoria mais recente** (padrão) — a ordem de sempre, agora correta;
-- **prazo de DET mais urgente** — quem está mais perto de vencer, ou já vencido, aparece
-  primeiro; auditorias sem prazo em aberto vão para o fim.
-
-A escolha fica guardada no navegador: se você prefere ver por prazo, o painel abre assim
-nas próximas vezes. A troca é instantânea, sem regerar a página.
 
 ## 12/08/2026
 <!-- commit: painel-zonas-de-escrita -->

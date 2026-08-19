@@ -404,6 +404,11 @@ Linhas separadas por `\n`.
 - `[TAB]` = caractere literal `\t`.
 - `[texto_autuacao]` é uma **única linha contínua** (sem `\n` reais). Use `#13#10` como comando de quebra de linha:
   - **Subtítulos em algarismos romanos com hífen**: `I - DA FISCALIZAÇÃO:`, `II - IRREGULARIDADE:`, `III - OBSERVAÇÕES:`.
+  - **Cada subtítulo aparece UMA única vez.** Ao transcrever o `autos.md` para o
+    `[texto_autuacao]`, o subtítulo **já vem no texto de origem**: copie-o como está e
+    **não o escreva de novo** antes do corpo da seção. Subtítulo digitado duas vezes sai
+    duplicado no auto impresso (`I - DA FISCALIZAÇÃO:#13#10 . #13#10I - DA FISCALIZAÇÃO:`)
+    — defeito de forma que o `validar_txt.py` reprova no Passo 6.
   - **Após CADA subtítulo**: `#13#10 . #13#10` (o subtítulo fica sozinho na linha; a linha com `.` é o "espaço em branco" — o Sistema Auditor não entende linha vazia).
   - **Separador de seção** (entre o fim de uma seção e o subtítulo seguinte): `#13#10 . #13#10`
   - **Separador de parágrafo** (dentro de um subtítulo): `#13#10`
@@ -461,7 +466,7 @@ linha 6 (CIF)
      "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
    O script aborta (sem gerar o TXT) se faltar valor no de-para, se algum CPF não tiver 11 dígitos, se sobrar token órfão `[[...]]`, ou se houver caractere fora do latin-1. Se abortar, corrija a causa e rode de novo — **não** preencha o TXT à mão.
-6. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, **anexos de um auto somando mais de 10 MB**, caractere fora do latin-1):
+6. **VALIDAÇÃO PRÉ-IMPORTAÇÃO (obrigatória).** Antes de entregar o arquivo ao AFT, rode o validador sobre o TXT real — ele pega em segundos os erros que, de outro modo, só apareceriam como "AI RECUSADO" dentro do Sistema Auditor (CEP vazio, nº de campos errado, ementa malformada, identificador com dígitos errados, anexo inexistente, **anexos de um auto somando mais de 10 MB**, caractere fora do latin-1) — e também o **subtítulo ou a linha repetidos** no texto do auto (campo 18), que o Sistema Auditor aceitaria mas sairiam duplicados no auto impresso:
    ```bash
    python ~/.claude/skills/_scripts/validar_txt.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].txt"
    ```
