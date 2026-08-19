@@ -6,6 +6,41 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 19/08/2026
+<!-- commit: pdf-motores-opcionais -->
+
+**O toolkit agora conserta o PDF ruim, em vez de só avisar.** Até ontem, quando uma página
+vinha escaneada ou com a tabela embaralhada, o assistente avisava e lia aquela página como
+imagem — o caminho mais lento e mais caro. Agora, **se você tiver os programas opcionais
+instalados**, a página é consertada antes da leitura.
+
+São dois, e nenhum é obrigatório. O toolkit continua funcionando exatamente como antes
+para quem não instalar nada:
+
+- **`docling`** faz OCR de página escaneada, na sua máquina, sem mandar nada para fora.
+  Pesa cerca de 1 GB.
+- **`pymupdf4llm`** remonta tabela que sai embaralhada (aquela que vira sopa de letras).
+  Pesa cerca de 60 MB.
+
+O `/aft-doctor` passa a dizer quais você tem. **Não instale por conta própria** — peça ao
+assistente, que ele explica o peso e cuida do resto. Em máquina institucional, com
+antivírus e proxy, um download de 1 GB falha no meio com frequência.
+
+**Um aviso que vale ouro, e que nasceu de um caso real.** OCR lê texto impresso, mas
+**não lê assinatura de próprio punho**. Numa lista de presença de treinamento de NR-12, o
+OCR devolveu a coluna de assinatura vazia para nove trabalhadores — e pelo menos dois
+deles **tinham assinado**. Se aquilo tivesse virado achado, seria um auto indevido por
+"trabalhador sem treinamento".
+
+Por isso o toolkit passou a tratar isso como regra dura: em página lida por OCR, **toda
+conclusão de ausência exige conferir a imagem**. Campo em branco, falta de assinatura,
+nome que não aparece — o assistente abre a página e confere com os olhos antes de
+registrar. Presença o OCR atesta; ausência, não.
+
+**O repositório agora tem licença MIT.** Estava sem nenhuma, o que juridicamente significa
+"ninguém pode copiar" — o oposto do que se quer num kit feito para circular entre
+auditores. Agora está escrito: qualquer colega pode usar, adaptar e distribuir.
+
 ## 17/08/2026
 <!-- commit: extrator-documento-agente -->
 

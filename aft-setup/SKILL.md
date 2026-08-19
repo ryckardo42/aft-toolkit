@@ -463,6 +463,21 @@ e comprime anexos grandes; `pypdf` lê os autos lavrados (`/aft-autos-lavrados`)
 `pdfplumber` extrai texto de PDFs de fiscalização (termos, autos-modelo);
 `pillow-heif` lê fotos HEIC/HEIF do iPhone (opcional, só se houver esse formato).
 
+**6b-bis. Motores de PDF opcionais — NÃO instale por conta própria.** Existem dois extras
+que consertam PDF problemático. O toolkit funciona sem eles (avisa a página e o assistente
+a lê como imagem), então **só mencione se o AFT perguntar** ou se ele reclamar de PDF
+escaneado ou de tabela que sai embaralhada:
+
+| Extra | O que resolve | Peso | Licença |
+|---|---|---|---|
+| `docling` | OCR de página escaneada, feito na máquina | ~1 GB | Apache 2.0 |
+| `pymupdf4llm` | remonta tabela que sai embaralhada | ~60 MB | **AGPL** |
+
+O `pymupdf4llm` é AGPL e **por isso não é dependência do toolkit** — instalá-lo é escolha
+do AFT, na máquina dele. Nunca o inclua no comando de instalação acima. Se ele pedir,
+explique o peso e o download antes: em máquina institucional, com antivírus e proxy, um
+download de 1 GB falha no meio com frequência.
+
 **6c. Carimbar a lotação no cabeçalho dos documentos.** Com a `lotacao` já gravada no
 `aft-config.md`, prepare as cópias personalizadas dos templates (você roda):
 

@@ -26,14 +26,18 @@ Uso:
     python pdf_texto_paginado.py "documento.pdf"                 # -> ao lado do PDF
     python pdf_texto_paginado.py "documento.pdf" --saida "t.txt"
     python pdf_texto_paginado.py "documento.pdf" --so-resumo     # so o diagnostico
+    python pdf_texto_paginado.py "documento.pdf" --sem-motores   # ignora os extras opcionais
 """
 
 import sys
 import os
 import io
 import re
+import shutil
+import subprocess
 import tempfile
 import unicodedata
+import importlib.util
 
 try:
     import pdfplumber
@@ -164,6 +168,78 @@ def diagnosticar(texto, cobertura_imagem=0.0):
     return extra
 
 
+# ---------------------------------------------------------------------------
+# Motores opcionais. Nenhum e exigido: sem eles o script apenas avisa, como sempre.
+# Quem instalar ganha o conserto automatico da pagina.
+#
+#   pymupdf4llm  reconstroi tabela que saiu embaralhada. Licenca AGPL - por isso
+#                NUNCA e dependencia declarada do toolkit: quem instala e o AFT,
+#                na maquina dele. O que este repositorio distribui segue MIT.
+#   docling      faz OCR de pagina escaneada. Apache 2.0.
+#
+# Rota: embaralhada -> pymupdf4llm (3x mais rapido); sem texto ou texto suspeito
+# -> docling, que e o unico que faz OCR.
+# ---------------------------------------------------------------------------
+
+def motores():
+    """O que esta instalado nesta maquina."""
+    return {
+        "pymupdf4llm": importlib.util.find_spec("pymupdf4llm") is not None,
+        "docling": shutil.which("docling") is not None,
+    }
+
+
+def _reparar_embaralhadas(pdf_path, paginas):
+    """Reextrai com pymupdf4llm. Devolve {pagina: texto}."""
+    try:
+        import pymupdf4llm
+    except Exception:
+        return {}
+    out = {}
+    for n in paginas:
+        try:
+            md = pymupdf4llm.to_markdown(pdf_path, pages=[n - 1], show_progress=False)
+            if md and md.strip():
+                out[n] = md.strip()
+        except Exception:
+            pass
+    return out
+
+
+def _reparar_sem_texto(pdf_path, paginas):
+    """OCR pagina a pagina com docling. Devolve {pagina: texto}."""
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except Exception:
+        return {}
+    out = {}
+    tmp = tempfile.mkdtemp(prefix="ocr_")
+    try:
+        leitor = PdfReader(pdf_path)
+        for n in paginas:
+            uma = os.path.join(tmp, "p%d.pdf" % n)
+            w = PdfWriter()
+            w.add_page(leitor.pages[n - 1])
+            with open(uma, "wb") as f:
+                w.write(f)
+            cmd = ["docling", "convert", uma, "--to", "md", "--table-mode", "accurate",
+                   "--image-export-mode", "placeholder", "--output", tmp]
+            if sys.platform == "darwin":
+                cmd += ["--ocr-engine", "ocrmac", "--ocr-lang", "pt-BR"]
+            try:
+                subprocess.run(cmd, capture_output=True, timeout=180)
+                md = os.path.join(tmp, "p%d.md" % n)
+                if os.path.isfile(md):
+                    t = io.open(md, encoding="utf-8").read().strip()
+                    if t:
+                        out[n] = t
+            except Exception:
+                pass
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return out
+
+
 AVISO = {
     "SEM TEXTO": "[PAGINA SEM TEXTO EXTRAIVEL - PRECISA DE LEITURA VISUAL]",
     "TEXTO SUSPEITO": "[TEXTO SUSPEITO NESTA PAGINA - NAO CONFIAR NO TEXTO ACIMA, "
@@ -172,6 +248,16 @@ AVISO = {
                          "CONFERIR A PAGINA NO ORIGINAL]",
     "CONTEUDO EM IMAGEM": "[PARTE DESTA PAGINA E IMAGEM - O TEXTO ACIMA PODE ESTAR "
                           "INCOMPLETO; CONFERIR A PAGINA VISUALMENTE]",
+}
+
+RECUPERADA = {
+ "pymupdf4llm": "[PAGINA RECUPERADA COM pymupdf4llm - a extracao comum saiu embaralhada; "
+                "o texto acima e a tabela ja remontada. Nao precisa de leitura visual.]",
+ "docling":     "[PAGINA RECUPERADA POR OCR (docling) - nao havia texto extraivel. "
+                "ATENCAO: OCR nao le assinatura manuscrita, carimbo nem rubrica. Se o seu "
+                "achado for uma AUSENCIA (campo em branco, sem assinatura, nome faltando), "
+                "ABRA A PAGINA VISUALMENTE antes de concluir - ja houve caso de assinatura "
+                "presente no papel e ausente no OCR.]",
 }
 
 
@@ -200,6 +286,12 @@ def main():
     if so_resumo:
         args.remove("--so-resumo")
 
+    # Desliga os motores opcionais. Serve para a bateria de testes: sem isso o
+    # resultado dependeria do que esta instalado na maquina de quem roda.
+    sem_motores = "--sem-motores" in args
+    if sem_motores:
+        args.remove("--sem-motores")
+
     saida = None
     if "--saida" in args:
         k = args.index("--saida")
@@ -218,6 +310,7 @@ def main():
                              os.path.splitext(os.path.basename(pdf_path))[0] + "_texto.txt")
 
     partes = []
+    texto_pag, motivos_pag = {}, {}
     alertas = {"SEM TEXTO": [], "TEXTO SUSPEITO": [], "ORDEM EMBARALHADA": [],
                "CONTEUDO EM IMAGEM": []}
     total_car = 0
@@ -241,11 +334,45 @@ def main():
                     pass
             cobertura = min(area_img / area_pag, 1.0)
 
-            corpo = txt.strip()
+            texto_pag[i] = txt.strip()
             for alerta, motivo in diagnosticar(txt, cobertura):
                 alertas[alerta].append(i)
-                corpo = "%s\n%s (%s)" % (corpo, AVISO[alerta], motivo)
-            partes.append("===== PAGINA %d =====\n%s" % (i, corpo))
+                motivos_pag.setdefault(i, []).append((alerta, motivo))
+
+    # ---- reparo pelos motores opcionais -------------------------------------
+    disp = {"pymupdf4llm": False, "docling": False} if sem_motores else motores()
+    recuperadas = {"pymupdf4llm": [], "docling": []}
+
+    alvo_mupdf = sorted(set(alertas["ORDEM EMBARALHADA"]))
+    if alvo_mupdf and disp["pymupdf4llm"]:
+        for pag, novo in _reparar_embaralhadas(pdf_path, alvo_mupdf).items():
+            texto_pag[pag] = novo
+            recuperadas["pymupdf4llm"].append(pag)
+
+    alvo_ocr = sorted(set(alertas["SEM TEXTO"] + alertas["TEXTO SUSPEITO"]))
+    if alvo_ocr and disp["docling"]:
+        if not so_resumo:
+            print("Rodando OCR em %d pagina(s) com docling - pode demorar..." % len(alvo_ocr))
+        for pag, novo in _reparar_sem_texto(pdf_path, alvo_ocr).items():
+            texto_pag[pag] = novo
+            recuperadas["docling"].append(pag)
+
+    for i in range(1, n + 1):
+        corpo = texto_pag.get(i, "")
+        origem = None
+        for motor, pgs in recuperadas.items():
+            if i in pgs:
+                origem = motor
+        if origem:
+            corpo = "%s\n%s" % (corpo, RECUPERADA[origem])
+        for alerta, motivo in motivos_pag.get(i, []):
+            # alerta ja resolvido pelo motor nao precisa mais assustar
+            if origem == "pymupdf4llm" and alerta == "ORDEM EMBARALHADA":
+                continue
+            if origem == "docling" and alerta in ("SEM TEXTO", "TEXTO SUSPEITO"):
+                continue
+            corpo = "%s\n%s (%s)" % (corpo, AVISO[alerta], motivo)
+        partes.append("===== PAGINA %d =====\n%s" % (i, corpo))
 
     if not so_resumo:
         with io.open(saida, "w", encoding="utf-8") as f:
@@ -275,9 +402,25 @@ def main():
         print("    agente extrator mesmo que o documento seja curto.")
         print("")
 
-    nao_confiaveis = set(alertas["SEM TEXTO"] + alertas["TEXTO SUSPEITO"] +
-                         alertas["ORDEM EMBARALHADA"])
-    print("Paginas de texto confiavel: %d de %d" % (n - len(nao_confiaveis), n))
+    print("")
+    print("Motores opcionais nesta maquina: pymupdf4llm=%s | docling=%s"
+          % ("SIM" if disp["pymupdf4llm"] else "nao", "SIM" if disp["docling"] else "nao"))
+    for motor, pgs in recuperadas.items():
+        if pgs:
+            print("  %-12s recuperou as paginas: %s" % (motor, faixas(pgs)))
+    pendentes = sorted(set(alertas["SEM TEXTO"] + alertas["TEXTO SUSPEITO"] +
+                           alertas["ORDEM EMBARALHADA"]) -
+                       set(recuperadas["pymupdf4llm"] + recuperadas["docling"]))
+    if pendentes:
+        print("  ainda exigem leitura visual: %s" % faixas(pendentes))
+    elif any(recuperadas.values()):
+        print("  nenhuma pagina restou para leitura visual.")
+
+    nao_confiaveis = set(pendentes)
+    n_ocr = len(recuperadas["docling"])
+    print("Paginas de texto utilizavel: %d de %d%s"
+          % (n - len(nao_confiaveis), n,
+             " (das quais %d vieram de OCR - ver o aviso na pagina)" % n_ocr if n_ocr else ""))
     print("  (a pagina so com CONTEUDO EM IMAGEM conta como confiavel: o texto dela esta")
     print("   bom, apenas pode nao contar tudo o que a pagina mostra)")
     if not so_resumo:
