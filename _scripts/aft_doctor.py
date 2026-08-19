@@ -140,6 +140,38 @@ else:
         "Provavel clone aninhado (ex.: ~/.claude/skills/aft-toolkit/...). "
         "O repositorio precisa SER a pasta ~/.claude/skills.")
 
+# 3a-ter. Skills PESSOAIS do AFT ----------------------------------------------
+# Toda pasta de 1o nivel que nao esta no manifesto do toolkit e do AFT. Nada
+# nosso pode apaga-la. Em 19/08/2026 um AFT perdeu onze skills proprias numa
+# atualizacao; o doctor agora confere se a rede de protecao esta armada.
+try:
+    _guarda = CLAUDE_DIR / "skills-pessoais-backup"
+    _manifesto = SKILLS_DIR / "_scripts" / "skills_oficiais.txt"
+    _infra = {"_scripts", "Template", "agents", "arquitetura", "config", "novidades"}
+    if _manifesto.is_file():
+        _oficiais = {l.strip() for l in _manifesto.read_text(encoding="utf-8").splitlines() if l.strip()}
+        _pessoais = sorted(d.name for d in SKILLS_DIR.iterdir()
+                           if d.is_dir() and not d.name.startswith(".")
+                           and d.name not in _oficiais and d.name not in _infra)
+        _retratos = sorted(_guarda.iterdir()) if _guarda.is_dir() else []
+        if not _pessoais:
+            add("Skills pessoais", "ok", "nenhuma skill propria — nada a proteger")
+        elif _retratos:
+            add("Skills pessoais", "ok",
+                f"{len(_pessoais)} skill(s) propria(s), retrato de {_retratos[-1].name}")
+        else:
+            add("Skills pessoais", "aviso",
+                f"{len(_pessoais)} skill(s) propria(s) SEM retrato de seguranca: "
+                + ", ".join(_pessoais),
+                "Rode: python3 ~/.claude/skills/_scripts/skills_pessoais.py --backup")
+    else:
+        add("Skills pessoais", "aviso",
+            "manifesto do toolkit ausente (_scripts/skills_oficiais.txt)",
+            "Atualize o toolkit (/aft-atualizar): sem o manifesto o toolkit nao "
+            "sabe quais skills sao suas e nao consegue protege-las.")
+except OSError as e:
+    add("Skills pessoais", "aviso", f"nao consegui conferir: {e}")
+
 # 3a-bis. Atalhos do Codex ----------------------------------------------------
 # So aparece na maquina de quem tem o Codex. Sao os dois enderecos que fazem o
 # Codex enxergar a MESMA pasta de skills e o MESMO perfil do auditor - atalho,

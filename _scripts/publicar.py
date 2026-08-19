@@ -218,6 +218,21 @@ def main():
     # 4. Copiar para a pasta instalada ---------------------------------------
     if not destino.is_dir():
         raise SystemExit(f"ERRO: pasta instalada não existe: {destino}")
+
+    # 4a. Retrato das skills PESSOAIS antes de mexer na pasta instalada.
+    # O rsync abaixo nao apaga (nao usa --delete), mas o retrato e barato e cobre
+    # qualquer outro caminho que toque em ~/.claude/skills. Em 19/08/2026 um AFT
+    # perdeu as skills pessoais dele numa atualizacao; retrato antes, confere
+    # depois, e o prejuizo vira um comando de reposicao.
+    if not conferir:
+        # Regrava a lista do que o toolkit instala: e ela que diz o que NAO e
+        # nosso e, portanto, nao pode ser apagado. Deduzir por prefixo falha —
+        # 'aft-grant' e skill pessoal de um AFT e parece oficial.
+        oficiais = sorted({l.split("/")[0] for l in
+                           git(["ls-files"], raiz).splitlines() if "/" in l})
+        (raiz / "_scripts" / "skills_oficiais.txt").write_text(
+            "\n".join(oficiais) + "\n", encoding="utf-8")
+        print("  " + rodar_script(raiz, "skills_pessoais.py", ["--backup"], False))
     cmd = ["rsync", "-a", "--itemize-changes"]
     if conferir:
         cmd.append("--dry-run")
@@ -245,6 +260,14 @@ def main():
         print("      " + nome)
     if len(conteudo) > 10:
         print(f"      ... e mais {len(conteudo) - 10}")
+
+    # 4b. Nenhuma skill pessoal pode ter sumido no caminho.
+    if not conferir:
+        try:
+            print("  " + rodar_script(raiz, "skills_pessoais.py", ["--conferir"], False))
+        except SystemExit:
+            print("  ATENCAO: skill pessoal sumiu na publicacao. Reponha com:")
+            print("      python3 ~/.claude/skills/_scripts/skills_pessoais.py --restaurar")
 
     # 5 e 6. Subagentes e perfil do auditor ----------------------------------
     print("  " + rodar_script(raiz, "instalar_agentes.py", [], conferir))

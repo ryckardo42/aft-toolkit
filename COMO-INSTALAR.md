@@ -296,7 +296,11 @@ Só se o Passo 3 falhar (computador sem winget, rede corporativa bloqueando, **o
   $skillsDir = "$HOME\.claude\skills"
   git clone https://github.com/ryckardo42/aft-toolkit.git $origem
   New-Item -ItemType Directory -Force -Path $skillsDir | Out-Null
-  Get-ChildItem -Force $origem | Move-Item -Destination $skillsDir -Force
+  # -Force aqui SOBRESCREVE o que ja existe em ~/.claude/skills. Se voce ja tem
+  # skills suas la, elas seriam perdidas. Copiamos so o que ainda nao existe:
+  Get-ChildItem -Force $origem | Where-Object {
+      -not (Test-Path (Join-Path $skillsDir $_.Name))
+  } | Move-Item -Destination $skillsDir
   Remove-Item $origem -Recurse -Force
   Test-Path "$HOME\.claude\skills\aft-setup\SKILL.md"
   ```
