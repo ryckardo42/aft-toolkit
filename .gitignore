@@ -5,11 +5,36 @@ __pycache__/
 .backups/
 # Arquivos-dono temporarios do Office (Word/Excel abertos) - nunca versionar
 ~$*
-# Skills proprias do AFT (criadas pelo colega para a realidade dele). Namespace
-# reservado: NENHUMA skill oficial do toolkit comeca com "minha-". Assim elas
-# ficam no 1o nivel (o Claude Code as enxerga), nunca sao versionadas no repo
-# oficial e sobrevivem a qualquer atualizacao (git pull). Ver /nova-skill.
-minha-*/
+# ── Skills pessoais do AFT: TUDO que nao e do toolkit fica de fora ───────────
+#
+# Regra invertida, e de proposito: em vez de listar o que proteger, listamos o
+# que e NOSSO e ignoramos todo o resto. Assim a skill pessoal do colega sobrevive
+# a qualquer atualizacao mesmo SEM o prefixo "minha-" — e nunca sobe por acidente
+# para o repo publico (skills pessoais citam caminhos e rotinas da maquina dele).
+#
+# Antes desta regra so "minha-*/" era protegido. Em 19/08/2026 uma atualizacao
+# levou junto as skills pessoais de um AFT que nao usavam esse prefixo
+# (cowork-ingest, cipa-atas, sisos-sync e outras): elas eram apenas "nao
+# rastreadas", e nao rastreado e o que a limpeza do git remove primeiro.
+#
+# ATENCAO A QUEM MANTEM O TOOLKIT: pasta oficial nova precisa de "!" aqui, senao
+# nasce invisivel ao git e nunca e commitada. Skill oficial sempre comeca com
+# "aft-" (convencao desde 26/07/2026), entao so as 6 pastas de infraestrutura
+# precisam de linha propria.
+#
+# LIMITE DESTA CAMADA: o "!/aft-*/" nao consegue distinguir uma skill PESSOAL
+# batizada de "aft-alguma-coisa" de uma oficial — ela volta a ser visivel ao git.
+# Quem cobre esse caso e o retrato do _scripts/skills_pessoais.py, que decide
+# pelo manifesto real (_scripts/skills_oficiais.txt) e nao pelo nome. Ainda
+# assim, oriente o colega a nao prefixar skill propria com "aft-".
+/*/
+!/aft-*/
+!/_scripts/
+!/Template/
+!/agents/
+!/arquitetura/
+!/config/
+!/novidades/
 # Atalho .agents/skills -> .claude/skills. E da maquina, nao do projeto: cada
 # pessoa cria o seu (link simbolico no Mac/Linux, junction no Windows). Versionar
 # um atalho quebraria na maquina dos outros.

@@ -24,6 +24,29 @@ confirma que tudo continua funcionando com o `/aft-doctor`.
 Tom: tranquilizador e direto. O AFT não precisa entender git nem pip — só saber
 o que mudou e se precisa fazer algo (normalmente não).
 
+## Passo 0 — Retrato das skills pessoais (SEMPRE, antes de qualquer coisa)
+
+O AFT pode ter skills próprias em `~/.claude/skills` que o toolkit não conhece. Elas são
+dele: nada nosso pode apagá-las. Tire o retrato antes de tocar na pasta (você roda):
+
+```bash
+python3 ~/.claude/skills/_scripts/skills_pessoais.py --backup
+```
+
+Guarda uma cópia em `~/.claude/skills-pessoais-backup/` (fora da pasta que a atualização
+mexe) e mantém os 5 retratos mais recentes. Ao terminar a atualização, confira:
+
+```bash
+python3 ~/.claude/skills/_scripts/skills_pessoais.py --conferir
+```
+
+Se acusar sumiço, **avise o AFT e reponha** com `--restaurar` (nunca sobrescreve o que
+está lá). Foi assim que em 19/08/2026 um AFT perdeu `cowork-ingest`, `cipa-atas`,
+`sisos-sync` e outras: elas não usavam o prefixo `minha-`, eram apenas não rastreadas
+pelo git, e não rastreado é o que a limpeza remove primeiro. O `.gitignore` do repo passou
+a ignorar tudo que não é do toolkit — mas o retrato é a rede que vale mesmo quando a
+instalação não é um clone git.
+
 ## Passo 1 — Atualizar as skills (repositório do toolkit)
 
 Na pasta das skills (você roda):
