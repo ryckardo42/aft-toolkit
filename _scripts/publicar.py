@@ -121,17 +121,24 @@ def rodar_script(raiz, nome, args, conferir):
     r = subprocess.run([python_atual(), str(script)] + args,
                        capture_output=True, text=True, encoding="utf-8",
                        errors="replace")
-    saida = (r.stdout or r.stderr).strip().splitlines()
+    bruto = (r.stdout or r.stderr).strip()
+    saida = bruto.splitlines()
     ultima = saida[-1] if saida else f"terminou ({r.returncode})"
-    if ultima.startswith("{"):  # scripts que respondem em JSON (instalar_agentes)
+    # Scripts que respondem em JSON: uns numa linha so (instalar_agentes), outros
+    # indentado em varias (instalar_servidor_painel) - neste, a ultima linha e um
+    # "}" solto, que nao diz nada ao AFT. Tenta a saida INTEIRA antes da ultima.
+    for candidato in (bruto, ultima):
+        if not candidato.startswith("{"):
+            continue
         try:
-            d = json.loads(ultima)
-            partes = [f"{len(d[k])} {k}" for k in
-                      ("instalados", "atualizados", "em_dia", "erros")
-                      if isinstance(d.get(k), list) and d[k]]
-            ultima = ", ".join(partes) or "nada a fazer"
+            d = json.loads(candidato)
         except ValueError:
-            pass
+            continue
+        partes = [f"{len(d[k])} {k}" for k in
+                  ("instalados", "atualizados", "em_dia", "erros")
+                  if isinstance(d.get(k), list) and d[k]]
+        ultima = ", ".join(partes) or d.get("detalhe") or "nada a fazer"
+        break
     return f"{nome}: {ultima}"
 
 
