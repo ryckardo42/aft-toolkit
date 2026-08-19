@@ -245,6 +245,16 @@ def main():
                               ["--status", str(raiz / "config" / "CLAUDE-aft.md"),
                                str(Path.home() / ".claude" / "CLAUDE.md")], False))
 
+    # 7. Reiniciar o servidor do painel ---------------------------------------
+    # O servico fica de pe por semanas e faz `import det_sync` UMA VEZ, na
+    # partida: trocar o arquivo no disco nao recarrega o modulo. Sem este passo,
+    # mudanca em det_sync.py/servir_painel.py e publicada e nao vale - em
+    # silencio, ate a maquina reiniciar. (O gerar_painel.py escapa disso porque
+    # o servidor o chama como subprocesso a cada carregamento da pagina.)
+    # Constatado em 19/08/2026: o sync do DET rodou com codigo de 4 dias antes.
+    print("  " + rodar_script(raiz, "instalar_servidor_painel.py",
+                              ["reiniciar"], conferir))
+
     print("PUBLICADO" if not conferir else "CONFERÊNCIA CONCLUÍDA (nada mudou)")
 
 
