@@ -286,7 +286,7 @@ preserva o texto fixo. Os passos 2-alt a 5 ficam abaixo só como **fallback**.
   "medidas_protecao": ["medida 1", "medida 2"],
   "documentos_solicitados": ["documento 1", "documento 2"],
 
-  "conclusao": "texto da conclusão (opcional; sem ele a seção fica em branco para o AFT)",
+  "conclusao": "texto padrão da conclusão (obrigatório; ver Item 8)",
 
   "cidade": "Goiânia", "uf": "GO", "data": "29/07/2026",
   "auditor_fiscal": "NOME DO AUDITOR"
@@ -337,9 +337,15 @@ nenhum outro texto:** os itens 1, 2 e 8, a metodologia da NR-3 e as Tabelas
   ATIVIDADE | MÁQUINA | EQUIPAMENTO | SETOR DE SERVIÇO | ESTABELECIMENTO
   (e OBRA, no embargo — subitem 3.2.2.1);
 - `tipo_paralisacao` — caixa alta: TOTAL | PARCIAL;
-- `objetos` — descrição: identificação física, localização, nº de série/patrimônio
-  quando houver, e o que exatamente ficou paralisado. Prosa objetiva, 1 a 3
-  parágrafos. **Sem juízo de valor e sem fundamentação legal** (isso é do item 4).
+- `objetos` — descrição: identificação física, localização e nº de série/patrimônio
+  quando houver; quando a paralisação for PARCIAL, dizer qual parte parou. Prosa
+  objetiva, 1 a 3 parágrafos. **Sem juízo de valor e sem fundamentação legal**
+  (isso é do item 4).
+  **Nunca escrever frase declarando a paralisação em si** — nada de "Ficou
+  paralisada a operação da máquina em sua totalidade", "a atividade foi totalmente
+  paralisada" ou equivalente, em objeto nenhum: a paralisação já está declarada no
+  cabeçalho do objeto (`tipo_paralisacao`) e é o próprio efeito do Termo. Repeti-la
+  na descrição é redundância.
 
 **Item 2 — `Contexto-da-inspecao-fisica`.** É onde entra o **contexto da ação
 fiscal**, no início do item 2. Deve trazer **sempre, no mínimo, a data da
@@ -452,9 +458,17 @@ adequação **de cada uma** delas. O que **não** se agrupa: documento que não 
 (procedimento de segurança, certificado de capacitação, ordem de serviço) vai em item
 próprio.
 
-**Item 8 — `conclusao`** (opcional). Texto da seção CONCLUSÃO/OBSERVAÇÃO. Sem o
-campo, a seção sai em branco para o AFT preencher no Word — antes o script nem
-tinha como preenchê-la.
+**Item 8 — `conclusao`** (obrigatório). Texto da seção CONCLUSÃO/OBSERVAÇÃO.
+**Nunca deixar em branco nem escrever `[A PREENCHER PELO AFT]`.** Salvo pedido
+diferente do AFT, preencher sempre com o texto padrão abaixo, literal:
+
+> Diante do exposto nesse Laudo Técnico de Caracterização de Grave e Iminente
+> Risco para a saúde e integridade física dos trabalhadores e do dever de tutela
+> legal pelo Estado, determinamos a interdição/embargo administrativo cautelar dos
+> objetos mencionados na seção 3 deste relatório.
+
+Se o AFT quiser acrescentar observação própria (prazo, compromisso do empregador,
+fato relevante), ela vem **depois** desse parágrafo, sem substituí-lo.
 
 **Fecho** — `cidade`, `uf` (sigla), `data`, `auditor_fiscal` (nome completo, caixa
 alta).
@@ -839,6 +853,7 @@ Competência delegada pela Portaria 1719/2014...
 - Texto limpo: sem colchetes, marcações ou referências de fonte no documento final.
 - Não alterar nenhum conteúdo fixo do modelo.
 - Se alguma seção não tiver dados do usuário, inserir `[A PREENCHER]` e informar o usuário.
+  **Exceção: a conclusão (item 8) nunca sai como `[A PREENCHER]`** — vai o texto padrão do Item 8.
 - Manter a formatação (fontes, espaçamentos, tabulações) do modelo original.
 
 ---
