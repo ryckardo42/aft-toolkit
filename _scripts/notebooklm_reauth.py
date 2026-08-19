@@ -78,6 +78,8 @@ def _python_do_notebooklm() -> Path | None:
     raizes: list[Path] = []
     if os.environ.get("PIPX_HOME"):
         raizes.append(Path(os.environ["PIPX_HOME"]) / "venvs")
+    if os.environ.get("LOCALAPPDATA"):
+        raizes.append(Path(os.environ["LOCALAPPDATA"]) / "pipx" / "pipx" / "venvs")  # pipx padrao atual no Windows
     raizes += [
         Path.home() / "pipx" / "venvs",            # pipx novo no Windows
         Path.home() / ".local" / "pipx" / "venvs",  # pipx clássico
