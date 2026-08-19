@@ -417,7 +417,19 @@ Linhas separadas por `\n`.
     só os parágrafos que a `/aft-revisa-auto` (FASE 2.7) separou; um bloco II com vários
     parágrafos no `autos.md` deve sair com vários `#13#10` no meio, não um único parágrafo
     corrido.
-  - Exemplo: `I - DA FISCALIZACAO:#13#10 . #13#10Trata-se de acao fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalizacao...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVACOES:#13#10 . #13#10a) ...#13#10b) ...`
+  - Exemplo: `I - DA FISCALIZAÇÃO:#13#10 . #13#10Trata-se de ação fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalização...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVAÇÕES:#13#10 . #13#10a) ...#13#10b) ...`
+  - **Nunca escreva os subtítulos sem acento** (`FISCALIZACAO`, `OBSERVACOES`) — mesmo em rascunho
+    interno ou script auxiliar. O encoding final (latin-1) suporta acento normalmente; a única
+    razão para tirar acento seria confundir "ASCII-safe" com "exigência do sistema", o que é falso
+    aqui e já causou um auto real sair sem o cabeçalho `III - OBSERVAÇÕES:` corretamente acentuado
+    numa fiscalização (17/08/2026). Se montar o `[texto_autuacao]` por script (em vez de digitar
+    linha a linha), **teste a saída extraindo o campo 18 de uma linha tipo 1 e conferindo, à mão,
+    que os três subtítulos aparecem completos e acentuados** antes de rodar `indenta_quebras.py`.
+  - **Ao extrair um bloco III já existente do `autos.md`** (o texto fixo `III - OBSERVAÇÕES:...`
+    que a Fase 2 injeta), a extração deve **incluir o cabeçalho `III - OBSERVAÇÕES:` no resultado**,
+    não só o conteúdo depois dele — um erro de regex que capture só o que vem *depois* do
+    cabeçalho descarta o subtítulo inteiro do TXT final sem dar erro em lugar nenhum (o
+    `validar_txt.py` não pegava isso; ver checagem nova abaixo).
   - **Normalização do legado (obrigatória)**: rascunho antigo redigido com `1) DA FISCALIZAÇÃO:` / `2) IRREGULARIDADE:` / `3) OBSERVAÇÕES:` é convertido para o formato romano ao montar o `[texto_autuacao]` (troca determinística de subtítulo, sem tocar no resto do texto) — todo TXT sai no formato novo, mesmo de rascunho antigo.
   - **Recuo de primeira linha (aplicado por script na geração, ver "Geração e salvamento"):** monte o `[texto_autuacao]` com os `#13#10` puros, como acima. O recuo NÃO é digitado à mão — o passo `indenta_quebras.py` insere, de forma determinística, 8 espaços após cada `#13#10` que precede texto real (parágrafo, subtítulo, alínea), deixando os parágrafos com recuo no Sistema Auditor. Os marcadores de linha em branco `#13#10 . #13#10` são preservados (o ponto continua com 1 espaço de cada lado, sem recuo). Não escreva os 8 espaços você mesmo — apenas rode o script.
 - `[cod_3]` = código da ementa com o hífen removido, mantendo TODOS os dígitos. Ex: `312358-8` → `3123588`; `000361-0` → `0003610`. Nunca usar zero-padding de 7 dígitos — o dígito verificador faz parte do código.
@@ -452,11 +464,20 @@ linha 6 (CIF)
    ```
    <OS_ATIVAS>/[PASTA_EMPRESA]/[PASTA_LAVRATURA]/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt
    ```
-4. **Recuo de primeira linha (obrigatório).** Rode o script do toolkit sobre o tokenizado — ele insere 8 espaços após cada `#13#10` que precede texto real (recuo de parágrafo no Sistema Auditor), preservando os marcadores de linha em branco `#13#10 . #13#10`. É idempotente (rodar de novo não duplica o recuo):
+4. **Recuo de primeira linha (obrigatório — NUNCA pule este passo).** Rode o script do toolkit sobre o tokenizado — ele insere 8 espaços após cada `#13#10` que precede texto real (recuo de parágrafo no Sistema Auditor), preservando os marcadores de linha em branco `#13#10 . #13#10`. É idempotente (rodar de novo não duplica o recuo):
    ```bash
    DIR="<OS_ATIVAS>"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"
    python ~/.claude/skills/_scripts/indenta_quebras.py "$DIR/AI_[NUM_AUTOS]_[CNPJ].tokenized.txt"
    ```
+   > **Por que isso é fácil de esquecer:** o Sistema Auditor aplica recuo automático **só na
+   > primeiríssima linha** do campo (o subtítulo `I - DA FISCALIZAÇÃO:`, que fica sem espaço nenhum
+   > antes dele mesmo). Todas as outras quebras (`#13#10` que o Toolkit cria manualmente) **não**
+   > ganham recuo sozinhas — sem este script, o resultado visual é o subtítulo `I` com recuo e
+   > tudo o mais (parágrafos, `II`, `III`) grudado na margem, uma inconsistência visível na
+   > importação. Regenerar o TXT numa correção rápida e esquecer de rodar este passo de novo
+   > é o erro mais fácil de cometer — se você regenerar o `.tokenized.txt` do zero por qualquer
+   > motivo (nova correção de texto, novo script de montagem), rode este passo de novo **antes**
+   > de re-hidratar, mesmo que pareça repetição.
 5. **Re-hidrate** rodando o script do toolkit (gera o TXT real, já em latin-1, a partir do tokenizado + de-para):
    ```bash
    DIR="<OS_ATIVAS>"/"[PASTA_EMPRESA]"/"[PASTA_LAVRATURA]"

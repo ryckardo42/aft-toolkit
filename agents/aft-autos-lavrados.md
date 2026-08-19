@@ -30,7 +30,7 @@ dezenas de PDFs não entulhe o contexto do AFT — de volta, só o relatório.
 
 1. **Leia o manual** (o SKILL.md recebido). Ignore o Passo 1 (resolução de alvos — já
    feito) e o Passo 1.5 (despacho — você É o agente). Execute os **Passos 2 → 2.5 →
-   3 → 4 → 4.5 → 5 → 5.5 → 6** para cada alvo, na ordem, exatamente como o manual
+   3 → 4 → 4.5 → 5 → 5.5 → 6 → 6.5** para cada alvo, na ordem, exatamente como o manual
    manda.
 2. **Você nunca pergunta nada** — não tem a tool AskUserQuestion, de propósito. Nos
    pontos em que o manual manda perguntar ao AFT, aplique a regra conservadora e

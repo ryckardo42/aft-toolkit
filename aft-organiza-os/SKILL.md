@@ -73,6 +73,13 @@ for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
    `python ~/.claude/skills/_scripts/backup_arquivo.py "<memory.md>"`). Se estiver em
    dia, não toque.
 
+   **Gatilho específico — Ordem de Serviço sem `## Ementas da OS`.** Se a pasta tiver um
+   PDF de Ordem de Serviço (root ou solto) e o `memory.md` **não** tiver a seção
+   `## Ementas da OS`, isso sozinho já qualifica a pasta como "atualização" — mesmo que
+   nada mais esteja fora do padrão. É o caso típico de OS organizada antes desta
+   extração existir na skill, ou de Ordem de Serviço salva depois do primeiro
+   `/aft-organiza-os`.
+
    **Layout antigo (anterior a 22/07/2026) → migração.** Antes, notificações e pastas
    de autos ficavam soltas na raiz. Detecte e inclua a migração no plano quando houver,
    na raiz: `notificacao-*.pdf`, `relatorio-atendimento-*.pdf`, `notificacao-*/`,
@@ -97,6 +104,7 @@ Classifique cada item pelas assinaturas (nome do arquivo + texto da 1ª página)
 | Tipo | Assinaturas típicas |
 |---|---|
 | **Notificação DET** | "NOTIFICAÇÃO Nº" + código alfanumérico 12–16 chars (ex.: `S8JHJEYM2OC4VE`); "NOTIFICAÇÃO PARA A APRESENTAÇÃO DE DOCUMENTOS"/"CORREÇÃO"; cabeçalho MTE/SIT |
+| **Ordem de Serviço do SFIT** | arquivo tipo `OrdemServico*.pdf` ou qualquer nome (ex.: "Ordem de Serviço.pdf"); cabeçalho "Ordem de Serviço", seções "1. Dados da OS" / "4. Ementas a Fiscalizar" / "6. Equipe AFT" — mesma assinatura que o `/aft-nova-auditoria` usa no Passo 0 |
 | **Relatório de atendimento do DET** | nome `relatorio-atendimento*<CODIGO>*.pdf` ou 1ª página "Relatório de Atendimento" + código — é **evidência de que o DET foi respondido** |
 | **Notificação emitida pelo AFT (TN/NCO ou NAD)** | nome `tn-nco-*` ou `nad-*` (saídas das skills `/aft-tn-nco` e `/aft-NAD`) — o `.docx` vai para `NOTIFICACOES/`, o `.md` **fica na raiz** |
 | **Relação de autos lavrados** | "Relação de Autos de Infração Lavrados" (relatório do Sistema Auditor); nome tipo `RR_*.PDF` |
@@ -123,6 +131,11 @@ Extraia, quando presentes:
 - Da relação de autos: para cada auto, **número do AI** (9 dígitos → formate
   `XX.XXX.XXX-X`), **data de lavratura**, **ementa** (7 dígitos → `XXXXXX-X`) e um resumo
   curtíssimo da descrição.
+- Da Ordem de Serviço: nº da OS, prazo limite para término da fiscalização (o
+  **vencimento da OS**), e a tabela inteira da seção "4. Ementas a Fiscalizar"
+  (Atributo/NR, código da ementa, descrição) — **código e descrição literais do PDF,
+  nunca resumidos ou parafraseados**. É a mesma extração que o `/aft-nova-auditoria`
+  faz no Passo 0; aqui ela vira a seção `## Ementas da OS` do `memory.md` (FASE 4).
 
 > Privacidade: **não abra nem ecoe** conteúdo de listas de empregados (ex.: "RELAÇÃO DE
 > EMPREGADOS.xlsx") nem documentos pessoais de trabalhador (CNH, RG, CAT, certidão de
@@ -151,10 +164,14 @@ Monte **um único plano** cobrindo todas as pastas (novas + atualizações) e pe
    Empregador: ACME LTDA · CNPJ 11.222.333/0001-44
    ⚠️ Sem o PDF da notificação DET na pasta → DET fica em branco no memory.md
    (preencher depois; sem pergunta)
+   Ordem de Serviço encontrada (OS 99887766-5) → 12 ementas extraídas para
+   "## Ementas da OS"; renomear "OrdemServico.pdf" → "OS 99887766-5.pdf" (fica na raiz)
 
 ── 3. ... ───────────────────────────────────────────────
 
 ── Atualização: "BETA LTDA 11222333000144" ──────────────
+   Ordem de Serviço presente na pasta, mas memory.md não tem "## Ementas da OS"
+   → acrescentar seção com as 8 ementas do PDF (backup do memory.md antes)
    2 arquivos novos soltos na raiz → mover para notificacao-XYZ.../
    (memory.md será editado com backup antes)
 
@@ -171,6 +188,7 @@ só com as fichas e os relatórios `.md`**:
 <EMPREGADOR> <CNPJ>/
 ├── memory.md                     ← ficha da OS
 ├── CLAUDE.md                     ← briefing da sessão (não mover)
+├── OS <nº da OS>.pdf             ← Ordem de Serviço do SFIT, se presente (fica na raiz)
 ├── autos-lavrados.md             ← RAIZ OBRIGATÓRIA (ver regra abaixo)
 ├── analise-preliminar-*.md       ← RAIZ OBRIGATÓRIA
 ├── jornada-analise-*.md          ← RAIZ OBRIGATÓRIA
@@ -185,8 +203,23 @@ só com as fichas e os relatórios `.md`**:
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
 │   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
 ├── interdicao-embargo/           ← termo, RT, laudos, juntados
+├── RELATÓRIOS DE FISCALIZAÇÃO/   ← todo relatório de fiscalização (ver regra abaixo)
+│   ├── Relatorio auditoria RI <ri>.docx/.md/.json   ← /aft-relatorio
+│   ├── RI <ri> - autos e anexos.pdf                 ← dossiê do /aft-autos-pdf-reunidos
+│   └── relatorio-sfitweb.docx                       ← /minha-risfitweb
 └── fotos/
 ```
+
+> **Pasta padrão para relatórios — `RELATÓRIOS DE FISCALIZAÇÃO/`.** Todo documento cujo
+> propósito é ser um **relatório** da fiscalização (não uma notificação, não um auto,
+> não uma minuta de trabalho em andamento) vai nessa subpasta — crie-a se não existir.
+> Referência: `/aft-relatorio` (Relatório Final Simplificado) e `/minha-risfitweb`
+> (relatório de avaliação de ementas para o SFITWEB) já gravam ali. Documento de
+> relatório avulso pedido fora de skill (ver `/aft-modelo-docx`) segue a mesma regra.
+> Isso é diferente da regra de `.md` na raiz abaixo: os `.md`/`.json` que acompanham um
+> relatório (fonte do `.docx`) ficam **dentro** desta subpasta, junto do `.docx` — não
+> na raiz — porque aqui o documento final é sempre o `.docx`, e manter os três juntos
+> importa mais do que a visibilidade no painel.
 
 > **Regra dura — `.md` fica na RAIZ.** Duas travas no painel, não é preferência de
 > arrumação:
@@ -231,6 +264,16 @@ Regras do plano:
   (`autos.md` + TXT do `/aft-gera-ai`). É a mesma pasta que o `/aft-embargo-interdicao` e o `/aft-embargo-interdicao-manutencao`
   escrevem. Se já existir uma pasta antiga `Autos TE-TI DD-MM/`, inclua no plano
   renomeá-la para `interdicao-embargo/` (ou mover o conteúdo dela para lá).
+- **Ordem de Serviço** → fica na raiz (mesma convenção do `/aft-nova-auditoria`), renomeada
+  para `OS <nº da OS>.pdf` quando o número for extraído; sem número legível, mantenha o
+  nome original e avise no plano. Nunca mova para `NOTIFICACOES/` nem `AUTOS/` — não é
+  nem notificação nem auto, é o documento de abertura da fiscalização.
+- **Relatórios de fiscalização** → subpasta `RELATÓRIOS DE FISCALIZAÇÃO/` (crie se não
+  existir): relatório final (`Relatorio auditoria RI <ri>.docx/.md/.json`), dossiê de
+  autos e anexos (`RI <ri> - autos e anexos.pdf`), relatório de ementas do SFITWEB
+  (`relatorio-sfitweb.docx`) e qualquer outro relatório avulso solto na raiz que não
+  seja notificação, auto ou minuta de trabalho em andamento (esses seguem as regras
+  próprias acima).
 - Fotos: subpasta `fotos/` (crie se estiverem soltas; renomeie `FOTO/` → `fotos/`).
 - Trabalho do AFT em andamento (.docx/.md de minutas e análises): **fica na raiz**,
   intocado, anotado no memory.md.
@@ -254,9 +297,15 @@ status: em_andamento
 # <EMPREGADOR>
 
 **CPF:** <formatado>   (ou **CNPJ:**, conforme o caso)
+**OS (SFIT):** <nº da OS>   <!-- só quando a Ordem de Serviço foi lida -->
+**Vencimento da OS:** <dd/mm/aaaa>   <!-- prazo limite para término; só quando lido -->
 
 ## Notificações DET
 - [ ] <CODIGO> — prazo <dd/mm/aaaa>
+
+## Ementas da OS
+_(OS SFIT nº <os> — ementas a fiscalizar; seção só existe quando uma Ordem de Serviço foi lida)_
+- [ ] <código> — <descrição oficial literal> (<NR ou atributo>)
 
 ## Autos de Infração
 _(vazio)_
@@ -284,6 +333,14 @@ _(vazio)_
      `- [ ] (código não localizado) — prazo (a preencher)` + observação; **não pergunte**.
    - Registre em observação os trabalhos já iniciados pelo AFT (minutas, análises,
      relatórios .docx encontrados na raiz).
+   - **`## Ementas da OS`**: só entra no `memory.md` quando uma Ordem de Serviço foi
+     lida (FASE 2). Código e descrição **literais** do PDF — nunca resuma nem
+     parafraseie a ementa. Numa pasta **nova**, a seção já nasce junto com o resto do
+     arquivo. Numa pasta em **atualização** (memory.md já existe e só falta essa
+     seção — gatilho da FASE 1), acrescente-a com Edit cirúrgico logo após
+     `## Notificações DET`, sem tocar em mais nada do arquivo (o backup já foi feito
+     no passo 2). As linhas `**OS (SFIT):**` e `**Vencimento da OS:**` seguem a mesma
+     regra: só entram/atualizam se a Ordem de Serviço foi lida.
 3. Rode o guarda de PII em cada memory.md escrito — **sempre com a saída em UTF-8**, para
    o console Windows (cp1252) não derrubar o script:
    ```bash
@@ -377,5 +434,7 @@ Próximos passos sugeridos: /analise-preliminar (respostas de DET) · /aft-det-6
 - Dados extraídos vêm **dos documentos** — não invente empregador, código, prazo ou
   número de AI que não estejam escritos neles. Campo não encontrado fica vazio.
 - Código de DET: **só** o que está na linha "NOTIFICAÇÃO Nº" do PDF da notificação.
+- Ementa da Ordem de Serviço: código e descrição **literais** da tabela "4. Ementas a
+  Fiscalizar" — nunca resumir, parafrasear ou completar de memória.
 - Nome/CPF de trabalhador: nunca no chat nem no memory.md (só quantitativos).
 - Encoding UTF-8; datas dd/mm/aaaa no corpo do memory.md.
