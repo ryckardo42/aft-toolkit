@@ -118,11 +118,12 @@ Para cada ementa confirmada, redija o **bloco 2)** que será colado dentro do au
 2. **Personalize com os fatos da narrativa**: máquinas atingidas, setor, marca/modelo se houver. Não enxerte fatos que o AFT não relatou.
 3. **Cite ao menos 1 ou 2 empregados como exemplo** (mesmo em infração coletiva — necessário para defesa). **Use os tokens `[[TRAB_NN]]` (e `[[CPF_NN]]` se citar CPF)** no lugar do nome/CPF real, registrando o par no `.depara_[CNPJ].json` da OS — política de anonimização do toolkit; o `/aft-gera-ai` re-hidrata no TXT final. Se o AFT não forneceu nomes, use o placeholder `[NOME DO EMPREGADO 1 — FUNÇÃO]` e sinalize no fechamento.
 4. **Cite o dispositivo legal violado** ao final do parágrafo factual (itens da NR-12 conforme a capitulação da ementa).
-5. **Inclua o parágrafo de dano coletivo** (texto fixo abaixo) — toda infração de NR-12 é SST:
+5. **Conclusão jurídica logo após o enquadramento normativo** (parágrafo próprio): `Sendo assim, incorreu o empregador na infração ementada supracitada.`
+6. **Feche o bloco II com o parágrafo de dano coletivo** (texto canônico abaixo) — toda infração de NR-12 é SST:
 
-   > Dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a citação do empregado em situação irregular faz-se necessária apenas quando imprescindível à caracterização da infração e quando a lei fixar a multa com base no quantitativo de trabalhadores diretamente prejudicados. Ademais, nas infrações que atingem a coletividade dos trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho (SST), dispensa-se a individualização do sujeito, pois o bem jurídico tutelado tem natureza difusa ou coletiva. (Orientação técnica SIT/n.2/2022).
+   > Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022). Contudo, cita-se como exemplo de trabalhador prejudicado [[TRAB_01]], [função].
 
-6. **Feche com a conclusão jurídica**: `Sendo assim, incorreu o empregador na infração ementada supracitada.`
+   A frase final ("Contudo, cita-se...") é a regra, não o enfeite: se a narrativa identificar o operador da máquina ou outro trabalhador exposto, cite esse(s), com a função se conhecida; senão, use a relação de vínculos ativos da pasta da OS (ex.: `ImprimirVinculosAtivos*.pdf`) e cite **pelo menos dois** empregados com função compatível com a exposição, no plural ("Contudo, citam-se como exemplos de trabalhadores prejudicados [[TRAB_01]], [função], e [[TRAB_02]], [função]."). Nome em capitalização normal, podendo abreviar (primeiro nome + um sobrenome); função em minúsculas; **nunca cite CPF neste parágrafo**. Vale a anonimização por tokens `[[TRAB_NN]]` (registre a forma abreviada no `.depara_[CNPJ].json`). Sem nenhum nome disponível (exceção), encerre em "...(Orientação Técnica SIT nº 2/2022).", sem a frase final.
 7. **Tom**: sóbrio, formal, impessoal, terceira pessoa. Acentuação portuguesa completa preservada (o encoding latin-1 é responsabilidade do `/aft-gera-ai`). Sem travessões.
 8. **Risco grave e iminente**: se a ementa está marcada como aplicável a Termo de Interdição em `references/ementas-comuns.md` E a narrativa indica máquina em operação ou exposição atual, sinalize internamente `[RISCO_GRAVE = true]` para mostrar no encerramento.
 
@@ -149,17 +150,16 @@ II - IRREGULARIDADE:
 
 <texto redigido conforme regras da Fase 4>
 
-Dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a
-citação do empregado em situação irregular faz-se necessária apenas
-quando imprescindível à caracterização da infração e quando a lei fixar
-a multa com base no quantitativo de trabalhadores diretamente
-prejudicados. Ademais, nas infrações que atingem a coletividade dos
-trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho
-(SST), dispensa-se a individualização do sujeito, pois o bem jurídico
-tutelado tem natureza difusa ou coletiva. (Orientação técnica
-SIT/n.2/2022).
-
 Sendo assim, incorreu o empregador na infração ementada supracitada.
+
+Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação
+nominal do empregado só é necessária quando imprescindível à
+caracterização da infração ou quando a multa se baseia no quantitativo
+de trabalhadores prejudicados. Nas infrações que atingem a coletividade,
+tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a
+individualização, dado o caráter difuso ou coletivo do bem jurídico
+tutelado (Orientação Técnica SIT nº 2/2022). Contudo, cita-se como
+exemplo de trabalhador prejudicado [[TRAB_01]], [função].
 
 ----- LINHA PARA A SEÇÃO 4 DO RT (consumido por /aft-embargo-interdicao) -----
 

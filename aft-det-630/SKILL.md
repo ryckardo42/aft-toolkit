@@ -102,7 +102,7 @@ A recusa na apresentação dos documentos solicitados não apenas impede a verif
 
 Em anexo o Relatório de <ATEND_OU_NAO_ATEND> à notificação emitido pelo DET<COMPLEMENTO_RELATORIO>.
 
-Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022).
+Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022).<FRASE_EXEMPLO_TRABALHADOR>
 
 ELEMENTOS DE CONVICÇÃO:
 - Relatório de <ATEND_OU_NAO_ATEND> à notificação emitido pelo DET (ANEXO).
@@ -120,6 +120,16 @@ ELEMENTOS DE CONVICÇÃO:
 | `<PARAGRAFO_OMISSAO>` | (ver bloco A abaixo) | (ver bloco B abaixo) |
 | `<ATEND_OU_NAO_ATEND>` | `não atendimento` | `atendimento` |
 | `<COMPLEMENTO_RELATORIO>` | ` que cita todos os documentos notificados mas não apresentados` | (string vazia) |
+| `<FRASE_EXEMPLO_TRABALHADOR>` | (ver regra abaixo) | idem |
+
+**Regra do `<FRASE_EXEMPLO_TRABALHADOR>`** (exemplo de trabalhador prejudicado, boas
+práticas da inspeção): se a pasta da OS tiver uma relação de vínculos ativos (ex.:
+`ImprimirVinculosAtivos*.pdf`), acrescente ao final do parágrafo de dano coletivo a
+frase ` Contudo, citam-se como exemplos de trabalhadores prejudicados [NOME 1], [função],
+e [NOME 2], [função].` com **pelo menos dois** empregados da lista — nome em
+capitalização normal, podendo abreviar (primeiro nome + um sobrenome); função em
+minúsculas; **nunca cite CPF**. Sem lista de vínculos na pasta, substitua por string
+vazia (o parágrafo termina em "...(Orientação Técnica SIT nº 2/2022).").
 
 **Bloco A — Cenário 1 (omissão total):**
 ```

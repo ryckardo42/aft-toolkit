@@ -92,11 +92,25 @@ cada elemento:
 NR-17, NR-18, NR-35 e demais NRs. Autos **contratuais** (aft-informalidade/CTPS, jornada, FGTS,
 salário) **não são SST**.
 
-- **Auto de SST sem o parágrafo → insira-o** ao final do bloco 2 (IRREGULARIDADE),
-  antes de `ELEMENTOS DE CONVICÇÃO:`. Texto canônico (latin-1-safe, **sem travessões**):
+- **Auto de SST sem o parágrafo → insira-o** como **último parágrafo** do bloco 2
+  (IRREGULARIDADE), antes de `ELEMENTOS DE CONVICÇÃO:` e **depois** da conclusão
+  jurídica ("Sendo assim, incorreu o empregador..."). Texto canônico (latin-1-safe,
+  **sem travessões**):
 
-> Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022).
+> Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022). Contudo, cita-se como exemplo de trabalhador prejudicado [NOME], [função].
 
+- **Frase final de exemplo ("Contudo, cita-se..."):** é a regra do padrão — as skills
+  redatoras devem citar trabalhador prejudicado identificado no contexto ou, na falta,
+  pelo menos dois nomes da relação de vínculos da OS (sem CPF, nunca). Você, revisor,
+  **não inventa nome**: se o parágrafo já vier com exemplo (nome real ou token
+  `[[TRAB_NN]]`), mantenha; se vier sem, insira/mantenha o canônico **sem** a frase
+  final (terminando em "...(Orientação Técnica SIT nº 2/2022).") e sinalize `⚠️ sem
+  exemplo de trabalhador prejudicado no parágrafo de dano coletivo` — pendência
+  factual, não bloqueia.
+- **Ordem trocada → corrija:** se a conclusão jurídica vier **depois** do parágrafo de
+  dano coletivo (padrão antigo), troque os dois parágrafos de lugar — a conclusão fica
+  logo após o enquadramento normativo e o dano coletivo fecha o bloco. Reordenação pura,
+  sem alterar uma palavra.
 - **Auto contratual → NÃO** insira o parágrafo.
 - **Compatibilidade ISO-8859-1 (latin-1):** o `rehydrate.py` grava o TXT final nesse
   encoding. O latin-1 **suporta todos os acentos do português** (ç ã õ á é í ó ú â ê ô à):
@@ -186,9 +200,10 @@ fixo de parágrafos):**
   analisado, um por item de norma, um por setor inspecionado) — não junte achados de
   assuntos diferentes num só parágrafo.
 - Confirmação por inspeção física, quando o texto trouxer essa frase — parágrafo próprio.
+- **Conclusão** ("Sendo assim, incorreu o empregador...") — parágrafo próprio, logo após
+  o enquadramento normativo.
 - **Parágrafo de dano coletivo** (FASE 2) — sempre no seu próprio parágrafo, nunca
-  fundido com o anterior ou o seguinte.
-- **Conclusão** ("Sendo assim, incorreu o empregador...") — parágrafo próprio, ao final.
+  fundido com o anterior ou o seguinte; é o último do bloco II.
 
 **Regras:**
 - Nunca quebre no meio de uma frase — só entre pontos finais.
@@ -209,7 +224,8 @@ paragrafado, não mexa.
 Política: **corrige o que puder e segue direto** (sem reapresentar para aprovação).
 
 1. **Correções determinísticas → aplique direto:** parágrafo de dano coletivo ausente em
-   auto de SST; travessões/aspas curvas → pontuação latin-1-safe; acentuação pt-br
+   auto de SST; conclusão jurídica e dano coletivo em ordem trocada → reordene (FASE 2);
+   travessões/aspas curvas → pontuação latin-1-safe; acentuação pt-br
    reposta nas palavras apontadas pelo `checar_acentos.py` (FASE 2.5); referência a
    arquivo/pasta interna reescrita como descrição da prova (FASE 2.6); bloco II monolítico
    dividido em parágrafos (FASE 2.7).
