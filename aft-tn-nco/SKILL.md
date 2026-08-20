@@ -210,7 +210,7 @@ Dúvidas:
 
 ---
 
-## FASE 4 — Apresentar no chat (bloco a bloco) + salvar .md
+## FASE 4 — Apresentar no chat (bloco a bloco) + salvar .md e .docx
 
 O AFT **copia cada parte individualmente** para os campos correspondentes do DET (Introdução · um Item Solicitado por irregularidade · Observações). Por isso, apresente cada parte em seu **próprio bloco de código copiável**, com rótulo claro.
 
@@ -253,6 +253,19 @@ PATH_MD="$PASTA_OS/tn-nco-$(date +%Y-%m-%d).md"
 ```
 
 Confirme ao AFT: arquivo salvo + nº de itens. Se não houver pasta de OS resolvida, pergunte onde salvar (ou ofereça a Área de Trabalho).
+
+### Gere também um .docx em paralelo (sempre)
+
+Além do `.md` (para o AFT colar no DET) e dos blocos de texto puro no chat, gere **na
+mesma execução** um `.docx` com o mesmo teor, em `<PASTA_OS>/NOTIFICACOES/`, no padrão
+visual do toolkit (biblioteca `aft-modelo-docx`) — nome sugerido
+`NCO - <DD-MM-AAAA>.docx` (ou `NCO - <DD-MM-AAAA> (2).docx` se já existir um do mesmo
+dia). É o mesmo padrão "chat + docx sempre juntos" usado pela Análise Preliminar e pelo
+compilado final de achados no fluxo de resposta a NAD: o `.docx` é para leitura
+confortável e arquivo (capa, introdução, um bloco por item com título em negrito, base
+legal, exigência e ementa), **não substitui** os blocos de texto puro do chat — quem cola
+no DET continua sendo esses blocos, não o `.docx`. Crie a pasta `NOTIFICACOES/` se ainda
+não existir.
 
 ---
 
