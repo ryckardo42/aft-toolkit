@@ -430,31 +430,43 @@ econômica** do estabelecimento, **CNPJ** (apenas dígitos).
   fato à exigência da NR-17. Esta é a forma de tornar a análise rastreável no auto.
   **Separe cada item por linha em branco** no `autos.md` — é o que o `/aft-gera-ai` converte
   em quebra de linha real no Sistema Auditor; uma lista numérica sem quebra entre os itens
-  sai como um único parágrafo corrido. O parágrafo de dano coletivo e a conclusão jurídica
-  (abaixo) também ficam isolados, cada um no seu próprio parágrafo.
+  sai como um único parágrafo corrido. A conclusão jurídica e o parágrafo de dano coletivo
+  (abaixo) também ficam isolados, cada um no seu próprio parágrafo, nesta ordem: conclusão
+  jurídica logo após a última evidência/enquadramento; dano coletivo fechando o bloco II.
 - Descreva os **fatos concretos** com precisão técnica e tom oficial.
 - Cite o **dispositivo da NR-17** violado (item exato, ex: 17.3.3, 17.3.8, 17.4.1(d),
   17.4.2, 17.4.3).
 - **Incorpore as citações de página/folha** geradas na análise. Não economize palavras: a
   empresa precisa localizar cada evidência.
-- Inclua o **parágrafo de dano coletivo** (AET é SST):
+- **Conclusão jurídica logo após a última evidência/enquadramento** (parágrafo próprio):
+  *"Sendo assim, incorreu o empregador na infração ementada supracitada."*
+- Feche o bloco II com o **parágrafo de dano coletivo** (AET é SST), último parágrafo
+  antes de ELEMENTOS DE CONVICÇÃO. Texto canônico:
 
 ```
-Dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a
-citação do empregado em situação irregular faz-se necessária apenas
-quando imprescindível à caracterização da infração e quando a lei fixar
-a multa com base no quantitativo de trabalhadores diretamente
-prejudicados. Ademais, nas infrações que atingem a coletividade dos
-trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho
-(SST), dispensa-se a individualização do sujeito, pois o bem jurídico
-tutelado tem natureza difusa ou coletiva. (Orientação técnica
-SIT/n.2/2022).
+Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação
+nominal do empregado só é necessária quando imprescindível à
+caracterização da infração ou quando a multa se baseia no quantitativo
+de trabalhadores prejudicados. Nas infrações que atingem a coletividade,
+tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a
+individualização, dado o caráter difuso ou coletivo do bem jurídico
+tutelado (Orientação Técnica SIT nº 2/2022). Contudo, citam-se como
+exemplos de trabalhadores prejudicados [NOME 1], [função], e [NOME 2],
+[função].
 ```
 
-- Finalize com a conclusão jurídica: *"Sendo assim, incorreu o empregador na infração
-  ementada supracitada."*
+  **Exemplo de trabalhador prejudicado (frase final "Contudo, ..."):** se o contexto da
+  fiscalização (inspeção física, narrativa do AFT, a própria AET) identificar trabalhador
+  exposto ao risco ergonômico, cite esse(s), com a função se conhecida. Senão, procure na
+  pasta da OS uma relação de vínculos ativos (ex.: `ImprimirVinculosAtivos*.pdf`) e cite
+  **pelo menos dois** empregados com função compatível com a exposição. Nome em
+  capitalização normal, podendo abreviar (primeiro nome + um sobrenome); função em
+  minúsculas; **nunca cite CPF**. Com um só nome, use o singular ("cita-se como exemplo
+  de trabalhador prejudicado..."). Sem nenhum nome disponível (exceção), encerre em
+  "...(Orientação Técnica SIT nº 2/2022).", sem a frase final.
 - Tom: sóbrio, formal, impessoal, terceira pessoa. **Sem travessões.**
-- Não há trabalhadores nominados em autos de AET (infração coletiva — sem linhas tipo 4).
+- Autos de AET não levam trabalhadores nominados nas **linhas tipo 4** do TXT (infração
+  coletiva) — o exemplo do parágrafo de dano coletivo é só texto do bloco II.
 
 **Códigos das cinco ementas** (já no formato com hífen para a linha `Ementa:` — o `/aft-gera-ai`
 remove o hífen no cod_3):

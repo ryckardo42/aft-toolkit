@@ -344,8 +344,10 @@ nenhuma quebra interna sai como um único parágrafo gigante e ilegível):
 3. **Enquadramento normativo** (Por quê): vincular o fato constatado à exigência normativa descumprida, fechando o nexo entre o empírico e o típico.
 
 Se houver mais de uma irregularidade/constatação dentro da mesma ementa, use um parágrafo
-por grupo temático em vez de espremer tudo no movimento 2. O parágrafo de dano coletivo e
-a conclusão jurídica (abaixo) ficam sempre isolados, cada um no seu próprio parágrafo.
+por grupo temático em vez de espremer tudo no movimento 2. A conclusão jurídica e o
+parágrafo de dano coletivo (abaixo) ficam sempre isolados, cada um no seu próprio
+parágrafo, **nesta ordem**: a conclusão jurídica vem logo após o enquadramento normativo
+(movimento 3), e o parágrafo de dano coletivo fecha o bloco II.
 
 **Modelo de referência** (adaptar à NR/dispositivo do caso):
 
@@ -359,21 +361,38 @@ a conclusão jurídica (abaixo) ficam sempre isolados, cada um no seu próprio p
 - Cite o **dispositivo legal infringido** (artigo da CLT, item da NR, portaria).
 - **Sempre cite ao menos 1 ou 2 empregados** como exemplos de prejudicados, mesmo em infrações de natureza coletiva. O nome do empregado é necessário para permitir a defesa do autuado. **Na redação e nos ecos do chat, use os tokens `[[TRAB_NN]]` (e `[[CPF_NN]]` se citar CPF)**, registrando o par real no `.depara_[CNPJ].json` da OS — o `/aft-gera-ai` re-hidrata no TXT final. Se o auditor não forneceu nomes, use `[NOME DO EMPREGADO 1 - FUNÇÃO]` como placeholder e peça os dados.
 - Se houver consulta ao eSocial, mencione a data e os eventos verificados (S-2190, S-2200, etc.).
-- **Parágrafo de dano coletivo** — incluir APENAS em infrações de SST (NRs), NÃO em infrações puramente CLT (registro, jornada, CTPS):
+- **Conclusão jurídica logo após o enquadramento normativo** (parágrafo próprio, imediatamente depois do movimento 3): "Sendo assim, incorreu o empregador na infração ementada supracitada."
+- **Parágrafo de dano coletivo** — incluir APENAS em infrações de SST (NRs), NÃO em infrações puramente CLT (registro, jornada, CTPS). É o **último parágrafo do bloco II** (depois da conclusão jurídica, antes de ELEMENTOS DE CONVICÇÃO). Texto canônico:
 
 ```
-Dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a
-citação do empregado em situação irregular faz-se necessária apenas
-quando imprescindível à caracterização da infração e quando a lei fixar
-a multa com base no quantitativo de trabalhadores diretamente
-prejudicados. Ademais, nas infrações que atingem a coletividade dos
-trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho
-(SST), dispensa-se a individualização do sujeito, pois o bem jurídico
-tutelado tem natureza difusa ou coletiva. (Orientação técnica
-SIT/n.2/2022).
+Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação
+nominal do empregado só é necessária quando imprescindível à
+caracterização da infração ou quando a multa se baseia no quantitativo
+de trabalhadores prejudicados. Nas infrações que atingem a coletividade,
+tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a
+individualização, dado o caráter difuso ou coletivo do bem jurídico
+tutelado (Orientação Técnica SIT nº 2/2022). Contudo, cita-se como
+exemplo de trabalhador prejudicado [[TRAB_01]], [função].
 ```
 
-- Finalize com conclusão jurídica: "Sendo assim, incorreu o empregador na infração ementada supracitada."
+  **A frase final ("Contudo, cita-se...") é a regra, não o enfeite** — as boas práticas
+  da inspeção recomendam exemplificar o trabalhador prejudicado. Como escolher o exemplo:
+  1. **Contexto primeiro:** se a inspeção física, a análise documental ou a narrativa do
+     AFT identificarem trabalhador prejudicado/exposto (ex.: o operador da máquina), cite
+     esse(s), com a função se conhecida.
+  2. **Senão, lista de vínculos da OS:** procure na pasta da OS uma relação de vínculos
+     ativos (ex.: `ImprimirVinculosAtivos*.pdf`, relação de vínculos do SFIT) e cite
+     **pelo menos dois** empregados com função compatível com a exposição (ex.: padeiros
+     para máquina da padaria). Plural: "Contudo, citam-se como exemplos de trabalhadores
+     prejudicados [[TRAB_01]], [função], e [[TRAB_02]], [função]."
+  3. **Sem nenhum nome disponível (exceção):** encerre o parágrafo em "...(Orientação
+     Técnica SIT nº 2/2022).", sem a frase final.
+
+  Nome do trabalhador em capitalização normal, podendo abreviar (primeiro nome + um
+  sobrenome: "Alessandro Martins", não "ALESSANDRO MARTINS DE OLIVEIRA"); função em
+  minúsculas. **Nunca cite CPF neste parágrafo.** Vale a política de anonimização: no
+  rascunho e no chat, tokens `[[TRAB_NN]]` com o par real no `.depara_[CNPJ].json`
+  (registre a forma abreviada) — o `/aft-gera-ai` re-hidrata no TXT final.
 - Tom: sóbrio, formal, impessoal, terceira pessoa.
 - Dados ausentes: sinalize como `[DADO NÃO INFORMADO]`.
 

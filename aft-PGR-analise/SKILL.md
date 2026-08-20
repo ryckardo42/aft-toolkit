@@ -555,8 +555,9 @@ estabelecimento. CNPJ: capa do PGR ou memory.md.
 - **Estruture em parágrafos temáticos — nunca em um bloco único.** Separe com linha em
   branco: um parágrafo para o enquadramento normativo (conduta + item da NR-01 violado),
   um parágrafo por **grupo temático de constatações relacionadas** (ex.: um por
-  trecho/seção do PGR sobre o mesmo tema, um por GHE/setor), e o parágrafo de dano
-  coletivo e a conclusão jurídica sempre isolados, cada um no seu próprio parágrafo. A
+  trecho/seção do PGR sobre o mesmo tema, um por GHE/setor), e a conclusão jurídica e o
+  parágrafo de dano coletivo sempre isolados, cada um no seu próprio parágrafo, nesta
+  ordem: conclusão jurídica logo após o enquadramento; dano coletivo fechando o bloco. A
   linha em branco no `autos.md` é o que o `/aft-gera-ai` converte em quebra de linha real
   (`#13#10`) no Sistema Auditor — um bloco II sem nenhuma quebra interna sai como um
   único parágrafo gigante e ilegível. Alvo prático: 3 a 6 parágrafos.
@@ -564,22 +565,32 @@ estabelecimento. CNPJ: capa do PGR ou memory.md.
 - Cite o **dispositivo da NR-01** violado (item exato, ex: 1.5.4.3.1).
 - **Incorpore as citações de página** geradas na análise (`pág. X` ou `págs. X a Y`).
   Não economize palavras: a empresa precisa localizar cada evidência citada.
-- Inclua o **parágrafo de dano coletivo** (PGR é SST):
+- **Conclusão jurídica logo após o enquadramento normativo** (parágrafo próprio):
+  *"Sendo assim, incorreu o empregador na infração ementada supracitada."*
+- Feche o bloco II com o **parágrafo de dano coletivo** (PGR é SST), último parágrafo
+  antes de ELEMENTOS DE CONVICÇÃO. Texto canônico:
 
 ```
-Dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a
-citação do empregado em situação irregular faz-se necessária apenas
-quando imprescindível à caracterização da infração e quando a lei fixar
-a multa com base no quantitativo de trabalhadores diretamente
-prejudicados. Ademais, nas infrações que atingem a coletividade dos
-trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho
-(SST), dispensa-se a individualização do sujeito, pois o bem jurídico
-tutelado tem natureza difusa ou coletiva. (Orientação técnica
-SIT/n.2/2022).
+Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação
+nominal do empregado só é necessária quando imprescindível à
+caracterização da infração ou quando a multa se baseia no quantitativo
+de trabalhadores prejudicados. Nas infrações que atingem a coletividade,
+tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a
+individualização, dado o caráter difuso ou coletivo do bem jurídico
+tutelado (Orientação Técnica SIT nº 2/2022). Contudo, citam-se como
+exemplos de trabalhadores prejudicados [NOME 1], [função], e [NOME 2],
+[função].
 ```
 
-- Finalize com a conclusão jurídica: *"Sendo assim, incorreu o empregador na infração
-  ementada supracitada."*
+  **Exemplo de trabalhador prejudicado (frase final "Contudo, ..."):** se o contexto da
+  fiscalização (inspeção física, narrativa do AFT) identificar trabalhador exposto, cite
+  esse(s). Senão, procure na pasta da OS uma relação de vínculos ativos (ex.:
+  `ImprimirVinculosAtivos*.pdf`) e cite **pelo menos dois** empregados com função
+  compatível com a exposição. Nome em capitalização normal, podendo abreviar (primeiro
+  nome + um sobrenome); função em minúsculas; **nunca cite CPF**. Com um só nome, use o
+  singular ("cita-se como exemplo de trabalhador prejudicado..."). Sem nenhum nome
+  disponível (exceção), encerre em "...(Orientação Técnica SIT nº 2/2022).", sem a frase
+  final.
 - Tom: sóbrio, formal, impessoal, terceira pessoa. Sem travessões.
 - **Acentuação completa e obrigatória.** Escreva o subtítulo 2 em português com TODOS os
   acentos (ç ã õ á é í ó ú â ê ô à). O TXT final do Sistema Auditor é gravado em
@@ -593,7 +604,9 @@ SIT/n.2/2022).
   Regra Especial D.A como conteúdo do subtítulo 2 e acrescente aos elementos de
   convicção: `; termo de interdição lavrado, em anexo`.
 - O subtítulo 3 é **fixo e literal** (bloco acima) — não altere.
-- Não há trabalhadores nominados em autos de PGR (infração coletiva — sem linhas tipo 4).
+- Autos de PGR não levam trabalhadores nominados nas **linhas tipo 4** do TXT (infração
+  coletiva) — o exemplo de trabalhador prejudicado do parágrafo de dano coletivo é só
+  texto do bloco II, não gera linha tipo 4.
 
 **Códigos das sete ementas** (formato com hífen, para a linha `Ementa:` — o `/aft-gera-ai`
 remove o hífen no cod_3):
