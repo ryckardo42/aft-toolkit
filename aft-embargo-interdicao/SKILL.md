@@ -673,7 +673,7 @@ DA INFRAÇÃO COMETIDA: Constatou-se que o empregador aqui autuado incorreu na e
 
 O quadro resultante dessa sistematização e análise de informações levou à caracterização da condição de RISCO GRAVE E IMINENTE à saúde e à integridade física dos trabalhadores expostos, na forma conceituada pelo subitem 3.2.1 da Norma Regulamentadora nº 3 do Ministério do Trabalho e Previdência, com atualização dada pela Portaria nº 1.068, de 23 de setembro de 2019: "Considera-se grave e iminente risco toda condição ou situação de trabalho que possa causar acidente ou doença com lesão grave ao trabalhador.", resultando na lavratura do termo de interdição/embargo em anexo.
 
-Exemplo de empregado prejudicado: dano de natureza coletiva. A Portaria MTP nº 667/2021 esclareceu que a citação do empregado em situação irregular faz-se necessária apenas quando imprescindível à caracterização da infração e quando a lei fixar a multa com base no quantitativo de trabalhadores diretamente prejudicados. Ademais, nas infrações que atingem a coletividade dos trabalhadores, tais como naquelas inerentes ao meio ambiente de trabalho (SST), dispensa-se a individualização do sujeito, pois o bem jurídico tutelado tem natureza difusa ou coletiva. (Orientação técnica SIT/n.2/2022).
+Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022). Contudo, cita-se como exemplo de trabalhador prejudicado {exemplo_trabalhador}.
 
 ELEMENTOS DE CONVICÇÃO:
 Inspeção realizada no estabelecimento e relatório técnico do embargo/interdição em anexo.
@@ -683,6 +683,17 @@ Inspeção realizada no estabelecimento e relatório técnico do embargo/interdi
 > injetado pelo `/aft-gera-ai` (de `config/blocos_auto.md`) entre o Subtítulo 2 e os
 > ELEMENTOS DE CONVICÇÃO. O template acima termina, de propósito, no Subtítulo 2 +
 > ELEMENTOS DE CONVICÇÃO.
+
+> **`{exemplo_trabalhador}`** (frase final do parágrafo de dano coletivo, boas práticas
+> da inspeção): se o RT/`inspecao-fisica.md` identificar trabalhador exposto ao objeto
+> interditado (o operador da máquina, por exemplo), cite esse(s), com a função se
+> conhecida. Senão, use a relação de vínculos ativos da pasta da OS (ex.:
+> `ImprimirVinculosAtivos*.pdf`) e cite **pelo menos dois** empregados com função
+> compatível com a exposição, ajustando para o plural ("citam-se como exemplos de
+> trabalhadores prejudicados NOME 1, função, e NOME 2, função"). Nome em capitalização
+> normal, podendo abreviar (primeiro nome + um sobrenome); função em minúsculas;
+> **nunca cite CPF**. Sem nenhum nome disponível (exceção), encerre o parágrafo em
+> "...(Orientação Técnica SIT nº 2/2022).", sem a frase final.
 
 #### 7.2.1. Enriquecimento contextual do Subtítulo 1
 
