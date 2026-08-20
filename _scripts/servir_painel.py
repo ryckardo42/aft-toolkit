@@ -7,7 +7,7 @@ recém-gerado e aceita as AÇÕES MECÂNICAS dos cards (os controles só aparece
 no navegador quando o painel é aberto por este endereço, não pelo file://):
 
   - marcar/desmarcar uma notificação DET como respondida ([ ] ↔ [x]);
-  - resolver uma pendência ([ ] → [x], com carimbo de data);
+  - registrar uma pendência ou resolvê-la ([ ] → [x], com carimbo de data);
   - registrar uma constatação da análise documental (nova linha em Auditoria
     de documentos) ou reescrever o texto de uma já registrada;
   - reescrever o relato de campo (inspecao-fisica.md) editado no painel;
@@ -199,6 +199,38 @@ def acao_pendencia(texto: str, alvo: str) -> tuple[str, str]:
 RE_DETALHE_DET = re.compile(r"^\s+-\s+lavrada\s", re.IGNORECASE)
 RE_ULT_ENTREGA = re.compile(r"última entrega\s+(\d{2})/(\d{2})/(\d{4})",
                             re.IGNORECASE)
+
+
+def acao_pendencia_add(texto: str, descricao: str) -> tuple[str, str]:
+    """Acrescenta '- [ ] texto' em '## Pendências'. Sem data: pendência é
+    tarefa, não registro datado — o carimbo entra quando ela é resolvida.
+    Cria a seção (antes de 'Registro de atividades', ou no fim) se faltar."""
+    descricao = " ".join(descricao.split())
+    if not descricao:
+        raise ValueError("pendência vazia")
+    nova = f"- [ ] {descricao}\n"
+    linhas = texto.splitlines(keepends=True)
+    ini, fim = limites_secao(linhas, ("Pendências", "Pendencias"))
+    if ini < 0:
+        bloco = f"## Pendências\n{nova}\n"
+        reg_ini = -1
+        for i, l in enumerate(linhas):
+            if l.strip().startswith("## ") and l.strip()[3:].strip().startswith("Registro de atividades"):
+                reg_ini = i
+                break
+        if reg_ini >= 0:
+            linhas.insert(reg_ini, bloco)
+        else:
+            if linhas and not linhas[-1].endswith("\n"):
+                linhas[-1] += "\n"
+            linhas.append("\n" + bloco)
+        return "".join(linhas), "pendência registrada"
+    for i in range(ini, fim):
+        if linhas[i].strip() == "_(vazio)_":
+            linhas.pop(i)
+            break
+    linhas.insert(ini, nova)
+    return "".join(linhas), "pendência registrada"
 
 
 def acao_det_visto(texto: str, codigo: str) -> tuple[str, str]:
@@ -401,6 +433,7 @@ ACOES = {
     "det": lambda t, p: acao_det(t, p.get("codigo", "")),
     "det_visto": lambda t, p: acao_det_visto(t, p.get("codigo", "")),
     "pendencia": lambda t, p: acao_pendencia(t, p.get("texto", "")),
+    "pendencia_add": lambda t, p: acao_pendencia_add(t, p.get("texto", "")),
     "constatacao_edit": lambda t, p: acao_constatacao_edit(
         t, p.get("texto", ""), p.get("novo", "")),
     "anotacao_add": lambda t, p: acao_anotacao_add(t, p.get("texto", "")),

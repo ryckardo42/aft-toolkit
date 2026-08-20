@@ -184,6 +184,9 @@ _(vazio)_
 ## Auditoria de documentos
 _(vazio)_
 
+## Pendências
+_(vazio)_
+
 ## Registro de atividades
 | Data | Ação | Detalhes |
 |------|------|----------|
@@ -194,7 +197,13 @@ _(vazio)_
 >
 > **`## Ementas da OS`**: só existe quando um PDF do SFIT foi lido (Passo 0). Código e descrição **literais** do PDF — ementa nunca se resume nem se parafraseia. As caixas `- [ ]` servem para o AFT marcar, ao longo da fiscalização, o que já foi verificado/autuado; a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção. Sem PDF, não crie a seção.
 >
+> **Seções obrigatórias:** `## Notificações DET`, `## Auditoria de documentos` e
+> `## Pendências` entram em TODA ficha, **mesmo vazias** (com `_(vazio)_`). São os três
+> lugares onde o AFT escreve pelo painel; sem a seção, o campo não tem onde gravar.
+>
 > **`## Auditoria de documentos`**: nasce vazia. É onde o AFT registra o andamento da análise documental — o que apurou no PGR, nos ASO, nas atas de CIPA, no controle de jornada (SESMT/CIPA subdimensionado, ASO faltando, programa vencido…) — no formato `- dd/mm/aaaa — texto`. **Não é lista de tarefas:** não tem caixa de marcar; é o registro do que a auditoria documental encontrou. A `/aft-auditoria-geral` lê essas constatações para redigir os autos; o painel mostra, permite acrescentar e editar cada uma.
+>
+> **`## Pendências`**: nasce vazia. É a lista de tarefas da OS — o que o AFT ainda precisa fazer ou conferir (cobrar um documento na próxima visita, decidir um enquadramento, revisar uma minuta) — no formato `- [ ] texto`, **com** caixa de marcar. Resolvida, vira `- [x]` com o carimbo da data. O painel mostra só as em aberto e permite registrar e resolver.
 
 Regras:
 - **`prazo <dd/mm/aaaa>`** é a chave que o `/aft-painel` vigia — escreva a palavra `prazo` seguida

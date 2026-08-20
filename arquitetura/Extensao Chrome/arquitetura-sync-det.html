@@ -468,6 +468,7 @@ Content-Type: application/json</code></pre>
     <tr><td><code>det</code></td><td>alterna [ ]/[x] da notificação DET (respondida/reaberta)</td></tr>
     <tr><td><code>det_visto</code></td><td>dispensa o alerta "⚠️ atualização pendente" (volta se houver entrega nova)</td></tr>
     <tr><td><code>pendencia</code></td><td>marca pendência como resolvida ([x] + carimbo de data)</td></tr>
+    <tr><td><code>pendencia_add</code></td><td>registra pendência (<code>- [ ] texto</code>; cria a seção se faltar)</td></tr>
     <tr><td><code>anotacao_add</code></td><td>registra constatação da auditoria de documentos (<code>- dd/mm/aaaa — texto</code>)</td></tr>
     <tr><td><code>constatacao_edit</code></td><td>reescreve o texto de uma constatação já registrada</td></tr>
     <tr><td><code>inspecao_edit</code></td><td>reescreve o inspecao-fisica.md editado no painel (única ação fora do memory.md)</td></tr>
@@ -477,7 +478,7 @@ Content-Type: application/json</code></pre>
   </table>
   <p><strong>O que cada card mostra:</strong> cabeçalho (empregador, CNPJ, município, RI, nº de
   trabalhadores, CNAE, grau de risco, início/vencimento, embargo) · Notificações DET com a
-  sub-linha de detalhes do sync · Pendências (em aberto, com resolver) e <em>Auditoria de documentos</em> (com
+  sub-linha de detalhes do sync · Pendências (em aberto, com registrar/resolver) e <em>Auditoria de documentos</em> (com
   registrar/editar) · Inspeção física · Registro de atividades · Autos de infração lavrados ·
   Relatórios .md · botões que copiam comandos prontos para o Claude Code.</p>
   <p class="sub" style="margin:0">Privacidade: a versão publicada como Artifact (só com

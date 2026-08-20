@@ -1184,6 +1184,9 @@ function agCal(j){const v=DATA.venc[j];
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agDetVisto(i,k){const o=DATA.os[i];api({acao:'det_visto',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
+function agPendAdd(i){const el=document.getElementById('pend-txt');const v=(el.value||'').trim();
+ if(!v){aviso('Escreva a pendência antes');return}
+ api({acao:'pendencia_add',pasta:DATA.os[i].pasta,texto:v})}
 // CTA das zonas de escrita: ativo somente com texto no campo.
 function cta(el){const b=el.closest('.entrada').querySelector('.cta');
  if(b)b.disabled=!el.value.trim()}
@@ -1300,10 +1303,18 @@ function cartaoNovas(o){
   (n.prazo?' — prazo '+esc(n.prazo):'')+(n.ciencia?' — ciência '+esc(n.ciencia):'')+
   '</li>').join('')+'</ul></div>'}
 function cartaoPendencias(o,i){
- return '<div class="cartao"><h3>Pendências da OS <span class="cont">'+o.pendencias.length+
-  '</span></h3><ul class="lista">'+o.pendencias.map((s,k)=>'<li>◻ '+esc(s)+
+ const ps=o.pendencias||[];
+ let h='<div class="cartao"><h3>Pendências da OS <span class="cont">'+ps.length+'</span></h3>';
+ if(ps.length)h+='<ul class="lista">'+ps.map((s,k)=>'<li>◻ '+esc(s)+
   (ATIVO&&o.pasta?'<button class="mini acao" onclick="agPend('+i+','+k+')">resolvido</button>':'')+
-  '</li>').join('')+'</ul></div>'}
+  '</li>').join('')+'</ul>';
+ else h+='<p class="vazio">nenhuma pendência em aberto</p>';
+ if(ATIVO&&o.pasta)h+='<div class="entrada">'+
+  '<label for="pend-txt">Nova pendência</label><div class="linha">'+
+  '<input id="pend-txt" type="text" placeholder="ex.: cobrar o AEJ de julho na próxima visita" '+
+  'oninput="cta(this)" onkeydown="if(event.key===&quot;Enter&quot;)agPendAdd('+i+')">'+
+  '<button class="cta" disabled onclick="agPendAdd('+i+')">registrar</button></div></div>';
+ return h+'</div>'}
 function cartaoAnotacoes(o,i){
  const an=o.anotacoes||[];
  let h='<div class="cartao"><h3>Auditoria de documentos <span class="cont">'+an.length+'</span></h3>';
@@ -1448,7 +1459,7 @@ function abre(i){
  h+='<div class="corpo2"><div>';
  h+=cartaoDets(o,i);
  if((o.novas||[]).length)h+=cartaoNovas(o);
- if((o.pendencias||[]).length)h+=cartaoPendencias(o,i);
+ if(ATIVO&&o.pasta||(o.pendencias||[]).length)h+=cartaoPendencias(o,i);
  if(ATIVO&&o.pasta||(o.anotacoes||[]).length)h+=cartaoAnotacoes(o,i);
  if(o.inspecao&&((o.inspecao.bullets||[]).length||o.inspecao.texto))h+=cartaoInspecao(o,i);
  h+=cartaoTimeline(o,i);

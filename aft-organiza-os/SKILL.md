@@ -267,6 +267,9 @@ _(vazio — preenchido a seguir pelo /aft-autos-lavrados)_
 ## Auditoria de documentos
 _(vazio)_
 
+## Pendências
+_(vazio)_
+
 ## Registro de atividades
 | Data | Ação | Detalhes |
 |------|------|----------|
