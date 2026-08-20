@@ -1,7 +1,7 @@
 ## 20/08/2026
 <!-- commit: secao-ii-auto-infracao -->
 
-**Seção II do auto de infração: conclusão no lugar certo e exemplo de trabalhador prejudicado.** Duas mudanças no texto padrão que as skills redatoras produzem (/aft-auditoria-geral, /aft-PGR-analise, /aft-aet-auditoria, /aft-NR01, /aft-NR12, /aft-det-630) e que a /aft-revisa-auto garante na revisão:
+**Seção II do auto de infração: conclusão no lugar certo e exemplo de trabalhador prejudicado.** Duas mudanças no texto padrão que as skills redatoras produzem (/aft-auditoria-geral, /aft-PGR-analise, /aft-aet-auditoria, /aft-NR01, /aft-NR12, /aft-det-630, /aft-embargo-interdicao) e que a /aft-revisa-auto garante na revisão:
 
 1. A frase de conclusão ("Sendo assim, incorreu o empregador na infração ementada supracitada.") agora vem logo depois do enquadramento normativo — a parte que diz o que a norma exigia —, e não mais no fim do auto.
 
