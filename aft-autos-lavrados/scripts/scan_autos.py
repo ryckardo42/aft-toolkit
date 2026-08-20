@@ -65,6 +65,14 @@ RE_EMENTA_NUM = re.compile(r"(\d{6}-\d)")
 RE_DATA_LAVRATURA = re.compile(r"Data:\s*(\d{2}/\d{2}/\d{4})")
 RE_CNPJ_AUTUADO = re.compile(r"CNPJ\s*:\s*(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2})")
 RE_RAZAO_SOCIAL = re.compile(r"Nome/Razão Social:\s*(.+?)\s*$", re.MULTILINE)
+# Campos só preenchidos pelo Sistema Auditor no momento da LAVRATURA — vêm
+# em branco (Porte) ou com o placeholder "-1" (Nº Trabalhadores) em autos
+# ainda em elaboração/rascunho. Regex tolerante a espaçamento: o pdftotext
+# -layout separa "Porte Econômico: X" de "Natureza Jurídica: Y" por vários
+# espaços, mas o fallback pypdf pode concatenar sem espaço nenhum — por
+# isso a captura usa lookahead no próximo rótulo em vez de contar espaços.
+RE_PORTE_ECONOMICO = re.compile(r"Porte\s*Econômico:\s*(.+?)(?=Natureza\s*Jurídica|\n|$)")
+RE_NRO_TRABALHADORES = re.compile(r"N[ºo°]\s*Trabalhadores\s*\(total\)\s*:\s*(-?\d+)")
 
 
 def numero_ai_do_nome(nome_arquivo: str):
@@ -189,6 +197,8 @@ def parse_auto(text: str, pdf_path: Path) -> dict:
         "data_lavratura": None,
         "cnpj_autuado": None,
         "razao_social_autuado": None,
+        "porte_economico": None,
+        "nro_trabalhadores": None,
         "warnings": warnings,
     }
 
@@ -210,6 +220,22 @@ def parse_auto(text: str, pdf_path: Path) -> dict:
     m_rs = RE_RAZAO_SOCIAL.search(text)
     if m_rs:
         out["razao_social_autuado"] = m_rs.group(1).strip()
+
+    # Porte Econômico e Nº de Trabalhadores: só existem preenchidos em auto já
+    # LAVRADO (o Sistema Auditor exige o preenchimento antes da lavratura). Em
+    # rascunho/"Em elaboração" vêm em branco ou como placeholder "-1" — nesse
+    # caso o campo sai None, para não gravar lixo no memory.md.
+    m_porte = RE_PORTE_ECONOMICO.search(text)
+    if m_porte:
+        porte = m_porte.group(1).strip()
+        if porte:
+            out["porte_economico"] = porte
+
+    m_trab = RE_NRO_TRABALHADORES.search(text)
+    if m_trab:
+        n = int(m_trab.group(1))
+        if n >= 0:
+            out["nro_trabalhadores"] = n
 
     ementa_idx = text.find("EMENTA (Nº/Descrição):")
     if ementa_idx == -1:

@@ -43,6 +43,22 @@ except Exception:
 
 TOKEN = re.compile(r"\[\[[A-Z0-9_]+\]\]")
 
+# Subtitulos obrigatorios do texto_autuacao (campo 18) - com acento correto.
+# O latin-1 final suporta acentuacao normalmente; nao ha motivo para tirar acento
+# aqui. Ja aconteceu de um script de montagem escrever "FISCALIZACAO"/"OBSERVACOES"
+# sem acento, ou descartar o subtitulo III inteiro por erro de regex na extracao -
+# nenhum dos dois quebra o TXT (o Sistema Auditor aceita e importa normalmente),
+# entao so aparece quando o AFT confere o auto ja importado. Pegamos aqui antes.
+SUBTITULOS_OK = ["I - DA FISCALIZAÇÃO:", "II - IRREGULARIDADE:", "III - OBSERVAÇÕES:"]
+# "IRREGULARIDADE" nao tem acento em portugues - so FISCALIZACAO e OBSERVACOES
+# denunciam perda de acento (deveriam ser FISCALIZAÇÃO e OBSERVAÇÕES).
+SUBTITULOS_SEM_ACENTO = re.compile(r"\b(FISCALIZACAO|OBSERVACOES)\s*:", re.IGNORECASE)
+# "#13#10" que precede texto real (nao o marcador de linha em branco " . ") deve
+# vir seguido de exatamente 8 espacos - e o recuo de paragrafo que indenta_quebras.py
+# aplica. Sem ele, o Sistema Auditor mostra o subtitulo "I" com recuo (automatico,
+# so na primeira linha do campo) e todo o resto colado na margem.
+QUEBRA_SEM_RECUO = re.compile(r"#13#10(?! \. )(?!        )")
+
 # O Sistema Auditor limita os anexos a 10 MB por AUTO DE INFRACAO, somando os
 # anexos daquele auto — nao por arquivo. Estourou num auto, a importacao e recusada.
 # O mesmo PDF anexado a varios autos e permitido: pesa 1 vez no orcamento de cada um.
@@ -227,6 +243,27 @@ def main():
             # Texto do auto (campo 18): subtitulo/linha duplicados.
             if len(campos) > 17:
                 checar_texto_autuacao(campos[17], rotulo, erros)
+
+            # texto_autuacao (campo 18): subtitulos I/II/III presentes e acentuados,
+            # e recuo de paragrafo aplicado (indenta_quebras.py ja rodado).
+            if len(campos) > 17:
+                texto = campos[17]
+                faltando = [s for s in SUBTITULOS_OK if s not in texto]
+                if faltando:
+                    erros.append(f"{rotulo} -> Erro: subtitulo(s) ausente(s) ou sem acento "
+                                 f"correto no texto_autuacao: {', '.join(faltando)}. Confira "
+                                 f"se a extracao do bloco III do autos.md descartou o "
+                                 f"cabecalho, ou se o script de montagem escreveu o rotulo "
+                                 f"sem acento.")
+                sem_acento = SUBTITULOS_SEM_ACENTO.findall(texto)
+                if sem_acento:
+                    erros.append(f"{rotulo} -> Erro: subtitulo(s) sem acento no texto_autuacao: "
+                                 f"{', '.join(sorted(set(sem_acento)))}. O latin-1 aceita "
+                                 f"acento normalmente - corrija o script de montagem.")
+                if QUEBRA_SEM_RECUO.search(texto):
+                    avisos.append(f"{rotulo} -> recuo de paragrafo nao aplicado no "
+                                  f"texto_autuacao (rode indenta_quebras.py sobre o "
+                                  f"tokenized.txt antes de re-hidratar).")
 
         elif tipo == "2":
             rotulo = (f"AI CNPJ/CPF:{bloco_atual[0]} Ementa:{bloco_atual[1]}"
