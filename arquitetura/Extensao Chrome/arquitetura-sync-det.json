@@ -188,6 +188,7 @@
    "pendencia": "marca pendência como resolvida ([x] + carimbo de data)",
    "anotacao_add": "registra constatação da auditoria de documentos ('- dd/mm/aaaa — texto'; cria a seção se faltar)",
    "constatacao_edit": "reescreve o texto de uma constatação já registrada, preservando comentários de rastreio",
+   "inspecao_edit": "reescreve o inspecao-fisica.md com o relato editado no painel (única ação que grava fora do memory.md; ver ARQUIVO_DA_ACAO)",
    "atividade": "acrescenta linha no Registro de atividades (data de hoje)",
    "status": "muda o status da OS (front-matter status:)",
    "embargo": "alterna embargo/interdição vigente/suspenso (front-matter embargo_interdicao:)"

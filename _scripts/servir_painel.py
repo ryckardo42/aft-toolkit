@@ -10,6 +10,7 @@ no navegador quando o painel é aberto por este endereço, não pelo file://):
   - resolver uma pendência ([ ] → [x], com carimbo de data);
   - registrar uma constatação da análise documental (nova linha em Auditoria
     de documentos) ou reescrever o texto de uma já registrada;
+  - reescrever o relato de campo (inspecao-fisica.md) editado no painel;
   - registrar uma atividade (nova linha na tabela Registro de atividades);
   - mudar o status da OS (front-matter `status:`);
   - alternar embargo/interdição entre vigente/suspenso (front-matter
@@ -97,6 +98,8 @@ RE_ITEM = re.compile(r"^(\s*-\s*)(?:\[[ xX]?\]\s*)?(.*)$")
 TITULOS_DOC = ("Auditoria de documentos", "Anotações da auditoria",
                "Anotacoes da auditoria")
 STATUS_VALIDOS = {"em_andamento", "aguardando_resposta", "encerrada"}
+# Toda ação escreve no memory.md da OS, menos as listadas aqui.
+ARQUIVO_DA_ACAO = {"inspecao_edit": "inspecao-fisica.md"}
 
 
 def args_posicionais() -> list[str]:
@@ -357,6 +360,16 @@ def editar_fm(texto: str, chave: str, valor: str) -> str:
     return texto[:m.start(1)] + fm_novo + texto[m.end(1):]
 
 
+def acao_inspecao_edit(texto: str, novo: str) -> tuple[str, str]:
+    """Reescreve o inspecao-fisica.md com o texto que o AFT editou no painel.
+    Única ação que grava fora do memory.md (ver ARQUIVO_DA_ACAO): o relato de
+    campo é um arquivo próprio. O backup do original fica com o servidor."""
+    novo = novo.replace("\r\n", "\n").rstrip()
+    if not novo.strip():
+        raise ValueError("o relato de campo não pode ficar vazio")
+    return novo + "\n", "relato de campo atualizado"
+
+
 def acao_status(texto: str, valor: str) -> tuple[str, str]:
     if valor not in STATUS_VALIDOS:
         raise ValueError(f"status inválido: {valor}")
@@ -393,6 +406,7 @@ ACOES = {
     "anotacao_add": lambda t, p: acao_anotacao_add(t, p.get("texto", "")),
     "atividade": lambda t, p: (acao_atividade_tipada(t, p) if p.get("tipos")
                                else acao_atividade(t, p.get("texto", ""))),
+    "inspecao_edit": lambda t, p: acao_inspecao_edit(t, p.get("texto", "")),
     "status": lambda t, p: acao_status(t, p.get("valor", "")),
     "embargo": lambda t, p: acao_embargo(t, p.get("estado", "")),
 }
@@ -766,9 +780,10 @@ class Handler(BaseHTTPRequestHandler):
             pasta = (p.get("pasta") or "").strip()
             if not pasta or "/" in pasta or "\\" in pasta or pasta.startswith("."):
                 raise ValueError("pasta inválida")
-            mem = (self.base / pasta / "memory.md").resolve()
+            nome = ARQUIVO_DA_ACAO.get(acao, "memory.md")
+            mem = (self.base / pasta / nome).resolve()
             if self.base.resolve() not in mem.parents or not mem.exists():
-                raise ValueError(f"memory.md não encontrado em {pasta}")
+                raise ValueError(f"{nome} não encontrado em {pasta}")
             texto = mem.read_text(encoding="utf-8")
             novo, msg = ACOES[acao](texto, p)
             if BACKUP.exists():

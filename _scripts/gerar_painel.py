@@ -496,7 +496,10 @@ def parse_inspecao_fisica(pasta: Path) -> dict:
         data = m.group(1).strip()
     bullets = [l.strip()[1:].strip().rstrip(";").strip()
                for l in texto.splitlines() if l.strip().startswith("- ")]
-    return {"data": data, "bullets": bullets} if bullets else {}
+    if not texto.strip():
+        return {}
+    # `texto` é o arquivo como está no disco: é o que o painel abre para editar.
+    return {"data": data, "bullets": bullets, "texto": texto}
 
 
 def scan_ao_vivo(os_: dict) -> list[dict] | None:
@@ -832,6 +835,15 @@ padding:5px 10px}
 .cons-campo:focus{outline:none;border-color:var(--coral-deep);
 box-shadow:0 0 0 3px rgba(176,89,62,.18)}
 .cons-edita .mini{margin-left:0;margin-right:8px}
+/* Relato de campo em edição: o inspecao-fisica.md inteiro num campo só. */
+.insp-campo{width:100%;box-sizing:border-box;min-height:220px;resize:vertical;
+font:13.5px/1.55 var(--serif);color:var(--t1);background:var(--paper);
+border:1px solid #C9C3B2;border-radius:8px;padding:12px 14px}
+.insp-campo:focus{outline:none;border-color:var(--coral-deep);
+box-shadow:0 0 0 3px rgba(176,89,62,.18)}
+.insp-rodape{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.insp-rodape .mini{margin-left:0;margin-right:8px}
+.dica-edicao{font:11.5px var(--sans);color:var(--t3)}
 .acoes{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:14px 0 2px;
 background:var(--cream);border:1px solid var(--bds);border-radius:8px;padding:10px 14px;
 font-size:13px}
@@ -865,8 +877,9 @@ font-size:13px;z-index:20;display:none}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
 .mini.acao{background:#3A2C22;border-color:#4A382B;color:#E9A891}
 .mini.acao:hover{background:#C8694A;border-color:#C8694A;color:#191917}
-.cons-campo{background:#2A2722;border-color:#4A463C}
-.cons-campo:focus{border-color:#E9A891;box-shadow:0 0 0 3px rgba(233,168,145,.25)}
+.cons-campo,.insp-campo{background:#2A2722;border-color:#4A463C}
+.cons-campo:focus,.insp-campo:focus{border-color:#E9A891;
+box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 }
 /* ---- Dossiê da OS (tela de detalhe) ---- */
 :root{--sans:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;--ochre:#A8842C}
@@ -914,6 +927,7 @@ font-size:13px;z-index:20;display:none}
 #detalhe .cartao h3{font:700 12px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;
   color:var(--t3);margin:0 0 12px;border:none;padding:0}
 #detalhe .cartao .cont{float:right;font:12px var(--sans);color:var(--t3);letter-spacing:0;text-transform:none}
+#detalhe .cartao h3 .mini{text-transform:none;letter-spacing:0}
 /* DETs como cards com checkbox */
 .det-item{display:flex;align-items:flex-start;gap:12px;border:1px solid var(--bds);
   border-radius:10px;padding:11px 14px;cursor:pointer;margin-bottom:8px}
@@ -1297,10 +1311,37 @@ function cartaoAnotacoes(o,i){
   'oninput="cta(this)" onkeydown="if(event.key===&quot;Enter&quot;)agAnotAdd('+i+')">'+
   '<button class="cta" disabled onclick="agAnotAdd('+i+')">anotar</button></div></div>';
  return h+'</div>'}
-function cartaoInspecao(o){
- return '<div class="cartao"><h3>Inspeção física'+
+function cartaoInspecao(o,i){
+ const bs=o.inspecao.bullets||[];
+ return '<div class="cartao" id="insp-cartao"><h3>Inspeção física'+
+  (ATIVO&&o.pasta&&o.inspecao.texto?
+   '<button class="mini acao" onclick="agInspEdit('+i+')">editar</button>':'')+
   (o.inspecao.data?' <span class="cont">'+esc(o.inspecao.data)+'</span>':'')+'</h3>'+
-  '<ul class="insp">'+o.inspecao.bullets.map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul></div>'}
+  (bs.length?'<ul class="insp">'+bs.map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul>':
+   '<p class="vazio">relato sem itens em lista</p>')+'</div>'}
+// Relato de campo: o cartão vira um campo com o inspecao-fisica.md tal como
+// está no disco — dá para corrigir uma frase, acrescentar uma lembrança ou
+// registrar uma visita nova. Aqui o Enter é quebra de linha (é texto longo):
+// quem salva é Ctrl/⌘ + Enter, ou o botão.
+function agInspEdit(i){
+ const cx=document.getElementById('insp-cartao');if(!cx||cx.querySelector('textarea'))return;
+ cx.innerHTML='<h3>Inspeção física</h3><textarea class="insp-campo"></textarea>'+
+  '<div class="insp-rodape"><span>'+
+  '<button class="mini acao" onclick="agInspSalva('+i+')">salvar</button>'+
+  '<button class="mini" onclick="abre('+i+')">cancelar</button></span>'+
+  '<span class="dica-edicao">Ctrl (⌘) + Enter salva · Esc desiste</span></div>';
+ const t=cx.querySelector('textarea');t.value=DATA.os[i].inspecao.texto||'';
+ t.style.height=Math.min(t.scrollHeight+12,620)+'px';
+ // Abre no começo do relato, como quem relê o documento: preencher o campo
+ // joga o cursor (e a rolagem) para o fim, e aí não se vê o que se está editando.
+ t.focus();t.setSelectionRange(0,0);t.scrollTop=0;
+ t.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))agInspSalva(i);
+  if(e.key==='Escape')abre(i)}}
+function agInspSalva(i){
+ const o=DATA.os[i],t=document.querySelector('#insp-cartao textarea');
+ if(!t.value.trim()){aviso('O relato não pode ficar vazio');return}
+ if(t.value.trim()===(o.inspecao.texto||'').trim()){abre(i);return}
+ api({acao:'inspecao_edit',pasta:o.pasta,texto:t.value})}
 function cartaoTimeline(o,i){
  let h='<div class="cartao"><h3>Registro de atividades <span class="cont">'+(o.atividades||[]).length+'</span></h3>';
  if(!(o.atividades||[]).length)return h+'<p class="vazio">nenhuma atividade registrada</p></div>';
@@ -1403,7 +1444,7 @@ function abre(i){
  if((o.novas||[]).length)h+=cartaoNovas(o);
  if((o.pendencias||[]).length)h+=cartaoPendencias(o,i);
  if(ATIVO&&o.pasta||(o.anotacoes||[]).length)h+=cartaoAnotacoes(o,i);
- if(o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)h+=cartaoInspecao(o);
+ if(o.inspecao&&((o.inspecao.bullets||[]).length||o.inspecao.texto))h+=cartaoInspecao(o,i);
  h+=cartaoTimeline(o,i);
  h+='</div><div>';
  h+=cartaoAcoes(o,i);
