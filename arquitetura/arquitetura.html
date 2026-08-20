@@ -134,7 +134,7 @@
 const ARCH = {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code e Codex (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-08-14",
+  "data": "2026-08-20",
   "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
     "skills": 46,
@@ -244,7 +244,7 @@ const ARCH = {
       "skills": [
         {
           "nome": "/aft-setup",
-          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG), perfil CLAUDE.md global (bloco gerenciado com marcadores versionados — Passo 5b), deny-list de segurança, dependências, NotebookLM. Instala POR PADRÃO o servidor do painel interativo sempre ligado (Passo 7c, instalar_servidor_painel.py) e oferece (opt-in) a rotina diária do painel (7b) e os prazos de DET no Google Calendar (7d, /aft-agenda-det). Passo 0: descobre em qual assistente está — no Codex cria os dois atalhos (~/.agents/skills e ~/.codex/AGENTS.md) e pula agentes, deny-list, vigia de sessões e gancho do diário.",
+          "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG) e persona opcional do assessor (tratamento + nome_assessor, so no chat), perfil CLAUDE.md global (bloco gerenciado com marcadores versionados — Passo 5b), deny-list de segurança, dependências, NotebookLM. Instala POR PADRÃO o servidor do painel interativo sempre ligado (Passo 7c, instalar_servidor_painel.py) e oferece (opt-in) a rotina diária do painel (7b) e os prazos de DET no Google Calendar (7d, /aft-agenda-det). Passo 0: descobre em qual assistente está — no Codex cria os dois atalhos (~/.agents/skills e ~/.codex/AGENTS.md) e pula agentes, deny-list, vigia de sessões e gancho do diário.",
           "tech": "winget · pipx · uorgs.csv · model: sonnet"
         },
         {
@@ -703,7 +703,7 @@ const ARCH = {
     },
     {
       "arquivo": "config/CLAUDE-aft.md",
-      "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho, privacidade e roteamento das skills",
+      "conteudo": "Perfil do Auditor-Fiscal + regras de trabalho, privacidade, roteamento das skills e persona opcional do assessor (campos tratamento/nome_assessor do aft-config.md; vale so no chat, nunca em documento)",
       "uso": "Instalado pelo /aft-setup em ~/.claude/CLAUDE.md (carregado em toda conversa)."
     },
     {
