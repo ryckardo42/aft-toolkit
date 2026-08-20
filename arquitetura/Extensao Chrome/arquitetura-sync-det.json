@@ -177,7 +177,7 @@
    "cabeçalho: empregador, CNPJ, município, RI, nº de trabalhadores, CNAE, grau de risco, início/vencimento, embargo",
    "card da grade (tela inicial): selo '✉️ mensagem no DET' (com a contagem quando há mais de uma) ao lado do '⚠️ atualização pendente' — o AFT vê de longe que a empresa aguarda resposta, sem abrir a OS. Notificação cancelada não conta como DET aberto nem carrega alerta",
    "Notificações DET — código + rótulo (o tipo que o AFT escreveu na linha, ex.: 'NAD jornada/ponto'), datas do sync em linha única (lavratura · ciência · entregas), notas do AFT (observações da linha do memory.md, sem os fragmentos de data já estruturados), alerta dispensável e chip '✉️ mensagem no DET' (canal de comunicação aguardando resposta). Notificação CANCELADA no DET aparece riscada, hachurada e sem clique, com selo 'cancelada no DET': fica visível, mas fora do contador e de todo cálculo de prazo (det_cobra_acao) e fora da agenda de vencimentos",
-   "Pendências ([ ] em aberto) · Anotações da auditoria ([ ] em aberto, com adicionar/resolver)",
+   "Pendências ([ ] em aberto, com resolver) · Auditoria de documentos (registro sem checkbox, com registrar/editar)",
    "Inspeção física (bullets do inspecao-fisica.md) · Registro de atividades (timeline)",
    "Autos de infração lavrados (autos-lavrados.md, seção do memory.md ou --scan do Sistema Auditor)",
    "Relatórios .md da OS (links via /doc/) · Comandos prontos para copiar no Claude Code"
@@ -186,8 +186,8 @@
    "det": "alterna [ ]/[x] da notificação DET (respondida/reaberta)",
    "det_visto": "dispensa o alerta '⚠️ atualização pendente' (grava <!-- visto: última entrega -->; volta se houver entrega nova)",
    "pendencia": "marca pendência como resolvida ([x] + carimbo de data)",
-   "anotacao_add": "registra anotação da auditoria ('- [ ] dd/mm/aaaa — texto'; cria a seção se faltar)",
-   "anotacao_ok": "marca anotação como tratada ([x] + carimbo)",
+   "anotacao_add": "registra constatação da auditoria de documentos ('- dd/mm/aaaa — texto'; cria a seção se faltar)",
+   "constatacao_edit": "reescreve o texto de uma constatação já registrada, preservando comentários de rastreio",
    "atividade": "acrescenta linha no Registro de atividades (data de hoje)",
    "status": "muda o status da OS (front-matter status:)",
    "embargo": "alterna embargo/interdição vigente/suspenso (front-matter embargo_interdicao:)"

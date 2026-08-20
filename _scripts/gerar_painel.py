@@ -93,6 +93,9 @@ RE_PRAZO = re.compile(
     re.IGNORECASE)
 RE_CODIGO_DET = re.compile(r"([A-Z0-9]{6,})")
 RE_CHECKBOX = re.compile(r"^-\s*\[([ xX]?)\]\s*(.*)$")
+# Item da "Auditoria de documentos": com ou sem checkbox (o formato antigo,
+# das OS abertas quando a seção ainda era uma lista de tarefas).
+RE_ITEM = re.compile(r"^-\s*(?:\[[ xX]?\]\s*)?(.*)$")
 # Sub-linha de detalhes mantida pelo det_sync (nunca editada à mão), logo abaixo
 # do checkbox: "  - lavrada dd/mm/aaaa · ciência dd/mm/aaaa · última entrega
 # dd/mm/aaaa · Confirmada". Os campos vazios são omitidos pelo sync.
@@ -331,12 +334,16 @@ def parse_memory(path: Path) -> dict:
         if cb and cb.group(1).strip().lower() != "x":
             pendencias.append(cb.group(2).strip())
 
-    # Anotações da auditoria (checkbox) — só as em aberto vão ao painel.
+    # Auditoria de documentos — o que a análise documental apurou (PGR, ASO,
+    # atas de CIPA...). Não é checklist: entra tudo, na ordem do arquivo.
+    # Aceita o nome antigo da seção para não quebrar OS já abertas.
     anotacoes = []
-    for linha in extrair_secao(corpo, "Anotações da auditoria").splitlines():
-        cb = RE_CHECKBOX.match(linha.strip())
-        if cb and cb.group(1).strip().lower() != "x":
-            texto_an = re.sub(r"<!--.*?-->", "", cb.group(2)).strip()
+    sec_doc = (extrair_secao(corpo, "Auditoria de documentos")
+               or extrair_secao(corpo, "Anotações da auditoria"))
+    for linha in sec_doc.splitlines():
+        m_it = RE_ITEM.match(linha.strip())
+        if m_it:
+            texto_an = re.sub(r"<!--.*?-->", "", m_it.group(1)).strip()
             if texto_an:
                 anotacoes.append(texto_an)
 
@@ -814,6 +821,17 @@ footer{margin-top:34px;color:var(--t3);font-size:12px}
 .mini{font:12px var(--serif);background:var(--paper);border:1px solid var(--bd);
 border-radius:6px;padding:1px 9px;margin-left:8px;cursor:pointer;color:var(--t2)}
 .mini:hover{border-color:var(--coral);color:var(--coral-deep)}
+/* Botão de ação dentro de lista (resolvido, editar): fundo preenchido, senão
+   some no cartão e não se lê como botão. */
+.mini.acao{background:#EFE2D5;border-color:var(--bd);color:var(--coral-deep);font-weight:600}
+.mini.acao:hover{background:var(--coral-deep);border-color:var(--coral-deep);color:var(--paper)}
+/* Constatação da auditoria de documentos, em edição no lugar. */
+.cons-campo{width:100%;box-sizing:border-box;margin:0 0 6px;font:13.5px var(--serif);
+color:var(--t1);background:var(--paper);border:1px solid #C9C3B2;border-radius:6px;
+padding:5px 10px}
+.cons-campo:focus{outline:none;border-color:var(--coral-deep);
+box-shadow:0 0 0 3px rgba(176,89,62,.18)}
+.cons-edita .mini{margin-left:0;margin-right:8px}
 .acoes{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:14px 0 2px;
 background:var(--cream);border:1px solid var(--bds);border-radius:8px;padding:10px 14px;
 font-size:13px}
@@ -845,6 +863,10 @@ font-size:13px;z-index:20;display:none}
 .det-item .cod .pend,.pend-card{background:#3D2521;color:#E9A891}
 .det-item .cod .msg,.msg-card{background:#3B2E1B;color:#E8BE85}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
+.mini.acao{background:#3A2C22;border-color:#4A382B;color:#E9A891}
+.mini.acao:hover{background:#C8694A;border-color:#C8694A;color:#191917}
+.cons-campo{background:#2A2722;border-color:#4A463C}
+.cons-campo:focus{border-color:#E9A891;box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 }
 /* ---- Dossiê da OS (tela de detalhe) ---- */
 :root{--sans:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;--ochre:#A8842C}
@@ -1113,7 +1135,7 @@ function copiaVelho(t,fim){const ta=document.createElement('textarea');ta.value=
 // Legendas dos comandos: resumo de cada skill vindo da arquitetura do toolkit.
 const CMDS=[
  ['/aft-inspecao-fisica','Transforma a narrativa ditada da visita num relato de campo estruturado (inspecao-fisica.md), fiel e sem enquadramento.'],
- ['/aft-auditoria-geral','Lê os achados (campo e anotações da auditoria), identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
+ ['/aft-auditoria-geral','Lê os achados (campo e auditoria de documentos), identifica NR/ementa e redige os autos de infração (NRs + CLT), com gate de dupla visita.'],
  ['/aft-gera-ai','Empacota os autos redigidos no TXT importável pelo Sistema Auditor, com anexos em PDF e pseudonimização reversível.'],
  ['/aft-autos-lavrados','Confere no Sistema Auditor o que já foi transmitido e marca [x]/[ ] no memory.md; cada auto identificado pelo número do AI.'],
  ['/aft-det-630','Auto por omissão de documentos notificados via DET (ementa 001168-1, art. 630 §4º CLT).'],
@@ -1145,9 +1167,24 @@ function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,text
 // CTA das zonas de escrita: ativo somente com texto no campo.
 function cta(el){const b=el.closest('.entrada').querySelector('.cta');
  if(b)b.disabled=!el.value.trim()}
-function agAnot(i,k){const o=DATA.os[i];api({acao:'anotacao_ok',pasta:o.pasta,texto:o.anotacoes[k]})}
+// Constatação da auditoria de documentos: o item vira campo no próprio lugar.
+// O valor entra pelo .value (o esc() do painel não protege atributo).
+function agAnotEdit(i,k){
+ const li=document.getElementById('cons-'+k);if(!li||li.querySelector('input'))return;
+ li.innerHTML='<input type="text" class="cons-campo"><span class="cons-edita">'+
+  '<button class="mini acao" onclick="agAnotSalva('+i+','+k+')">salvar</button>'+
+  '<button class="mini" onclick="abre('+i+')">cancelar</button></span>';
+ const c=li.querySelector('input');c.value=DATA.os[i].anotacoes[k];c.focus();
+ c.setSelectionRange(c.value.length,c.value.length);
+ c.onkeydown=e=>{if(e.key==='Enter')agAnotSalva(i,k);if(e.key==='Escape')abre(i)}}
+function agAnotSalva(i,k){
+ const o=DATA.os[i],li=document.getElementById('cons-'+k);
+ const v=(li.querySelector('input').value||'').trim();
+ if(!v){aviso('A constatação não pode ficar vazia');return}
+ if(v===o.anotacoes[k]){abre(i);return}
+ api({acao:'constatacao_edit',pasta:o.pasta,texto:o.anotacoes[k],novo:v})}
 function agAnotAdd(i){const el=document.getElementById('anot-txt');const v=(el.value||'').trim();
- if(!v){aviso('Escreva a anotação antes');return}api({acao:'anotacao_add',pasta:DATA.os[i].pasta,texto:v})}
+ if(!v){aviso('Escreva a constatação antes');return}api({acao:'anotacao_add',pasta:DATA.os[i].pasta,texto:v})}
 function agStatus(i,v){api({acao:'status',pasta:DATA.os[i].pasta,valor:v})}
 function agEmbargo(i,k){api({acao:'embargo',pasta:DATA.os[i].pasta,estado:k?'suspenso':'vigente'})}
 function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.value||'').trim();
@@ -1245,18 +1282,18 @@ function cartaoNovas(o){
 function cartaoPendencias(o,i){
  return '<div class="cartao"><h3>Pendências da OS <span class="cont">'+o.pendencias.length+
   '</span></h3><ul class="lista">'+o.pendencias.map((s,k)=>'<li>◻ '+esc(s)+
-  (ATIVO&&o.pasta?'<button class="mini" onclick="agPend('+i+','+k+')">resolver</button>':'')+
+  (ATIVO&&o.pasta?'<button class="mini acao" onclick="agPend('+i+','+k+')">resolvido</button>':'')+
   '</li>').join('')+'</ul></div>'}
 function cartaoAnotacoes(o,i){
  const an=o.anotacoes||[];
- let h='<div class="cartao"><h3>Anotações da auditoria <span class="cont">'+an.length+'</span></h3>';
- if(an.length)h+='<ul class="lista">'+an.map((s,k)=>'<li>◻ '+esc(s)+
-  (ATIVO&&o.pasta?'<button class="mini" onclick="agAnot('+i+','+k+')">tratada</button>':'')+
+ let h='<div class="cartao"><h3>Auditoria de documentos <span class="cont">'+an.length+'</span></h3>';
+ if(an.length)h+='<ul class="lista">'+an.map((s,k)=>'<li id="cons-'+k+'">'+esc(s)+
+  (ATIVO&&o.pasta?'<button class="mini acao" onclick="agAnotEdit('+i+','+k+')">editar</button>':'')+
   '</li>').join('')+'</ul>';
- else h+='<p class="vazio">nenhuma anotação em aberto</p>';
+ else h+='<p class="vazio">nenhuma constatação registrada</p>';
  if(ATIVO&&o.pasta)h+='<div class="entrada">'+
-  '<label for="anot-txt">Nova anotação</label><div class="linha">'+
-  '<input id="anot-txt" type="text" placeholder="ex.: SESMT mal dimensionado, ASO faltando..." '+
+  '<label for="anot-txt">Nova constatação</label><div class="linha">'+
+  '<input id="anot-txt" type="text" placeholder="ex.: PGR sem inventário de riscos químicos" '+
   'oninput="cta(this)" onkeydown="if(event.key===&quot;Enter&quot;)agAnotAdd('+i+')">'+
   '<button class="cta" disabled onclick="agAnotAdd('+i+')">anotar</button></div></div>';
  return h+'</div>'}

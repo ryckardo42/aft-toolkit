@@ -264,7 +264,7 @@ _(vazio)_
 ## Autos lavrados
 _(vazio — preenchido a seguir pelo /aft-autos-lavrados)_
 
-## Anotações da auditoria
+## Auditoria de documentos
 _(vazio)_
 
 ## Registro de atividades
@@ -289,7 +289,7 @@ _(vazio)_
 
 4. **Grave o `AGENTS.md` de contexto em cada pasta de OS** — o arquivo curto que faz o
    assistente "saber quem é" ao abrir a conversa naquela pasta (ler o `memory.md`
-   primeiro, registrar constatação nas Anotações da auditoria, privacidade). Uma passada
+   primeiro, registrar constatação na Auditoria de documentos, privacidade). Uma passada
    cobre todas as OS e **nunca sobrescreve** um arquivo existente:
    ```bash
    python ~/.claude/skills/_scripts/contexto_os.py "<pasta OS ATIVAS>"

@@ -60,7 +60,7 @@ Se o AFT insistir na ementa de NR-01 mesmo após o aviso, prossiga — a decisã
 
 ## FASE 1 — ENTRADA
 
-1. **Receba uma narrativa textual** descrevendo a(s) irregularidade(s): frase única, lista, texto corrido, ou bloco produzido por outra skill (ex.: `## Anotações da auditoria` do memory.md).
+1. **Receba uma narrativa textual** descrevendo a(s) irregularidade(s): frase única, lista, texto corrido, ou bloco produzido por outra skill (ex.: `## Auditoria de documentos` do memory.md).
 2. **Extraia cada irregularidade discreta**. Uma irregularidade = um fato distinto que gera **uma ementa**. Ex.: "empresa sem PGR e sem ordens de serviço" → 2 irregularidades.
 3. **Se vier mais de uma**, apresente a lista numerada e confirme antes de prosseguir:
    ```

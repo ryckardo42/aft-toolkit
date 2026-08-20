@@ -181,7 +181,7 @@ _(vazio)_
 ## Autos lavrados
 _(vazio)_
 
-## Anotações da auditoria
+## Auditoria de documentos
 _(vazio)_
 
 ## Registro de atividades
@@ -194,7 +194,7 @@ _(vazio)_
 >
 > **`## Ementas da OS`**: só existe quando um PDF do SFIT foi lido (Passo 0). Código e descrição **literais** do PDF — ementa nunca se resume nem se parafraseia. As caixas `- [ ]` servem para o AFT marcar, ao longo da fiscalização, o que já foi verificado/autuado; a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção. Sem PDF, não crie a seção.
 >
-> **`## Anotações da auditoria`**: nasce vazia. É onde o AFT registra constatações da inspeção e da análise documental (SESMT/CIPA subdimensionado, ASO faltando, programa vencido…) no formato `- [ ] dd/mm/aaaa — texto`. A `/aft-auditoria-geral` lê as anotações em aberto para redigir os autos; o painel mostra e permite adicionar/resolver.
+> **`## Auditoria de documentos`**: nasce vazia. É onde o AFT registra o andamento da análise documental — o que apurou no PGR, nos ASO, nas atas de CIPA, no controle de jornada (SESMT/CIPA subdimensionado, ASO faltando, programa vencido…) — no formato `- dd/mm/aaaa — texto`. **Não é lista de tarefas:** não tem caixa de marcar; é o registro do que a auditoria documental encontrou. A `/aft-auditoria-geral` lê essas constatações para redigir os autos; o painel mostra, permite acrescentar e editar cada uma.
 
 Regras:
 - **`prazo <dd/mm/aaaa>`** é a chave que o `/aft-painel` vigia — escreva a palavra `prazo` seguida
@@ -207,7 +207,7 @@ Regras:
 
 Com o `memory.md` no lugar, grave o `AGENTS.md` de contexto da auditoria — o arquivo
 curto que faz o assistente "saber quem é" ao abrir a conversa naquela pasta: ler a ficha
-primeiro, registrar constatação nas `## Anotações da auditoria`, classificar documento
+primeiro, registrar constatação na `## Auditoria de documentos`, classificar documento
 novo, privacidade. Você roda, sem perguntar:
 
 ```bash

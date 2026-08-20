@@ -8,8 +8,8 @@ no navegador quando o painel é aberto por este endereço, não pelo file://):
 
   - marcar/desmarcar uma notificação DET como respondida ([ ] ↔ [x]);
   - resolver uma pendência ([ ] → [x], com carimbo de data);
-  - anotar uma constatação da auditoria (nova linha em Anotações da auditoria)
-    ou marcá-la como tratada ([ ] → [x]);
+  - registrar uma constatação da análise documental (nova linha em Auditoria
+    de documentos) ou reescrever o texto de uma já registrada;
   - registrar uma atividade (nova linha na tabela Registro de atividades);
   - mudar o status da OS (front-matter `status:`);
   - alternar embargo/interdição entre vigente/suspenso (front-matter
@@ -90,6 +90,12 @@ CORS_DET = {
 
 RE_FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 RE_CHECKBOX = re.compile(r"^(\s*-\s*\[)([ xX]?)(\]\s*)(.*)$")
+# Item da "Auditoria de documentos": aceita o formato antigo (com checkbox)
+# das OS abertas quando a seção ainda era uma lista de tarefas.
+RE_ITEM = re.compile(r"^(\s*-\s*)(?:\[[ xX]?\]\s*)?(.*)$")
+# Nome novo primeiro; os outros são os das OS já abertas.
+TITULOS_DOC = ("Auditoria de documentos", "Anotações da auditoria",
+               "Anotacoes da auditoria")
 STATUS_VALIDOS = {"em_andamento", "aguardando_resposta", "encerrada"}
 
 
@@ -217,37 +223,61 @@ def acao_det_visto(texto: str, codigo: str) -> tuple[str, str]:
     raise ValueError(f"notificação {codigo} não encontrada no memory.md")
 
 
-def acao_anotacao_ok(texto: str, alvo: str) -> tuple[str, str]:
-    """Marca [x] a anotação em aberto cujo texto visível bate com `alvo`."""
+def migra_secao_documentos(linhas: list[str]) -> None:
+    """Migração no primeiro toque: se a ficha ainda traz a seção com o nome
+    antigo ('Anotações da auditoria', que era lista de tarefas), renomeia para
+    'Auditoria de documentos' e tira as caixas de marcar das linhas. Roda quando
+    o AFT registra ou edita uma constatação pelo painel — nenhuma ficha precisa
+    ser convertida de véspera."""
+    for i, linha in enumerate(linhas):
+        if linha.strip() not in ("## Anotações da auditoria",
+                                 "## Anotacoes da auditoria"):
+            continue
+        linhas[i] = "## Auditoria de documentos\n"
+        for j in range(i + 1, len(linhas)):
+            if linhas[j].strip().startswith("## "):
+                break
+            linhas[j] = re.sub(r"^(\s*-\s*)\[[ xX]?\]\s*", r"\1", linhas[j])
+        return
+
+
+def acao_constatacao_edit(texto: str, alvo: str, novo: str) -> tuple[str, str]:
+    """Reescreve o texto de uma constatação da 'Auditoria de documentos'.
+    Preserva os comentários de rastreio da linha (ex.: `<!-- auto ementa ... -->`,
+    que a /aft-auditoria-geral grava) e migra a linha antiga, com checkbox."""
+    novo = " ".join(novo.split())
+    if not novo:
+        raise ValueError("constatação vazia")
     linhas = texto.splitlines(keepends=True)
-    ini, fim = limites_secao(linhas, ("Anotações da auditoria", "Anotacoes da auditoria"))
+    migra_secao_documentos(linhas)
+    ini, fim = limites_secao(linhas, TITULOS_DOC)
     if ini < 0:
-        raise ValueError("seção 'Anotações da auditoria' não encontrada")
-    hoje = datetime.date.today().strftime("%d/%m/%Y")
+        raise ValueError("seção 'Auditoria de documentos' não encontrada")
     for i in range(ini, fim):
-        m = RE_CHECKBOX.match(linhas[i].rstrip("\n"))
-        if m and m.group(2).strip().lower() != "x" \
-                and sem_comentario(m.group(4)) == alvo.strip():
-            fim_l = "\n" if linhas[i].endswith("\n") else ""
-            linhas[i] = (m.group(1) + "x" + m.group(3) + m.group(4)
-                         + f" <!-- tratada em {hoje} (painel) -->" + fim_l)
-            return "".join(linhas), "anotação marcada como tratada"
-    raise ValueError("anotação não encontrada (ou já tratada)")
+        m = RE_ITEM.match(linhas[i].rstrip("\n"))
+        if not m or sem_comentario(m.group(2)) != alvo.strip():
+            continue
+        comentarios = "".join(" " + c for c in re.findall(r"<!--.*?-->", m.group(2)))
+        fim_l = "\n" if linhas[i].endswith("\n") else ""
+        linhas[i] = m.group(1) + novo + comentarios + fim_l
+        return "".join(linhas), "constatação atualizada"
+    raise ValueError("constatação não encontrada")
 
 
 def acao_anotacao_add(texto: str, descricao: str) -> tuple[str, str]:
-    """Acrescenta '- [ ] dd/mm/aaaa — texto' em '## Anotações da auditoria'.
+    """Acrescenta '- dd/mm/aaaa — texto' em '## Auditoria de documentos'.
     Cria a seção (antes de 'Registro de atividades', ou no fim) se faltar."""
     descricao = " ".join(descricao.split())
     if not descricao:
-        raise ValueError("anotação vazia")
+        raise ValueError("constatação vazia")
     hoje = datetime.date.today().strftime("%d/%m/%Y")
-    nova = f"- [ ] {hoje} — {descricao}\n"
+    nova = f"- {hoje} — {descricao}\n"
     linhas = texto.splitlines(keepends=True)
-    ini, fim = limites_secao(linhas, ("Anotações da auditoria", "Anotacoes da auditoria"))
+    migra_secao_documentos(linhas)
+    ini, fim = limites_secao(linhas, TITULOS_DOC)
     if ini < 0:
         # Seção ausente: cria antes de 'Registro de atividades', senão no fim.
-        bloco = f"## Anotações da auditoria\n{nova}\n"
+        bloco = f"## Auditoria de documentos\n{nova}\n"
         reg_ini = -1
         for i, l in enumerate(linhas):
             if l.strip().startswith("## ") and l.strip()[3:].strip().startswith("Registro de atividades"):
@@ -259,7 +289,7 @@ def acao_anotacao_add(texto: str, descricao: str) -> tuple[str, str]:
             if linhas and not linhas[-1].endswith("\n"):
                 linhas[-1] += "\n"
             linhas.append("\n" + bloco)
-        return "".join(linhas), "anotação registrada"
+        return "".join(linhas), "constatação registrada"
     # Seção existe: remove placeholder '_(vazio)_' e insere após o cabeçalho.
     ins = ini
     for i in range(ini, fim):
@@ -268,7 +298,7 @@ def acao_anotacao_add(texto: str, descricao: str) -> tuple[str, str]:
             fim -= 1
             break
     linhas.insert(ins, nova)
-    return "".join(linhas), "anotação registrada"
+    return "".join(linhas), "constatação registrada"
 
 
 def acao_atividade_tipada(texto: str, p: dict) -> tuple[str, str]:
@@ -358,7 +388,8 @@ ACOES = {
     "det": lambda t, p: acao_det(t, p.get("codigo", "")),
     "det_visto": lambda t, p: acao_det_visto(t, p.get("codigo", "")),
     "pendencia": lambda t, p: acao_pendencia(t, p.get("texto", "")),
-    "anotacao_ok": lambda t, p: acao_anotacao_ok(t, p.get("texto", "")),
+    "constatacao_edit": lambda t, p: acao_constatacao_edit(
+        t, p.get("texto", ""), p.get("novo", "")),
     "anotacao_add": lambda t, p: acao_anotacao_add(t, p.get("texto", "")),
     "atividade": lambda t, p: (acao_atividade_tipada(t, p) if p.get("tipos")
                                else acao_atividade(t, p.get("texto", ""))),

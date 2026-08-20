@@ -192,7 +192,7 @@ const ARCH = {
     },
     {
       "who": "/aft-auditoria-geral",
-      "act": "Enquadra os achados (relato de campo + Anotações da auditoria em aberto), identifica NR/ementa (via /aft-consulta ao NotebookLM) e redige os autos. Aciona consultoras /aft-NR12 e /aft-NR18; desvia para /aft-informalidade, /aft-embargo-interdicao (risco grave), /aft-PGR-analise, /aft-aet-auditoria ou /aft-analise-acidente. Gate de dupla visita (ME/EPP)."
+      "act": "Enquadra os achados (relato de campo + constatações da Auditoria de documentos), identifica NR/ementa (via /aft-consulta ao NotebookLM) e redige os autos. Aciona consultoras /aft-NR12 e /aft-NR18; desvia para /aft-informalidade, /aft-embargo-interdicao (risco grave), /aft-PGR-analise, /aft-aet-auditoria ou /aft-analise-acidente. Gate de dupla visita (ME/EPP)."
     },
     {
       "who": "/aft-revisa-auto",
@@ -325,7 +325,7 @@ const ARCH = {
         },
         {
           "nome": "/aft-auditoria-geral",
-          "role": "Enquadra e redige os autos (NRs + CLT) a partir de DUAS fontes — o relato de campo (inspecao-fisica.md) e as Anotações da auditoria do memory.md (constatações da análise documental). Identifica NR/ementa via /aft-consulta, com gate de dupla visita.",
+          "role": "Enquadra e redige os autos (NRs + CLT) a partir de DUAS fontes — o relato de campo (inspecao-fisica.md) e a Auditoria de documentos do memory.md (constatações da análise documental). Identifica NR/ementa via /aft-consulta, com gate de dupla visita.",
           "tech": "orquestra consultoras · herda o modelo da sessão"
         },
         {
@@ -562,7 +562,7 @@ const ARCH = {
     {
       "nome": "servir_painel.py",
       "caminho": "_scripts/servir_painel.py",
-      "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 8 ações mecânicas por clique (marcar/reabrir DET respondida, dispensar alerta de atualização pendente do DET, resolver pendência, adicionar/resolver anotação da auditoria, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
+      "papel": "Modo INTERATIVO do painel: mini-servidor http.server em 127.0.0.1:8347 que serve o painel recém-gerado e aceita 8 ações mecânicas por clique (marcar/reabrir DET respondida, dispensar alerta de atualização pendente do DET, resolver pendência, registrar/editar constatação da auditoria de documentos, registrar atividade, mudar status, alternar embargo/interdição vigente/suspenso), cada uma editando a linha exata do memory.md com backup prévio (backup_arquivo.py). Só escuta localhost; valida pasta contra path-traversal; ações de julgamento nunca passam por ele — o painel oferece botões que copiam o comando pronto para o Claude Code.",
       "runtime": "Python stdlib"
     },
     {

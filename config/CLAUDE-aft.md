@@ -101,7 +101,7 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Criar habilidade própria minha → `/aft-nova-skill`
 
 **Constatação de auditoria** (SESMT/CIPA mal dimensionado, ASO faltando, programa
-vencido…) não vira auto na hora: registre em `## Anotações da auditoria` do memory.md —
+vencido…) não vira auto na hora: registre em `## Auditoria de documentos` do memory.md —
 a `/aft-auditoria-geral` depois transforma em auto.
 
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico ou Termo de
