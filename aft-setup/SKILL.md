@@ -316,7 +316,22 @@ sempre 9 dígitos).
    por enquanto (o Sistema Auditor permite confirmar pela lupa), recomendando
    preencher depois editando o `aft-config.md`.
 
-## Passo 4 — Descobrir o caminho Windows da pasta de trabalho
+### Persona do assessor (opcional, uma pergunta só)
+
+Depois de resolver a UORG, ofereça a personalização do assessor, em uma única
+pergunta, deixando claro que é opcional e vale só para a conversa:
+
+> Quer dar um toque pessoal ao assistente? Posso te chamar de um tratamento seu
+> ("Dr. João", "Dra. Maria" ou só o primeiro nome) e atender por um nome que você
+> escolher ("Claudinho", "Claudete"...). Isso vale SÓ aqui no chat — nunca em auto
+> de infração, notificação ou qualquer documento. Se não quiser, seguimos como está.
+
+- Se o AFT topar, colete os dois valores: `tratamento` (sugira "Dr./Dra. + primeiro
+  nome", mas grave **o que ele disser** — nunca deduza gênero pelo nome) e
+  `nome_assessor` (o que ele escolher).
+- Se recusar ou ignorar, **não insista**: deixe os dois campos fora do config (ou
+  vazios) e siga.
+- Os valores entram no front-matter do Passo 5.
 
 O Sistema Auditor exige caminhos absolutos no formato Windows (`C:\...`) nas linhas
 de anexo do TXT. Converta **a pasta que o Passo 2 devolveu** (nunca um caminho
@@ -362,6 +377,9 @@ path_windows: "C:\\Users\\joao\\Documents\\AFT"
 python_path: "C:\\Users\\joao\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
 # Navegador que o AFT usa com a conta Google do NotebookLM (chrome | edge):
 notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /aft-notebooklm-login
+# Persona do assessor (opcional; vale so no chat, nunca em documento oficial):
+tratamento: "Dr. João"     # como o assistente chama o AFT na conversa
+nome_assessor: "Claudinho" # nome pelo qual o assistente atende
 # Dados fixos do TXT (não alterar sem orientação):
 cod_1: "8211300"           # CNAE placeholder — o Sistema Auditor corrige pela lupa
 cod_2: "0"                 # nº de empregados da empresa no TXT (0 = não informado)
