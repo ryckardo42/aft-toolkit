@@ -417,7 +417,7 @@ Linhas separadas por `\n`.
     só os parágrafos que a `/aft-revisa-auto` (FASE 2.7) separou; um bloco II com vários
     parágrafos no `autos.md` deve sair com vários `#13#10` no meio, não um único parágrafo
     corrido.
-  - Exemplo: `I - DA FISCALIZAÇÃO:#13#10 . #13#10Trata-se de ação fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalização...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVAÇÕES:#13#10 . #13#10a) ...#13#10b) ...`
+  - Exemplo: `I - DA FISCALIZAÇÃO:#13#10 . #13#10Trata-se de ação fiscal...de X.#13#10 . #13#10II - IRREGULARIDADE:#13#10 . #13#10Na referida fiscalização...#13#10Sendo assim, incorreu...#13#10Dano de natureza coletiva...#13#10 . #13#10III - OBSERVAÇÕES:#13#10 . #13#10a) ...#13#10b) ...`
   - **Nunca escreva os subtítulos sem acento** (`FISCALIZACAO`, `OBSERVACOES`) — mesmo em rascunho
     interno ou script auxiliar. O encoding final (latin-1) suporta acento normalmente; a única
     razão para tirar acento seria confundir "ASCII-safe" com "exigência do sistema", o que é falso
