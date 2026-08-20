@@ -77,6 +77,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Console do Windows é cp1252: sem isto, o JSON final (nomes de empregador com
+# acento) estoura em UnicodeEncodeError antes de terminar de imprimir.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 try:
     import pdfplumber  # opcional: detecção pelo conteúdo da 1ª página
 except ImportError:
