@@ -254,18 +254,36 @@ PATH_MD="$PASTA_OS/tn-nco-$(date +%Y-%m-%d).md"
 
 Confirme ao AFT: arquivo salvo + nº de itens. Se não houver pasta de OS resolvida, pergunte onde salvar (ou ofereça a Área de Trabalho).
 
-### Gere também um .docx em paralelo (sempre)
+### Gere também um .docx em paralelo (sempre), no modelo da Análise Preliminar de NAD
 
 Além do `.md` (para o AFT colar no DET) e dos blocos de texto puro no chat, gere **na
 mesma execução** um `.docx` com o mesmo teor, em `<PASTA_OS>/NOTIFICACOES/`, no padrão
 visual do toolkit (biblioteca `aft-modelo-docx`) — nome sugerido
 `NCO - <DD-MM-AAAA>.docx` (ou `NCO - <DD-MM-AAAA> (2).docx` se já existir um do mesmo
-dia). É o mesmo padrão "chat + docx sempre juntos" usado pela Análise Preliminar e pelo
-compilado final de achados no fluxo de resposta a NAD: o `.docx` é para leitura
-confortável e arquivo (capa, introdução, um bloco por item com título em negrito, base
-legal, exigência e ementa), **não substitui** os blocos de texto puro do chat — quem cola
-no DET continua sendo esses blocos, não o `.docx`. Crie a pasta `NOTIFICACOES/` se ainda
-não existir.
+dia). O `.docx` é para leitura confortável e arquivo, **não substitui** os blocos de
+texto puro do chat — quem cola no DET continua sendo esses blocos.
+
+**Use como referência estrutural o modelo da "Análise Preliminar da Resposta à
+Notificação DET"** (comando do AFT de 20/08/2026), adaptando as seções ao conteúdo de
+uma NCO em vez de a uma análise:
+
+1. Capa: título "NOTIFICAÇÃO PARA CORREÇÃO DE IRREGULARIDADES (NCO)"; subtítulo com a
+   quantidade de itens e, se houver, a notificação DET de origem; unidade (empregador +
+   CNPJ); data no formato "Município-UF, dd de mês de aaaa" usando a **lotação do
+   auditor** (`municipio`/`uf` do `aft-config.md`), nunca o município da fiscalizada.
+2. "1. Identificação" — tabela rótulo-valor: Empregador, CNPJ, RI, Data da notificação,
+   Quantidade de itens.
+3. "2. Itens notificados" — um bloco por item, título em negrito, seguido de Base
+   legal, Exigência e, quando houver, a ementa de referência — o mesmo conteúdo dos
+   blocos do chat, só que em prosa formatada em vez de blocos de código.
+4. "3. Tabela-resumo" — tabela `Item | Título | Base legal | Ementa`, para conferência
+   rápida (mesmo espírito da tabela item a item da Análise Preliminar).
+5. "4. Observações" — o texto fixo de comprovação de cumprimento/prorrogação e dúvidas
+   (o mesmo do bloco de Observações do chat).
+6. Fechamento com assinatura do auditor (sem "É o relatório." — isso é da Análise
+   Preliminar, não da NCO).
+
+Crie a pasta `NOTIFICACOES/` se ainda não existir.
 
 ---
 
