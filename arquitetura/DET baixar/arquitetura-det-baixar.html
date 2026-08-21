@@ -171,7 +171,7 @@
 <h2>2. O fluxo, passo a passo</h2>
 <ol class="steps">
   <li>O AFT navega no DET logado; a extensão captura o token de sessão e o guarda no <code>chrome.storage.local</code> (validade ~30 min).</li>
-  <li>O AFT clica em <strong>Sincronizar</strong>: o token chega ao servidor do painel (<code>POST /api/det-sync</code>), roda o sync das fichas e fica guardado <strong>em RAM por 25 min</strong> — nunca em disco.</li>
+  <li>O token chega ao servidor do painel e fica guardado <strong>em RAM até o <code>exp</code> real do JWT</strong> (nunca em disco). Dois caminhos: a extensão <strong>v3.0 empurra sozinha</strong> a cada navegação no DET (<code>POST /api/det-token</code>, canal leve, throttle 2 min) e o <strong>Sincronizar</strong> (<code>/api/det-sync</code>) também abastece. Durante o trabalho, o token está sempre pronto — sem clique.</li>
   <li>O download é disparado pelo botão <strong>"⬇ baixar arquivos"</strong> do cartão ou pela skill <code>/aft-det-baixar</code>. Os dois caem no mesmo <code>POST /api/det-baixar {pasta, codigo}</code>.</li>
   <li>O servidor valida a pasta (filha direta de OS ATIVAS, sem path traversal). Sem token fresco: <code>409 {token_expirado}</code> com a instrução de sincronizar.</li>
   <li>O motor pesquisa a notificação pelo código (chave única), obtém o <code>uid</code> e resolve o pacote de destino (<code>pasta_do_pacote</code>).</li>
@@ -224,7 +224,7 @@ com o token de sessão do próprio AFT.</p>
 
 <h2>5. Segurança</h2>
 <ul>
-  <li>O token vive <strong>só na RAM</strong> do servidor do painel, por 25 min — nunca em disco, nunca no chat, nunca na skill.</li>
+  <li>O token vive <strong>só na RAM</strong> do servidor do painel, com validade igual ao <code>exp</code> real do próprio JWT (menos 60s de margem) — nunca em disco, nunca no chat, nunca na skill. Reempurrar o mesmo token não estende nada além do que o DET concede.</li>
   <li>O servidor só escuta <code>127.0.0.1</code> e valida a pasta contra path traversal.</li>
   <li>401/403 do DET limpa o cache e devolve 409 com a instrução ("clique em Sincronizar").</li>
   <li>Falha no registro de visualização nunca derruba o download (<code>visto_no_det: false</code>).</li>
@@ -232,6 +232,7 @@ com o token de sessão do próprio AFT.</p>
 
 <h2>6. Pendências e limites conhecidos</h2>
 <ul>
+  <li>A sessão do DET dura <strong>~30 min</strong> (o <code>exp</code> do JWT) e <strong>não tem refresh</strong>: quando vence, o AFT reloga no gov.br — isso é do governo, nenhuma mudança na extensão remove. O auto-push da v3.0 elimina o Sincronizar manual e os "token expirado" durante a sessão, mas não o login em si.</li>
   <li>O canal de comunicação é <strong>somente leitura</strong>: responder e registrar ciência são atos do AFT, no site (os endpoints de escrita existem, mas ficaram de fora de propósito).</li>
   <li>Reinício do serviço do painel zera o token: primeiro download depois de publicar pede novo Sincronizar (não é defeito).</li>
   <li><code>det_baixar.py</code> é importado pelo servidor: mexeu, <strong>reinicie o serviço</strong> (o <code>publicar.py</code> já reinicia).</li>
