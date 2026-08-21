@@ -802,6 +802,48 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self._json(404, {"ok": False, "erro": "rota desconhecida"})
 
+    def _det_criar(self):
+        """POST /api/det-criar — ESCREVE um rascunho de notificação no DET.
+        Corpo {pasta, arquivo, titulo?, prazo_dias?, confirmar}. Sem
+        confirmar=true, devolve só a PRÉVIA (payload montado), sem tocar o DET.
+        Com confirmar=true, cria a casca + salva o rascunho — NUNCA lavra."""
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
+            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            pasta = (p.get("pasta") or "").strip()
+            arquivo = (p.get("arquivo") or "").strip()
+            if (not pasta or "/" in pasta or "\\" in pasta or pasta.startswith(".")
+                    or not arquivo or "/" in arquivo or "\\" in arquivo
+                    or not arquivo.endswith(".md")):
+                raise ValueError("pasta/arquivo inválidos")
+            alvo = (self.base / pasta).resolve()
+            if self.base.resolve() != alvo.parent or not alvo.is_dir():
+                raise ValueError(f"pasta {pasta} não encontrada em OS ATIVAS")
+            token = _token_atual()
+            if not token:
+                return self._json(409, {"ok": False, "token_expirado": True,
+                                        "erro": "sem token — sincronize no DET e tente de novo"})
+            payload, itens = det_criar.preparar_de_os(
+                alvo, arquivo, p.get("titulo") or "Termo de Notificação",
+                int(p.get("prazo_dias") or 16), token)
+            resumo = {"ri": payload["ri"], "ni": payload["ni"],
+                      "titulo": payload["titulo"],
+                      "prazo": payload["dataPrazoEntregaPadrao"],
+                      "n_itens": len(payload["itens"]),
+                      "itens": [{"ordem": it["ordem"], "descricao": it["descricao"][:80]}
+                                for it in payload["itens"]]}
+            if not p.get("confirmar"):
+                return self._json(200, {"ok": True, "previa": True, "resumo": resumo})
+            res = det_criar.criar_rascunho(token, payload)
+            self._json(200, {"ok": True, "previa": False, "resumo": resumo, **res})
+        except det_baixar.TokenExpirado as e:
+            _DET_TOKEN["token"] = None
+            self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
+        except ValueError as e:
+            self._json(400, {"ok": False, "erro": str(e)})
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+
     def _det_molde(self):
         """GET /api/det-molde?codigo=XXX — JSON cru de uma notificação real,
         para servir de molde à construção do rascunho (subsistema det-criar,
@@ -868,6 +910,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._det_token()
         if self.path == "/api/det-baixar":
             return self._det_baixar()
+        if self.path == "/api/det-criar":
+            return self._det_criar()
         if self.path != "/api/acao":
             return self._json(404, {"ok": False, "erro": "rota desconhecida"})
         try:

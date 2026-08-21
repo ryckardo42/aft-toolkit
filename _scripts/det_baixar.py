@@ -156,7 +156,8 @@ class TokenExpirado(RuntimeError):
 # ── HTTP (urllib puro, como no det_sync) ─────────────────────────────────────
 
 def _requisicao(token: str, caminho: str, *, params: dict | None = None,
-                corpo: dict | None = None, timeout: int = TIMEOUT_JSON) -> bytes:
+                corpo: dict | None = None, timeout: int = TIMEOUT_JSON,
+                metodo: str | None = None) -> bytes:
     url = DET_BASE + caminho
     if params:
         url += "?" + urllib.parse.urlencode(params)
@@ -168,7 +169,8 @@ def _requisicao(token: str, caminho: str, *, params: dict | None = None,
             "Content-Type": "application/json",
             "Accept": "application/json, text/plain, */*",
         },
-        method="POST" if corpo is not None else "GET",
+        # metodo explícito vence (POST casca, PUT rascunho); senão infere.
+        method=metodo or ("POST" if corpo is not None else "GET"),
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
