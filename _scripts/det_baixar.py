@@ -368,6 +368,25 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
             except Exception as e:
                 r["erros"].append(f"{rot}/{nome}: {e}")
 
+    # Espelha o "abrir a notificação" do site: GET do detalhe da notificação e
+    # de cada item — as mesmas chamadas que o front dispara quando o AFT abre
+    # a tela e o "Visualizar Item Solicitado". É isso que faz o DET registrar
+    # a visualização e apagar o triângulo amarelo "Existe atualização
+    # pendente" (sem estas leituras, o alerta continuava aceso mesmo com tudo
+    # baixado — constatado pelo AFT em 21/08/2026, caso real).
+    try:
+        _json_api(token, f"/notificacoes/{uid}")
+        for item in itens or []:
+            if item.get("uid"):
+                _json_api(token, f"/itens-notificacao/{item['uid']}",
+                          params={"uidNotificacao": uid})
+        r["visto_no_det"] = True
+    except TokenExpirado:
+        raise
+    except Exception as e:
+        r["visto_no_det"] = False
+        r["erros"].append(f"registro de visualização no DET: {e}")
+
     _registrar_no_memory(pasta_os, r)
     return r
 
