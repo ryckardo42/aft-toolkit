@@ -826,7 +826,7 @@ class Handler(BaseHTTPRequestHandler):
             payload, itens = det_criar.preparar_de_os(
                 alvo, arquivo, p.get("titulo") or "Termo de Notificação",
                 int(p.get("prazo_dias") or 16), token,
-                id_modelo=p.get("modelo"))
+                id_modelo=p.get("modelo"), cif=p.get("cif"))
             resumo = {"ri": payload["ri"], "ni": payload["ni"],
                       "titulo": payload["titulo"],
                       "prazo": payload["dataPrazoEntregaPadrao"],

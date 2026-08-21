@@ -66,11 +66,39 @@ def recuperar_crua(token: str, codigo: str) -> dict:
     return json.loads(det_baixar._requisicao(token, f"/notificacoes/{uid}").decode("utf-8"))
 
 
-def recuperar_modelo(token: str, id_modelo: int) -> dict:
-    """Modelo de notificação do AFT (GET /modelos-notificacao/{id}) — traz a
-    introdução/observações e textos padrão que ele consagrou no DET."""
+def listar_modelos(token: str, id_modelo=None, cif=None) -> list[dict]:
+    """POST /modelos-notificacao com filtro (mesmo corpo do site) — devolve a
+    lista de modelos. `id_modelo` é a Identificação que o AFT vê; `cif` filtra
+    por auditor (modelo de equipe). Leitura pura."""
+    filtro = {"isPesquisaPadrao": False,
+              "idModelo": int(id_modelo) if id_modelo else None,
+              "cifAuditor": str(cif) if cif else None,
+              "tituloModelo": None, "tituloNotificacao": None, "autoria": "M"}
+    r = json.loads(det_baixar._requisicao(
+        token, "/modelos-notificacao", corpo=filtro, metodo="POST").decode("utf-8"))
+    return r if isinstance(r, list) else (r.get("modelos") or [])
+
+
+def recuperar_modelo(token: str, id_modelo, cif=None) -> dict:
+    """Modelo de notificação do AFT pela Identificação (ex.: 521). Lista com
+    filtro para achar o uid real e recupera o detalhe (GET /{uid}). Traz a
+    introdução/observações e textos padrão que o AFT consagrou no DET.
+    RuntimeError se a Identificação não bater com nenhum modelo."""
+    modelos = listar_modelos(token, id_modelo=id_modelo, cif=cif)
+    alvo = None
+    for m in modelos:
+        if str(m.get("idModelo") or m.get("identificacao") or "") == str(id_modelo):
+            alvo = m
+            break
+    alvo = alvo or (modelos[0] if len(modelos) == 1 else None)
+    if not alvo:
+        raise RuntimeError(f"modelo de identificação {id_modelo} não encontrado "
+                           f"({len(modelos)} modelos no filtro)")
+    uid = alvo.get("uid")
+    if not uid:
+        return alvo
     return json.loads(det_baixar._requisicao(
-        token, f"/modelos-notificacao/{int(id_modelo)}").decode("utf-8"))
+        token, f"/modelos-notificacao/{uid}").decode("utf-8"))
 
 
 def recuperar_detalhe_ri(token: str, ri: str) -> dict:
@@ -158,7 +186,7 @@ def ids_do_memory(texto: str) -> tuple[str, str]:
 
 
 def enriquecer(payload: dict, token: str, ri: str,
-               id_modelo=None) -> dict:
+               id_modelo=None, cif=None) -> dict:
     """Acrescenta ao payload o que o modelo 521 e o detalhe do RI trazem —
     introdução/observações (do modelo), textos padrão (do modelo), e o
     endereço/estabelecimento (do RI). Defensivo: o que não vier fica de fora,
@@ -167,7 +195,7 @@ def enriquecer(payload: dict, token: str, ri: str,
     relato = {"modelo": None, "observacoes": 0, "textos": 0, "enderecos": 0}
     if id_modelo:
         try:
-            modelo = recuperar_modelo(token, id_modelo)
+            modelo = recuperar_modelo(token, id_modelo, cif=cif)
             obs = _secao_do_modelo(modelo, "observacoes")
             txt = _secao_do_modelo(modelo, "textosInformativosPadraoAtivos")
             if obs:
@@ -194,7 +222,7 @@ def enriquecer(payload: dict, token: str, ri: str,
 
 
 def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo: str,
-                   prazo_dias: int, token: str, id_modelo=None
+                   prazo_dias: int, token: str, id_modelo=None, cif=None
                    ) -> tuple[dict, list[dict]]:
     """Lê a TN-NCO e o memory.md da OS e devolve (payload, itens) prontos —
     sem escrever nada. O endpoint usa isto para montar antes de criar."""
@@ -208,7 +236,7 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo: str,
         raise RuntimeError("RI não encontrado no memory.md da OS")
     prazo = _prazo_iso(prazo_dias)
     payload = montar_payload(token, ri, cnpj, titulo, itens, prazo)
-    enriquecer(payload, token, ri, id_modelo)
+    enriquecer(payload, token, ri, id_modelo, cif)
     return payload, itens
 
 
