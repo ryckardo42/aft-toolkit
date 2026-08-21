@@ -130,6 +130,37 @@ def consultar_det(token: str, cnpj: str, ri: str) -> list[dict]:
     return dados.get("notificacoes") or []
 
 
+def snippet_canal(token: str, uid: str) -> str:
+    """Última mensagem do EMPREGADOR no canal de comunicação da notificação,
+    resumida (90 chars) para a sub-linha da ficha. Best-effort: qualquer
+    falha devolve '' — o envelope continua aparecendo sem o texto."""
+    base = "https://auditor-det.sit.trabalho.gov.br/services/auditor/v1"
+    req = urllib.request.Request(
+        f"{base}/notificacoes/{uid}/canal-comunicacao",
+        headers={"Authorization": f"Bearer {token}",
+                 "Accept": "application/json, text/plain, */*"})
+    try:
+        with urllib.request.urlopen(req, timeout=DET_TIMEOUT) as resp:
+            canal = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return ""
+    registros = canal if isinstance(canal, list) else next(
+        (v for v in (canal or {}).values()
+         if isinstance(v, list) and v and isinstance(v[0], dict)), [])
+    texto = ""
+    for reg in registros:
+        if (reg.get("tipoRegistroComunicacao") in (None, "M")
+                and reg.get("tipoUsuarioEmissor") == "E" and reg.get("texto")):
+            texto = reg["texto"]  # fica com a última (a lista vem cronológica)
+    texto = re.sub(r"\s+", " ", texto).replace('"', "'").strip()
+    if len(texto) > 90:
+        texto = texto[:90]
+        if " " in texto:
+            texto = texto.rsplit(" ", 1)[0]
+        texto += "…"
+    return texto
+
+
 # Status da notificação no DET. Os três valores são os do enum do próprio
 # DET, lidos do código do site em 19/08/2026 (chunk 251 do front Angular):
 #   0 EM_ELABORACAO ("ainda em elaboração")
@@ -241,7 +272,7 @@ def _fingerprint(n: dict) -> str:
     return (n.get("itemDataUltimaEntrega") or "")[:10] or "sem-entrega"
 
 
-def _linha_detalhe(n: dict, visto: str = "") -> str:
+def _linha_detalhe(n: dict, visto: str = "", msg: str = "") -> str:
     """Sub-linha de detalhes de uma notificação (dados vindos do DET).
     Campos vazios são omitidos; status 1 = Confirmada (único elegível).
 
@@ -279,14 +310,18 @@ def _linha_detalhe(n: dict, visto: str = "") -> str:
     # esperando resposta do AFT. Diferente do triângulo, some sozinho quando o
     # AFT responde no DET: por isso não é dispensável por clique.
     if _flag(n.get("isPendenciaComunicacaoAuditor")):
-        partes.append("✉️ mensagem no canal de comunicação")
+        # O trecho da última mensagem do empregador (quando o sync conseguiu
+        # buscá-lo) vai na própria sub-linha — o painel o mostra no cartão.
+        partes.append("✉️ mensagem no canal de comunicação"
+                      + (f': "{msg}"' if msg else ""))
     linha = "  - " + " · ".join(partes)
     if visto:
         linha += f" <!-- visto: {visto} -->"
     return linha + "\n"
 
 
-def aplicar_notificacoes(texto: str, notifs: list[dict]
+def aplicar_notificacoes(texto: str, notifs: list[dict],
+                         msgs: dict[str, str] | None = None
                          ) -> tuple[str, int, int, int, list[str]]:
     """Aplica as notificações elegíveis na seção ## Notificações DET.
     Devolve (novo_texto, inseridas, prazos_atualizados, detalhes_atualizados,
@@ -328,6 +363,7 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]
     canceladas: list[str] = []
     novas: list[str] = []
     inserir_detalhe: list[tuple[int, str]] = []  # (posição, linha) — aplicados no fim
+    msgs = msgs or {}
     for n in notifs:
         codigo = (n.get("codigo") or "").strip()
         if not codigo:
@@ -342,7 +378,7 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]
                 continue  # nunca entra na ficha; volta no relatório
             prazo = _data_br(prazo_iso)
             novas.append(f"- [ ] {codigo}" + (f" — prazo {prazo}\n" if prazo else "\n"))
-            novas.append(_linha_detalhe(n))
+            novas.append(_linha_detalhe(n, msg=msgs.get(codigo, "")))
             inseridas += 1
             continue
         # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou),
@@ -351,7 +387,7 @@ def aplicar_notificacoes(texto: str, notifs: list[dict]
         if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
             mv = RE_VISTO.search(linhas[i + 1])
             visto = mv.group(1) if mv else ""
-        det = _linha_detalhe(n, visto)
+        det = _linha_detalhe(n, visto, msgs.get(codigo, ""))
         if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
             if linhas[i + 1] != det:
                 linhas[i + 1] = det
@@ -477,8 +513,8 @@ def identificadores(texto: str, pasta: str) -> tuple[str, str]:
 
 
 def sincronizar_os(pasta_os: Path, token: str,
-                   consultar=consultar_det) -> dict:
-    """Sincroniza uma OS. `consultar` é injetável para testes."""
+                   consultar=consultar_det, canal=snippet_canal) -> dict:
+    """Sincroniza uma OS. `consultar` e `canal` são injetáveis para testes."""
     r = {"os": pasta_os.name, "recebidas": 0, "inseridas": 0,
          "prazos_atualizados": 0, "detalhes_atualizados": 0,
          "ri_preenchido": False, "ignoradas": [], "canceladas": [],
@@ -530,8 +566,18 @@ def sincronizar_os(pasta_os: Path, token: str,
     if not minhas:
         return r
 
+    # Envelope aceso: busca o trecho da última mensagem do empregador para a
+    # sub-linha (uma requisição extra só nas notificações com pendência).
+    msgs = {}
+    for n in minhas:
+        if _flag(n.get("isPendenciaComunicacaoAuditor")) and n.get("uid"):
+            trecho = canal(token, n["uid"])
+            if trecho:
+                msgs[(n.get("codigo") or "").strip()] = trecho
+
     (novo, r["inseridas"], r["prazos_atualizados"],
-     r["detalhes_atualizados"], r["canceladas"]) = aplicar_notificacoes(texto, minhas)
+     r["detalhes_atualizados"], r["canceladas"]) = aplicar_notificacoes(
+        texto, minhas, msgs)
     novo, r["ri_preenchido"] = preencher_ri(novo, ri_novo)
     if novo == texto:
         return r
@@ -561,10 +607,11 @@ def sincronizar_os(pasta_os: Path, token: str,
     return r
 
 
-def sincronizar_todas(base: Path, token: str, consultar=consultar_det) -> dict:
+def sincronizar_todas(base: Path, token: str, consultar=consultar_det,
+                      canal=snippet_canal) -> dict:
     """Sincroniza todas as OS de OS ATIVAS/. Uma OS com erro não derruba as
     demais. Devolve métricas agregadas (mesmo espírito do SisOS)."""
-    resultados = [sincronizar_os(mem.parent, token, consultar)
+    resultados = [sincronizar_os(mem.parent, token, consultar, canal)
                   for mem in sorted(base.glob("*/memory.md"))]
     erros = [{"os": r["os"], "erro": r["erro"]} for r in resultados if r["erro"]]
     ignoradas = [{"os": r["os"], **ig} for r in resultados for ig in r["ignoradas"]]

@@ -114,7 +114,11 @@ RE_DET_ULTIMA = re.compile(r"[uú]ltima\s+entrega\s+(\d{2}/\d{2}/\d{4})", re.IGN
 RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
 # Envelope laranja do DET: mensagem do empregador no canal de comunicação
 # esperando resposta do AFT (isPendenciaComunicacaoAuditor na API).
-RE_DET_MENSAGEM = re.compile(r"mensagem\s+no\s+canal", re.IGNORECASE)
+# O sync pode anexar o trecho da última mensagem do empregador na própria
+# sub-linha: `✉️ mensagem no canal de comunicação: "texto..."` — o grupo 1
+# captura o texto (opcional, sub-linhas antigas não o têm).
+RE_DET_MENSAGEM = re.compile(
+    r'mensagem\s+no\s+canal[^:"]*(?::\s*"([^"]*)")?', re.IGNORECASE)
 # Notificação cancelada pelo auditor no DET (status 2): sem efeito legal.
 # Aceita também o `status 2` cru — é como as sincronizações antigas gravaram a
 # sub-linha, antes de o sync conhecer o nome do status. Só casa dentro da
@@ -314,6 +318,7 @@ def parse_memory(path: Path) -> dict:
         # lavratura, ciência e última entrega vêm do próprio DET.
         lavrada = ciencia = ultima = None
         pendente = aguarda = mensagem = cancelada = False
+        mensagem_txt = ""
         if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
             det = linhas_sec[idx + 1]
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
@@ -323,7 +328,9 @@ def parse_memory(path: Path) -> dict:
             ultima = parse_data(mu.group(1)) if mu else None
             pendente = bool(RE_DET_PENDENTE.search(det))
             aguarda = bool(RE_DET_AGUARDA.search(det))
-            mensagem = bool(RE_DET_MENSAGEM.search(det))
+            m_msg = RE_DET_MENSAGEM.search(det)
+            mensagem = bool(m_msg)
+            mensagem_txt = (m_msg.group(1) or "").strip() if m_msg else ""
             cancelada = bool(RE_DET_CANCELADA.search(det))
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
@@ -331,7 +338,7 @@ def parse_memory(path: Path) -> dict:
                      "lavrada": lavrada, "ciencia": ciencia,
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente,
                      "aguardando_ciencia": aguarda, "mensagem_canal": mensagem,
-                     "cancelada": cancelada})
+                     "mensagem_txt": mensagem_txt, "cancelada": cancelada})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -1308,7 +1315,8 @@ function cartaoDets(o,i){
    (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?' onclick="agDet('+i+','+k+')" title="clique para '+
     (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
    '<span class="cx">'+(d.cancelada?'✕':d.feito?'✓':'')+'</span><div><div class="cod">'+
-   (d.mensagem?'<span class="msg" title="o empregador mandou mensagem no canal de comunicação desta notificação e ela aguarda resposta sua — responda no DET">✉️ mensagem no DET</span> ':'')+
+   (d.mensagem?'<span class="msg" title="o empregador mandou mensagem no canal de comunicação desta notificação e ela aguarda resposta sua — responda no DET">✉️ mensagem no DET'+
+    (d.mensagem_txt?': “'+esc(d.mensagem_txt)+'”':'')+'</span> ':'')+
    (d.pendente&&!d.cancelada?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
     ' style="cursor:pointer" title="clique se já viu esta atualização no DET — o alerta some e só volta se houver entrega nova"'+
     ' onclick="event.stopPropagation();agDetVisto('+i+','+k+')"':'')+
@@ -1868,6 +1876,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "ultima_entrega": d["ultima_entrega"].strftime("%d/%m/%Y") if d.get("ultima_entrega") else "",
                       "pendente": bool(d.get("atualizacao_pendente")),
                       "mensagem": bool(d.get("mensagem_canal")),
+                      "mensagem_txt": d.get("mensagem_txt") or "",
                       "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}

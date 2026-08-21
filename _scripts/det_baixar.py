@@ -92,6 +92,62 @@ TIMEOUT_BLOB = 120  # segundos — arquivos (o DET aceita até 20 MB por arquivo
 # Arquivo entregue: 0 INICIAL · 1 RECEBIDO · 2 REJEITADO · 3 DISPENSADO
 STATUS_INVALIDADOS = (2, 3)
 
+# Status do ITEM nos eventos do histórico (enum do front do DET, chunk 251,
+# lido em 21/08/2026) — é o que aparece na coluna Status da tela do item.
+STATUS_ITEM = {
+    0: "Inicial", 1: "Item enviado", 2: "Item recebido", 3: "Item rejeitado",
+    4: "Aguardando avaliação de prazo", 5: "Prazo aceito", 6: "Prazo rejeitado",
+    7: "Prazo prorrogado", 8: "Não enviado",
+    9: "Aguardando avaliação de dispensa", 10: "Item dispensado",
+    11: "Dispensa rejeitada", 12: "Dispensa parcial",
+    13: "Providência solicitada", 14: "Entrega digital dispensada",
+    15: "Item enviado (pendente avaliação de prazo)",
+    16: "Não enviado (pendente avaliação de prazo)",
+    17: "Item recebido (pendente avaliação de prazo)",
+    18: "Item enviado (pendente avaliação de dispensa)",
+    19: "Não enviado (pendente avaliação de dispensa)",
+    20: "Item recebido (pendente avaliação de dispensa)",
+}
+
+
+def _data_hora_br(iso: str | None) -> str:
+    """'2026-08-19T10:11:22...' → '19/08/2026 10:11'; '' se vazio."""
+    if not iso:
+        return ""
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})", str(iso))
+    if m:
+        return f"{m.group(3)}/{m.group(2)}/{m.group(1)} {m.group(4)}:{m.group(5)}"
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", str(iso))
+    return f"{m.group(3)}/{m.group(2)}/{m.group(1)}" if m else str(iso)
+
+
+def _texto_plano(t: str | None, limite: int = 0) -> str:
+    """Texto de API para arquivo/linha: colapsa quebras e espaços; corta na
+    última palavra inteira quando `limite` > 0."""
+    t = re.sub(r"\s+", " ", t or "").strip()
+    if limite and len(t) > limite:
+        t = t[:limite]
+        if " " in t:
+            t = t.rsplit(" ", 1)[0]
+        t += "…"
+    return t
+
+
+def _registros_canal(canal) -> list[dict]:
+    """A lista de registros do canal, onde quer que a API a tenha posto
+    (a resposta é um objeto; o nome exato da lista não está no contrato)."""
+    if isinstance(canal, list):
+        return [x for x in canal if isinstance(x, dict)]
+    if isinstance(canal, dict):
+        for chave in ("registros", "mensagens", "comunicacoes", "eventos"):
+            v = canal.get(chave)
+            if isinstance(v, list):
+                return [x for x in v if isinstance(x, dict)]
+        for v in canal.values():
+            if isinstance(v, list) and v and isinstance(v[0], dict):
+                return v
+    return []
+
 
 class TokenExpirado(RuntimeError):
     """401/403 do DET: o token de sessão venceu (dura ~30 min)."""
@@ -274,7 +330,8 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
         raise ValueError(f"código de notificação inválido: {codigo!r}")
     r = {"ok": True, "codigo": codigo, "pasta": pasta_os.name,
          "baixados": 0, "ja_existiam": 0, "invalidados": 0,
-         "itens": 0, "sem_arquivo": 0, "erros": []}
+         "itens": 0, "sem_arquivo": 0, "eventos": 0,
+         "mensagens_canal": 0, "anexos_canal": 0, "erros": []}
 
     n = pesquisar_por_codigo(token, codigo)
     if not n:
@@ -303,33 +360,47 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                 antigo.rename(novo)
                 r["movidos"] = r.get("movidos", 0) + 1
 
-    # Os 2 PDFs. numeroDeLinhas=0 é o que o próprio site passa no download
-    # direto (sem o modal de paginação); no relatório, tipo=0 e
-    # exibeHistorico=true são os padrões do modal — e o tipo é OBRIGATÓRIO
-    # (sem ele a API devolve 400 "Parâmetro de URL tipo inválido", constatado
-    # na primeira execução real em 21/08/2026).
-    pdfs = [
-        ("PDF da notificação", f"notificacao-{codigo}.pdf",
-         f"/notificacoes/{uid}/pdf", {"numeroDeLinhas": 0}),
-        ("Relatório de Atendimento", f"relatorio-atendimento-{codigo}.pdf",
-         f"/notificacoes/{uid}/pdf-relatorio-atendimento",
-         {"tipo": 0, "exibeHistorico": "true"}),
-    ]
-    for rotulo, nome, caminho, params in pdfs:
-        try:
-            _migrar(nome)
-            destino = raiz / nome
-            if destino.exists() and destino.stat().st_size > 0:
-                r["ja_existiam"] += 1
-                continue
-            conta(_salvar(destino, _requisicao(token, caminho, params=params,
-                                               timeout=TIMEOUT_BLOB)))
-        except TokenExpirado:
-            raise
-        except Exception as e:
-            r["erros"].append(f"{rotulo}: {e}")
+    # PDF da notificação: documento estático — baixa uma vez, depois pula.
+    # numeroDeLinhas=0 é o que o próprio site passa no download direto.
+    try:
+        _migrar(f"notificacao-{codigo}.pdf")
+        destino = raiz / f"notificacao-{codigo}.pdf"
+        if destino.exists() and destino.stat().st_size > 0:
+            r["ja_existiam"] += 1
+        else:
+            conta(_salvar(destino,
+                          _requisicao(token, f"/notificacoes/{uid}/pdf",
+                                      params={"numeroDeLinhas": 0},
+                                      timeout=TIMEOUT_BLOB)))
+    except TokenExpirado:
+        raise
+    except Exception as e:
+        r["erros"].append(f"PDF da notificação: {e}")
 
-    # Arquivos entregues, item a item.
+    # Relatório de Atendimento: é uma FOTOGRAFIA do estado da notificação —
+    # entrega nova da empresa o deixa velho. Por isso é baixado SEMPRE e
+    # regravado (o DET carimba data de emissão no PDF, então comparar bytes
+    # não diz nada). tipo=0/exibeHistorico=true são os padrões do modal do
+    # site; o tipo é OBRIGATÓRIO (400 sem ele, constatado em 21/08/2026).
+    try:
+        _migrar(f"relatorio-atendimento-{codigo}.pdf")
+        destino = raiz / f"relatorio-atendimento-{codigo}.pdf"
+        novo_pdf = _requisicao(token,
+                               f"/notificacoes/{uid}/pdf-relatorio-atendimento",
+                               params={"tipo": 0, "exibeHistorico": "true"},
+                               timeout=TIMEOUT_BLOB)
+        if not destino.exists() or destino.stat().st_size == 0:
+            conta(_salvar(destino, novo_pdf))
+        else:
+            destino.write_bytes(novo_pdf)
+            r["relatorio_refrescado"] = True
+    except TokenExpirado:
+        raise
+    except Exception as e:
+        r["erros"].append(f"Relatório de Atendimento: {e}")
+
+    # Arquivos entregues e histórico de eventos, item a item.
+    historico: list[tuple[str, list[dict]]] = []
     itens = _json_api(token, "/itens-notificacao", params={"uidNotificacao": uid})
     r["itens"] = len(itens or [])
     for item in itens or []:
@@ -338,6 +409,20 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
         if not uid_item:
             r["erros"].append(f"{rot}: item sem uid")
             continue
+        # Eventos do item: pedidos de prorrogação, justificativas, mudanças de
+        # status. É onde mora a história de um item SEM entrega (a lacuna
+        # constatada no caso real de 21/08/2026: notificação só com pedidos de
+        # prazo baixava "nada" e não contava a história).
+        try:
+            evs = _json_api(token, "/eventos-item", params={"uidItem": uid_item})
+        except TokenExpirado:
+            raise
+        except Exception as e:
+            evs = []
+            r["erros"].append(f"{rot}: eventos: {e}")
+        if evs:
+            r["eventos"] += len(evs)
+            historico.append((rot, evs))
         try:
             arquivos = _json_api(token, "/arquivos-item",
                                  params={"uidItem": uid_item})
@@ -367,6 +452,93 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                 raise
             except Exception as e:
                 r["erros"].append(f"{rot}/{nome}: {e}")
+
+    # historico-itens.md: a linha do tempo de cada item, legível. Arquivo
+    # DERIVADO do DET — regravado por inteiro a cada download; anotação do AFT
+    # não pertence a ele (vai no memory.md).
+    if historico:
+        md = [f"# Histórico dos itens — notificação {codigo}", "",
+              "Gerado do DET pelo AFT Toolkit (arquivo derivado: regravado a "
+              "cada download). Pedidos de prorrogação, justificativas e "
+              "mudanças de status de cada item solicitado.", ""]
+        for rot, evs in historico:
+            md.append(f"## {rot}")
+            for ev in evs:
+                linha = "- " + (_data_hora_br(ev.get("dataEvento")) or "sem data")
+                st = ev.get("status")
+                linha += " · " + STATUS_ITEM.get(st, f"status {st}")
+                if ev.get("dataAntecipacao"):
+                    linha += f" · nova data {_data_hora_br(ev['dataAntecipacao'])}"
+                obs = _texto_plano(ev.get("observacao"))
+                if obs:
+                    linha += f" · justificativa: {obs}"
+                md.append(linha)
+            md.append("")
+        (raiz / "historico-itens.md").write_text("\n".join(md), encoding="utf-8")
+
+    # Canal de comunicação: mensagens trocadas naquela notificação. Vai para
+    # canal-comunicacao/ no pacote — mensagens.md (derivado, regravado), os
+    # anexos e o histórico oficial em PDF (refrescado a cada download).
+    # SOMENTE LEITURA: registrar ciência/responder é ato do AFT, no site.
+    try:
+        canal = _json_api(token, f"/notificacoes/{uid}/canal-comunicacao")
+    except TokenExpirado:
+        raise
+    except Exception:
+        canal = None  # canal desabilitado/inexistente não é erro
+    registros = _registros_canal(canal)
+    if registros:
+        pasta_canal = raiz / "canal-comunicacao"
+        pasta_canal.mkdir(parents=True, exist_ok=True)
+        md = [f"# Canal de comunicação — notificação {codigo}", "",
+              "Gerado do DET pelo AFT Toolkit (arquivo derivado: regravado a "
+              "cada download). O histórico oficial em PDF está ao lado "
+              "(historico-canal.pdf).", ""]
+        usados: set[str] = set()
+        for reg in registros:
+            tipo = reg.get("tipoRegistroComunicacao")
+            quando = _data_hora_br(reg.get("createdAt")) or "sem data"
+            emissor = {"A": "AUDITOR", "E": "EMPREGADOR"}.get(
+                reg.get("tipoUsuarioEmissor"), "")
+            nome_emissor = _texto_plano(reg.get("nomeEmissor")
+                                        or reg.get("usuarioEmissor"))
+            quem = f"{emissor} ({nome_emissor})" if nome_emissor else emissor
+            if tipo == "B":
+                md.append(f"- {quando} · {quem or 'AUDITOR'} desabilitou o canal")
+                continue
+            if tipo == "D":
+                md.append(f"- {quando} · {quem or 'AUDITOR'} habilitou o canal")
+                continue
+            r["mensagens_canal"] += 1
+            md.append(f"- {quando} · {quem or 'mensagem'}: "
+                      f"{_texto_plano(reg.get('texto')) or '(sem texto)'}")
+            if reg.get("arquivoNome") and reg.get("uid"):
+                nome = nome_do_arquivo(reg["arquivoNome"], usados)
+                md.append(f"  - anexo: {nome}")
+                destino = pasta_canal / nome
+                if destino.exists() and destino.stat().st_size > 0:
+                    r["ja_existiam"] += 1
+                else:
+                    try:
+                        conta(_salvar(destino, _requisicao(
+                            token,
+                            f"/notificacoes/{uid}/arquivos-canal-comunicacao/"
+                            f"{reg['uid']}/blob", timeout=TIMEOUT_BLOB)))
+                        r["anexos_canal"] += 1
+                    except TokenExpirado:
+                        raise
+                    except Exception as e:
+                        r["erros"].append(f"canal/{nome}: {e}")
+        (pasta_canal / "mensagens.md").write_text("\n".join(md) + "\n",
+                                                  encoding="utf-8")
+        try:
+            (pasta_canal / "historico-canal.pdf").write_bytes(_requisicao(
+                token, f"/notificacoes/{uid}/pdf-historico-canal-comunicacao",
+                timeout=TIMEOUT_BLOB))
+        except TokenExpirado:
+            raise
+        except Exception as e:
+            r["erros"].append(f"canal/historico-canal.pdf: {e}")
 
     # Espelha o "abrir a notificação" do site: GET do detalhe da notificação e
     # de cada item — as mesmas chamadas que o front dispara quando o AFT abre

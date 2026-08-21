@@ -40,7 +40,13 @@ passa por aqui. O que chega vai todo para o pacote da notificação, dentro de
 ```
 <OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/   ← data do primeiro download
 ├── notificacao-<CODIGO>.pdf              ← o PDF da notificação
-├── relatorio-atendimento-<CODIGO>.pdf    ← o Relatório de Atendimento
+├── relatorio-atendimento-<CODIGO>.pdf    ← SEMPRE refrescado (entrega nova o muda)
+├── historico-itens.md                    ← prorrogações, justificativas e status
+│                                            de cada item (derivado; regravado)
+├── canal-comunicacao/                    ← só quando há mensagens na notificação
+│   ├── mensagens.md                      ← a conversa, legível (derivado)
+│   ├── <anexos das mensagens>
+│   └── historico-canal.pdf               ← o histórico oficial do DET
 └── item<N>_<descrição oficial>/          ← um por item solicitado
     ├── <arquivos entregues>
     └── invalidados/                      ← o que o AFT rejeitou/dispensou no DET
@@ -90,7 +96,13 @@ python ~/.claude/skills/_scripts/det_baixar.py --via-painel "<pasta da OS>" <COD
 Leia o JSON devolvido:
 
 - `ok: true` → anote `pacote` (a pasta onde tudo ficou), `baixados`,
-  `ja_existiam`, `movidos`, `itens`, `sem_arquivo`, `invalidados` e `erros`.
+  `ja_existiam`, `movidos`, `itens`, `sem_arquivo`, `invalidados`, `eventos`
+  (prorrogações/justificativas no historico-itens.md), `mensagens_canal`,
+  `anexos_canal` e `erros`. Notificação sem nenhum arquivo mas com `eventos` >
+  0 não é vazia: a história dela está no `historico-itens.md` — diga isso ao
+  AFT (é o caso típico de pedidos de prorrogação).
+- O canal de comunicação é SOMENTE LEITURA: responder ou registrar ciência é
+  ato do AFT, no site do DET.
 - `token_expirado: true` → peça ao AFT, **em uma frase**: abrir a aba do DET
   no Chrome e clicar no botão flutuante **Sincronizar** (canto inferior
   direito). Aguarde a confirmação e repita a chamada — o token vale 25 min,
