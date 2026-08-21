@@ -244,10 +244,14 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
         raise
     except Exception as e:
         r["erros"].append(f"PDF da notificação: {e}")
+    # tipo=0 e exibeHistorico=true são os padrões do modal do site — o tipo é
+    # OBRIGATÓRIO (sem ele a API devolve 400 "Parâmetro de URL tipo inválido",
+    # constatado na primeira execução real em 21/08/2026).
     try:
         conta(_salvar(pasta_os / f"relatorio-atendimento-{codigo}.pdf",
                       _requisicao(token,
                                   f"/notificacoes/{uid}/pdf-relatorio-atendimento",
+                                  params={"tipo": 0, "exibeHistorico": "true"},
                                   timeout=TIMEOUT_BLOB)))
     except TokenExpirado:
         raise
