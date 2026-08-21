@@ -4,8 +4,8 @@
  "data": "2026-08-21",
  "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 48,
-  "scripts": 46,
+  "skills": 49,
+  "scripts": 47,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 21/08/2026"
  },
@@ -109,6 +109,11 @@
    "nome": "Configuração e visão geral",
    "cor": "accent2",
    "skills": [
+    {
+     "nome": "/aft-ajuda",
+     "role": "Ajuda de uso do proprio toolkit para o AFT novo ou travado: responde duvida sobre painel, extensao Sync DET, DET, NotebookLM, pastas, memory.md, privacidade, scripts locais e catalogo de habilidades. Antes de responder, le o estado da maquina (pasta AFT, aft-config.md, quantas OS em OS ATIVAS) para responder no caso concreto, e fecha sempre oferecendo executar o proximo passo. Tem modo tour para quem acabou de instalar, conduzido um passo por vez ate a primeira OS cadastrada e o painel aberto. Toda resposta explica na primeira mencao os termos de toolkit e de informatica que usa (references/glossario.md, que proibe explicar termo de fiscalizacao ao AFT) e fecha com uma acao concreta MAIS duas ou tres trilhas tiradas dos conceitos em que a propria resposta se apoiou. Duas advertencias que ela nunca omite: habilidade que le documento entregue pela empresa passa o conteudo pelo modelo (o AFT decide antes se ha dado sensivel no pacote), e habilidade de varredura rapida e TRIAGEM, nao auditoria. Sabe tambem que a maquina pode ter habilidades fora do toolkit (pessoais, minha-*, ou de terceiros): le o SKILL.md delas em vez de inventar. Read-only por allowed-tools: nao cria OS, nao edita ficha, nao redige documento e nao registra dia no diario.",
+     "tech": "references/ (fluxo-completo, tour-primeira-vez, painel-det-extensao, notebooklm-e-ementas, problemas-comuns, glossario, o-que-sai-da-maquina) + ajuda_arquitetura.py, que LE o arquitetura.json instalado em vez de copiar o catalogo · model: sonnet"
+    },
     {
      "nome": "/aft-setup",
      "role": "Configuração inicial: pastas de trabalho, dados do auditor (CIF/UORG) e persona opcional do assessor (tratamento + nome_assessor, so no chat), perfil CLAUDE.md global (bloco gerenciado com marcadores versionados — Passo 5b), deny-list de segurança, dependências, NotebookLM. Instala POR PADRÃO o servidor do painel interativo sempre ligado (Passo 7c, instalar_servidor_painel.py) e oferece (opt-in) a rotina diária do painel (7b) e os prazos de DET no Google Calendar (7d, /aft-agenda-det). Passo 0: descobre em qual assistente está — no Codex cria os dois atalhos (~/.agents/skills e ~/.codex/AGENTS.md) e pula agentes, deny-list, vigia de sessões e gancho do diário.",
@@ -566,6 +571,12 @@
    "caminho": "_scripts/indenta_quebras.py",
    "papel": "Recuo de primeira linha nos autos do Sistema Auditor: o campo é uma linha única em que a quebra é o comando #13#10, e sem recuo os parágrafos chegam grudados na importação. Insere 8 espaços após cada #13#10 que precede texto real, poupando o marcador ' . ' de linha em branco entre subtítulos.",
    "runtime": "Python stdlib"
+  },
+  {
+   "nome": "ajuda_arquitetura.py",
+   "caminho": "_scripts/ajuda_arquitetura.py",
+   "papel": "Recorta um bloco do arquitetura.json (camadas, scripts, anonimizacao, dados, avisos, decisoes) ou busca um termo nele, para a /aft-ajuda responder sem copiar o catalogo das habilidades para dentro dela. Evita jogar os 88 KB do JSON no contexto a cada pergunta.",
+   "runtime": "python (stdlib)"
   }
  ],
  "dados": [
@@ -620,7 +631,8 @@
   "Os dados reais entram no TXT final apenas pelo script determinístico rehydrate.py — nunca pelo modelo. Um nome/CPF trocado num documento legal é inaceitável.",
   "A cópia *.tokenized.txt é a única versão segura para compartilhar com colegas.",
   "Guard-rail extra: checar_pii.py varre relatos/pastas e avisa se um CPF ou PIS/PASEP com dígito verificador válido escapou da anonimização (não bloqueia — a troca real continua só pelo rehydrate.py).",
-  "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais. Única exceção, opt-in e com consentimento por sessão: o /aft-painel pode publicar o painel (empresas e prazos, sem dados de trabalhador) como Artifact privado na conta claude.ai do AFT."
+  "Nada de fiscalização vai para serviços externos: compressão de PDF, conversão de fotos e validação são scripts Python locais. Única exceção, opt-in e com consentimento por sessão: o /aft-painel pode publicar o painel (empresas e prazos, sem dados de trabalhador) como Artifact privado na conta claude.ai do AFT.",
+  "Dois modos de processar um documento, e a diferenca importa: por SCRIPT LOCAL, quando o conteudo nunca entra no contexto (Relacao de Vinculos Ativos, AFD/AEJ, planilhas de CAT, PDFs dos autos transmitidos, rehydrate.py); ou pela LEITURA DO PROPRIO MODELO, quando a skill precisa compreender o documento (auditoria de PGR/AET/laudo NR-12, analise de acidente, triagem de resposta ao DET) - ai o conteudo do documento e enviado ao modelo. O criterio de cuidado e o CONTEUDO, nao o tipo: a LGPD (Lei 13.709/2018, arts. 1o e 5o, I) protege pessoa natural e NAO alcanca pessoa juridica, entao PGR, AET e laudo de maquina nao sao dado pessoal; ASO, atestado, laudo com CID, CAT, lista nominal, folha de ponto e ficha de registro sao. Ao rodar essas skills sobre um LOTE entregue pela empresa, cabe ao AFT conferir antes o que ha no pacote. O script local nao e ressalva, e o caminho DESENHADO para dado pessoal: onde ha nome, CPF, PIS, salario ou jornada, o toolkit resolve por script de proposito - havendo escolha, para dado de pessoa fisica a skill que calcula por script e a preferivel a que le o documento."
  ],
  "decisoes": [
   {
