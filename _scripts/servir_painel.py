@@ -80,6 +80,7 @@ MAX_BODY = 64_000
 sys.path.insert(0, str(AQUI))
 import det_sync  # noqa: E402
 import det_baixar  # noqa: E402  (download dos arquivos de uma notificação)
+import det_criar  # noqa: E402  (rascunho de notificação — leitura do molde, por ora)
 import diario_registrar  # noqa: E402  (diário de atividades — letras A-F)
 
 # Token do DET emprestado pela extensão. Vive SÓ na RAM deste processo (nunca
@@ -794,10 +795,32 @@ class Handler(BaseHTTPRequestHandler):
                                  "fichas": len(mts)})
             except OSError as e:
                 self._json(500, {"ok": False, "erro": str(e)})
+        elif self.path.startswith("/api/det-molde"):
+            self._det_molde()
         elif self.path.startswith("/doc/"):
             self._serve_doc()
         else:
             self._json(404, {"ok": False, "erro": "rota desconhecida"})
+
+    def _det_molde(self):
+        """GET /api/det-molde?codigo=XXX — JSON cru de uma notificação real,
+        para servir de molde à construção do rascunho (subsistema det-criar,
+        fase de descoberta). Leitura pura; usa o token guardado na RAM."""
+        try:
+            q = urllib.parse.urlparse(self.path).query
+            codigo = (urllib.parse.parse_qs(q).get("codigo") or [""])[0].strip().upper()
+            if not codigo:
+                return self._json(400, {"ok": False, "erro": "informe ?codigo="})
+            token = _token_atual()
+            if not token:
+                return self._json(409, {"ok": False, "token_expirado": True,
+                                        "erro": "sem token — sincronize no DET e tente de novo"})
+            self._json(200, {"ok": True, "notificacao": det_criar.recuperar_crua(token, codigo)})
+        except det_baixar.TokenExpirado as e:
+            _DET_TOKEN["token"] = None
+            self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
 
     def _serve_doc(self):
         """GET /doc/<pasta-da-OS>/<arquivo>.md — renderiza o relatório em HTML.
