@@ -9,14 +9,18 @@ servir_painel.py. Nenhum navegador envolvido: são 4 ou 5 requisições HTTP e o
 download termina em segundos — substitui o fluxo antigo de dirigir o Chrome
 clique a clique (10 minutos por notificação).
 
-O que é baixado, e para onde (pasta da OS em OS ATIVAS/):
+O que é baixado, e para onde (pasta da OS em OS ATIVAS/) — tudo dentro da
+pasta da notificação, para não poluir a raiz da OS:
 
-    notificacao-<CODIGO>.pdf              o PDF da notificação
-    relatorio-atendimento-<CODIGO>.pdf    o Relatório de Atendimento
-    notificacao-<CODIGO>/                 os arquivos entregues pelo empregador
+    notificacao-<CODIGO>/
+        notificacao-<CODIGO>.pdf              o PDF da notificação
+        relatorio-atendimento-<CODIGO>.pdf    o Relatório de Atendimento
         item<N>_<descrição do item>/          um por item solicitado
             <arquivo entregue>
             invalidados/<arquivo>             o que o AFT rejeitou/dispensou
+
+PDF que um download antigo deixou na raiz da OS é movido para dentro da pasta
+na próxima execução (migração automática; conta em `movidos`).
 
 Em vez do ZIP geral do site (que exige segundo request numa URL volátil e
 chega sem estrutura), cada arquivo é baixado individualmente pelo endpoint de
@@ -233,33 +237,45 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     def conta(gravou: bool):
         r["baixados" if gravou else "ja_existiam"] += 1
 
+    # Tudo fica DENTRO de notificacao-<COD>/ — inclusive os 2 PDFs, para não
+    # poluir a raiz da OS (pedido do AFT em 21/08/2026). PDF que um download
+    # antigo deixou na raiz é MOVIDO para dentro (migração, nunca re-baixado).
+    raiz = pasta_os / f"notificacao-{codigo}"
+
+    def _migrar(nome: str) -> None:
+        antigo, novo = pasta_os / nome, raiz / nome
+        if antigo.is_file() and not novo.exists():
+            novo.parent.mkdir(parents=True, exist_ok=True)
+            antigo.rename(novo)
+            r["movidos"] = r.get("movidos", 0) + 1
+
     # Os 2 PDFs. numeroDeLinhas=0 é o que o próprio site passa no download
-    # direto (sem o modal de paginação).
-    try:
-        conta(_salvar(pasta_os / f"notificacao-{codigo}.pdf",
-                      _requisicao(token, f"/notificacoes/{uid}/pdf",
-                                  params={"numeroDeLinhas": 0},
-                                  timeout=TIMEOUT_BLOB)))
-    except TokenExpirado:
-        raise
-    except Exception as e:
-        r["erros"].append(f"PDF da notificação: {e}")
-    # tipo=0 e exibeHistorico=true são os padrões do modal do site — o tipo é
-    # OBRIGATÓRIO (sem ele a API devolve 400 "Parâmetro de URL tipo inválido",
-    # constatado na primeira execução real em 21/08/2026).
-    try:
-        conta(_salvar(pasta_os / f"relatorio-atendimento-{codigo}.pdf",
-                      _requisicao(token,
-                                  f"/notificacoes/{uid}/pdf-relatorio-atendimento",
-                                  params={"tipo": 0, "exibeHistorico": "true"},
-                                  timeout=TIMEOUT_BLOB)))
-    except TokenExpirado:
-        raise
-    except Exception as e:
-        r["erros"].append(f"Relatório de Atendimento: {e}")
+    # direto (sem o modal de paginação); no relatório, tipo=0 e
+    # exibeHistorico=true são os padrões do modal — e o tipo é OBRIGATÓRIO
+    # (sem ele a API devolve 400 "Parâmetro de URL tipo inválido", constatado
+    # na primeira execução real em 21/08/2026).
+    pdfs = [
+        ("PDF da notificação", f"notificacao-{codigo}.pdf",
+         f"/notificacoes/{uid}/pdf", {"numeroDeLinhas": 0}),
+        ("Relatório de Atendimento", f"relatorio-atendimento-{codigo}.pdf",
+         f"/notificacoes/{uid}/pdf-relatorio-atendimento",
+         {"tipo": 0, "exibeHistorico": "true"}),
+    ]
+    for rotulo, nome, caminho, params in pdfs:
+        try:
+            _migrar(nome)
+            destino = raiz / nome
+            if destino.exists() and destino.stat().st_size > 0:
+                r["ja_existiam"] += 1
+                continue
+            conta(_salvar(destino, _requisicao(token, caminho, params=params,
+                                               timeout=TIMEOUT_BLOB)))
+        except TokenExpirado:
+            raise
+        except Exception as e:
+            r["erros"].append(f"{rotulo}: {e}")
 
     # Arquivos entregues, item a item.
-    raiz = pasta_os / f"notificacao-{codigo}"
     itens = _json_api(token, "/itens-notificacao", params={"uidNotificacao": uid})
     r["itens"] = len(itens or [])
     for item in itens or []:
