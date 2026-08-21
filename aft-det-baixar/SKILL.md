@@ -41,6 +41,10 @@ passa por aqui. O que chega vai todo para o pacote da notificação, dentro de
 <OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/   ← data do primeiro download
 ├── notificacao-<CODIGO>.pdf              ← o PDF da notificação
 ├── relatorio-atendimento-<CODIGO>.pdf    ← SEMPRE refrescado (entrega nova o muda)
+│                                            RELATÓRIO DE EXCEÇÃO: lista os itens NÃO
+│                                            entregues. Vazio = certidão oficial de que
+│                                            não há omissão (art. 630, §4º). O que foi
+│                                            entregue está nas pastas item<N>/.
 ├── historico-itens.md                    ← prorrogações, justificativas e status
 │                                            de cada item (derivado; regravado)
 ├── canal-comunicacao/                    ← só quando há mensagens na notificação

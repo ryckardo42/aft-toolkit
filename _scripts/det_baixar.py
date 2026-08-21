@@ -382,6 +382,17 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     # regravado (o DET carimba data de emissão no PDF, então comparar bytes
     # não diz nada). tipo=0/exibeHistorico=true são os padrões do modal do
     # site; o tipo é OBRIGATÓRIO (400 sem ele, constatado em 21/08/2026).
+    #
+    # ATENÇÃO ao que o PDF contém com tipo=0: ele é um relatório de EXCEÇÃO.
+    # O próprio texto do documento diz que exibe "os itens da notificação NÃO
+    # ENTREGUES" — não os entregues. Quando a empresa atendeu tudo, o PDF sai
+    # dizendo "não consta item para o critério selecionado", com contagem de
+    # 0 itens e 0 arquivos (constatado em fiscalização real, 21/08/2026).
+    # Isso NÃO é falha do download: é a certidão oficial de que não há
+    # omissão — prova documental direta para o art. 630, §4º, da CLT. Quem
+    # ler o arquivo esperando o inventário do que foi entregue vai concluir
+    # o contrário do que ele diz. O inventário do que veio está nas pastas
+    # item<N>/ e no historico-itens.md.
     try:
         _migrar(f"relatorio-atendimento-{codigo}.pdf")
         destino = raiz / f"relatorio-atendimento-{codigo}.pdf"
