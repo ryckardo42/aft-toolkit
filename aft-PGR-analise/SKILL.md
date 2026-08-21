@@ -116,6 +116,16 @@ PGR costuma passar de cem páginas. Lido direto na conversa, ele consome o conte
 limite de uso do AFT, e é **recobrado a cada turno** da análise - o que estoura o plano no
 meio do trabalho. Por isso a leitura é feita fora da conversa, por um agente próprio.
 
+**Antes de medir, veja se o extrato já existe.** Se
+`<OS_ATIVAS>/[PASTA_EMPRESA]/pgr-extrato.md` já estiver na pasta, a extração já foi feita
+- por uma execução anterior deste skill, ou por um fluxo de trabalho que extraiu os
+documentos numa triagem inicial. Confira que ele cobre as sete ementas do roteiro abaixo
+e **siga direto para "Analise sobre o extrato"**: não meça o PDF nem delegue de novo.
+Extrair duas vezes o mesmo PGR é o desperdício mais caro deste skill - é justamente o
+custo que a delegação existe para evitar. Só refaça a extração se o extrato estiver
+vazio, truncado ou visivelmente fora do roteiro e, nesse caso, diga ao AFT em uma linha
+por que está refazendo.
+
 Descubra primeiro o tamanho do documento:
 
 ```bash

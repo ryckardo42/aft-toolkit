@@ -300,6 +300,10 @@ do Decreto nº 4.552/2002, iniciada em [data_inspecao] e ainda em curso
 na presente data no empregador acima qualificado.
 ```
 
+> Este subtítulo (I - DA FISCALIZAÇÃO) é sempre este texto fixo, independente da
+> fonte da irregularidade (campo ou documental) — não varie. A **fonte** do auto
+> (campo vs. documental) se reflete na abertura do **Subtítulo 2**, não neste.
+
 **Enriquecimento contextual** — acrescente, na sequência, apenas os itens que o relato fornecer:
 
 | Informação no relato | Como inserir |
@@ -334,6 +338,24 @@ O texto deve conectar o **fato empírico** (o que foi constatado no local) com o
 | **Como** | Como a irregularidade se manifesta? | ✅ Necessário — fato empírico observado + descrição técnica da falha e do risco gerado. |
 | **Por Quê** | O que a norma exigia? | ✅ Necessário — conduta devida conforme a lei + conexão com o item normativo violado (fato típico). |
 
+**Frase de abertura do Subtítulo 2 — uma por fonte, idêntica em todos os autos daquela fonte.**
+
+O primeiro parágrafo do Subtítulo 2 varia conforme a **fonte da irregularidade** (Fase 1),
+mas deve ser **textualmente idêntico** em todos os autos que compartilham a mesma fonte
+nesta OS — nunca deixe alguns autos com data e outros sem, ou frases parecidas mas não
+iguais. Duas fórmulas fixas, escolha uma por auto conforme a origem do achado:
+
+- **Fonte A (campo, `inspecao-fisica.md`):**
+  `"Em [data_inspecao], durante inspeção física no estabelecimento do empregador, no setor [SETOR], constatou-se que..."`
+- **Fonte B (documental, análise de resposta a notificação/PGR/PCMSO/AEP etc.):**
+  `"Mediante análise da documentação apresentada em resposta à Notificação nº [NUM_NAD], constatou-se que..."`
+- **Auto que combina achado de campo confirmado por documento** (ex.: interdição
+  seguida de Relatório Técnico): use a fórmula de campo (Fonte A) — o documento entra
+  como elemento de convicção, não como abertura.
+
+Ao redigir a leva de autos de uma mesma OS, **releia o primeiro parágrafo de todos antes
+de apresentar** e corrija qualquer divergência: mesma fonte → mesma frase, literal.
+
 **Lógica de redação (3 movimentos)** — conecta o empírico ao típico nesta ordem, **cada
 movimento em seu próprio parágrafo** (separado por linha em branco no `autos.md` — é o
 que o `/aft-gera-ai` converte em quebra de linha real no Sistema Auditor; um bloco II sem
@@ -358,7 +380,39 @@ parágrafo, **nesta ordem**: a conclusão jurídica vem logo após o enquadramen
 **Regras de redação:**
 
 - Descreva os **fatos concretos** constatados, com precisão técnica e tom oficial.
+- **Identifique a máquina/equipamento explicitamente em CADA auto**, por nome/tipo (e
+  marca/modelo se houver) — nunca "a máquina" genérico quando a OS tem mais de um
+  equipamento envolvido. Cada auto é uma peça autônoma e precisa fazer sentido sozinho
+  para a defesa do autuado, mesmo que outro auto da mesma leva já tenha citado o
+  mesmo equipamento.
+- **Confira o equipamento contra a fonte primária antes de redigir**, nunca por
+  inferência ou memória do relato: se houver Relatório Técnico de interdição/embargo,
+  laudo ou outro documento técnico que descreva o objeto, releia-o e confirme qual
+  objeto (ex.: "Objeto 1"/"Objeto 2") corresponde à ementa antes de atribuir a máquina
+  ao auto. Atribuição errada de máquina é o erro mais caro de corrigir depois.
 - Cite o **dispositivo legal infringido** (artigo da CLT, item da NR, portaria).
+- **Fechamento do Subtítulo 2** — antes do parágrafo de dano coletivo, feche com uma
+  frase padronizada de enquadramento normativo, igual em estrutura para todos os autos
+  da leva: `"A conduta contraria o disposto no item [X.X.X] da [norma], que exige/impõe [síntese da exigência]."`
+  Se o auto decorreu de interdição/embargo, acrescente ao final desse mesmo parágrafo (não
+  em parágrafo à parte) a menção ao Termo, ex.: `"A gravidade da situação determinou a
+  lavratura do Termo de Interdição nº [...], com paralisação total da máquina [...], na
+  mesma data."` — releia todos os autos da leva juntos e confira que a estrutura do
+  fechamento é a mesma antes de apresentar.
+- **Exceção de padronização — Regra Especial:** ementas com corpo de texto fixado em lei
+  ou norma interna do toolkit (ex.: 101060-3, quando a interdição está confirmada) têm
+  texto **literal e imutável** — não aplique a padronização de abertura/fechamento acima
+  a esse subtítulo; reproduza o texto fixo tal como definido na skill/normativo de origem.
+- **Bis in idem entre ementa geral e específica da mesma NR:** quando duas ementas da
+  mesma NR podem, em tese, cobrir o mesmo ponto físico de risco — uma de zona de perigo
+  geral (ex.: NR-12 item 12.5.1) e outra específica para o tipo de risco (ex.: NR-12 item
+  12.4.1 dispositivos de partida, ou 12.8.1 transportadores contínuos) — **não autue as
+  duas para o mesmo ponto/zona**. Aplique o princípio da especialidade (norma específica
+  prevalece sobre a geral) e, se ambas forem cabíveis por a máquina ter mais de uma zona
+  de perigo distinta, delimite explicitamente no texto de cada auto **qual zona física**
+  cada ementa cobre (ex.: "área de prensagem" num auto, "área dos roletes" no outro), de
+  modo que nenhum auto autue duas vezes o mesmo fato. Na dúvida sobre qual ementa é a
+  específica para o caso, confirme via NotebookLM (Fase 2, Camada 1) antes de redigir.
 - **Sempre cite ao menos 1 ou 2 empregados** como exemplos de prejudicados, mesmo em infrações de natureza coletiva. O nome do empregado é necessário para permitir a defesa do autuado. **Na redação e nos ecos do chat, use os tokens `[[TRAB_NN]]` (e `[[CPF_NN]]` se citar CPF)**, registrando o par real no `.depara_[CNPJ].json` da OS — o `/aft-gera-ai` re-hidrata no TXT final. Se o auditor não forneceu nomes, use `[NOME DO EMPREGADO 1 - FUNÇÃO]` como placeholder e peça os dados.
 - Se houver consulta ao eSocial, mencione a data e os eventos verificados (S-2190, S-2200, etc.).
 - **Conclusão jurídica logo após o enquadramento normativo** (parágrafo próprio, imediatamente depois do movimento 3): "Sendo assim, incorreu o empregador na infração ementada supracitada."
@@ -427,6 +481,13 @@ Ao redigir os autos, avalie se alguma irregularidade constitui **risco grave e i
 Se detectar: marque internamente `[RISCO_GRAVE = true]` para usar na Fase 5.
 
 ### Apresentação
+
+Antes de apresentar, **releia os autos da leva lado a lado** e confira: (1) mesma fonte
+→ mesma frase de abertura do Subtítulo 2, literal; (2) fechamento normativo com a mesma
+estrutura em todos; (3) toda máquina/equipamento nomeada explicitamente em cada auto que
+a envolve; (4) nenhum par de ementas geral/específica autuando o mesmo ponto físico sem
+delimitação de zona. Corrija divergências antes de mostrar ao AFT — pedir para ele
+apontar inconsistências depois custa uma rodada de revisão inteira.
 
 Apresente cada auto numerado:
 
