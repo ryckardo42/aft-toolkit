@@ -9,18 +9,23 @@ servir_painel.py. Nenhum navegador envolvido: são 4 ou 5 requisições HTTP e o
 download termina em segundos — substitui o fluxo antigo de dirigir o Chrome
 clique a clique (10 minutos por notificação).
 
-O que é baixado, e para onde (pasta da OS em OS ATIVAS/) — tudo dentro da
-pasta da notificação, para não poluir a raiz da OS:
+O que é baixado, e para onde (pasta da OS em OS ATIVAS/) — toda notificação
+mora em NOTIFICACOES/, no pacote "<CODIGO> <dd-mm-aaaa>" (data do primeiro
+download; convenção pedida pelo AFT em 21/08/2026 — sem o prefixo
+"notificacao-" no nome da pasta):
 
-    notificacao-<CODIGO>/
+    NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/
         notificacao-<CODIGO>.pdf              o PDF da notificação
         relatorio-atendimento-<CODIGO>.pdf    o Relatório de Atendimento
         item<N>_<descrição do item>/          um por item solicitado
             <arquivo entregue>
             invalidados/<arquivo>             o que o AFT rejeitou/dispensou
 
-PDF que um download antigo deixou na raiz da OS é movido para dentro da pasta
-na próxima execução (migração automática; conta em `movidos`).
+Legados são migrados sozinhos na próxima execução: pacote "notificacao-<COD>"
+(na raiz da OS ou em NOTIFICACOES/) é renomeado para o padrão — preservando
+sufixo descritivo que o AFT tenha dado (aí só se usa a pasta, sem renomear) —
+e PDF solto na raiz ou em NOTIFICACOES/ é movido para dentro do pacote
+(conta em `movidos`).
 
 Em vez do ZIP geral do site (que exige segundo request numa URL volátil e
 chega sem estrutura), cada arquivo é baixado individualmente pelo endpoint de
@@ -189,6 +194,48 @@ def nome_do_arquivo(nome: str, usados: set[str]) -> str:
     return candidato
 
 
+RE_SO_DATA = re.compile(r"\d{2}-\d{2}-\d{4}")
+
+
+def pasta_do_pacote(pasta_os: Path, codigo: str, hoje: str | None = None) -> Path:
+    """A pasta-pacote da notificação: NOTIFICACOES/<CODIGO> <dd-mm-aaaa>.
+
+    Reusa pacote existente que contenha o código no nome — em NOTIFICACOES/ ou
+    na raiz da OS, com ou sem o prefixo legado "notificacao-". Nome "puro"
+    (só prefixo/código/data) é RENOMEADO para o padrão, preservando a data que
+    já estiver no nome ou, sem data, usando a da última modificação da pasta;
+    nome com sufixo descritivo do AFT ("<COD> jornada") é respeitado como
+    está. Sem pacote nenhum: NOTIFICACOES/<CODIGO> <hoje> (criada na primeira
+    gravação). A data no nome é a do PRIMEIRO download — downloads seguintes
+    (entrega parcelada, prorrogação) acumulam no mesmo pacote."""
+    hoje = hoje or datetime.date.today().strftime("%d-%m-%Y")
+    notifs = pasta_os / "NOTIFICACOES"
+    cands: list[Path] = []
+    for base in (notifs, pasta_os):
+        if base.is_dir():
+            cands += sorted(p for p in base.iterdir()
+                            if p.is_dir() and codigo in p.name.upper())
+    if not cands:
+        return notifs / f"{codigo} {hoje}"
+    alvo = cands[0]
+    resto = alvo.name.upper()
+    if resto.startswith("NOTIFICACAO-"):
+        resto = resto[len("NOTIFICACAO-"):]
+    resto = resto.replace(codigo, "", 1).strip()
+    if resto and not RE_SO_DATA.fullmatch(resto):
+        return alvo  # sufixo descritivo do AFT: usa sem renomear
+    data = resto or datetime.date.fromtimestamp(
+        alvo.stat().st_mtime).strftime("%d-%m-%Y")
+    novo = notifs / f"{codigo} {data}"
+    if novo == alvo:
+        return alvo
+    if novo.exists():
+        return novo  # padrão já existe; nunca mescla pastas sozinho
+    notifs.mkdir(parents=True, exist_ok=True)
+    alvo.rename(novo)
+    return novo
+
+
 def registrar_atividade(texto: str, detalhe: str) -> str:
     """Linha no Registro de atividades (best-effort, como no det_sync)."""
     linhas = texto.splitlines(keepends=True)
@@ -240,17 +287,21 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     def conta(gravou: bool):
         r["baixados" if gravou else "ja_existiam"] += 1
 
-    # Tudo fica DENTRO de notificacao-<COD>/ — inclusive os 2 PDFs, para não
-    # poluir a raiz da OS (pedido do AFT em 21/08/2026). PDF que um download
-    # antigo deixou na raiz é MOVIDO para dentro (migração, nunca re-baixado).
-    raiz = pasta_os / f"notificacao-{codigo}"
+    # Tudo fica DENTRO do pacote NOTIFICACOES/<COD> <data>/ — inclusive os
+    # 2 PDFs, para não poluir a raiz da OS (convenção do AFT, 21/08/2026).
+    # PDF que um download antigo deixou solto (na raiz da OS ou em
+    # NOTIFICACOES/) é MOVIDO para dentro (migração, nunca re-baixado).
+    raiz = pasta_do_pacote(pasta_os, codigo)
+    r["pacote"] = raiz.name
 
     def _migrar(nome: str) -> None:
-        antigo, novo = pasta_os / nome, raiz / nome
-        if antigo.is_file() and not novo.exists():
-            novo.parent.mkdir(parents=True, exist_ok=True)
-            antigo.rename(novo)
-            r["movidos"] = r.get("movidos", 0) + 1
+        novo = raiz / nome
+        for base in (pasta_os, pasta_os / "NOTIFICACOES"):
+            antigo = base / nome
+            if antigo.is_file() and not novo.exists():
+                novo.parent.mkdir(parents=True, exist_ok=True)
+                antigo.rename(novo)
+                r["movidos"] = r.get("movidos", 0) + 1
 
     # Os 2 PDFs. numeroDeLinhas=0 é o que o próprio site passa no download
     # direto (sem o modal de paginação); no relatório, tipo=0 e

@@ -637,6 +637,13 @@ def varrer_notificacoes_novas(pasta: Path, memoria: str) -> list[dict]:
             try:
                 pdfs += sorted(p for p in e.iterdir()
                                if p.is_file() and p.suffix.lower() == ".pdf")
+                if e.name.upper() == "NOTIFICACOES":
+                    # Os PDFs da notificação moram um nível abaixo, dentro do
+                    # pacote "<CODIGO> <dd-mm-aaaa>/" (ou "notificacao-*/" nos
+                    # legados) — convenção de 21/08/2026.
+                    for sub in sorted(p for p in e.iterdir() if p.is_dir()):
+                        pdfs += sorted(p for p in sub.iterdir()
+                                       if p.is_file() and p.suffix.lower() == ".pdf")
             except OSError:
                 pass
 

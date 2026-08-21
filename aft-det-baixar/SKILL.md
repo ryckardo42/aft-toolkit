@@ -34,11 +34,11 @@ description: >
 O servidor do painel (porta 8347) guarda por **25 minutos** o token que a
 extensão Chrome "Sync DET" entrega quando o AFT clica em **Sincronizar** na
 aba do DET. Esta skill só dispara o download por esse servidor — o token nunca
-passa por aqui. O que chega, tudo dentro da pasta da notificação (a raiz da OS
-fica limpa):
+passa por aqui. O que chega vai todo para o pacote da notificação, dentro de
+`NOTIFICACOES/` (a raiz da OS fica limpa):
 
 ```
-<OS>/notificacao-<CODIGO>/
+<OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/   ← data do primeiro download
 ├── notificacao-<CODIGO>.pdf              ← o PDF da notificação
 ├── relatorio-atendimento-<CODIGO>.pdf    ← o Relatório de Atendimento
 └── item<N>_<descrição oficial>/          ← um por item solicitado
@@ -46,9 +46,11 @@ fica limpa):
     └── invalidados/                      ← o que o AFT rejeitou/dispensou no DET
 ```
 
-É idempotente (arquivo existente não é baixado de novo; PDF que download
-antigo deixou na raiz é movido para dentro), e cada download entra sozinho no
-Registro de atividades do memory.md. O mesmo motor atende o botão
+É idempotente: arquivo existente não é baixado de novo, e download repetido
+(entrega parcelada, prorrogação aceita) acumula no MESMO pacote. Legados
+migram sozinhos: pacote `notificacao-<COD>` (na raiz ou em NOTIFICACOES/) é
+renomeado ao padrão e PDF solto é movido para dentro. Cada download entra
+sozinho no Registro de atividades do memory.md. O mesmo motor atende o botão
 "⬇ baixar arquivos" do cartão de notificações do painel.
 
 ## Passo 0 — Servidor do painel no ar
@@ -84,8 +86,8 @@ python ~/.claude/skills/_scripts/det_baixar.py --via-painel "<pasta da OS>" <COD
 
 Leia o JSON devolvido:
 
-- `ok: true` → anote `baixados`, `ja_existiam`, `movidos`, `itens`,
-  `sem_arquivo`, `invalidados` e `erros`.
+- `ok: true` → anote `pacote` (a pasta onde tudo ficou), `baixados`,
+  `ja_existiam`, `movidos`, `itens`, `sem_arquivo`, `invalidados` e `erros`.
 - `token_expirado: true` → peça ao AFT, **em uma frase**: abrir a aba do DET
   no Chrome e clicar no botão flutuante **Sincronizar** (canto inferior
   direito). Aguarde a confirmação e repita a chamada — o token vale 25 min,
