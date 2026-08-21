@@ -75,6 +75,7 @@ import json
 import re
 import subprocess
 import sys
+import urllib.parse
 from pathlib import Path
 
 # Console do Windows é cp1252: sem isto, o JSON final (nomes de empregador com
@@ -751,14 +752,16 @@ color:var(--t3);margin:0 0 8px}
 .venc ul{margin:0;padding-left:18px;font-size:13.5px}
 .venc li{margin-bottom:5px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.ordena{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.ordena{display:flex;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.ordena label + select + label{margin-left:10px}
 .ordena label{font:11px var(--sans);font-weight:700;letter-spacing:.08em;
 text-transform:uppercase;color:var(--t3)}
 .ordena select{font:13px var(--serif);color:var(--t1);background:var(--paper);
 border:1px solid var(--bd);border-radius:8px;padding:5px 10px;cursor:pointer}
 .ordena select:focus{outline:none;border-color:var(--coral-deep);
 box-shadow:0 0 0 3px rgba(176,89,62,.18)}
-.card{background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
+.card{display:block;color:inherit;text-decoration:none;
+background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
 border-radius:10px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s}
 .card:hover{box-shadow:0 3px 14px rgba(20,20,19,.10)}
 .card.urgente,.card.vencido{border-left-color:var(--coral-deep)}
@@ -1148,13 +1151,12 @@ function aviso(t){let a=document.getElementById('aviso-copiado');
  if(!a){a=document.createElement('div');a.id='aviso-copiado';document.body.appendChild(a)}
  a.textContent=t;a.style.display='block';clearTimeout(a._t);
  a._t=setTimeout(()=>a.style.display='none',2200)}
-async function api(p,semReabrir){
+async function api(p){
  try{const r=await fetch('/api/acao',{method:'POST',
   headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
   const j=await r.json();
   if(!j.ok){aviso('Erro: '+(j.erro||'?'));return}
-  if(!semReabrir)sessionStorage.setItem('painel-reabrir',p.pasta);
-  location.reload();
+   location.reload();
  }catch(e){aviso('Servidor do painel não respondeu — abra pelo http://127.0.0.1:8347')}}
 function copia(t){
  const fim=()=>aviso('Copiado — cole no Claude Code: '+t);
@@ -1505,13 +1507,39 @@ function abre(i){
  h+=secaoAutos(o,i);
  P.innerHTML=h;P.classList.add('aberto');V.classList.add('aberto');P.scrollTop=0;
 }
-function fecha(){P.classList.remove('aberto');V.classList.remove('aberto');ABERTA=null}
+function fechaVista(){P.classList.remove('aberto');V.classList.remove('aberto');ABERTA=null}
+// Fechar tira o #os= da barra de endereços — assim o botão voltar do navegador
+// devolve a auditoria. Em file:// o pushState é barrado: o hash vazio resolve.
+function fecha(){
+ if(/^#os=/.test(location.hash||'')){
+  try{history.pushState(null,'',location.pathname+location.search)}
+  catch(e){location.hash=''}}
+ fechaVista()}
 V.addEventListener('click',fecha);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
-// Depois de uma ação, reabre o mesmo card (a página recarrega para refletir a edição).
-(function(){const alvo=sessionStorage.getItem('painel-reabrir');
- if(!alvo)return;sessionStorage.removeItem('painel-reabrir');
- const i=DATA.os.findIndex(o=>o.pasta===alvo);if(i>=0)abre(i)})();
+// ---- Um endereço por auditoria ---------------------------------------------
+// Cada card é um link para "#os=<pasta>". Com isso o navegador faz de graça o
+// que o painel não fazia: ⌘/Ctrl+clique e clique do meio abrem a auditoria em
+// aba própria, o endereço pode ser copiado e favoritado, e o botão voltar
+// funciona. O hash também é o que reabre a mesma auditoria depois de uma ação
+// (a página recarrega) — por isso não há mais nada guardado em sessionStorage.
+function chaveOS(o,i){return o.pasta||('os'+i)}
+function rotaOS(){
+ const m=/^#os=(.*)$/.exec(location.hash||'');
+ if(!m){fechaVista();return}
+ const chave=decodeURIComponent(m[1]);
+ const i=DATA.os.findIndex((o,k)=>chaveOS(o,k)===chave);
+ if(i>=0)abre(i);else fechaVista()}
+window.addEventListener('hashchange',rotaOS);
+// "abrir auditoria": nesta tela (padrão) ou em nova aba já no clique simples.
+function modoAbrir(v){
+ document.querySelectorAll('.grid .card').forEach(c=>{
+  if(v==='aba')c.target='_blank';else c.removeAttribute('target')});
+ localStorage.setItem('painel-abrir',v)}
+(function(){const sel=document.getElementById('abrir');if(!sel)return;
+ const v=localStorage.getItem('painel-abrir')||'tela';
+ sel.value=v;modoAbrir(v)})();
+rotaOS();
 // Auto-refresh: o servidor expõe /api/estado com um carimbo da última mudança
 // nos memory.md — inclusive as gravadas pelo sync da extensão Chrome do DET.
 // Quando o carimbo muda, a página recarrega sozinha (o GET / regenera o
@@ -1525,8 +1553,7 @@ if(ATIVO){let carimbo=null;
   carimbo=j.estado;
   const a=document.activeElement; // não derruba o AFT no meio de uma digitação
   if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;
-  if(P.classList.contains('aberto')&&ABERTA)sessionStorage.setItem('painel-reabrir',ABERTA);
-  location.reload();
+   location.reload();
  }catch(e){}},4000)}
 // ---- Calendário de trabalho (diário de atividades) --------------------------
 // Dados: DATA.diario = entradas {d (ISO), emp, os (pasta), t (letras A-F),
@@ -1647,7 +1674,7 @@ function calRegistrar(){
  const det=(document.getElementById('cal-det').value||'').trim();
  if(!tipos){aviso('Marque pelo menos uma atividade (A-F)');return}
  if(!/^[0-9]{2}[/][0-9]{2}[/][0-9]{4}$/.test(data)){aviso('Data no formato dd/mm/aaaa');return}
- api({acao:'atividade',pasta:pasta,texto:det,data:data,tipos:tipos},true)}
+ api({acao:'atividade',pasta:pasta,texto:det,data:data,tipos:tipos})}
 // Ordem dos cards. A grade nasce por data de criação da auditoria; a opção
 // "prazo de DET" só reposiciona os mesmos cards (cada um carrega a sua posição
 // em data-det), sem regerar a página. A escolha vale para as próximas aberturas.
@@ -1975,8 +2002,11 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         pend = any(d.get("atualizacao_pendente") for d in vivas)
         pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
                      if pend else "")
+        # Endereço da auditoria. Sem pasta (Artifact publicado), cai no índice —
+        # o link continua funcionando dentro daquela versão publicada.
+        chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
         cards.append(f"""
-<div class="card {classe}" data-det="{o.get('ord_det', i)}" onclick="abre({i})">
+<a class="card {classe}" data-det="{o.get('ord_det', i)}" href="#os={chave}">
   <h2>{html.escape(o["empregador"])}</h2>
   <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ/CPF não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
   <span class="badge {classe}">{html.escape(rotulo)}</span>
@@ -1985,7 +2015,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
   </div>{msg_selo}{pend_selo}
-</div>""")
+</a>""")
 
     grade = ("".join(cards) if cards else
              '<div class="aviso-vazio">Nenhuma OS encontrada em OS ATIVAS. '
@@ -2024,6 +2054,11 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
   <select id="ordem" onchange="ordena(this.value)">
     <option value="criada">auditoria mais recente</option>
     <option value="det">prazo de DET mais urgente</option>
+  </select>
+  <label for="abrir">abrir auditoria</label>
+  <select id="abrir" onchange="modoAbrir(this.value)">
+    <option value="tela">nesta tela</option>
+    <option value="aba">em nova aba</option>
   </select>
 </div>
 <div class="grid">{grade}</div>

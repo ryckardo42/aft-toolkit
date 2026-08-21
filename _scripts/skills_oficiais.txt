@@ -7,6 +7,7 @@ aft-NR18
 aft-PGR-analise
 aft-aet-auditoria
 aft-agenda-det
+aft-ajuda
 aft-analise-acidente
 aft-atualizar
 aft-auditoria-AR-NR12
