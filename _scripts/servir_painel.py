@@ -82,23 +82,41 @@ import det_sync  # noqa: E402
 import det_baixar  # noqa: E402  (download dos arquivos de uma notificação)
 import diario_registrar  # noqa: E402  (diário de atividades — letras A-F)
 
-# Token do DET emprestado pela extensão no último Sincronizar. Vive SÓ na RAM
-# deste processo (nunca em disco — regra da extensão) e vale 25 min, a mesma
-# janela que a própria extensão usa (o token do DET dura ~30). É o que permite
-# ao botão "baixar arquivos" e à skill /aft-det-baixar funcionarem sem
-# pedir token nenhum: o Sincronizar de sempre abastece.
-_DET_TOKEN: dict = {"token": None, "ts": 0.0}
-_DET_TOKEN_TTL = 25 * 60
+# Token do DET emprestado pela extensão. Vive SÓ na RAM deste processo (nunca
+# em disco — regra da extensão). Desde a extensão v3.0 chega sozinho, a cada
+# navegação do AFT no DET (POST /api/det-token), além do Sincronizar; é o que
+# permite ao botão "baixar arquivos" e à skill /aft-det-baixar funcionarem sem
+# clique. A validade seguida é o `exp` REAL do próprio JWT (menos uma margem),
+# não uma janela fixa: reempurrar o mesmo token não "estende" nada, e um token
+# recém-emitido rende os ~30 min cheios, não 25.
+_DET_TOKEN: dict = {"token": None, "exp": 0.0}
+_TTL_FALLBACK = 25 * 60   # JWT ilegível: a janela conservadora de sempre
+_MARGEM = 60              # deixa de valer 1 min antes do exp real (relógio/rede)
+
+
+def _jwt_exp(token: str) -> float | None:
+    """`exp` (segundos epoch) do payload do JWT, ou None se ilegível."""
+    import base64
+    try:
+        p = token.split(".")[1]
+        p += "=" * (-len(p) % 4)  # padding base64url
+        payload = json.loads(base64.urlsafe_b64decode(p).decode("utf-8"))
+        exp = payload.get("exp")
+        return float(exp) if exp else None
+    except Exception:
+        return None
 
 
 def _token_guardar(token: str) -> None:
     import time
-    _DET_TOKEN["token"], _DET_TOKEN["ts"] = token, time.time()
+    exp = _jwt_exp(token)
+    _DET_TOKEN["token"] = token
+    _DET_TOKEN["exp"] = (exp - _MARGEM) if exp else (time.time() + _TTL_FALLBACK)
 
 
 def _token_atual() -> str | None:
     import time
-    if _DET_TOKEN["token"] and time.time() - _DET_TOKEN["ts"] < _DET_TOKEN_TTL:
+    if _DET_TOKEN["token"] and time.time() < _DET_TOKEN["exp"]:
         return _DET_TOKEN["token"]
     return None
 
@@ -812,8 +830,8 @@ class Handler(BaseHTTPRequestHandler):
                            "text/plain; charset=utf-8")
 
     def do_OPTIONS(self):
-        # Preflight do navegador para o POST /api/det-sync vindo do site do DET.
-        if self.path == "/api/det-sync":
+        # Preflight do navegador para os POSTs vindos da extensão do DET.
+        if self.path in ("/api/det-sync", "/api/det-token"):
             self._responde(204, b"", "text/plain", CORS_DET)
         else:
             self._responde(204, b"", "text/plain")
@@ -823,6 +841,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(403, {"ok": False, "erro": "host não permitido"})
         if self.path == "/api/det-sync":
             return self._det_sync()
+        if self.path == "/api/det-token":
+            return self._det_token()
         if self.path == "/api/det-baixar":
             return self._det_baixar()
         if self.path != "/api/acao":
@@ -863,9 +883,31 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(400, {"ok": False,
                                         "erro": "det_access_token ausente ou inválido"},
                                   CORS_DET)
-            _token_guardar(token)  # abastece o "baixar arquivos" por 25 min
+            _token_guardar(token)  # abastece o "baixar arquivos"
             resultado = det_sync.sincronizar_todas(self.base, token)
             self._json(200, resultado, CORS_DET)
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"},
+                       CORS_DET)
+
+    def _det_token(self):
+        """POST /api/det-token — corpo {det_access_token}; chamado sozinho pela
+        extensão v3.0 a cada navegação do AFT no DET. Só guarda o token na RAM
+        (validade = exp real do JWT); NÃO varre fichas — é o canal leve que
+        mantém o "baixar arquivos" sempre pronto sem o Sincronizar manual."""
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
+            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            token = p.get("det_access_token")
+            if not token or not isinstance(token, str) or token.count(".") != 2:
+                return self._json(400, {"ok": False,
+                                        "erro": "det_access_token ausente ou inválido"},
+                                  CORS_DET)
+            _token_guardar(token)
+            import time
+            self._json(200, {"ok": True,
+                             "validade_s": max(0, int(_DET_TOKEN["exp"] - time.time()))},
+                       CORS_DET)
         except Exception as e:
             self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"},
                        CORS_DET)

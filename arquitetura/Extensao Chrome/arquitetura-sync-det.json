@@ -1,6 +1,6 @@
 {
  "projeto": "Sync DET — SisOS / AFT Toolkit",
- "versao_extensao": "2.0.0",
+ "versao_extensao": "3.0.0",
  "manifest_version": 3,
  "navegadores": [
   "Google Chrome",
@@ -129,7 +129,9 @@
     "GET /api/ping": "health-check usado pelo /aft-doctor e pela extensão",
     "POST /api/acao": "ações mecânicas do painel — ver painel_ativo.acoes",
     "POST /api/det-sync": "recebe {det_access_token} da extensão e chama det_sync.py",
-    "GET /doc/<os>/<arquivo.md>": "visualiza relatórios .md da OS (validação de caminho: só .md dentro de OS ATIVAS)"
+    "GET /doc/<os>/<arquivo.md>": "visualiza relatórios .md da OS (validação de caminho: só .md dentro de OS ATIVAS)",
+    "POST /api/det-token": "recebe {det_access_token} e SÓ guarda o token na RAM (validade = exp real do JWT); empurrado sozinho pela extensão v3.0 a cada navegação do AFT no DET (throttle 2 min). Canal leve que mantém o /aft-det-baixar pronto sem o Sincronizar manual.",
+    "POST /api/det-baixar": "download dos arquivos de uma notificação (ver arquitetura 'DET baixar'); usa o token guardado"
    }
   },
   "motor": {
