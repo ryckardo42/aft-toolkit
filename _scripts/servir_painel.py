@@ -79,7 +79,28 @@ MAX_BODY = 64_000
 # CORS restrito ao site do DET: é de lá que a extensão dispara o fetch.
 sys.path.insert(0, str(AQUI))
 import det_sync  # noqa: E402
+import det_baixar  # noqa: E402  (download dos arquivos de uma notificação)
 import diario_registrar  # noqa: E402  (diário de atividades — letras A-F)
+
+# Token do DET emprestado pela extensão no último Sincronizar. Vive SÓ na RAM
+# deste processo (nunca em disco — regra da extensão) e vale 25 min, a mesma
+# janela que a própria extensão usa (o token do DET dura ~30). É o que permite
+# ao botão "baixar arquivos" e à skill det-baixar-empregador funcionarem sem
+# pedir token nenhum: o Sincronizar de sempre abastece.
+_DET_TOKEN: dict = {"token": None, "ts": 0.0}
+_DET_TOKEN_TTL = 25 * 60
+
+
+def _token_guardar(token: str) -> None:
+    import time
+    _DET_TOKEN["token"], _DET_TOKEN["ts"] = token, time.time()
+
+
+def _token_atual() -> str | None:
+    import time
+    if _DET_TOKEN["token"] and time.time() - _DET_TOKEN["ts"] < _DET_TOKEN_TTL:
+        return _DET_TOKEN["token"]
+    return None
 
 ORIGEM_DET = "https://auditor-det.sit.trabalho.gov.br"
 CORS_DET = {
@@ -802,6 +823,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(403, {"ok": False, "erro": "host não permitido"})
         if self.path == "/api/det-sync":
             return self._det_sync()
+        if self.path == "/api/det-baixar":
+            return self._det_baixar()
         if self.path != "/api/acao":
             return self._json(404, {"ok": False, "erro": "rota desconhecida"})
         try:
@@ -840,11 +863,42 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(400, {"ok": False,
                                         "erro": "det_access_token ausente ou inválido"},
                                   CORS_DET)
+            _token_guardar(token)  # abastece o "baixar arquivos" por 25 min
             resultado = det_sync.sincronizar_todas(self.base, token)
             self._json(200, resultado, CORS_DET)
         except Exception as e:
             self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"},
                        CORS_DET)
+
+    def _det_baixar(self):
+        """POST /api/det-baixar — corpo {pasta, codigo}; chamado pelo botão
+        "baixar arquivos" do painel e pela skill det-baixar-empregador. Usa o
+        token guardado pelo último Sincronizar; sem token fresco devolve 409
+        com a instrução (o download demora segundos, o clique no DET também)."""
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
+            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            pasta = (p.get("pasta") or "").strip()
+            if not pasta or "/" in pasta or "\\" in pasta or pasta.startswith("."):
+                raise ValueError("pasta inválida")
+            alvo = (self.base / pasta).resolve()
+            if self.base.resolve() != alvo.parent or not alvo.is_dir():
+                raise ValueError(f"pasta {pasta} não encontrada em OS ATIVAS")
+            token = _token_atual()
+            if not token:
+                return self._json(409, {"ok": False, "token_expirado": True,
+                                        "erro": "sem token do DET — abra a aba do DET "
+                                                "e clique em Sincronizar; depois tente "
+                                                "de novo (vale 25 min)"})
+            r = det_baixar.baixar_notificacao(alvo, token, p.get("codigo") or "")
+            self._json(200, r)
+        except det_baixar.TokenExpirado as e:
+            _DET_TOKEN["token"] = None
+            self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
+        except ValueError as e:
+            self._json(400, {"ok": False, "erro": str(e)})
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
 
 
 def porta_ocupada(porta: int) -> bool:

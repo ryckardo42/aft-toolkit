@@ -1183,6 +1183,21 @@ function agCal(j){const v=DATA.venc[j];
   encodeURIComponent('Notificação DET '+v.codigo+' — '+v.empregador+' (AFT Toolkit)'),'_blank')}
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
 function agDetVisto(i,k){const o=DATA.os[i];api({acao:'det_visto',pasta:o.pasta,codigo:o.dets[k].codigo})}
+// "baixar arquivos": o servidor busca na API do DET (com o token do último
+// Sincronizar) o PDF da notificação, o Relatório de Atendimento e os arquivos
+// entregues, direto na pasta da OS. Pode levar alguns segundos.
+async function agDetBaixar(i,k,ev,b){ev.stopPropagation();
+ const o=DATA.os[i];b.disabled=true;const rot=b.textContent;b.textContent='baixando…';
+ try{const r=await fetch('/api/det-baixar',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({pasta:o.pasta,codigo:o.dets[k].codigo})});
+  const j=await r.json();
+  if(j.ok){const e=(j.erros||[]).length;
+   aviso(j.baixados?j.baixados+' arquivo(s) baixado(s) na pasta da OS'+
+    (e?' — '+e+' com erro':''):'nada novo — tudo já estava baixado')}
+  else aviso((j.token_expirado?'⚠️ ':'Erro: ')+(j.erro||'?'));
+ }catch(e){aviso('Servidor do painel não respondeu — abra pelo http://127.0.0.1:8347')}
+ b.disabled=false;b.textContent=rot}
 function agPend(i,k){const o=DATA.os[i];api({acao:'pendencia',pasta:o.pasta,texto:o.pendencias[k]})}
 function agPendAdd(i){const el=document.getElementById('pend-txt');const v=(el.value||'').trim();
  if(!v){aviso('Escreva a pendência antes');return}
@@ -1295,6 +1310,9 @@ function cartaoDets(o,i){
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
+   (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?'<button class="mini acao" '+
+    'title="baixa da API do DET o PDF da notificação, o Relatório de Atendimento e os arquivos entregues, organizados por item na pasta da OS (precisa de um Sincronizar na aba do DET nos últimos 25 min)" '+
+    'onclick="agDetBaixar('+i+','+k+',event,this)">⬇ baixar arquivos</button>':'')+
    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+'</div></div>'}).join('');
  return h+'</div>'}
 function cartaoNovas(o){
