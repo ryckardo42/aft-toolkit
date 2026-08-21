@@ -4,7 +4,7 @@
  "resumo": "Substitui o download manual (ou por navegador automatizado) das notificações do DET: com o token de sessão que a extensão Sync DET empresta ao servidor do painel, o motor det_baixar.py busca na API oficial do DET o PDF da notificação, o Relatório de Atendimento e os arquivos entregues pelo empregador, item a item, e grava tudo no pacote NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/ da pasta da OS — em segundos, sem navegador e sem o token jamais passar pela conversa do assistente. Ao final, registra a visualização no DET (o triângulo amarelo 'Existe atualização pendente' se apaga como se o AFT tivesse aberto a notificação no site). Nasceu em 21/08/2026, substituindo um fluxo por Claude in Chrome que levava ~10 minutos por notificação.",
  "onde_mora": {
   "motor": "_scripts/det_baixar.py (baixar_notificacao, pasta_do_pacote, via_painel)",
-  "servidor_local": "_scripts/servir_painel.py — POST /api/det-baixar em 127.0.0.1:8347 + cache do token em RAM (25 min)",
+  "servidor_local": "_scripts/servir_painel.py — POST /api/det-baixar em 127.0.0.1:8347; cache do token em RAM com validade = exp real do JWT, abastecido pelo POST /api/det-token (auto-push da extensão v3.0) e pelo /api/det-sync (Sincronizar)",
   "botao_no_painel": "_scripts/gerar_painel.py — botão '⬇ baixar arquivos' em cada notificação do cartão Notificações DET (função agDetBaixar)",
   "skill_de_chat": "aft-det-baixar/SKILL.md — invólucro fino: resolve pedido (código/CNPJ/nome) e chama det_baixar.py --via-painel",
   "token": "extensão Chrome 'Sync DET' (repo SisOS) — a mesma captura documentada em arquitetura/Extensao Chrome/",
@@ -12,7 +12,7 @@
  },
  "fluxo": [
   "1. O AFT navega no DET logado; a extensão captura o token de sessão (webRequest) e o guarda no chrome.storage.local (validade ~30 min).",
-  "2. O AFT clica no botão flutuante 'Sincronizar' (extensão): o token chega ao servidor do painel via POST /api/det-sync, roda o sync das fichas e fica guardado em RAM por 25 min (_DET_TOKEN; nunca em disco).",
+  "2. O token chega ao servidor do painel e fica guardado em RAM até o exp real do JWT (_DET_TOKEN; nunca em disco). Dois caminhos: a extensão v3.0 empurra sozinha a cada navegação do AFT no DET (POST /api/det-token, canal leve, throttle 2 min) e o Sincronizar (POST /api/det-sync) também abastece. Resultado: durante uma sessão de trabalho o token está sempre pronto, sem clique.",
   "3. O AFT dispara o download: botão '⬇ baixar arquivos' no cartão do painel OU skill /aft-det-baixar no chat (que roda det_baixar.py --via-painel). Os dois caem no mesmo POST /api/det-baixar {pasta, codigo}.",
   "4. O servidor valida a pasta (filha direta de OS ATIVAS, sem path traversal) e chama det_baixar.baixar_notificacao com o token da RAM. Sem token fresco: 409 {token_expirado: true} com a instrução de sincronizar.",
   "5. O motor pesquisa a notificação pelo código (chave única, isSomenteMinhas=false), obtém o uid e resolve o pacote de destino (pasta_do_pacote).",
@@ -138,7 +138,7 @@
   ]
  },
  "seguranca": [
-  "O token vive só na RAM do processo do servidor do painel, por 25 min — nunca em disco, nunca no chat, nunca na skill.",
+  "O token vive só na RAM do processo do servidor do painel, com validade = o exp real do próprio JWT (menos margem de 60s) — nunca em disco, nunca no chat, nunca na skill. Reempurrar o mesmo token não estende a validade além do que o DET concede.",
   "O servidor só escuta 127.0.0.1 e valida a pasta contra path traversal (mesma validação do /api/acao).",
   "401/403 do DET vira TokenExpirado: o cache é limpo e o chamador recebe 409 com a instrução de sincronizar.",
   "Falha no registro de visualização nunca derruba o download (visto_no_det: false + erro no relatório)."
@@ -192,6 +192,7 @@
   }
  ],
  "limites_e_pendencias": [
+  "Sessão do DET dura ~30 min (exp do JWT) e NÃO tem refresh: quando vence, o AFT reloga no gov.br — isso é do governo e nenhuma mudança na extensão remove. O auto-push v3.0 elimina o Sincronizar manual e os 'token expirado' durante a sessão, mas não o login em si.",
   "Canal de comunicação é somente leitura: responder e registrar ciência são atos do AFT no site (os endpoints de escrita existem, mas ficaram de fora de propósito).",
   "Porta 8347 fixa no modo --via-painel (igual às demais referências do painel).",
   "Reinício do serviço do painel zera o token (RAM): o primeiro download depois de publicar toolkit pede um novo Sincronizar — não é defeito.",
@@ -222,6 +223,10 @@
   {
    "quando": "2026-08-21",
    "o_que": "Histórico dos itens (eventos-item → historico-itens.md), canal de comunicação no pacote (mensagens.md + anexos + PDF, com o trecho da mensagem no cartão do painel) e Relatório de Atendimento sempre refrescado."
+  },
+  {
+   "quando": "2026-08-21",
+   "o_que": "Extensão v3.0: auto-push do token (POST /api/det-token, canal leve com throttle) — some o Sincronizar manual e a espera durante a sessão. Cache do painel passa a valer pelo exp real do JWT, não 25 min fixos."
   }
  ]
 }

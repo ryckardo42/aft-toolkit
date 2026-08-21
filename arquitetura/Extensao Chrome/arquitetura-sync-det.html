@@ -93,7 +93,7 @@
 
 <h1>🔄 Sync DET — arquitetura completa</h1>
 <p class="sub">
-  Extensão <strong>v2.0.0</strong> para Chrome e Edge (Manifest V3) ·
+  Extensão <strong>v3.0.0</strong> para Chrome e Edge (Manifest V3) ·
   <a href="https://chromewebstore.google.com/detail/sync-det-%E2%80%94-sisos-aft-tool/khmecjbidgcndmgmkbpfncjgmmfehiem">página na Chrome Web Store</a><br>
   Como a extensão captura o token do DET, quem fala com a API oficial e como as
   notificações chegam ao <code>memory.md</code> de cada OS.
@@ -459,6 +459,7 @@ Content-Type: application/json</code></pre>
     <tr><td><code>GET /api/ping</code></td><td>health-check (usado pelo /aft-doctor e pela extensão)</td></tr>
     <tr><td><code>POST /api/acao</code></td><td>ações mecânicas nos cards (tabela abaixo)</td></tr>
     <tr><td><code>POST /api/det-sync</code></td><td>recebe o token da extensão e roda o det_sync.py</td></tr>
+    <tr><td><code>POST /api/det-token</code></td><td>canal leve (v3.0): só guarda o token na RAM, validade = <code>exp</code> real do JWT — empurrado sozinho pela extensão a cada navegação no DET, sem varrer fichas</td></tr>
     <tr><td><code>GET /doc/&lt;os&gt;/&lt;arquivo.md&gt;</code></td><td>visualiza relatórios .md da OS (só .md dentro de OS ATIVAS)</td></tr>
   </table>
   <p><strong>Ações do <code>POST /api/acao</code></strong> (cada uma = backup + edição de linha
@@ -523,7 +524,7 @@ Content-Type: application/json</code></pre>
   Gerado em 19/07/2026 · atualizado em 22/07/2026 (RI estrito por front-matter · alerta
   dispensável · arquitetura do painel ativo · indicador do popup e RI do destino nuvem
   corrigidos) · atualizado em 19/08/2026 (notificação cancelada fora da ficha · envelope do
-  canal de comunicação no painel) · Sync DET v2.0.0 · acompanha
+  canal de comunicação no painel) · Sync DET v3.0.0 · acompanha
   <code>arquitetura-sync-det.json</code>
   (a mesma arquitetura em formato estruturado, para consumo por máquina).
 </footer>
