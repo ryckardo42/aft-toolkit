@@ -18,6 +18,7 @@ aft-cipa-nr05-dimensionamento
 aft-cnae-grau-risco-nr04
 aft-consulta
 aft-det-630
+aft-det-baixar
 aft-diario
 aft-dimensionamento-sesmt-nr04
 aft-doctor
