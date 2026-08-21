@@ -825,11 +825,13 @@ class Handler(BaseHTTPRequestHandler):
                                         "erro": "sem token — sincronize no DET e tente de novo"})
             payload, itens = det_criar.preparar_de_os(
                 alvo, arquivo, p.get("titulo") or "Termo de Notificação",
-                int(p.get("prazo_dias") or 16), token)
+                int(p.get("prazo_dias") or 16), token,
+                id_modelo=p.get("modelo"))
             resumo = {"ri": payload["ri"], "ni": payload["ni"],
                       "titulo": payload["titulo"],
                       "prazo": payload["dataPrazoEntregaPadrao"],
                       "n_itens": len(payload["itens"]),
+                      "enriquecimento": payload.get("_enriquecimento"),
                       "itens": [{"ordem": it["ordem"], "descricao": it["descricao"][:80]}
                                 for it in payload["itens"]]}
             if not p.get("confirmar"):
