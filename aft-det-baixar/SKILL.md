@@ -50,8 +50,11 @@ passa por aqui. O que chega vai todo para o pacote da notificação, dentro de
 (entrega parcelada, prorrogação aceita) acumula no MESMO pacote. Legados
 migram sozinhos: pacote `notificacao-<COD>` (na raiz ou em NOTIFICACOES/) é
 renomeado ao padrão e PDF solto é movido para dentro. Cada download entra
-sozinho no Registro de atividades do memory.md. O mesmo motor atende o botão
-"⬇ baixar arquivos" do cartão de notificações do painel.
+sozinho no Registro de atividades do memory.md. O download também REGISTRA A
+VISUALIZAÇÃO no DET (as mesmas leituras que o site faz ao abrir a notificação
+e cada item), então o triângulo amarelo "Existe atualização pendente" se apaga
+na tela do DET como se o AFT tivesse aberto pelo navegador. O mesmo motor
+atende o botão "⬇ baixar arquivos" do cartão de notificações do painel.
 
 ## Passo 0 — Servidor do painel no ar
 
