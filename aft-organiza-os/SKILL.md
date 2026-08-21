@@ -177,10 +177,11 @@ só com as fichas e os relatórios `.md`**:
 ├── inspecao-fisica.md            ← RAIZ OBRIGATÓRIA
 ├── tn-nco-*.md · nad-*.md        ← RAIZ OBRIGATÓRIA (texto que o AFT recola no DET)
 ├── NOTIFICACOES/
-│   ├── notificacao-<CODIGO>.pdf
-│   ├── relatorio-atendimento-<CODIGO>.pdf
 │   ├── tn-nco-*.docx · nad-*.docx  ← versão fechada da notificação emitida
-│   └── notificacao-<CODIGO>/     ← resposta do empregador (item1/, item2/...)
+│   └── notificacao-<CODIGO>/     ← TUDO daquela notificação
+│       ├── notificacao-<CODIGO>.pdf
+│       ├── relatorio-atendimento-<CODIGO>.pdf
+│       └── item1/ item2/ ...     ← resposta do empregador
 ├── AUTOS/
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
 │   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
@@ -206,10 +207,11 @@ Regras do plano:
 - **Nome da pasta**: `<EMPREGADOR EM CAIXA ALTA> <identificador só dígitos>` (padrão do
   toolkit). Sem identificador encontrado → só o nome, e avise que o CNPJ/CPF será exigido
   no `/aft-gera-ai`.
-- **Notificações** → tudo em `NOTIFICACOES/`: o PDF como
-  `NOTIFICACOES/notificacao-<CODIGO>.pdf`, o relatório de atendimento como
-  `NOTIFICACOES/relatorio-atendimento-<CODIGO>.pdf` e a resposta do empregador na
-  subpasta `NOTIFICACOES/notificacao-<CODIGO>/` (mantendo `item1/`, `item2/`... ou
+- **Notificações** → tudo em `NOTIFICACOES/`, e cada notificação inteira dentro da
+  SUA subpasta (regra de 21/08/2026 — os PDFs moram junto com a resposta, não soltos):
+  o PDF como `NOTIFICACOES/notificacao-<CODIGO>/notificacao-<CODIGO>.pdf`, o relatório
+  de atendimento como `NOTIFICACOES/notificacao-<CODIGO>/relatorio-atendimento-<CODIGO>.pdf`
+  e a resposta do empregador na mesma subpasta (mantendo `item1/`, `item2/`... ou
   `01 - .../`). Sufixo descritivo que o AFT tenha dado à pasta é **preservado**
   (`notificacao-<CODIGO> jornada/`) — o que identifica é o código.
 - **Notificação também é o que o AFT emitiu**, não só o que voltou do DET: os `.docx`
