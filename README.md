@@ -136,7 +136,7 @@ Documentos\AFT\
 │       ├── autos.md                 (autos redigidos)
 │       ├── autos-lavrados.md        (o que já foi transmitido — fica na raiz)
 │       ├── NOTIFICACOES\            (PDFs do DET + respostas do empregador)
-│       │   └── notificacao-ABC123\  (tudo daquela notificação)
+│       │   └── ABC123 21-08-2026\   (tudo daquela notificação; data do download)
 │       │       ├── notificacao-ABC123.pdf
 │       │       ├── relatorio-atendimento-ABC123.pdf
 │       │       └── item1_...\       (itens entregues pela empresa)

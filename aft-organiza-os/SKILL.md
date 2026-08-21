@@ -145,7 +145,7 @@ Monte **um único plano** cobrindo todas as pastas (novas + atualizações) e pe
    Empregador: JOSE DA SILVA SANTOS · CPF 111.222.333-44 · Cidade/UF
    Renomear: Jose fazenda → JOSE DA SILVA SANTOS 11122233344
    DET: ABCDE12345FGHIJ — prazo 19/06/2026 (respondido: há relatório de atendimento)
-   Mover: resposta do empregador → notificacao-ABCDE12345FGHIJ/ · fotos → fotos/
+   Mover: resposta do empregador → NOTIFICACOES/ABCDE12345FGHIJ 19-06-2026/ · fotos → fotos/
 
 ── 2. "ACME" (nova) ─────────────────────────────────────
    Empregador: ACME LTDA · CNPJ 11.222.333/0001-44
@@ -155,7 +155,7 @@ Monte **um único plano** cobrindo todas as pastas (novas + atualizações) e pe
 ── 3. ... ───────────────────────────────────────────────
 
 ── Atualização: "BETA LTDA 11222333000144" ──────────────
-   2 arquivos novos soltos na raiz → mover para notificacao-XYZ.../
+   2 arquivos novos soltos na raiz → mover para NOTIFICACOES/XYZ... <data>/
    (memory.md será editado com backup antes)
 
 Pastas vazias (nada a fazer): PASTA-A, PASTA-B
@@ -178,8 +178,8 @@ só com as fichas e os relatórios `.md`**:
 ├── tn-nco-*.md · nad-*.md        ← RAIZ OBRIGATÓRIA (texto que o AFT recola no DET)
 ├── NOTIFICACOES/
 │   ├── tn-nco-*.docx · nad-*.docx  ← versão fechada da notificação emitida
-│   └── notificacao-<CODIGO>/     ← TUDO daquela notificação
-│       ├── notificacao-<CODIGO>.pdf
+│   └── <CODIGO> <dd-mm-aaaa>/    ← TUDO daquela notificação (data do download
+│       ├── notificacao-<CODIGO>.pdf                    ou dos arquivos)
 │       ├── relatorio-atendimento-<CODIGO>.pdf
 │       └── item1/ item2/ ...     ← resposta do empregador
 ├── AUTOS/
@@ -207,13 +207,15 @@ Regras do plano:
 - **Nome da pasta**: `<EMPREGADOR EM CAIXA ALTA> <identificador só dígitos>` (padrão do
   toolkit). Sem identificador encontrado → só o nome, e avise que o CNPJ/CPF será exigido
   no `/aft-gera-ai`.
-- **Notificações** → tudo em `NOTIFICACOES/`, e cada notificação inteira dentro da
-  SUA subpasta (regra de 21/08/2026 — os PDFs moram junto com a resposta, não soltos):
-  o PDF como `NOTIFICACOES/notificacao-<CODIGO>/notificacao-<CODIGO>.pdf`, o relatório
-  de atendimento como `NOTIFICACOES/notificacao-<CODIGO>/relatorio-atendimento-<CODIGO>.pdf`
-  e a resposta do empregador na mesma subpasta (mantendo `item1/`, `item2/`... ou
-  `01 - .../`). Sufixo descritivo que o AFT tenha dado à pasta é **preservado**
-  (`notificacao-<CODIGO> jornada/`) — o que identifica é o código.
+- **Notificações** → tudo em `NOTIFICACOES/`, e cada notificação inteira dentro do
+  SEU pacote `<CODIGO> <dd-mm-aaaa>` (regra de 21/08/2026 — sem o prefixo
+  `notificacao-` no nome da pasta; a data é a do download ou, na importação, a data
+  mais recente dos arquivos da resposta): o PDF como
+  `NOTIFICACOES/<CODIGO> <data>/notificacao-<CODIGO>.pdf`, o relatório de atendimento
+  ao lado, e a resposta do empregador na mesma subpasta (mantendo `item1/`,
+  `item2/`... ou `01 - .../`). Pacote legado `notificacao-<CODIGO>/` é renomeado ao
+  padrão; sufixo descritivo que o AFT tenha dado é **preservado** (`<CODIGO> jornada/`
+  fica como está) — o que identifica é o código.
 - **Notificação também é o que o AFT emitiu**, não só o que voltou do DET: os `.docx`
   de Termo de Notificação para Correção (`tn-nco-*.docx`) e de Notificação para
   Apresentação de Documentos (`nad-*.docx`) vão para `NOTIFICACOES/` junto com os PDFs.
