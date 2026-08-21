@@ -1,0 +1,99 @@
+{
+ "projeto": "DET baixar — download de notificações do DET pela API oficial (AFT Toolkit)",
+ "data": "2026-08-21",
+ "resumo": "Substitui o download manual (ou por navegador automatizado) das notificações do DET: com o token de sessão que a extensão Sync DET empresta ao servidor do painel, o motor det_baixar.py busca na API oficial do DET o PDF da notificação, o Relatório de Atendimento e os arquivos entregues pelo empregador, item a item, e grava tudo no pacote NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/ da pasta da OS — em segundos, sem navegador e sem o token jamais passar pela conversa do assistente. Ao final, registra a visualização no DET (o triângulo amarelo 'Existe atualização pendente' se apaga como se o AFT tivesse aberto a notificação no site). Nasceu em 21/08/2026, substituindo um fluxo por Claude in Chrome que levava ~10 minutos por notificação.",
+ "onde_mora": {
+  "motor": "_scripts/det_baixar.py (baixar_notificacao, pasta_do_pacote, via_painel)",
+  "servidor_local": "_scripts/servir_painel.py — POST /api/det-baixar em 127.0.0.1:8347 + cache do token em RAM (25 min)",
+  "botao_no_painel": "_scripts/gerar_painel.py — botão '⬇ baixar arquivos' em cada notificação do cartão Notificações DET (função agDetBaixar)",
+  "skill_de_chat": "aft-det-baixar/SKILL.md — invólucro fino: resolve pedido (código/CNPJ/nome) e chama det_baixar.py --via-painel",
+  "token": "extensão Chrome 'Sync DET' (repo SisOS) — a mesma captura documentada em arquitetura/Extensao Chrome/",
+  "nota_tecnica": "cofre aft-toolkit-history: sync-det-e-extensao.md (motor e decisões) + aft-det-baixar.md (a skill)"
+ },
+ "fluxo": [
+  "1. O AFT navega no DET logado; a extensão captura o token de sessão (webRequest) e o guarda no chrome.storage.local (validade ~30 min).",
+  "2. O AFT clica no botão flutuante 'Sincronizar' (extensão): o token chega ao servidor do painel via POST /api/det-sync, roda o sync das fichas e fica guardado em RAM por 25 min (_DET_TOKEN; nunca em disco).",
+  "3. O AFT dispara o download: botão '⬇ baixar arquivos' no cartão do painel OU skill /aft-det-baixar no chat (que roda det_baixar.py --via-painel). Os dois caem no mesmo POST /api/det-baixar {pasta, codigo}.",
+  "4. O servidor valida a pasta (filha direta de OS ATIVAS, sem path traversal) e chama det_baixar.baixar_notificacao com o token da RAM. Sem token fresco: 409 {token_expirado: true} com a instrução de sincronizar.",
+  "5. O motor pesquisa a notificação pelo código (chave única, isSomenteMinhas=false), obtém o uid e resolve o pacote de destino (pasta_do_pacote).",
+  "6. Baixa os 2 PDFs e, item a item, a lista de arquivos e cada blob. Idempotente: arquivo existente (tamanho > 0) é pulado; status 2/3 vai para invalidados/.",
+  "7. Registra a visualização no DET: GET do detalhe da notificação + GET de cada item (as mesmas chamadas do site ao abrir a tela) — apaga o triângulo 'Existe atualização pendente'.",
+  "8. Grava linha no Registro de atividades do memory.md (com backup prévio) quando algo foi baixado; o painel recarrega sozinho pelo /api/estado (mtime das fichas).",
+  "9. Devolve o JSON de resultado: pacote, baixados, ja_existiam, movidos, itens, sem_arquivo, invalidados, visto_no_det, erros."
+ ],
+ "api_det": {
+  "base": "https://auditor-det.sit.trabalho.gov.br/services/auditor/v1",
+  "autenticacao": "Authorization: Bearer <token de sessão do AFT> (o mesmo do site; capturado pela extensão)",
+  "fonte_dos_endpoints": "Bundle público do front Angular do DET — chunk 251 (~550 KB), lido em 21/08/2026. O front é a fonte primária: baixar o index.html, achar o runtime.<hash>.js, montar a URL do chunk e procurar o serviço. O hash muda a cada deploy do DET.",
+  "endpoints_usados": [
+   {"metodo": "POST", "caminho": "/notificacoes/pesquisa", "para": "localizar a notificação pelo código (campo codigoNotificacao; isSomenteMinhas=false para cobrir equipe) — devolve o uid", "obs": "mesmo corpo de pesquisa do det_sync.py"},
+   {"metodo": "GET", "caminho": "/notificacoes/{uid}/pdf?numeroDeLinhas=0", "para": "o PDF da notificação", "obs": "numeroDeLinhas=0 é o que o site passa no download direto"},
+   {"metodo": "GET", "caminho": "/notificacoes/{uid}/pdf-relatorio-atendimento?tipo=0&exibeHistorico=true", "para": "o Relatório de Atendimento", "obs": "tipo é OBRIGATÓRIO: sem ele a API devolve 400 'Parâmetro de URL tipo inválido' (pego na 1ª execução real; o bundle não denunciava porque o modal do site sempre manda os padrões)"},
+   {"metodo": "GET", "caminho": "/itens-notificacao?uidNotificacao={uid}", "para": "itens solicitados: uid, ordem, descricao (a descrição oficial vira o nome da pasta do item)", "obs": null},
+   {"metodo": "GET", "caminho": "/arquivos-item?uidItem={uid}", "para": "arquivos entregues no item: uid, nome, status", "obs": "status: 0 INICIAL · 1 RECEBIDO · 2 REJEITADO · 3 DISPENSADO (enum do front)"},
+   {"metodo": "GET", "caminho": "/arquivos-item/{uid}/blob", "para": "o arquivo em si (até 20 MB por arquivo, limite do próprio DET)", "obs": null},
+   {"metodo": "GET", "caminho": "/notificacoes/{uid}", "para": "registro de visualização: é o 'abrir a notificação' do site", "obs": "apaga o triângulo amarelo — confirmado em produção 21/08/2026"},
+   {"metodo": "GET", "caminho": "/itens-notificacao/{uidItem}?uidNotificacao={uid}", "para": "registro de visualização por item: o 'Visualizar Item Solicitado' do site", "obs": null}
+  ],
+  "endpoints_conhecidos_e_nao_usados": [
+   {"caminho": "PUT /notificacoes/{uid}/download-documentos", "porque_nao": "é o ZIP do site: devolve uma URL volátil para segundo request e o conteúdo chega sem estrutura — o download arquivo a arquivo dispensa ZIP, unzip e adivinhação de nomes"},
+   {"caminho": "GET /eventos-item?uidItem=", "porque_nao": "eventos do item (pedidos de prorrogação, justificativas e seus anexos) — reservado para a etapa de entregas parceladas/prorrogação"}
+  ],
+  "o_que_apaga_o_alerta_amarelo": "Não existe endpoint 'marcar como visto'. O que apaga o itemAtualizado são os GETs de abrir a notificação e cada item (por isso o passo 7 do fluxo). Comprovadamente NÃO apagam: a pesquisa, pesquisarArquivos e o GET do blob."
+ },
+ "layout_do_pacote": {
+  "convencao": "NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/ — dentro da pasta NOTIFICACOES da OS, sem o prefixo 'notificacao-' no nome, com a data do PRIMEIRO download",
+  "arvore": [
+   "NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/",
+   "  notificacao-<CODIGO>.pdf",
+   "  relatorio-atendimento-<CODIGO>.pdf",
+   "  item<N>_<descrição oficial do item, 40 chars>/",
+   "    <arquivos entregues>",
+   "    invalidados/<arquivos com status 2/3>"
+  ],
+  "regras": [
+   "Downloads repetidos (entrega parcelada, prorrogação aceita) acumulam no MESMO pacote; nada é duplicado.",
+   "pasta_do_pacote() resolve por 'nome contém o código', em NOTIFICACOES/ e na raiz da OS.",
+   "Pacote legado com nome puro (notificacao-<COD>, com ou sem data) é renomeado ao padrão — data do nome preservada; sem data, vale o mtime da pasta.",
+   "Sufixo descritivo do AFT ('<COD> jornada') é respeitado: a pasta é usada como está, nunca renomeada.",
+   "Pacotes nunca são mesclados automaticamente.",
+   "PDF solto (na raiz da OS ou em NOTIFICACOES/) é movido para dentro do pacote — migração, nunca re-download.",
+   "Nomes saneados para valerem também no Windows (remove <>:\"/\\|?*, apara ponto final; acentos ficam); colisão ganha sufixo -2, -3."
+  ]
+ },
+ "seguranca": [
+  "O token vive só na RAM do processo do servidor do painel, por 25 min — nunca em disco, nunca no chat, nunca na skill.",
+  "O servidor só escuta 127.0.0.1 e valida a pasta contra path traversal (mesma validação do /api/acao).",
+  "401/403 do DET vira TokenExpirado: o cache é limpo e o chamador recebe 409 com a instrução de sincronizar.",
+  "Falha no registro de visualização nunca derruba o download (visto_no_det: false + erro no relatório)."
+ ],
+ "consumidores_do_layout": [
+  {"quem": "botão '⬇ baixar arquivos' (gerar_painel.py)", "como": "chama POST /api/det-baixar e mostra o resultado em toast"},
+  {"quem": "skill /aft-det-baixar", "como": "det_baixar.py --via-painel '<pasta>' <CODIGO> — resolve código/CNPJ/nome pelo memory.md antes"},
+  {"quem": "varredor de notificações não cadastradas (gerar_painel.varrer_notificacoes_novas)", "como": "varre também o 2º nível sob NOTIFICACOES/ (os PDFs desceram um nível)"},
+  {"quem": "/aft-organiza-os", "como": "layout canônico das OS importadas usa o mesmo pacote NOTIFICACOES/<CODIGO> <data>/"},
+  {"quem": "skills pessoais de análise (ex.: analise-preliminar do AFT)", "como": "localizam o PDF por find -maxdepth 4 e tratam o diretório do PDF como o pacote"}
+ ],
+ "decisoes": [
+  {"decisao": "API direta em vez de navegador automatizado", "porque": "o fluxo por Claude in Chrome levava ~10 min por notificação (modelo no loop de cada clique); por API são 4-8 requests e segundos, com custo de tokens quase zero"},
+  {"decisao": "arquivo a arquivo em vez do ZIP do site", "porque": "o ZIP exige segundo request em URL volátil e chega sem estrutura; por arquivo, a pasta nasce organizada por item com a descrição oficial da API"},
+  {"decisao": "token emprestado via Sincronizar + cache RAM 25 min", "porque": "reusa o gesto que o AFT já faz; o token nunca é digitado, gravado ou exposto — e o download funciona na janela em que o token vive (~30 min)"},
+  {"decisao": "registrar a visualização ao final do download", "porque": "sem isso o DET mantinha o alerta 'Existe atualização pendente' aceso mesmo com tudo baixado; os GETs replicam fielmente o abrir do site (caso real MASTER, confirmado pelo AFT)"},
+  {"decisao": "data do primeiro download no nome do pacote", "porque": "pedido do AFT (inspirado no nome do ZIP do site, só a data, sem hora); downloads seguintes acumulam sem renomear"}
+ ],
+ "limites_e_pendencias": [
+  "Anexos de pedidos de prorrogação e justificativas moram em /eventos-item — ainda não baixados (etapa de entregas parceladas/prorrogação, a desenhar).",
+  "O Relatório de Atendimento não é re-baixado quando já existe — fica obsoleto se a empresa entregar de novo depois (mesma etapa futura).",
+  "Porta 8347 fixa no modo --via-painel (igual às demais referências do painel).",
+  "Reinício do serviço do painel zera o token (RAM): o primeiro download depois de publicar toolkit pede um novo Sincronizar — não é defeito.",
+  "det_baixar.py é importado pelo servir_painel.py: mexeu no arquivo, reinicie o serviço (o publicar.py já reinicia).",
+  "O hash dos bundles do DET muda a cada deploy; endpoints REST tendem a ser estáveis, mas mudança de contrato aparece como erro legível no resultado."
+ ],
+ "historico": [
+  {"quando": "2026-08-21", "o_que": "Nasce o motor det_baixar.py + POST /api/det-baixar + botão no painel (endpoints levantados no chunk 251). Primeira execução real: 189 arquivos em segundos."},
+  {"quando": "2026-08-21", "o_que": "Correção: tipo=0&exibeHistorico=true obrigatórios no Relatório de Atendimento (400 sem eles)."},
+  {"quando": "2026-08-21", "o_que": "Skill oficial /aft-det-baixar (ex-skill pessoal do AFT); modo --via-painel para chamada por argumentos."},
+  {"quando": "2026-08-21", "o_que": "Layout: pacote NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/ com migração automática de legados."},
+  {"quando": "2026-08-21", "o_que": "Registro de visualização no DET ao final do download — o alerta amarelo apaga (confirmado em produção)."}
+ ]
+}
