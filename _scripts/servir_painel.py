@@ -85,7 +85,7 @@ import diario_registrar  # noqa: E402  (diário de atividades — letras A-F)
 # Token do DET emprestado pela extensão no último Sincronizar. Vive SÓ na RAM
 # deste processo (nunca em disco — regra da extensão) e vale 25 min, a mesma
 # janela que a própria extensão usa (o token do DET dura ~30). É o que permite
-# ao botão "baixar arquivos" e à skill det-baixar-empregador funcionarem sem
+# ao botão "baixar arquivos" e à skill /aft-det-baixar funcionarem sem
 # pedir token nenhum: o Sincronizar de sempre abastece.
 _DET_TOKEN: dict = {"token": None, "ts": 0.0}
 _DET_TOKEN_TTL = 25 * 60
@@ -872,7 +872,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _det_baixar(self):
         """POST /api/det-baixar — corpo {pasta, codigo}; chamado pelo botão
-        "baixar arquivos" do painel e pela skill det-baixar-empregador. Usa o
+        "baixar arquivos" do painel e pela skill /aft-det-baixar. Usa o
         token guardado pelo último Sincronizar; sem token fresco devolve 409
         com a instrução (o download demora segundos, o clique no DET também)."""
         try:

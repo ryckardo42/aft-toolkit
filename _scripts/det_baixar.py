@@ -46,7 +46,10 @@ O token é usado em memória e nunca gravado (regra da extensão). Cada download
 registra uma linha no Registro de atividades do memory.md (com backup prévio).
 
 Uso normal: via servir_painel.py (POST /api/det-baixar — botão do painel e a
-skill det-baixar-empregador). Direto (debug):
+skill /aft-det-baixar). A skill chama o modo --via-painel, que faz o POST no
+servidor local (o token fica lá, abastecido pelo Sincronizar da extensão):
+    python det_baixar.py --via-painel "<pasta ou nome da pasta da OS>" <CODIGO>
+Direto, com token em mãos (debug):
     python det_baixar.py "<pasta da OS>" "<CODIGO>" "<token>"
 """
 from __future__ import annotations
@@ -343,13 +346,42 @@ def _registrar_no_memory(pasta_os: Path, r: dict) -> None:
         r["erros"].append(f"registro no memory.md: {e}")
 
 
+def via_painel(pasta: str, codigo: str, porta: int = 8347) -> dict:
+    """POST /api/det-baixar no servidor local do painel (o token mora lá).
+    `pasta` pode ser o caminho completo ou só o nome da pasta da OS.
+    Devolve o JSON da resposta — inclusive o 409 de token vencido, para o
+    chamador orientar o Sincronizar sem tratar exceção."""
+    corpo = json.dumps({"pasta": Path(pasta).name,
+                        "codigo": codigo}).encode("utf-8")
+    req = urllib.request.Request(
+        f"http://127.0.0.1:{porta}/api/det-baixar", data=corpo,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        try:
+            return json.loads(e.read().decode("utf-8"))
+        except Exception:
+            return {"ok": False, "erro": f"painel respondeu {e.code}"}
+    except Exception as e:
+        return {"ok": False, "painel_fora": True,
+                "erro": f"servidor do painel não respondeu ({e}) — "
+                        "suba com instalar_servidor_painel.py reiniciar"}
+
+
 if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):  # console Windows é cp1252
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if len(sys.argv) != 4:
-        print("uso: python det_baixar.py \"<pasta da OS>\" <CODIGO> <token>",
+    if len(sys.argv) == 4 and sys.argv[1] == "--via-painel":
+        print(json.dumps(via_painel(sys.argv[2], sys.argv[3]),
+                         ensure_ascii=False, indent=2))
+    elif len(sys.argv) == 4:
+        print(json.dumps(baixar_notificacao(Path(sys.argv[1]), sys.argv[3],
+                                            sys.argv[2]),
+                         ensure_ascii=False, indent=2))
+    else:
+        print("uso: python det_baixar.py --via-painel \"<pasta da OS>\" <CODIGO>\n"
+              "     python det_baixar.py \"<pasta da OS>\" <CODIGO> <token>",
               file=sys.stderr)
         sys.exit(1)
-    print(json.dumps(baixar_notificacao(Path(sys.argv[1]), sys.argv[3],
-                                        sys.argv[2]),
-                     ensure_ascii=False, indent=2))
