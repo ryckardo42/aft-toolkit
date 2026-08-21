@@ -191,7 +191,9 @@ com o token de sessão do próprio AFT.</p>
   <tr><th>Chamada</th><th>Para quê</th><th>Detalhe que custou caro</th></tr>
   <tr><td><code>POST /notificacoes/pesquisa</code></td><td>localizar pelo código → <code>uid</code></td><td><code>isSomenteMinhas=false</code> cobre notificações da equipe</td></tr>
   <tr><td><code>GET /notificacoes/{uid}/pdf?numeroDeLinhas=0</code></td><td>PDF da notificação</td><td><code>numeroDeLinhas=0</code> é o download direto do site</td></tr>
-  <tr><td><code>GET .../pdf-relatorio-atendimento?tipo=0&amp;exibeHistorico=true</code></td><td>Relatório de Atendimento</td><td><strong><code>tipo</code> é obrigatório</strong> — sem ele, 400; o bundle não denunciava porque o modal sempre manda os padrões</td></tr>
+  <tr><td><code>GET .../pdf-relatorio-atendimento?tipo=0&amp;exibeHistorico=true</code></td><td>Relatório de Atendimento — baixado <strong>sempre</strong> e regravado (é fotografia do estado)</td><td><strong><code>tipo</code> é obrigatório</strong> — sem ele, 400; o bundle não denunciava porque o modal sempre manda os padrões</td></tr>
+  <tr><td><code>GET /eventos-item?uidItem=</code></td><td>histórico do item: prorrogações, justificativas, mudanças de status → <code>historico-itens.md</code></td><td>enum de 21 status do item; evento não tem anexo — a justificativa é texto</td></tr>
+  <tr><td><code>GET /notificacoes/{uid}/canal-comunicacao</code> + blobs + <code>/pdf-historico-canal-comunicacao</code></td><td>canal de comunicação → <code>canal-comunicacao/</code> (mensagens.md, anexos, PDF oficial)</td><td><strong>somente leitura</strong>: ciência/resposta são atos do AFT no site</td></tr>
   <tr><td><code>GET /itens-notificacao?uidNotificacao=</code></td><td>itens (uid, ordem, descrição)</td><td>a descrição oficial vira o nome da pasta do item</td></tr>
   <tr><td><code>GET /arquivos-item?uidItem=</code> + <code>/{uid}/blob</code></td><td>cada arquivo entregue</td><td>status: 0 INICIAL · 1 RECEBIDO · 2 REJEITADO · 3 DISPENSADO</td></tr>
   <tr><td><code>GET /notificacoes/{uid}</code> e <code>GET /itens-notificacao/{uidItem}</code></td><td>registro de visualização</td><td>é o que apaga o alerta amarelo — pesquisa, lista de arquivos e blob comprovadamente NÃO apagam</td></tr>
@@ -206,7 +208,10 @@ com o token de sessão do próprio AFT.</p>
 <h2>4. O pacote na pasta da OS</h2>
 <pre><code>NOTIFICACOES/&lt;CODIGO&gt; &lt;dd-mm-aaaa&gt;/     ← data do PRIMEIRO download
 ├── notificacao-&lt;CODIGO&gt;.pdf
-├── relatorio-atendimento-&lt;CODIGO&gt;.pdf
+├── relatorio-atendimento-&lt;CODIGO&gt;.pdf    ← SEMPRE refrescado
+├── historico-itens.md                     ← prorrogações/justificativas/status
+├── canal-comunicacao/                     ← só quando há mensagens
+│   ├── mensagens.md · &lt;anexos&gt; · historico-canal.pdf
 └── item&lt;N&gt;_&lt;descrição oficial&gt;/
     ├── &lt;arquivos entregues&gt;
     └── invalidados/                       ← rejeitados/dispensados no DET</code></pre>
@@ -225,13 +230,19 @@ com o token de sessão do próprio AFT.</p>
   <li>Falha no registro de visualização nunca derruba o download (<code>visto_no_det: false</code>).</li>
 </ul>
 
-<h2>6. Pendências conhecidas</h2>
+<h2>6. Pendências e limites conhecidos</h2>
 <ul>
-  <li>Anexos de <strong>prorrogação/justificativa</strong> (<code>/eventos-item</code>) — etapa futura de entregas parceladas.</li>
-  <li>O Relatório de Atendimento não é re-baixado quando já existe — fica obsoleto se houver entrega nova (mesma etapa).</li>
+  <li>O canal de comunicação é <strong>somente leitura</strong>: responder e registrar ciência são atos do AFT, no site (os endpoints de escrita existem, mas ficaram de fora de propósito).</li>
   <li>Reinício do serviço do painel zera o token: primeiro download depois de publicar pede novo Sincronizar (não é defeito).</li>
   <li><code>det_baixar.py</code> é importado pelo servidor: mexeu, <strong>reinicie o serviço</strong> (o <code>publicar.py</code> já reinicia).</li>
 </ul>
+<div class="note ok">
+  <strong>Resolvidas em 21/08/2026 (3ª rodada):</strong> o histórico de
+  prorrogações/justificativas virou o <code>historico-itens.md</code>; o canal de
+  comunicação passou a ser baixado (e o trecho da última mensagem do empregador
+  aparece no cartão do painel, via sub-linha da ficha); o Relatório de
+  Atendimento passou a ser refrescado a cada download.
+</div>
 
 <footer>
   AFT Toolkit · arquitetura do subsistema DET baixar · escrita em 21/08/2026, no dia
