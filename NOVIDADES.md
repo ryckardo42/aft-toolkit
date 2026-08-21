@@ -139,6 +139,53 @@ a nova versão da extensão precisa ser publicada na Chrome Web Store.
 
 ---
 
+## 21/08/2026
+<!-- commit: aft-ajuda -->
+
+**Travou no toolkit? Agora tem a quem perguntar: `/aft-ajuda`.** Ela responde
+dúvida sobre a própria ferramenta — como funciona o painel, a extensão do
+navegador, o DET, o NotebookLM, onde ficam os seus arquivos, o que é o
+`memory.md`, que programas rodam na sua máquina, qual habilidade serve para
+tal coisa. Você não precisa saber o nome dela: basta perguntar em português
+("como funciona isso?", "por onde eu começo?", "o que eu faço agora?").
+
+Duas coisas a distinguem de um manual. Primeiro, **ela olha a sua máquina
+antes de responder**: vê se a instalação existe, quantas auditorias você tem
+abertas, e responde com o seu caso na mão em vez de falar no genérico — e
+termina sempre oferecendo executar o próximo passo, em vez de mandar você
+digitar comando. Segundo, **quem acabou de instalar ganha um tour guiado**: um
+passo por vez, nada feito sem o seu "pode ir", até você ver uma fiscalização
+sua dentro do painel. Dá para parar em qualquer ponto.
+
+Ela também **não usa palavra sem explicar**: na primeira vez que a resposta
+falar em painel, ficha, script ou chave de sessão, a explicação vem junto, numa
+linha. O que ela nunca explica é termo de fiscalização — PGR, ementa,
+capitulação, DET são o seu ofício, não o dela. E toda resposta termina abrindo
+**duas ou três portas** para o assunto seguinte, tiradas do que acabou de ser
+dito, para você nunca ficar sem saber o que perguntar depois.
+
+E ela responde com honestidade a pergunta mais importante de todas — **"meus
+dados vão para a internet?"**. A resposta não é um "não" seco, e fingir que era
+seria ruim para você: o toolkit tem três regimes. O que roda por programa na
+sua máquina (ponto eletrônico, lista de vínculos, dimensionamentos, os autos)
+não sai dali. O que exige o assistente **compreender** um documento — julgar um
+PGR, ler um laudo, conferir a resposta da empresa ao DET — passa o conteúdo
+daquele documento pelo modelo. E a consulta de ementa manda só a descrição do
+fato, nunca nome nem CPF. A partir de agora, sempre que uma habilidade for do
+segundo tipo, a ajuda avisa antes: olhe o que tem no pacote — atestado, ASO,
+laudo com CID e lista nominal pedem decisão sua antes de rodar. Dois avisos que
+ela nunca omite, mesmo sem você perguntar; o outro é que **varredura rápida é
+triagem, não auditoria**: ela costuma ler alguns arquivos e não todos, e nada
+dali vira auto sem você ter olhado o documento.
+
+Ela não escreve nada: não cria auditoria, não mexe em ficha, não redige
+documento. Quando a resposta exige isso, ela chama a habilidade certa e você
+decide. Nasceu de um pedido de colega que disse, com todas as letras, que
+rodava de um lado para o outro sem se sentir seguro e acabava voltando a
+trabalhar como antes da IA.
+
+---
+
 ## 20/08/2026
 <!-- commit: painel-auditoria-de-documentos -->
 
