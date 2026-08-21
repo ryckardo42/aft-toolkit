@@ -212,9 +212,19 @@ def enriquecer(payload: dict, token: str, ri: str,
     try:
         detalhe = recuperar_detalhe_ri(token, ri)
         ends = _sem_uids(_cacar_enderecos(detalhe))
-        if ends:
-            payload["enderecos"] = ends
-        relato["enderecos"] = len(ends)
+        # O site usa o endereço de fiscalização (tipo 2, com uf). O detalhe do
+        # RI traz vários endereços; preferir tipo==2 e, entre eles, o que tem
+        # uf preenchida — senão o endereço sai errado (tipo 0, uf vazia).
+        ends.sort(key=lambda e: (e.get("tipo") != 2, not e.get("uf")))
+        escolhido = ends[:1] if ends else []
+        # o endereço do rascunho carrega uid "" (registro novo)
+        for e in escolhido:
+            e["uid"] = ""
+        if escolhido:
+            payload["enderecos"] = escolhido
+        relato["enderecos"] = len(escolhido)
+        relato["endereco_tipo"] = escolhido[0].get("tipo") if escolhido else None
+        relato["endereco_uf"] = escolhido[0].get("uf") if escolhido else None
     except Exception as e:
         relato["ri_erro"] = str(e)[:150]
     payload["_enriquecimento"] = relato
@@ -247,16 +257,30 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
     """Corpo do rascunho, PRONTO para conferência — NÃO envia nada.
     Espelha o molde real: casca (auditor/status) + itens com o texto integral."""
     aud = auditor_do_token(token)
+    ni = re.sub(r"\D", "", cnpj or "")
     itens_payload = []
     for i, it in enumerate(itens, 1):
+        # TODOS os campos que o site põe num item — inclusive os companheiros de
+        # data em null. Sem eles, a tela de EDIÇÃO (formulário reativo) tenta
+        # criar controle para um campo ausente e quebra (isDatasPadraoValidas /
+        # addControl → 'Cannot read properties of undefined'; a de visualização,
+        # só leitura, não sofre). Constatado no console do DET em 21/08/2026.
         itens_payload.append({
             "ordem": i,
             "descricao": it["descricao"],
             "tipo": tipo,
             "tipoRetornoSolicitado": retorno,
+            "tipoRetornoRealizado": None,
             "dataPrazoEntrega": prazo_iso,
-            "status": 0,
+            "dataPeriodoInicio": None,
+            "dataPeriodoFim": None,
+            "dataAntecipacao": None,
+            "horaPrazoEntrega": None,
+            "naoExigeDataInicialFinal": True,
+            "mensagemInfo": None,
+            "tiposArquivos": None,
             "preAssinalado": False,
+            "status": 0,
             "versao": 1,
         })
     return {
@@ -264,11 +288,18 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
         "status": STATUS_EM_ELABORACAO,
         "tipoGeracao": 0,
         "tipoAbrangencia": 1,
+        "tipoNi": 0 if len(ni) == 14 else 1,   # 0 = CNPJ, 1 = CPF (14 vs 11)
         "auditores": [aud],
         "ri": re.sub(r"\D", "", ri or ""),
-        "ni": re.sub(r"\D", "", cnpj or ""),
+        "ni": ni,
         "titulo": titulo,
         "dataPrazoEntregaPadrao": prazo_iso,
+        "dataPeriodoInicioPadrao": None,
+        "dataPeriodoFimPadrao": None,
+        "horaPrazoEntregaPadrao": None,
+        "estabelecimentos": [],
+        "contatos": [],
+        "entregas": [],
         "itens": itens_payload,
     }
 
