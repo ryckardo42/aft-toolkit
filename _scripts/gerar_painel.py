@@ -791,6 +791,15 @@ z-index:9;width:80vw;max-height:94vh;background:var(--paper);
 border:1px solid var(--bd);border-radius:14px;
 box-shadow:0 24px 70px rgba(20,20,19,.35);overflow-y:auto;padding:28px clamp(18px,3vw,40px) 44px}
 #detalhe.aberto,#veu.aberto{display:block}
+/* Auditoria em aba própria (#so=): a página é o dossiê. O painel — título,
+   abas, contadores, grade, calendário — não é escondido por cima: sai. */
+body.solo{padding:0}
+body.solo > h1,body.solo > .sub,body.solo > .abas,
+body.solo > #vista-painel,body.solo > #vista-cal,body.solo > #veu{display:none}
+body.solo #detalhe{position:static;transform:none;top:auto;left:auto;
+margin:0 auto;width:min(1280px,100%);max-height:none;overflow:visible;
+border:none;border-radius:0;box-shadow:none;min-height:100vh}
+body.solo footer{max-width:1280px;margin:0 auto;padding:0 34px}
 #detalhe h2{font-size:24px;margin:0 6px 2px 0}
 #detalhe .fechar{position:sticky;top:-4px;float:right;background:var(--cream);
 border:1px solid var(--bd);border-radius:8px;padding:6px 14px;cursor:pointer;
@@ -1511,10 +1520,10 @@ function fechaVista(){P.classList.remove('aberto');V.classList.remove('aberto');
 // Fechar tira o #os= da barra de endereços — assim o botão voltar do navegador
 // devolve a auditoria. Em file:// o pushState é barrado: o hash vazio resolve.
 function fecha(){
- if(/^#os=/.test(location.hash||'')){
+ if(/^#(os|so)=/.test(location.hash||'')){
   try{history.pushState(null,'',location.pathname+location.search)}
   catch(e){location.hash=''}}
- fechaVista()}
+ saiSolo();fechaVista()}
 V.addEventListener('click',fecha);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
 // ---- Um endereço por auditoria ---------------------------------------------
@@ -1524,18 +1533,39 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
 // funciona. O hash também é o que reabre a mesma auditoria depois de uma ação
 // (a página recarrega) — por isso não há mais nada guardado em sessionStorage.
 function chaveOS(o,i){return o.pasta||('os'+i)}
+const TITULO_PAINEL=document.title;
+// Dois endereços, dois jeitos de ver a mesma auditoria:
+//   #os=<pasta>  → o painel, com a auditoria aberta por cima da grade;
+//   #so=<pasta>  → SÓ a auditoria, ocupando a página (é o que abre em aba).
 function rotaOS(){
- const m=/^#os=(.*)$/.exec(location.hash||'');
- if(!m){fechaVista();return}
- const chave=decodeURIComponent(m[1]);
+ const m=/^#(os|so)=(.*)$/.exec(location.hash||'');
+ if(!m){saiSolo();fechaVista();return}
+ const chave=decodeURIComponent(m[2]);
  const i=DATA.os.findIndex((o,k)=>chaveOS(o,k)===chave);
- if(i>=0)abre(i);else fechaVista()}
+ if(i<0){saiSolo();fechaVista();return}
+ if(m[1]==='so'){
+  document.body.classList.add('solo');
+  // Com várias abas abertas, o nome da empresa na aba é o que as distingue.
+  document.title=DATA.os[i].empregador+' — AFT';
+ }else saiSolo();
+ abre(i)}
+function saiSolo(){
+ document.body.classList.remove('solo');document.title=TITULO_PAINEL}
 window.addEventListener('hashchange',rotaOS);
-// "abrir auditoria": nesta tela (padrão) ou em nova aba já no clique simples.
+// "abrir auditoria": em nova aba, o link do card vale como está (#so=). Nesta
+// tela (padrão), o clique simples é desviado para #os= — abre por cima da grade
+// sem sair do painel. Clique com ⌘/Ctrl/⇧ ou do meio nunca é desviado: aí o AFT
+// pediu explicitamente a aba, e ela vem com a página só da auditoria.
 function modoAbrir(v){
  document.querySelectorAll('.grid .card').forEach(c=>{
   if(v==='aba')c.target='_blank';else c.removeAttribute('target')});
  localStorage.setItem('painel-abrir',v)}
+document.addEventListener('click',e=>{
+ const a=e.target.closest&&e.target.closest('.grid .card');if(!a)return;
+ if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0)return;
+ if((localStorage.getItem('painel-abrir')||'tela')==='aba')return;
+ e.preventDefault();
+ location.hash='#os='+a.getAttribute('href').slice(4)});
 (function(){const sel=document.getElementById('abrir');if(!sel)return;
  const v=localStorage.getItem('painel-abrir')||'tela';
  sel.value=v;modoAbrir(v)})();
@@ -2006,7 +2036,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         # o link continua funcionando dentro daquela versão publicada.
         chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
         cards.append(f"""
-<a class="card {classe}" data-det="{o.get('ord_det', i)}" href="#os={chave}">
+<a class="card {classe}" data-det="{o.get('ord_det', i)}" href="#so={chave}">
   <h2>{html.escape(o["empregador"])}</h2>
   <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ/CPF não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
   <span class="badge {classe}">{html.escape(rotulo)}</span>
