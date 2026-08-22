@@ -831,6 +831,10 @@
   {
    "topico": "Parâmetros do DET dentro da TN-NCO, e revisão em duas camadas (22/08/2026)",
    "txt": "A /aft-tn-nco passou a gravar, no front-matter do .md que gera, os parâmetros que fazem a notificação existir no DET: prazo, tipo do item, tipo de retorno, pré-assinalado e tipos de arquivo aceitos, mais as exceções item a item. Antes o texto saía perfeito e mudo — prazo e retorno vinham da conversa e sumiam com ela. Padrão do toolkit: obrigação, retorno digital, 16 dias corridos, pré-assinalado. A precedência é chamada > front-matter > padrão, para o arquivo ser memória sem virar camisa de força. Junto veio a revisão em DUAS camadas: a mecânica no código (det_criar.revisar_payload, chamada pela própria criar_rascunho — item sem prazo, texto acima de 1000 caracteres, prazo no passado, item que pede documento sem aceitar arquivo e notificação sem introdução barram a escrita, e nada é enviado ao DET), e a de julgamento no subagente aft-revisor-notificacao (o retorno combina com o que o item pede? o prazo é exequível? a exigência é verificável?). A garantia NÃO foi confiada ao subagente: subagente pode ser pulado; a função no código, não."
+  },
+  {
+   "topico": "NAD preliminar: a notificação que se leva em mãos (22/08/2026)",
+   "txt": "A /aft-preparacao-acao-fiscal passou a oferecer, NO FIM, a NAD preliminar — a notificação que o AFT entrega na empresa e tem assinada durante a inspeção. No fim, e não no começo, porque só depois de levantar CNAE, grau de risco, acidentes e temas da denúncia se sabe se aquela OS pede documento além do padrão. O fluxo abre o DET no navegador do assistente para o AFT logar, puxa os itens do MODELO de notificação do DET (o toolkit passou a ler `modelositem`, que nunca tinha lido), passa pela prévia e pelo revisor, cria o rascunho e baixa o PDF DO RASCUNHO com 5 linhas em branco para impressão. Modelo canônico de fábrica: 11301/358070, trocável no aft-config.md. Corrigido junto o filtro de busca de modelos, que estava em 'somente meus modelos' e nunca achava modelo de colega."
   }
  ],
  "diferencas": [
