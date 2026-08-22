@@ -17,6 +17,7 @@ aft-autos-pdf-reunidos
 aft-cat-trabalhador
 aft-cipa-nr05-dimensionamento
 aft-cnae-grau-risco-nr04
+aft-cnpjs-endereco
 aft-consulta
 aft-det-630
 aft-det-baixar
