@@ -95,11 +95,13 @@ Para cada bloco extraia:
 Para cada auto, valide o código da ementa:
 - Formato obrigatório: `\d{6}-\d` (6 dígitos, hífen, 1 dígito verificador). Ex: `312358-8`.
 - Se o auditor não forneceu o código, use a busca em 3 camadas:
-  1. **NotebookLM** (se configurado): resolva o notebook da NR em
-     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e consulte:
+  1. **NotebookLM** (se configurado): escolha a key do notebook da NR (`nr-XX` ou
+     `ementario-sst`) e consulte:
      ```bash
-     notebooklm ask "Qual o código da ementa (formato XXXXXX-X) para [irregularidade]?" --notebook [id] --json
+     python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> "Qual o código da ementa (formato XXXXXX-X) para [irregularidade]?"
      ```
+     > **Código 5** = primeiro acesso pendente: mostre o link do campo `url`, peça o "oi" no
+     > chat do notebook e repita. **Código 3** = não existe para a cohort; siga sem.
      Para perguntas com acento, escreva num arquivo e use `--prompt-file`. **A reconexão é
      automática:** se a sessão tiver expirado, o próprio `notebooklm` se reautentica sozinho
      pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`). Só caia

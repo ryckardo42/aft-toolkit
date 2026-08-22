@@ -76,13 +76,19 @@ Para cada documento, busque o **código da ementa** no formato `XXXXXX-X` (ex.: 
 Estratégia em 3 camadas (mesma de `/aft-tn-nco` e `/aft-auditoria-geral`):
 
 **Camada 1 — NotebookLM (preferencial):**
-1. Resolva o `notebook_id`: leia `~/.claude/skills/config/notebooks.json`.
+1. Escolha a **key** do notebook (o script resolve o ID pela cohort do AFT; nunca leia o `notebooks.json` direto).
    - Documento de **SST** (PGR, PCMSO, ASO, laudo, atas CIPA, AET) → key da NR (`nr-01`, `nr-07`, `nr-05`, `nr-17`...). Sem key específica → `ementario-sst`.
    - Documento de **jornada/ponto** → `jornada`. **eSocial** → `esocial`. **FGTS** → `fgts-digital`. **Registro/vínculo** → `informalidade`. Legislação trabalhista geral → `ementario-legis`.
 2. Consulte:
    ```bash
-   notebooklm ask "Qual ementa do ementário cobre a não apresentação/ausência de [DOCUMENTO] exigido por [BASE_LEGAL]? Retorne o código (formato XXXXXX-X) e a descrição oficial." --notebook [notebook_id] --json
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> "Qual ementa do ementário cobre a não apresentação/ausência de [DOCUMENTO] exigido por [BASE_LEGAL]? Retorne o código (formato XXXXXX-X) e a descrição oficial."
    ```
+   > **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+   > AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+   > o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+   > **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+   > consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
    > **Reconexão automática:** se a sessão tiver expirado, o `notebooklm` se reautentica sozinho pelo `NOTEBOOKLM_REFRESH_CMD`. Só passe à Camada 2 se ainda assim não responder.
 3. Extraia o código com regex `\d{6}-\d` do `answer` ou de `references[].cited_text`.
 

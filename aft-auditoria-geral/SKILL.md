@@ -201,11 +201,17 @@ Antes de qualquer consulta externa, leia o arquivo `ementas-frequentes.md` desta
 
 **Camada 1 — NotebookLM (preferencial, requer setup do /aft-setup):**
 
-1. Resolva o notebook_id: leia `~/.claude/skills/config/notebooks.json` e busque a key correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
+1. Escolha a **key** do notebook (o script resolve o ID pela cohort do AFT; nunca leia o `notebooks.json` direto), buscando a correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
 2. Consulte o NotebookLM (a reconexão é automática — ver nota abaixo). Escreva a pergunta num arquivo para evitar problemas de acento no shell e use `--prompt-file`:
    ```bash
-   notebooklm ask --notebook [notebook_id] --json --prompt-file [pergunta.txt]
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> --prompt-file [pergunta.txt]
    ```
+   > **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+   > AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+   > o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+   > **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+   > consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
    (Conteúdo da pergunta: *"Qual ementa do ementário cobre a infração ao item [ITEM_NR] da NR-[NR] sobre [DESCRICAO_DA_IRREGULARIDADE]? Retorne o código da ementa (formato XXXXXX-X), a descrição, a capitulação e a gradação."*)
 3. Parse a resposta JSON: extraia `answer` e `references[].cited_text`.
 4. Extraia o código da ementa usando regex `\d{6}-\d` do `answer` ou de cada `cited_text`.
