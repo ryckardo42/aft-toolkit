@@ -39,7 +39,7 @@
  "fluxo": [
   {
    "who": "/aft-preparacao-acao-fiscal",
-   "act": "Opcional, antes da visita: resolve/cria a OS (chama /aft-nova-auditoria), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /aft-NAD ao final. Salva preparacao.md."
+   "act": "Opcional, antes da visita: resolve/cria a OS (chama /aft-nova-auditoria), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, destaca as ementas I3/I4 da OS que contam para a meta de regularização do projeto (com as de fácil regularização pelo empregador) e monta o checklist de documentos — encadeia /aft-NAD ao final. Salva preparacao.md."
   },
   {
    "who": "/aft-nova-auditoria",
@@ -176,7 +176,7 @@
    "skills": [
     {
      "nome": "/aft-preparacao-acao-fiscal",
-     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Consulta os outros CNPJs do endereço (FASE 4.6, via /aft-cnpjs-endereco). Salva preparacao.md na pasta da OS.",
+     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, classifica as ementas da OS pela gradação (FASE 1.15, scripts/metas_regularizacao.py + base local do ementário SST) destacando as I3/I4 que contam para a meta de regularização e as de fácil regularização pelo empregador (dúvida técnica é da /aft-consulta, não desta) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Consulta os outros CNPJs do endereço (FASE 4.6, via /aft-cnpjs-endereco). Salva preparacao.md na pasta da OS.",
      "tech": "chama /aft-nova-auditoria · .depara_[CNPJ].json na raiz da OS · model: opus"
     },
     {
