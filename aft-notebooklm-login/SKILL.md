@@ -238,10 +238,15 @@ Cada notebook do NotebookLM comporta 1.000 leitores. Os originais lotaram em 19/
 o catálogo foi duplicado, e quem se cadastrou depois enxerga as **cópias** — mesmo
 conteúdo, outros endereços. Isso é a "cohort": 1 = originais, 2 = cópias.
 
-O toolkit descobre sozinho, olhando quais notebooks já estão na conta do AFT, e grava o
-resultado no `aft-config.md` (`notebooklm_cohort:`). Só há o que fazer aqui **se o número
-estiver errado** — o que acontece quando o AFT ainda não abriu notebook nenhum e o palpite
-saiu conservador. Nesse caso, confirme com ele o que o portal mostra e corrija o campo:
+O toolkit descobre sozinho e grava o resultado no `aft-config.md`
+(`notebooklm_cohort:`), em duas tentativas: primeiro olha os notebooks que já estão na conta
+do AFT; se a conta ainda estiver vazia — o caso de quem acabou de se cadastrar e ainda não
+abriu nada —, pergunta ao servidor qual dos dois endereços ele alcança. **Não precisa
+perguntar nada ao AFT.**
+
+Só há o que fazer aqui se as duas tentativas falharem, e aí a causa é outra: sessão caída
+(volte ao Passo 2/3) ou acesso ainda não concedido pelo mantenedor. Se mesmo assim o número
+sair errado, confirme com o AFT o que o portal mostra a ele e corrija o campo:
 
 ```bash
 python ~/.claude/skills/_scripts/notebook_id.py --cohort      # o que o toolkit acha hoje

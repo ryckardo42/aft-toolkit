@@ -34,9 +34,10 @@ Codigos de saida (importam para quem chama):
 De onde sai a cohort, nesta ordem:
     1. variavel de ambiente AFT_COHORT (escape hatch de teste)
     2. campo `notebooklm_cohort:` do aft-config.md - a fonte normal
-    3. sondagem: quais IDs ja estao na colecao da conta (notebooklm list).
-       So roda quando o campo esta ausente, e grava o resultado no
-       aft-config.md para nao repetir. Ver sondar_cohort().
+    3. sondagem: quais IDs ja estao na colecao da conta (notebooklm list) e,
+       se a colecao estiver vazia, qual dos dois IDs o servidor entrega
+       (notebooklm metadata). So roda quando o campo esta ausente, e grava o
+       resultado no aft-config.md para nao repetir. Ver sondar_cohort().
     4. cohort 1 - o palpite conservador de quem instalou antes da duplicacao
 """
 from __future__ import annotations
@@ -154,49 +155,93 @@ def gravar_cohort(valor: int) -> bool:
         return False
 
 
-def sondar_cohort(m: dict | None = None) -> int | None:
-    """Descobre a cohort pelos notebooks que JA estao na colecao da conta.
-
-    O `notebooklm list` devolve os notebooks vistos recentemente - ou seja, os
-    que o AFT ja abriu no navegador. Como cada AFT so recebe acesso aos da sua
-    cohort, basta ver de que lado caem os IDs conhecidos. Conta so os notebooks
-    que tem ID diferente por cohort: os de link publico (mesmo endereco para
-    todos) nao distinguem nada.
-
-    Devolve None quando nao da para afirmar: sem CLI, sem sessao, ou nenhum
-    notebook aberto ainda.
-    """
-    cli = shutil.which("notebooklm")
-    if not cli:
-        return None
+def _rodar(cli: str, *args: str) -> tuple[int, str]:
     try:
         r = subprocess.run(
-            [cli, "--quiet", "list", "--json"],
+            [cli, "--quiet", *args],
             capture_output=True, text=True, timeout=TIMEOUT_SONDA,
             encoding="utf-8", errors="replace",
         )
     except (subprocess.TimeoutExpired, OSError):
+        return 1, ""
+    return r.returncode, ((r.stdout or "") + "\n" + (r.stderr or ""))
+
+
+def _pares(m: dict) -> list:
+    """Notebooks que distinguem cohort: os que tem ID diferente em cada uma.
+
+    Os de link publico tem o mesmo endereco para todos e nao provam nada.
+    Essenciais primeiro: sao os que o AFT mais provavelmente ja tem.
+    """
+    itens = [
+        (info.get("essencial") or 99, info["ids"])
+        for info in m.get("notebooks", {}).values()
+        if not info.get("publico") and len(info.get("ids", {})) > 1
+    ]
+    return [ids for _, ids in sorted(itens, key=lambda x: x[0])]
+
+
+def _sondar_por_metadata(cli: str, m: dict) -> int | None:
+    """Ultimo recurso: pergunta ao servidor, notebook por notebook, qual cohort
+    esta conta alcanca.
+
+    Existe por causa do AFT que acabou de se cadastrar: se ele pedir uma ementa
+    ANTES de abrir qualquer notebook no navegador, a colecao esta vazia e o
+    `list` nao tem o que dizer. O `metadata` nao depende disso - responde pelo
+    compartilhamento, e foi medido respondendo a notebook nunca aberto (ver o
+    campo `por_sondagem` do notebooklm_acesso.py, instalacao Windows 06/08/2026).
+
+    Custa 1 RPC por tentativa, entao para no primeiro acerto e testa no maximo
+    dois notebooks - a cohort ATIVA primeiro, que e a de quem se cadastra hoje.
+    Medido em ~4 s no pior caso.
+
+    Pegadinha conhecida: quem alcanca os DOIS lados (o mantenedor, dono das
+    copias) recebe a cohort ativa, nao a sua. Nao atrapalha - para ele a etapa 1
+    ja respondeu -, mas nao use este atalho isoladamente para diagnosticar.
+    """
+    ativa = str(m.get("cohort_ativa") or 2)
+    for ids in _pares(m)[:2]:
+        ordem = sorted(ids, key=lambda c: (c != ativa, c))
+        for cohort in ordem:
+            codigo, saida = _rodar(cli, "metadata", "-n", ids[cohort], "--json")
+            if codigo == 0 and '"error"' not in saida:
+                return int(cohort)
+            if any(p in saida.lower() for p in
+                   ("not authenticated", "session expired", "not logged in")):
+                return None  # e problema de login, nao de cohort
+    return None
+
+
+def sondar_cohort(m: dict | None = None) -> int | None:
+    """Descobre a cohort do AFT, em duas tentativas.
+
+    1. Pelos notebooks que JA estao na colecao da conta. O `notebooklm list`
+       devolve os vistos recentemente - ou seja, os que o AFT ja abriu no
+       navegador. Como cada um so recebe acesso aos da sua cohort, basta ver de
+       que lado caem os IDs conhecidos. E barato: uma chamada para tudo.
+    2. Colecao vazia (o AFT acabou de se cadastrar e ainda nao abriu nada) ->
+       pergunta ao servidor, com `metadata`, qual dos dois IDs ele alcanca.
+
+    Devolve None so quando nada disso conclui: sem CLI, sem sessao, ou sem
+    acesso concedido ainda.
+    """
+    cli = shutil.which("notebooklm")
+    if not cli:
         return None
-    if r.returncode != 0:
+    m = m if m is not None else mapa()
+    codigo, saida = _rodar(cli, "list", "--json")
+    if codigo != 0:
         return None
     vistos = set(re.findall(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
-                            (r.stdout or "").lower()))
-    if not vistos:
-        return None
-
+                            saida.lower()))
     placar: dict[int, int] = {}
-    for info in (m or mapa()).get("notebooks", {}).values():
-        if info.get("publico"):
-            continue
-        ids = info.get("ids", {})
-        if len(ids) < 2:
-            continue
+    for ids in _pares(m):
         for cohort, nid in ids.items():
             if nid.lower() in vistos:
                 placar[int(cohort)] = placar.get(int(cohort), 0) + 1
-    if not placar:
-        return None
-    return max(placar, key=placar.get)
+    if placar:
+        return max(placar, key=placar.get)
+    return _sondar_por_metadata(cli, m)
 
 
 def cohort(m: dict | None = None, sondar: bool = True) -> int:

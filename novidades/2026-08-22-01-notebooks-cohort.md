@@ -15,10 +15,13 @@ Para um colega da segunda coleção, toda consulta de ementa responderia "não
 encontrado" — e a habilidade cairia no modo sem ementário, sem nunca dizer por quê.
 
 Agora existe **um só lugar no toolkit que sabe o endereço de cada notebook**, e é
-ele que descobre a qual coleção a sua conta pertence: olha os notebooks que você
-já abriu e anota a resposta na sua configuração, uma vez. Você não faz nada. Se o
-número sair errado — acontece com quem ainda não abriu notebook nenhum —, o
-`/aft-notebooklm-login` ganhou um passo novo que confere e corrige.
+ele que descobre a qual coleção a sua conta pertence — anotando a resposta na sua
+configuração, uma vez. Você não faz nada. Ele tenta por dois caminhos: primeiro
+olha os notebooks que você já abriu; se você acabou de se cadastrar e ainda não
+abriu nenhum, pergunta direto ao Google qual dos dois endereços a sua conta
+alcança. Se as duas tentativas falharem, a causa não é a coleção — é o login
+vencido ou o acesso ainda não liberado, e o `/aft-notebooklm-login` diz qual dos
+dois.
 
 **Cinco notebooks não precisaram de cópia**, porque têm link público e não têm
 teto de leitores: Interdições, Aprendizagem Profissional, FGTS Digital,
