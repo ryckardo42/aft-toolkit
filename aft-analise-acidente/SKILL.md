@@ -29,11 +29,18 @@ revisão e aprovação dele.
 Isto não é opcional e não depende de a sessão já estar conectada por acaso.
 
 **Fonte 1 — Guia de Análise de Acidentes de Trabalho (MTE/SIT/DSST, 2010).**
-Notebook `guia-analise-acidentes`, id `aefa56af-5eb5-4558-8454-827173be228c`:
+Notebook `guia-analise-acidentes` (o ID sai do mapa, pela cohort do AFT — nunca cravado aqui):
 
 ```bash
-notebooklm ask --notebook aefa56af-5eb5-4558-8454-827173be228c --json --prompt-file <pergunta.txt>
+python ~/.claude/skills/_scripts/notebooklm_consulta.py guia-analise-acidentes --prompt-file <pergunta.txt>
 ```
+
+> **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+> AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+> o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+> **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+> consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+> **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
 
 Escreva a pergunta em arquivo (`--prompt-file`) para não quebrar acentuação no shell.
 Se a sessão expirar, o `notebooklm` se reautentica sozinho; se ainda assim falhar, oriente

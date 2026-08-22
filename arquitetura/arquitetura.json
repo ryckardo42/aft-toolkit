@@ -5,7 +5,7 @@
  "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
   "skills": 49,
-  "scripts": 49,
+  "scripts": 50,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 22/08/2026"
  },
@@ -595,6 +595,12 @@
    "caminho": "_scripts/sincronizar_notebooks.py",
    "papel": "Ferramenta do mantenedor: traz os IDs por cohort do mapa do portal (assets/notebooks-map.json) para o config/notebooks.json, sem tocar em title, essencial nem publico. Existe porque as duas copias do mapa ja haviam divergido em silencio (14 chaves com nome diferente, notebooks so de um lado).",
    "runtime": "python (stdlib)"
+  },
+  {
+   "nome": "notebooklm_consulta.py",
+   "caminho": "_scripts/notebooklm_consulta.py",
+   "papel": "Consulta um notebook pela CHAVE: resolve o ID da cohort (notebook_id.py), roda o notebooklm ask e TRADUZ a falha em vez de deixar tudo virar 'NotebookLM indisponivel'. Codigo 5 = primeiro acesso pendente (devolve titulo e link para o AFT dar o 'oi' e a skill repetir a consulta); 6 = sessao caida; 3 = nao existe para a cohort. Substituiu os onze pontos de chamada do ask espalhados pelas skills.",
+   "runtime": "python (stdlib) + CLI notebooklm"
   }
  ],
  "dados": [
@@ -632,7 +638,7 @@
  "ementas": [
   {
    "camada": "1. NotebookLM (recomendado)",
-   "txt": "CLI notebooklm-py + skill /aft-consulta; ID resolvido por _scripts/notebook_id.py <key> a partir de config/notebooks.json (um ID por cohort); acesso em notebooks-aft.vercel.app. Envia só a descrição da irregularidade."
+   "txt": "CLI notebooklm-py via _scripts/notebooklm_consulta.py <key> (resolve o ID pela cohort do AFT a partir de config/notebooks.json e traduz a falha: codigo 5 = primeiro acesso pendente, com o link para o 'oi'); skill /aft-consulta; acesso em notebooks-aft.vercel.app. Envia so a descricao da irregularidade. Cota da conta gratuita: ~50 consultas/dia, e o proprio 'oi' do primeiro acesso conta."
   },
   {
    "camada": "2. Google Drive compartilhado",
@@ -815,7 +821,7 @@
   },
   {
    "topico": "Cohorts do NotebookLM: o teto de 1.000 leitores e o resolvedor de ID (22/08/2026)",
-   "txt": "Cada notebook do NotebookLM comporta 1.000 leitores; os originais lotaram em 19/08/2026 e o catalogo inteiro foi duplicado — quem se cadastra desde entao entra na cohort 2 e enxerga as copias. Nao existe mais 'o ID da NR-12': existe o ID da NR-12 para a cohort do AFT. Treze SKILL.md carregavam a sua copia da mesma linha lendo o ID direto do notebooks.json; para um AFT da cohort 2 toda consulta responderia not found e as skills cairiam no modo sem ementario SEM dizer por que. A correcao nao foi trocar IDs: foi tirar dos SKILL.md a competencia de saber o que e um ID. Agora ha um resolvedor (_scripts/notebook_id.py), o notebooks.json perdeu o campo notebook_id de proposito (leitor esquecido quebra visivelmente em vez de servir o ID errado calado) e o codigo de saida 3 diz 'nao existe para esta cohort', que a skill trata como degradacao silenciosa — a mesma regra que a /aft-embargo-interdicao ja usava para a key interdicoes. A cohort e sondada pelo notebooklm list (o endpoint do portal que a sabe exige o JWT do Supabase, que o CLI nao tem) e gravada no aft-config.md. Cinco notebooks de link publico nao foram duplicados e valem para todas as cohorts. A sondagem tem duas etapas: o notebooklm list (o que o AFT ja abriu) e, quando a colecao esta vazia - o colega que se cadastrou hoje e ainda nao abriu nada -, o notebooklm metadata, que responde pelo compartilhamento e nao depende do primeiro acesso. Inverter o padrao para a cohort ativa nao servia: consertaria o recem-chegado e quebraria o AFT de cohort 1 que reinstala numa maquina nova."
+   "txt": "Cada notebook do NotebookLM comporta 1.000 leitores; os originais lotaram em 19/08/2026 e o catalogo inteiro foi duplicado — quem se cadastra desde entao entra na cohort 2 e enxerga as copias. Nao existe mais 'o ID da NR-12': existe o ID da NR-12 para a cohort do AFT. Treze SKILL.md carregavam a sua copia da mesma linha lendo o ID direto do notebooks.json; para um AFT da cohort 2 toda consulta responderia not found e as skills cairiam no modo sem ementario SEM dizer por que. A correcao nao foi trocar IDs: foi tirar dos SKILL.md a competencia de saber o que e um ID. Agora ha um resolvedor (_scripts/notebook_id.py), o notebooks.json perdeu o campo notebook_id de proposito (leitor esquecido quebra visivelmente em vez de servir o ID errado calado) e o codigo de saida 3 diz 'nao existe para esta cohort', que a skill trata como degradacao silenciosa — a mesma regra que a /aft-embargo-interdicao ja usava para a key interdicoes. A cohort e sondada pelo notebooklm list (o endpoint do portal que a sabe exige o JWT do Supabase, que o CLI nao tem) e gravada no aft-config.md. Cinco notebooks de link publico nao foram duplicados e valem para todas as cohorts. A sondagem tem duas etapas: o notebooklm list (o que o AFT ja abriu) e, quando a colecao esta vazia - o colega que se cadastrou hoje e ainda nao abriu nada -, o notebooklm metadata, que responde pelo compartilhamento e nao depende do primeiro acesso. Inverter o padrao para a cohort ativa nao servia: consertaria o recem-chegado e quebraria o AFT de cohort 1 que reinstala numa maquina nova. Segunda frente, no mesmo trabalho: o registro do primeiro acesso deixou de ser licao de casa. O Google so poe o notebook na conta depois de uma INTERACAO COM O CHAT (abrir o link nao basta), e essa interacao gasta uma das ~50 consultas diarias da conta gratuita - o mesmo custo do 'oi' manual. Pedir 13 no dia da instalacao queimava 13 da cota antes de o AFT trabalhar; automatizar os 47 queimava o dia. Entao o front-load caiu para 2 (os dois ementarios) e o resto virou SOB DEMANDA, sustentado pelo notebooklm_consulta.py, que distingue o not found (primeiro acesso pendente) das demais falhas e devolve o link na hora do uso. No caminho caiu o ultimo ID cravado do repositorio, na /aft-analise-acidente."
   }
  ],
  "diferencas": [

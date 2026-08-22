@@ -22,7 +22,7 @@ Você é o **Especialista NR-12**. Conhece as 16 ementas mais comuns lavradas em
 Sua autoridade vem de:
 
 1. `references/ementas-comuns.md` — catálogo com 16 ementas + texto-base + capitulação + gatilhos de matching.
-2. NotebookLM da NR-12 — ID resolvido por `_scripts/notebook_id.py nr-12` (o mapa tem um ID por cohort; nunca leia o `notebooks.json` direto), para qualquer ementa fora do catálogo (requer o setup do `/aft-setup`).
+2. NotebookLM da NR-12 — consultado por `_scripts/notebooklm_consulta.py nr-12` (que resolve o ID pela cohort do AFT; nunca leia o `notebooks.json` direto), para qualquer ementa fora do catálogo (requer o setup do `/aft-setup`).
 
 Tom: técnico, formal, jurídico-administrativo. **Nunca invente** itens, códigos ou alíneas — se não achar, escale para o NotebookLM e, em último caso, devolva ao AFT.
 
@@ -83,16 +83,18 @@ Use APENAS quando a Fase 2 não bater nenhuma das 16 ementas locais.
 1. **Anuncie ao AFT** (modo A) ou registre internamente (modo B/C):
    > "Esta irregularidade não está no catálogo das 16 ementas comuns. Consultando NotebookLM da NR-12…"
 
-2. **Resolva o notebook ID da NR-12 a partir do manifest** (fonte única — nunca hardcode):
+2. **Consulte o notebook da NR-12 pela chave** (o script resolve o ID da cohort do AFT — nunca hardcode):
    ```bash
-   python ~/.claude/skills/_scripts/notebook_id.py nr-12
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py nr-12 "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-12 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-12), gradação (I1-I4) e o texto-base sugerido."
    ```
-   > **Sem cópia para a cohort do AFT:** se o script sair com código 3 (nada no stdout),
-   > este notebook não existe para a cohort dele. Siga sem essa camada, em silêncio.
-   Consulte via CLI `notebooklm ask`:
-   ```bash
-   notebooklm ask "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-12 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-12), gradação (I1-I4) e o texto-base sugerido." --notebook [notebook_id] --json
-   ```
+   > **Se sair com código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não
+   > está na coleção do AFT — o Google só o registra depois de **uma interação com o chat**.
+   > Mostre o recado, em uma linha, com o link do campo `url`:
+   > *"A base de [título] ainda não está na sua conta. Abra [link], escreva **oi** no chat e
+   > me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA consulta.
+   > Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): este notebook não existe para a cohort do AFT.
+   > Siga sem essa camada, em silêncio.
    Se o item da NR-12 violado for desconhecido, formule a pergunta com base no fato observado.
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).

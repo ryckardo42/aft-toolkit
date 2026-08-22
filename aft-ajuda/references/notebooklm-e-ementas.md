@@ -93,9 +93,22 @@ Na rotina, a reconexão costuma ser **automática**: quando a sessão expira no 
 
 **1. Pedir acesso.** Se o notebook responde "sem acesso" / "não encontrado", solicite o acesso em **https://notebooks-aft.vercel.app**, com a conta Google, e aguarde a liberação do mantenedor.
 
-**2. O "oi" em cada notebook.** Mesmo já liberado, o Google só coloca um notebook compartilhado na coleção da conta **depois que a pessoa o abre uma vez**. Antes disso, a consulta àquele tema falha. É um clique por notebook, **uma vez na vida**: abra o notebook pelo portal, escreva **oi** na caixa de chat e feche. Vale a pena fazer isso de saída nos notebooks do dia a dia (os dois ementários e as NRs que você fiscaliza).
+**2. O "oi" em cada notebook.** Mesmo já liberado, o Google só coloca um notebook compartilhado na coleção da conta depois de **uma conversa com o chat dele** — abrir o link não basta. Antes disso, a consulta àquele tema falha. É **uma vez na vida** por notebook: abra, escreva **oi** na caixa de chat e feche.
 
-Essa etapa não dá para o assistente fazer pelo AFT: quem tem a conta Google no navegador é ele, e o registro do primeiro acesso só vale feito por ele.
+Essa etapa não dá para o assistente fazer pelo AFT: quem tem a conta Google no navegador é ele, e o registro só vale feito por ele.
+
+**Não faça isso nos 47 de uma vez.** Registre só os **dois ementários** no começo; os demais entram quando você precisar deles — o assistente avisa na hora, com o link pronto, e repete a consulta depois que você disser "pronto". O motivo é o limite abaixo.
+
+---
+
+## O limite de consultas por dia
+
+A conta gratuita do NotebookLM aceita por volta de **50 consultas por dia**. Isso vale para tudo o que fala com o chat: a consulta de ementa que as habilidades fazem **e o próprio "oi"** do primeiro acesso.
+
+Duas consequências práticas:
+
+- Registrar os 47 notebooks de saída queimaria quase a cota do dia antes de você fiscalizar qualquer coisa. Daí a regra de registrar sob demanda.
+- Se, no fim de um dia pesado, a consulta de ementa começar a falhar "sem motivo", pode ser a cota — e não defeito do toolkit. No dia seguinte volta ao normal; enquanto isso, o ementário no Google Drive continua disponível.
 
 ---
 

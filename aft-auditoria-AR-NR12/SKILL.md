@@ -330,14 +330,17 @@ com bloqueio (12.5.8).
 Para citar itens literais da NR-12 (e do Anexo específico da máquina: VI panificação, VIII
 prensas, etc.), consulte o NotebookLM se configurado pelo `/aft-setup`:
 
-1. Resolva o ID do notebook da NR-12:
-   ```bash
-   python ~/.claude/skills/_scripts/notebook_id.py nr-12
-   ```
+1. Consulte pela key `nr-12` (o script resolve o ID pela cohort do AFT):
 2. Consulte (uma pergunta objetiva por tema; paralelize quando forem vários):
    ```bash
-   notebooklm ask "Transcreva literalmente o item X.Y da NR-12 [ou do Anexo N] na redação vigente" --notebook <notebook_id> --json
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py nr-12 "Transcreva literalmente o item X.Y da NR-12 [ou do Anexo N] na redação vigente"
    ```
+   > **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+   > AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+   > o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+   > **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+   > consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).
 3. Fallback 1: peça ao AFT o texto do item (ou o PDF da NR-12 atualizada).

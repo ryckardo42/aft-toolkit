@@ -57,17 +57,8 @@ do fato**, nunca nome/CPF/empresa.
 
 ## FASE 2 — Resolver o(s) notebook(s)
 
-Resolva a(s) **key(s)** pelo assunto e peça o ID ao resolvedor — nunca fixe ID no código
-nem leia o `notebooks.json` direto: cada notebook tem um ID por **cohort**, e só o script
-sabe qual é a do AFT.
-
-```bash
-python ~/.claude/skills/_scripts/notebook_id.py <key>
-```
-
-Saiu com **código 3** e sem imprimir nada? Aquele notebook não existe para a cohort do AFT
-(nem todo notebook da cohort 1 foi duplicado). Escolha outra key — `ementario-sst` costuma
-cobrir — e siga; não é erro nem motivo de alarde.
+Escolha a(s) **key(s)** pelo assunto. Você não precisa do ID: quem o resolve, pela **cohort**
+do AFT, é o script da Fase 3. Nunca fixe ID no código nem leia o `notebooks.json` direto.
 
 ### Como escolher a key
 
@@ -104,8 +95,15 @@ cobrir — e siga; não é erro nem motivo de alarde.
 Escreva a pergunta num arquivo (evita problemas de acento no shell) e use `--prompt-file`:
 
 ```bash
-notebooklm ask --notebook [notebook_id] --json --prompt-file [pergunta.txt]
+python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> --prompt-file [pergunta.txt]
 ```
+
+> **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+> AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+> o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+> **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+> consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+> **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
 
 > **Reconexão automática:** se a sessão tiver expirado, o `notebooklm` se reautentica sozinho
 > pelo `NOTEBOOKLM_REFRESH_CMD`. Só trate como falha se ele ainda assim não responder.
