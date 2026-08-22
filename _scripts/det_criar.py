@@ -57,12 +57,11 @@ RETORNO_VISTORIA = 3
 STATUS_EM_ELABORACAO = 0
 PRAZO_PADRAO_DIAS = 16
 
-# "Todos os tipos de arquivo" marcados — a mesma concatenação que o front gera
-# (documentos + planilhas + imagens + jornadas + compactados), lida do chunk
-# 251. É o padrão da skill: todo item já vem aceitando qualquer arquivo.
-TIPOS_ARQUIVO_TODOS = (
-    ".txt, .pdf, .doc, .docx, .odt, .re, .xls, .xlsx, .ods, .csv, "
-    ".jpg, .jpeg, .png, .mp4, .mpeg4, .afd, .afdt, .acjef, .aej, .txt, .zip")
+# "Todos os tipos de arquivo" marcados — a string vem de config/det-opcoes.json
+# (o site concatena os grupos e repete o .txt; reproduzir igual é o que faz a
+# tela reconhecer a seleção ao reabrir o item).
+def tipos_arquivo_todos() -> str:
+    return opcoes()["tipos_de_arquivo"]["todos"]
 
 # Uma linha da TN-NCO: "*Título* - norma: texto [123456-7]"
 RE_ITEM_TN = re.compile(
@@ -185,18 +184,68 @@ def itens_da_tn_nco(texto: str) -> list[dict]:
     return itens
 
 
-# Palavras que o AFT lê no front-matter → enum do DET. O arquivo fala a língua
-# dele ("obrigacao", "digital"), não a do banco de dados (1, 1).
-PALAVRA_TIPO = {"solicitacao": TIPO_SOLICITACAO_DOCUMENTO,
-                "solicitacao_documento": TIPO_SOLICITACAO_DOCUMENTO,
-                "documento": TIPO_SOLICITACAO_DOCUMENTO,
-                "obrigacao": TIPO_CUMPRIMENTO_OBRIGACAO,
-                "cumprimento": TIPO_CUMPRIMENTO_OBRIGACAO,
-                "orientacao": TIPO_ORIENTACAO}
-PALAVRA_RETORNO = {"sem": RETORNO_SEM, "sem_retorno": RETORNO_SEM,
-                   "digital": RETORNO_DIGITAL, "impresso": RETORNO_IMPRESSO,
-                   "vistoria": RETORNO_VISTORIA,
-                   "vistoria_in_loco": RETORNO_VISTORIA}
+# ── As opções do DET vêm de config/det-opcoes.json ───────────────────────────
+# Fonte única: aquele arquivo espelha o formulário "Item Solicitado" do site,
+# com as regras de dependência entre os campos (quais retornos cada tipo aceita,
+# quando existe prazo, quando o item aceita arquivo). Elas NÃO estão duplicadas
+# aqui — se estivessem, um dia divergiriam.
+CONFIG_OPCOES = AQUI.parent / "config" / "det-opcoes.json"
+_OPCOES: dict | None = None
+
+
+def opcoes() -> dict:
+    """Carrega (uma vez) a tabela de opções do DET. Preguiçoso de propósito: um
+    arquivo faltando não pode derrubar o servidor do painel na importação."""
+    global _OPCOES
+    if _OPCOES is None:
+        try:
+            _OPCOES = json.loads(CONFIG_OPCOES.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            raise RuntimeError(
+                f"não consegui ler as opções do DET em {CONFIG_OPCOES} ({e}). "
+                "Rode /aft-atualizar para repor o arquivo.") from e
+    return _OPCOES
+
+
+def _palavras(secao: str) -> dict:
+    """{'digital': 1, ...} — as palavras que o AFT escreve no front-matter."""
+    return {p: int(cod)
+            for cod, o in opcoes()[secao]["opcoes"].items()
+            for p in o["palavras_no_frontmatter"]}
+
+
+def rotulo(secao: str, codigo) -> str:
+    o = opcoes()[secao]["opcoes"].get(str(codigo))
+    return o["rotulo"] if o else f"desconhecido ({codigo!r})"
+
+
+def retornos_permitidos(tipo: int) -> list[int]:
+    """Os retornos que o site oferece para aquele tipo de item. Fora desta
+    lista é combinação que a tela do DET jamais criaria."""
+    o = opcoes()["tipo_do_item"]["opcoes"].get(str(tipo))
+    return list(o["retornos_permitidos"]) if o else []
+
+
+def retorno_padrao(tipo: int, preferido: int | None = None) -> int:
+    """O retorno a usar para aquele tipo: o preferido, quando o tipo o aceita;
+    senão o padrão do próprio tipo. É o que impede um item de Orientação de
+    nascer com retorno digital só porque digital é o padrão da skill."""
+    permitidos = retornos_permitidos(tipo)
+    if preferido is not None and preferido in permitidos:
+        return preferido
+    o = opcoes()["tipo_do_item"]["opcoes"].get(str(tipo)) or {}
+    return o.get("retorno_padrao", RETORNO_SEM)
+
+
+def aceita_arquivo(retorno: int) -> bool:
+    """Só a entrega digital recebe arquivo pelo DET."""
+    regra = opcoes()["regras_do_formulario"]["tipos_de_arquivo"]
+    return retorno in regra["habilitado_somente_quando_retorno_for"]
+
+
+def exige_prazo(retorno: int) -> bool:
+    regra = opcoes()["regras_do_formulario"]["prazo_de_entrega"]
+    return retorno in regra["obrigatorio_quando_retorno_for"]
 
 
 def _sem_acento(s: str) -> str:
@@ -299,10 +348,10 @@ def parametros_do_md(texto: str) -> dict:
         p["prazo"] = simples["prazo"]
     if simples.get("prazo_dias"):
         p["prazo_dias"] = int(re.sub(r"\D", "", simples["prazo_dias"]) or 0)
-    t = _palavra(PALAVRA_TIPO, simples.get("tipo"))
+    t = _palavra(_palavras("tipo_do_item"), simples.get("tipo"))
     if t is not None:
         p["tipo"] = t
-    r = _palavra(PALAVRA_RETORNO, simples.get("retorno"))
+    r = _palavra(_palavras("retorno_solicitado"), simples.get("retorno"))
     if r is not None:
         p["retorno"] = r
     if "preassinalado" in simples:
@@ -313,8 +362,8 @@ def parametros_do_md(texto: str) -> dict:
         limpas = {}
         for ordem, campos in excecoes.items():
             e = {}
-            t = _palavra(PALAVRA_TIPO, campos.get("tipo"))
-            r = _palavra(PALAVRA_RETORNO, campos.get("retorno"))
+            t = _palavra(_palavras("tipo_do_item"), campos.get("tipo"))
+            r = _palavra(_palavras("retorno_solicitado"), campos.get("retorno"))
             if t is not None:
                 e["tipo"] = t
             if r is not None:
@@ -587,7 +636,7 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
                    tipo: int = TIPO_CUMPRIMENTO_OBRIGACAO,
                    retorno: int = RETORNO_DIGITAL,
                    preassinalado: bool = True,
-                   tipos_arquivo: str | None = TIPOS_ARQUIVO_TODOS,
+                   tipos_arquivo: str | None = None,
                    overrides: dict | None = None) -> dict:
     """Corpo do rascunho, PRONTO para conferência — NÃO envia nada.
     Espelha o molde real: casca (auditor/status) + itens com o texto integral.
@@ -604,10 +653,16 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
     for i, it in enumerate(itens, 1):
         ov = overrides.get(i, {})
         t = ov.get("tipo", tipo)
-        r = ov.get("retorno", retorno)
+        # O retorno tem de ser um dos que o SITE oferece para aquele tipo:
+        # Solicitação de Documento só aceita Digital/Impresso, e Orientação só
+        # aceita Sem Retorno. Pedir digital num item de Orientação criaria algo
+        # que a tela do DET jamais permitiria montar à mão.
+        r = retorno_padrao(t, ov.get("retorno", retorno))
         # o item pode ter prazo próprio (o DET aceita): correção de máquina
         # pede mais dias que fornecer água potável
         prazo_do_item = _prazo_para_iso(ov.get("prazo")) or prazo_iso
+        if not exige_prazo(r):
+            prazo_do_item = None   # Sem Retorno não tem prazo: o site o apaga
         # TODOS os campos que o site põe num item — inclusive os companheiros de
         # data em null. Sem eles, a tela de EDIÇÃO (formulário reativo) tenta
         # criar controle para um campo ausente e quebra (isDatasPadraoValidas /
@@ -626,8 +681,11 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
             "horaPrazoEntrega": None,
             "naoExigeDataInicialFinal": True,
             "mensagemInfo": None,
-            # Sem retorno não recebe arquivo — o site deixa tiposArquivos null.
-            "tiposArquivos": (tipos_arquivo if r != RETORNO_SEM else None),
+            # SÓ a entrega digital recebe arquivo pelo DET. Em Impresso,
+            # Vistoria ou Sem Retorno o site apaga a seleção — mandar extensões
+            # ali seria gravar o que a tela não mostraria.
+            "tiposArquivos": ((tipos_arquivo or tipos_arquivo_todos())
+                              if aceita_arquivo(r) else None),
             "preAssinalado": preassinalado,
             "status": 0,
             "versao": 1,
@@ -699,9 +757,17 @@ def revisar_payload(payload: dict) -> list[dict]:
         r = it.get("tipoRetornoSolicitado")
         if r not in (RETORNO_SEM, RETORNO_DIGITAL, RETORNO_IMPRESSO, RETORNO_VISTORIA):
             anota("impede", onde, f"tipo de retorno inválido ({r!r})")
+        elif r not in retornos_permitidos(it.get("tipo")):
+            permitidos = ", ".join(rotulo("retorno_solicitado", x)
+                                   for x in retornos_permitidos(it.get("tipo")))
+            anota("impede", onde,
+                  f"combinação impossível no DET: item do tipo "
+                  f"'{rotulo('tipo_do_item', it.get('tipo'))}' não aceita retorno "
+                  f"'{rotulo('retorno_solicitado', r)}' (aceita: {permitidos})")
         prazo = it.get("dataPrazoEntrega")
         if not prazo:
-            anota("impede", onde, "sem prazo de entrega")
+            if exige_prazo(r):
+                anota("impede", onde, "sem prazo de entrega")
         else:
             try:
                 d = datetime.date.fromisoformat(str(prazo)[:10])
@@ -711,11 +777,16 @@ def revisar_payload(payload: dict) -> list[dict]:
                     anota("aviso", onde, "prazo é hoje")
             except ValueError:
                 anota("impede", onde, f"prazo em formato inválido ({prazo!r})")
-        if r == RETORNO_SEM and it.get("tiposArquivos"):
-            anota("aviso", onde, "não pede retorno, mas aceita arquivo")
-        if r in (RETORNO_DIGITAL, RETORNO_IMPRESSO) and not it.get("tiposArquivos"):
+        # tipos de arquivo: o site só os habilita na entrega DIGITAL
+        if it.get("tiposArquivos") and not aceita_arquivo(r):
             anota("impede", onde,
-                  "pede retorno de documento, mas não aceita nenhum tipo de arquivo")
+                  f"aceita tipos de arquivo, mas o retorno é "
+                  f"'{rotulo('retorno_solicitado', r)}' — só a entrega Digital "
+                  "recebe arquivo pelo DET")
+        if aceita_arquivo(r) and not it.get("tiposArquivos"):
+            anota("impede", onde,
+                  "entrega digital sem nenhum tipo de arquivo aceito — a empresa "
+                  "não teria como anexar")
         if not RE_ITEM_TN.match(desc):
             anota("aviso", onde,
                   "fora do formato *Título* - norma: exigência [ementa] "

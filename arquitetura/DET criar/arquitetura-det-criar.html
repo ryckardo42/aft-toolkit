@@ -250,6 +250,42 @@ det:
   não os exige, e os arquivos antigos continuam válidos.
 </p>
 
+<h2>3-A. O tipo manda no retorno (e no resto do item)</h2>
+<p>
+  As opções de "Retorno Solicitado" <strong>não são as mesmas sempre</strong>: a lista
+  muda conforme o Tipo. Está no código do próprio site, e é o que a tela mostra:
+</p>
+<table>
+  <tr><th>Tipo do item</th><th>Retornos que o DET oferece</th><th>Padrão do toolkit</th></tr>
+  <tr><td>Solicitação de Documento</td><td>Digital · Impresso</td><td>Digital</td></tr>
+  <tr><td>Exigência do Cumprimento de Obrigação</td><td>Sem Retorno · Digital · Impresso · Vistoria in loco</td><td>Digital</td></tr>
+  <tr><td>Orientação</td><td><strong>só</strong> Sem Retorno</td><td>Sem Retorno (não há escolha)</td></tr>
+</table>
+<p>E o retorno, por sua vez, manda em três campos:</p>
+<ul>
+  <li><strong>Prazo de entrega</strong> — obrigatório em Digital, Impresso e Vistoria;
+      <strong>apagado</strong> em Sem Retorno (o item será verificado em fiscalização futura).</li>
+  <li><strong>Hora da entrega</strong> — só existe em Impresso e Vistoria, que são entrega
+      física ou visita.</li>
+  <li><strong>Tipos de arquivo</strong> — habilitados <strong>somente em Digital</strong>
+      (<code>allowEnableArquivos === DIGITAL</code>, no código do site). Só a entrega digital
+      recebe anexo pelo DET.</li>
+</ul>
+<div class="note stop">
+  <strong>Foram três defeitos reais, não teoria.</strong> Até 22/08/2026 o toolkit montava
+  item de Orientação com retorno digital, mandava tipos de arquivo em item de Vistoria e
+  punha prazo em item Sem Retorno — coisas que a tela do DET jamais deixaria um humano
+  criar, mas que a API aceita de quem monta o payload à mão. Descobertos porque o AFT
+  mandou as telas do site. Hoje <code>montar_payload</code> corrige o retorno para o que o
+  tipo aceita, e <code>revisar_payload</code> barra a combinação forçada.
+</div>
+<div class="note ok">
+  <strong>Fonte única:</strong> <code>config/det-opcoes.json</code> — todas as opções do
+  formulário, as dependências entre elas, os grupos de extensão e os textos de ajuda do
+  próprio DET. Veio do bundle público do site (não precisa de login). Se o DET mudar essa
+  tela, é um arquivo só para atualizar.
+</div>
+
 <h2>4. Revisão em duas camadas</h2>
 <p>
   O pedido foi "um subagente revisor, para que só vá ao DET dado completo". O subagente

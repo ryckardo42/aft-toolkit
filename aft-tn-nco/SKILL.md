@@ -249,12 +249,22 @@ Texto sozinho não vira notificação. O DET exige, de **cada item**, o que a em
 | `preassinalado` | `sim` | o item já nasce marcado |
 | `arquivos` | `todos` | aceita qualquer extensão que o DET permite |
 
+> **O retorno depende do tipo.** O DET não oferece as quatro opções sempre — a lista muda conforme o tipo do item, e combinação fora dela é impossível na tela do site (e o toolkit recusa):
+>
+> | Tipo do item | Retornos que o DET aceita | Padrão |
+> |---|---|---|
+> | Solicitação de Documento | Digital · Impresso | Digital |
+> | Exigência do Cumprimento de Obrigação | Sem Retorno · Digital · Impresso · Vistoria in loco | Digital |
+> | Orientação | **só** Sem Retorno | Sem Retorno |
+>
+> Decorrências que valem lembrar ao AFT: **Sem Retorno não tem prazo** (o item será verificado em fiscalização futura), e **só a entrega Digital recebe arquivo** — em Impresso ou Vistoria não há o que anexar. A tabela completa, com os textos de ajuda do próprio DET, está em `~/.claude/skills/config/det-opcoes.json`.
+
 **Pergunte só o que muda o resultado**, numa passagem só, depois da tabela de itens:
 
 1. **Prazo** — data fixa (`dd/mm/aaaa`) ou "tantos dias"? Sem resposta, valem os 16 dias.
 2. **Exceções** — algum item foge do padrão? Os dois casos frequentes:
    - item que só manda **fazer**, sem pedir documento (organizar o local de pega, orientar os trabalhadores, cessar uma prática) → `retorno: sem` ou `retorno: vistoria`, para não obrigar a empresa a inventar um documento;
-   - item redigido como conselho, não como obrigação → `tipo: orientacao`.
+   - item redigido como conselho, não como obrigação → `tipo: orientacao` (que arrasta `retorno: sem`, o único que o DET aceita nesse tipo — e, por isso, item de orientação não tem prazo).
 3. **Prazo próprio de um item** — quando uma exigência é claramente mais pesada que as outras (instalar proteção com ART, contratar profissional habilitado), ofereça prazo maior só para ela.
 
 Não pergunte item a item: ofereça o padrão e recolha apenas as exceções.
