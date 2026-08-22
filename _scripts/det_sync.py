@@ -607,12 +607,31 @@ def sincronizar_os(pasta_os: Path, token: str,
     return r
 
 
+# Quantas OS são consultadas ao mesmo tempo. O gargalo do sync é a espera pelo
+# servidor do DET (~6 s por OS), não a nossa CPU: em fila, 16 OS levavam ~105 s.
+# 5 de cada vez derruba isso para ~25 s sem martelar o DET (o site do governo faz
+# várias requisições simultâneas ao abrir uma tela; 5 é conservador). Cada OS
+# escreve no seu próprio memory.md, então não há concorrência de escrita.
+SYNC_PARALELO = 5
+
+
 def sincronizar_todas(base: Path, token: str, consultar=consultar_det,
                       canal=snippet_canal) -> dict:
     """Sincroniza todas as OS de OS ATIVAS/. Uma OS com erro não derruba as
-    demais. Devolve métricas agregadas (mesmo espírito do SisOS)."""
-    resultados = [sincronizar_os(mem.parent, token, consultar, canal)
-                  for mem in sorted(base.glob("*/memory.md"))]
+    demais. Devolve métricas agregadas (mesmo espírito do SisOS).
+
+    As OS são consultadas em PARALELO (SYNC_PARALELO por vez); a ordem do
+    relatório é preservada (executor.map devolve na ordem de entrada)."""
+    from concurrent.futures import ThreadPoolExecutor
+    pastas = [mem.parent for mem in sorted(base.glob("*/memory.md"))]
+    if not pastas:
+        resultados = []
+    elif len(pastas) == 1:
+        resultados = [sincronizar_os(pastas[0], token, consultar, canal)]
+    else:
+        with ThreadPoolExecutor(max_workers=min(SYNC_PARALELO, len(pastas))) as ex:
+            resultados = list(ex.map(
+                lambda p: sincronizar_os(p, token, consultar, canal), pastas))
     erros = [{"os": r["os"], "erro": r["erro"]} for r in resultados if r["erro"]]
     ignoradas = [{"os": r["os"], **ig} for r in resultados for ig in r["ignoradas"]]
     canceladas = [{"os": r["os"], "codigo": c}

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitetura — DET criar (AFT Toolkit)</title>
+<style>
+  :root {
+    --bg: #f8fafc;         --card: #ffffff;      --ink: #1e293b;
+    --muted: #64748b;      --line: #e2e8f0;      --teal: #14b8a6;
+    --teal-dark: #0f766e;  --amber: #f59e0b;     --violet: #6366f1;
+    --rose: #ef4444;       --code-bg: #f1f5f9;   --chip: #ccfbf1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;       --card: #1e293b;      --ink: #e2e8f0;
+      --muted: #94a3b8;    --line: #334155;      --code-bg: #0b1220;
+      --chip: #134e4a;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.65; padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.7rem; margin-bottom: .3rem; }
+  h2 {
+    font-size: 1.25rem; margin: 2.6rem 0 .9rem; padding-bottom: .4rem;
+    border-bottom: 2px solid var(--teal); color: var(--teal-dark);
+  }
+  @media (prefers-color-scheme: dark) { h2 { color: var(--teal); } }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 .5rem; }
+  p  { margin-bottom: .9rem; }
+  .sub { color: var(--muted); margin-bottom: 1.6rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+  }
+  code, .mono {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: .86em;
+    background: var(--code-bg); padding: .12em .4em; border-radius: 5px;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: .9rem 1.1rem; overflow-x: auto;
+    font-size: .82rem; line-height: 1.5; margin: .8rem 0 1.1rem;
+  }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0 1.2rem; font-size: .9rem; }
+  th, td { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+  th { background: var(--code-bg); }
+  ol.steps { counter-reset: passo; list-style: none; margin: .5rem 0 1rem; }
+  ol.steps li {
+    position: relative; padding: .55rem 0 .55rem 3rem;
+    border-left: 2px solid var(--line); margin-left: 1rem;
+  }
+  ol.steps li::before {
+    counter-increment: passo; content: counter(passo);
+    position: absolute; left: -1rem; top: .55rem;
+    width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--teal); color: #fff; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; font-size: .9rem;
+  }
+  .diagram-wrap { overflow-x: auto; margin: 1rem 0 1.4rem; }
+  .diagram-wrap svg { min-width: 720px; width: 100%; height: auto; }
+  .note {
+    border-left: 4px solid var(--amber); background: var(--code-bg);
+    padding: .7rem 1rem; border-radius: 0 10px 10px 0; margin: .9rem 0;
+    font-size: .92rem;
+  }
+  .ok { border-left-color: var(--teal); }
+  .stop { border-left-color: var(--rose); }
+  ul { margin: 0 0 .9rem 1.3rem; }
+  li { margin-bottom: .35rem; }
+  a { color: var(--teal-dark); }
+  @media (prefers-color-scheme: dark) { a { color: #5eead4; } }
+  footer { color: var(--muted); font-size: .8rem; margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>✍️ DET criar — arquitetura completa</h1>
+<p class="sub">
+  Como o AFT Toolkit monta o <strong>rascunho</strong> de uma notificação no DET a
+  partir do <code>.md</code> que a <code>/aft-tn-nco</code> gerou — pela API oficial,
+  em segundos, sem navegador. Irmão de escrita do
+  <a href="../DET%20baixar/arquitetura-det-baixar.html">DET baixar</a> (que é leitura).
+  Nasceu em 21/08/2026; ganhou parâmetros e revisão em 22/08/2026.
+</p>
+
+<div class="card">
+  <strong>A ideia em uma frase:</strong> com o crachá que o site do DET emitiu para o
+  AFT logado (o token de sessão, emprestado ao painel pelo navegador do assistente ou
+  pela <a href="../Extensao%20Chrome/arquitetura-sync-det.html">extensão Sync DET</a>),
+  o motor <code>det_criar.py</code> lê o
+  <code>.md</code> da notificação — texto dos itens, introdução, observações e os
+  <em>parâmetros</em> gravados no front-matter — e monta o rascunho no DET, já
+  conferido. <strong>A lavratura nunca é chamada:</strong> o rascunho fica esperando a
+  revisão e o clique do AFT, no site.
+</div>
+
+<div class="note stop">
+  <strong>A fronteira dura.</strong> A própria API do DET separa três estágios, e o
+  toolkit fica nos dois primeiros:
+  <code>POST /notificacoes</code> (casca) e
+  <code>PUT /notificacoes/{uid}/rascunho</code> (conteúdo) são feitos aqui;
+  <code>PUT /notificacoes/{uid}/lavratura</code> <strong>nunca</strong>. Lavrar é ato
+  de autoridade, com efeito legal: é sempre um clique do AFT. Regra de ouro do
+  toolkit — o assistente redige a minuta, o AFT decide e transmite.
+</div>
+
+<h2>1. Mapa geral</h2>
+<div class="diagram-wrap">
+<svg viewBox="0 0 900 430" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,sans-serif">
+  <defs>
+    <marker id="seta" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/>
+    </marker>
+    <marker id="setaT" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#14b8a6"/>
+    </marker>
+  </defs>
+
+  <rect x="20" y="30" width="200" height="120" rx="12" fill="#ccfbf1" stroke="#14b8a6" stroke-width="2"/>
+  <text x="120" y="58" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">.md da /aft-tn-nco</text>
+  <text x="120" y="82" text-anchor="middle" font-size="11" fill="#0f766e">front-matter det:</text>
+  <text x="120" y="100" text-anchor="middle" font-size="11" fill="#0f766e">itens (texto integral)</text>
+  <text x="120" y="118" text-anchor="middle" font-size="11" fill="#0f766e">introdução + observações</text>
+  <text x="120" y="138" text-anchor="middle" font-size="10" fill="#64748b">memory.md → RI e CNPJ</text>
+
+  <rect x="290" y="30" width="220" height="120" rx="12" fill="#ffffff" stroke="#6366f1" stroke-width="2"/>
+  <text x="400" y="58" text-anchor="middle" font-size="14" font-weight="700" fill="#4f46e5">det_criar.py</text>
+  <text x="400" y="82" text-anchor="middle" font-size="11" fill="#4f46e5">monta o payload</text>
+  <text x="400" y="100" text-anchor="middle" font-size="11" fill="#4f46e5">revisar_payload()</text>
+  <text x="400" y="122" text-anchor="middle" font-size="10" fill="#64748b">chamada &gt; arquivo &gt; padrão</text>
+
+  <rect x="580" y="30" width="200" height="120" rx="12" fill="#ffffff" stroke="#14b8a6" stroke-width="2"/>
+  <text x="680" y="58" text-anchor="middle" font-size="14" font-weight="700" fill="#0f766e">DET (API oficial)</text>
+  <text x="680" y="82" text-anchor="middle" font-size="11" fill="#0f766e">POST /notificacoes</text>
+  <text x="680" y="100" text-anchor="middle" font-size="11" fill="#0f766e">PUT .../rascunho</text>
+  <text x="680" y="122" text-anchor="middle" font-size="10" fill="#ef4444">lavratura: NUNCA</text>
+
+  <line x1="220" y1="90" x2="285" y2="90" stroke="#64748b" stroke-width="2" marker-end="url(#seta)"/>
+  <line x1="510" y1="90" x2="575" y2="90" stroke="#14b8a6" stroke-width="2" marker-end="url(#setaT)"/>
+
+  <rect x="290" y="210" width="220" height="86" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="400" y="238" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">aft-revisor-notificacao</text>
+  <text x="400" y="260" text-anchor="middle" font-size="11" fill="#b45309">subagente, contexto isolado</text>
+  <text x="400" y="280" text-anchor="middle" font-size="10" fill="#64748b">julga o que regra não julga</text>
+  <line x1="400" y1="152" x2="400" y2="206" stroke="#f59e0b" stroke-width="2" marker-end="url(#seta)"/>
+
+  <rect x="290" y="340" width="220" height="60" rx="12" fill="#ccfbf1" stroke="#14b8a6" stroke-width="2"/>
+  <text x="400" y="366" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">o AFT decide</text>
+  <text x="400" y="386" text-anchor="middle" font-size="10" fill="#0f766e">confirma · revisa no site · lavra</text>
+  <line x1="400" y1="298" x2="400" y2="336" stroke="#64748b" stroke-width="2" marker-end="url(#seta)"/>
+
+  <rect x="580" y="210" width="200" height="86" rx="12" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+  <text x="680" y="236" text-anchor="middle" font-size="12" font-weight="700">token de sessão</text>
+  <text x="680" y="256" text-anchor="middle" font-size="10" fill="#64748b">extensão Sync DET, ~30 min</text>
+  <text x="680" y="274" text-anchor="middle" font-size="10" fill="#64748b">só na RAM do painel</text>
+  <line x1="575" y1="253" x2="515" y2="253" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#seta)"/>
+</svg>
+</div>
+
+<ol class="steps">
+  <li><strong>O .md é a fonte.</strong> Itens, introdução, observações e parâmetros
+      saem do arquivo que a <code>/aft-tn-nco</code> gerou; RI e CNPJ saem do
+      <code>memory.md</code> ao lado.</li>
+  <li><strong>O payload é montado</strong> com todos os campos que o formulário do
+      site espera — inclusive os que vão nulos.</li>
+  <li><strong>A conferência mecânica roda</strong> (<code>revisar_payload</code>).
+      Qualquer impedimento aborta antes de tocar o DET.</li>
+  <li><strong>A prévia vai ao AFT</strong> e, com ela, o parecer do subagente
+      revisor.</li>
+  <li><strong>Só com o "sim" dele</strong> a casca é criada e o rascunho salvo.</li>
+  <li><strong>Ele revisa no site e lavra.</strong> O toolkit para aqui.</li>
+</ol>
+
+<h2>2. Os parâmetros moram no arquivo</h2>
+<p>
+  Até 21/08/2026 a <code>/aft-tn-nco</code> produzia um documento perfeito e mudo: o
+  texto saía pronto, mas prazo, tipo de item e tipo de retorno <strong>não existiam em
+  lugar nenhum</strong> — vinham da conversa e morriam com ela. Rodada a skill numa
+  terça e criada a notificação na quinta, tudo era perguntado de novo. Quem adivinha
+  prazo de notificação erra o prazo de alguém.
+</p>
+
+<pre><code>---
+det:
+  titulo: Termo de Notificação
+  prazo_dias: 16          # ou prazo: dd/mm/aaaa
+  tipo: obrigacao         # solicitacao | obrigacao | orientacao
+  retorno: digital        # sem | digital | impresso | vistoria
+  preassinalado: sim
+  arquivos: todos
+  excecoes:
+    - item: 7
+      retorno: vistoria
+---</code></pre>
+
+<table>
+  <tr><th>Parâmetro</th><th>Padrão do toolkit</th><th>No DET</th></tr>
+  <tr><td><code>tipo</code></td><td><code>obrigacao</code></td><td>Exigência do Cumprimento de Obrigação (1)</td></tr>
+  <tr><td><code>retorno</code></td><td><code>digital</code></td><td>a empresa anexa a comprovação (1)</td></tr>
+  <tr><td><code>prazo_dias</code></td><td><code>16</code></td><td>vira <strong>data fixa</strong> no momento da criação</td></tr>
+  <tr><td><code>preassinalado</code></td><td><code>sim</code></td><td>o item já nasce marcado</td></tr>
+  <tr><td><code>arquivos</code></td><td><code>todos</code></td><td>todas as extensões que o DET aceita</td></tr>
+</table>
+
+<p>
+  <strong>Precedência:</strong> o que a chamada mandou (o AFT decidiu agora) vence o
+  front-matter (o que ele decidiu ao redigir), que vence o padrão. É essa ordem que faz
+  o arquivo ser memória sem virar camisa de força. Para ela valer, o painel manda
+  <code>None</code> quando o pedido não traz o campo: antes ele mandava o próprio
+  padrão, e não havia como distinguir "não opinei" de "escolhi justamente o padrão" —
+  o front-matter nunca seria lido.
+</p>
+
+<div class="note">
+  <strong>Duas armadilhas do front-matter.</strong>
+  (1) <code>separar_frontmatter()</code> roda <em>antes</em> de qualquer leitura de
+  conteúdo — sem isso a configuração entraria na introdução e apareceria na
+  notificação, na cara do empregador.
+  (2) O parser é feito à mão, de propósito: nem todo Windows de AFT tem PyYAML, e uma
+  dependência a mais é uma instalação a mais para dar errado longe daqui. Sem bloco
+  <code>det:</code>, devolve vazio e vale o padrão — <strong>arquivo antigo continua
+  funcionando</strong>.
+</div>
+
+<h2>3. Introdução e observações: não existe campo "introdução"</h2>
+<p>
+  Descoberta de 22/08/2026, lendo uma notificação lavrada real: o campo
+  <code>introducao</code> do topo vem <strong>sempre nulo</strong>. Os dois blocos da
+  tela moram na mesma lista <code>observacoes</code>, e só o <code>tipoTexto</code> os
+  separa.
+</p>
+<table>
+  <tr><th><code>tipoTexto</code></th><th>Onde aparece</th><th>No .md da TN-NCO</th></tr>
+  <tr><td><strong>0</strong></td><td>antes dos itens — a introdução</td><td>o parágrafo anterior ao primeiro item</td></tr>
+  <tr><td><strong>1</strong></td><td>depois dos itens — as observações</td><td>cada bloco <code>Rótulo:</code> + linhas <code>&gt;</code></td></tr>
+</table>
+<p>
+  O <code>.md</code> que a skill já produzia carrega essa estrutura sem precisar de
+  marcador: o "Rótulo:" seguido de citação casa 1:1 com o campo <code>titulo</code> da
+  observação no DET. Por isso <strong>não foi preciso mudar o formato do arquivo</strong> —
+  o leitor aceita cabeçalhos explícitos (<code>## Introdução</code>) se existirem, mas
+  não os exige, e os arquivos antigos continuam válidos.
+</p>
+
+<h2>4. Revisão em duas camadas</h2>
+<p>
+  O pedido foi "um subagente revisor, para que só vá ao DET dado completo". O subagente
+  existe — mas a <strong>garantia não foi confiada a ele</strong>: subagente pode ser
+  pulado, esquecido ou não chamado num dia atarefado. A função no código, não.
+</p>
+
+<h3>Camada dura — <code>det_criar.revisar_payload()</code></h3>
+<p>
+  Chamada pela própria <code>criar_rascunho()</code>, antes do POST. Devolve achados com
+  gravidade <code>impede</code> ou <code>aviso</code>; havendo qualquer
+  <code>impede</code>, levanta erro e <strong>nada é enviado</strong>.
+</p>
+<table>
+  <tr><th>Impede a escrita</th><th>Só avisa</th></tr>
+  <tr>
+    <td>
+      RI ausente · CNPJ/CPF fora de 14/11 dígitos · sem título · sem itens ·
+      item sem prazo · prazo no passado · texto acima de 1000 caracteres ·
+      tipo ou retorno fora da tabela · item que pede documento sem aceitar arquivo ·
+      notificação sem introdução
+    </td>
+    <td>
+      endereço ausente ou sem UF (defeito conhecido do enriquecimento) ·
+      item fora do formato canônico (pode ser item sem ementa, que é legítimo) ·
+      prazo é hoje · notificação sem observações
+    </td>
+  </tr>
+</table>
+
+<h3>Camada de julgamento — <code>aft-revisor-notificacao</code></h3>
+<p>
+  Subagente do Claude Code. Lê o <code>.md</code> e a prévia <em>isolado da conversa que
+  os produziu</em> — a mesma ideia do <code>aft-revisor-autos</code>: revisão com olhos
+  frescos. Julga o que nenhuma regra pega: o retorno combina com o que o item de fato
+  pede? O prazo é exequível para aquela exigência? A exigência é verificável depois? É
+  um item só, ou dois disfarçados? Falta o fecho de comprovação? Ele recebe o resultado
+  da camada dura e tem ordem de <strong>não refazer</strong> aquele trabalho.
+  <strong>Sugere; não escreve no DET, não edita arquivo, não decide.</strong>
+</p>
+
+<h2>5. O fecho de comprovação</h2>
+<div class="note ok">
+  Esta regra <strong>nasceu do primeiro parecer real do subagente</strong>, em
+  22/08/2026: ele apontou dois itens que mandavam "adequar" com retorno Digital sem
+  pedir documento nenhum — o empregador não saberia o que anexar, e o AFT ficaria sem
+  prova para conferir. O AFT elevou o achado a regra da skill. O revisor não foi
+  escrito conhecendo a regra; ele a descobriu lendo os itens.
+</div>
+<ol>
+  <li><strong>Adequação de máquina ou equipamento (NR-12)</strong> → <em>Apresentar
+      laudo técnico de adequação, assinado por profissional legalmente habilitado, com
+      a respectiva ART e registro fotográfico da adequação realizada.</em> (155 caracteres)</li>
+  <li><strong>Qualquer outro "adequar"</strong> → <em>Apresentar documento com registro
+      fotográfico das adequações.</em> (61 caracteres)</li>
+</ol>
+<p>
+  Três condições impedem a regra de virar automatismo bobo: a <strong>1 vence a 2</strong>
+  (a da NR-12 já contém a fotografia — aplicar as duas pediria registro fotográfico
+  duas vezes); só vale para item com retorno <strong>digital ou impresso</strong> (em
+  <code>sem</code> ou <code>vistoria</code> a comprovação é a próxima visita, e exigir
+  documento contradiz o parâmetro que o próprio AFT escolheu); e não se aplica a item
+  que já pede laudo, ART, relatório ou fotografia com outras palavras. A regra mora em
+  dois lugares de propósito: na <strong>redação</strong> (o item nasce com o fecho) e na
+  <strong>revisão</strong> (o subagente cobra o que escapou).
+</p>
+
+<h2>6. Armadilhas descobertas no caminho</h2>
+<ul>
+  <li><strong>O molde certo é um rascunho, não uma notificação lavrada.</strong> Numa
+      lavrada os campos diretos já estão promovidos; num rascunho o conteúdo vive dentro
+      do campo <code>rascunho</code> (uma string JSON) e os campos diretos vêm vazios.
+      Ler os campos diretos de um rascunho engana.</li>
+  <li><strong>A tela de edição quebra com campo ausente.</strong> O formulário reativo
+      do site tenta criar controle para campos que não existem no item
+      (<code>isDatasPadraoValidas</code> / <code>addControl</code>). Por isso todo item
+      leva <em>todos</em> os campos de data, mesmo nulos, e
+      <code>naoExigeDataInicialFinal: true</code>. A tela de visualização, só leitura,
+      não sofre — o que fazia o defeito parecer intermitente.</li>
+  <li><strong>Toda observação leva o <code>textoInformativoPadrao</code> vazio</strong>
+      que o site sempre põe. Mesma lição dos itens.</li>
+  <li><strong>Procurar um campo <code>introducao</code></strong> é perder a tarde: ele
+      existe e vem sempre nulo.</li>
+  <li><strong>"16 dias" vira data fixa.</strong> O DET grava data, não contagem: se o
+      AFT lavrar dias depois, a data não anda sozinha. Por isso a skill é obrigada a
+      informar a data resultante e lembrar que ela pode ser alterada no próprio DET.</li>
+  <li><strong>O endereço ainda sai sem UF</strong> em alguns RIs. Vira aviso, não
+      impedimento — conserto pendente.</li>
+</ul>
+
+<h2>7. Onde mora cada coisa</h2>
+<table>
+  <tr><th>Arquivo</th><th>Papel</th></tr>
+  <tr><td><code>_scripts/det_criar.py</code></td><td>o motor: lê o .md, monta o payload, confere e escreve o rascunho</td></tr>
+  <tr><td><code>_scripts/det_baixar.py</code></td><td>irmão de leitura; <code>det_criar</code> reaproveita dele a camada de rede e o tratamento de token</td></tr>
+  <tr><td><code>_scripts/servir_painel.py</code></td><td><code>POST /api/det-criar</code> (prévia e criação), <code>GET /api/det-molde</code>, <code>POST /api/det-token</code>, <code>POST /api/recarregar</code></td></tr>
+  <tr><td><code>aft-tn-nco/SKILL.md</code></td><td>onde os parâmetros e o fecho de comprovação nascem</td></tr>
+  <tr><td><code>agents/aft-revisor-notificacao.md</code></td><td>a camada de julgamento</td></tr>
+</table>
+
+<div class="note ok">
+  <strong>Como o token chega (ordem).</strong> Via principal: o <strong>navegador do
+  próprio assistente</strong> — ele lê <code>sessionStorage["token"]</code> da aba do DET
+  já logada e entrega ao painel com
+  <code>det_token.py --gravar</code> (pela entrada padrão, nunca como argumento de
+  comando). Via alternativa: a <a href="../Extensao%20Chrome/arquitetura-sync-det.html">extensão
+  Sync DET</a>, para quem usa assistente sem navegador. O texto canônico das duas, para
+  onde as skills apontam, é <code>config/canal-token-det.md</code>.
+</div>
+
+<div class="note">
+  <strong>Privacidade.</strong> O token de sessão vive só na RAM do painel, nunca em
+  disco e nunca na conversa do assistente. Nenhum dado de empresa ou de trabalhador sai
+  da máquina: a única saída de rede é para o próprio DET, com o crachá que o site emitiu
+  para o AFT logado.
+</div>
+
+<footer>
+  AFT Toolkit — arquitetura do subsistema <strong>DET criar</strong>. Fonte de verdade:
+  <code>arquitetura-det-criar.json</code>, nesta mesma pasta. Atualizado em 22/08/2026.
+</footer>
+
+</main>
+</body>
+</html>

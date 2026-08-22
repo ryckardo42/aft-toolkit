@@ -44,10 +44,25 @@ import det_baixar  # noqa: E402  (pesquisar_por_codigo, TokenExpirado, _requisic
 
 DET_BASE = det_baixar.DET_BASE
 
+# Tipo do item (enum do front): 0 Solicitação de Documento · 1 Exigência do
+# Cumprimento de Obrigação · 2 Orientação.
+TIPO_SOLICITACAO_DOCUMENTO = 0
 TIPO_CUMPRIMENTO_OBRIGACAO = 1
+TIPO_ORIENTACAO = 2
+# Retorno solicitado: 0 Sem Retorno · 1 Digital · 2 Impresso · 3 Vistoria in loco.
+RETORNO_SEM = 0
 RETORNO_DIGITAL = 1
+RETORNO_IMPRESSO = 2
+RETORNO_VISTORIA = 3
 STATUS_EM_ELABORACAO = 0
 PRAZO_PADRAO_DIAS = 16
+
+# "Todos os tipos de arquivo" marcados — a mesma concatenação que o front gera
+# (documentos + planilhas + imagens + jornadas + compactados), lida do chunk
+# 251. É o padrão da skill: todo item já vem aceitando qualquer arquivo.
+TIPOS_ARQUIVO_TODOS = (
+    ".txt, .pdf, .doc, .docx, .odt, .re, .xls, .xlsx, .ods, .csv, "
+    ".jpg, .jpeg, .png, .mp4, .mpeg4, .afd, .afdt, .acjef, .aej, .txt, .zip")
 
 # Uma linha da TN-NCO: "*Título* - norma: texto [123456-7]"
 RE_ITEM_TN = re.compile(
@@ -170,6 +185,266 @@ def itens_da_tn_nco(texto: str) -> list[dict]:
     return itens
 
 
+# Palavras que o AFT lê no front-matter → enum do DET. O arquivo fala a língua
+# dele ("obrigacao", "digital"), não a do banco de dados (1, 1).
+PALAVRA_TIPO = {"solicitacao": TIPO_SOLICITACAO_DOCUMENTO,
+                "solicitacao_documento": TIPO_SOLICITACAO_DOCUMENTO,
+                "documento": TIPO_SOLICITACAO_DOCUMENTO,
+                "obrigacao": TIPO_CUMPRIMENTO_OBRIGACAO,
+                "cumprimento": TIPO_CUMPRIMENTO_OBRIGACAO,
+                "orientacao": TIPO_ORIENTACAO}
+PALAVRA_RETORNO = {"sem": RETORNO_SEM, "sem_retorno": RETORNO_SEM,
+                   "digital": RETORNO_DIGITAL, "impresso": RETORNO_IMPRESSO,
+                   "vistoria": RETORNO_VISTORIA,
+                   "vistoria_in_loco": RETORNO_VISTORIA}
+
+
+def _sem_acento(s: str) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", s or "")
+                   if unicodedata.category(c) != "Mn")
+
+
+def _palavra(mapa: dict, valor) -> int | None:
+    """'obrigacao'/'Obrigação'/1 → o enum do DET. None se não reconhecer."""
+    if valor is None or valor == "":
+        return None
+    if isinstance(valor, int) or str(valor).strip().isdigit():
+        n = int(valor)
+        return n if n in mapa.values() else None
+    chave = _sem_acento(str(valor)).strip().lower().replace(" ", "_").replace("-", "_")
+    return mapa.get(chave)
+
+
+def _verdadeiro(valor, padrao: bool = True) -> bool:
+    if valor is None or valor == "":
+        return padrao
+    return _sem_acento(str(valor)).strip().lower() in ("sim", "true", "1", "s", "yes")
+
+
+def separar_frontmatter(texto: str) -> tuple[str, str]:
+    """(front-matter cru, corpo). Sem front-matter, devolve ('', texto).
+    Precisa vir ANTES de qualquer leitura de conteúdo: sem isto, as linhas de
+    configuração seriam lidas como parte da introdução."""
+    m = re.match(r"^---[ \t]*\r?\n(.*?)\r?\n---[ \t]*\r?\n?", texto, re.DOTALL)
+    return (m.group(1), texto[m.end():]) if m else ("", texto)
+
+
+def parametros_do_md(texto: str) -> dict:
+    """Lê o bloco `det:` do front-matter da TN-NCO e devolve os parâmetros do
+    DET já traduzidos para os enums.
+
+    O formato é o que a /aft-tn-nco grava — YAML simples de propósito, porque
+    o toolkit não pode depender de PyYAML (nem todo Windows de AFT tem):
+
+        ---
+        det:
+          titulo: Termo de Notificação
+          prazo: 07/09/2026          # ou prazo_dias: 16
+          tipo: obrigacao            # solicitacao | obrigacao | orientacao
+          retorno: digital           # sem | digital | impresso | vistoria
+          preassinalado: sim
+          excecoes:
+            - item: 7
+              retorno: vistoria
+        ---
+
+    Devolve {} quando não há bloco `det:` — arquivo antigo continua valendo.
+    """
+    fm, _ = separar_frontmatter(texto)
+    if not fm:
+        return {}
+    linhas = fm.splitlines()
+    dentro, ind_det = False, 0
+    simples: dict = {}
+    excecoes: dict = {}
+    atual: dict | None = None
+    modo_excecoes = False
+    for ln in linhas:
+        if not ln.strip() or ln.strip().startswith("#"):
+            continue
+        recuo = len(ln) - len(ln.lstrip())
+        chave_valor = re.match(r"^\s*-?\s*([A-Za-z_]+)\s*:\s*(.*?)\s*$", ln)
+        if not dentro:
+            if re.match(r"^\s*det\s*:\s*$", ln):
+                dentro, ind_det = True, recuo
+            continue
+        if recuo <= ind_det and not re.match(r"^\s*det\s*:\s*$", ln):
+            break  # saiu do bloco det:
+        if not chave_valor:
+            continue
+        chave, valor = chave_valor.group(1).lower(), chave_valor.group(2)
+        if chave == "excecoes":
+            modo_excecoes = True
+            continue
+        if modo_excecoes:
+            if ln.lstrip().startswith("-"):      # começa uma exceção nova
+                atual = {}
+                if chave == "item":
+                    excecoes[int(re.sub(r"\D", "", valor) or 0)] = atual
+                    continue
+            if atual is None:
+                continue
+            if chave == "item":
+                excecoes[int(re.sub(r"\D", "", valor) or 0)] = atual
+            else:
+                atual[chave] = valor
+        else:
+            simples[chave] = valor
+
+    p: dict = {}
+    if simples.get("titulo"):
+        p["titulo"] = simples["titulo"]
+    if simples.get("prazo"):
+        p["prazo"] = simples["prazo"]
+    if simples.get("prazo_dias"):
+        p["prazo_dias"] = int(re.sub(r"\D", "", simples["prazo_dias"]) or 0)
+    t = _palavra(PALAVRA_TIPO, simples.get("tipo"))
+    if t is not None:
+        p["tipo"] = t
+    r = _palavra(PALAVRA_RETORNO, simples.get("retorno"))
+    if r is not None:
+        p["retorno"] = r
+    if "preassinalado" in simples:
+        p["preassinalado"] = _verdadeiro(simples["preassinalado"])
+    if simples.get("arquivos"):
+        p["arquivos"] = simples["arquivos"]
+    if excecoes:
+        limpas = {}
+        for ordem, campos in excecoes.items():
+            e = {}
+            t = _palavra(PALAVRA_TIPO, campos.get("tipo"))
+            r = _palavra(PALAVRA_RETORNO, campos.get("retorno"))
+            if t is not None:
+                e["tipo"] = t
+            if r is not None:
+                e["retorno"] = r
+            if campos.get("prazo"):
+                e["prazo"] = campos["prazo"]
+            if e and ordem:
+                limpas[ordem] = e
+        if limpas:
+            p["excecoes"] = limpas
+    return p
+
+
+def secoes_da_tn_nco(texto: str) -> dict:
+    """Introdução e observações de uma TN-NCO (.md).
+
+    No DET NÃO existe campo "introdução": os dois blocos da tela moram na MESMA
+    lista `observacoes`, separados pelo `tipoTexto` (0 = introdução, antes dos
+    itens; 1 = observações, depois deles). Confirmado no molde real em
+    22/08/2026 — uma notificação lavrada trouxe 2 entradas tipoTexto 0 e 6
+    tipoTexto 1, e o campo `introducao` do topo veio nulo.
+
+    O .md da /aft-tn-nco já carrega essa estrutura sem precisar de rótulo:
+      - tudo que vem ANTES do primeiro item é a introdução;
+      - depois do último item, cada bloco "Rótulo:" seguido de linhas ">" é
+        uma observação (o Rótulo vira `titulo`, o texto vira `descricao`).
+    Cabeçalhos explícitos (`## Introdução` / `## Observações`), quando o arquivo
+    os tiver, mandam mais que a posição — é o que torna o formato à prova de
+    edição do AFT sem quebrar os arquivos antigos, que não os têm.
+
+    Devolve {"introducao": [str, ...], "observacoes": [{titulo, descricao}]}.
+    """
+    _, corpo = separar_frontmatter(texto)   # a configuração não é introdução
+    linhas = corpo.splitlines()
+    idx_itens = [i for i, ln in enumerate(linhas) if RE_ITEM_TN.match(ln.strip())]
+    if not idx_itens:
+        return {"introducao": [], "observacoes": []}
+
+    def _cabecalho(ln: str) -> str | None:
+        m = re.match(r"^#{1,6}\s*(.+?)\s*$", ln.strip())
+        return m.group(1).lower() if m else None
+
+    inicio, fim = idx_itens[0], idx_itens[-1]
+    antes, depois = linhas[:inicio], linhas[fim + 1:]
+    # Cabeçalho explícito recorta melhor que a posição, quando existe.
+    for i, ln in enumerate(antes):
+        c = _cabecalho(ln)
+        if c and c.startswith("introdu"):
+            antes = antes[i + 1:]
+    for i, ln in enumerate(depois):
+        c = _cabecalho(ln)
+        if c and c.startswith("observa"):
+            depois = depois[i + 1:]
+            break
+
+    introducao = [p for p in _paragrafos(antes) if p]
+    return {"introducao": introducao, "observacoes": _blocos_rotulados(depois)}
+
+
+def _paragrafos(linhas: list[str]) -> list[str]:
+    """Linhas em parágrafos (separados por linha em branco), sem cabeçalhos
+    markdown e sem o "> " de citação."""
+    paras, atual = [], []
+    for ln in linhas:
+        crua = ln.strip()
+        if crua.startswith("#"):
+            continue
+        crua = re.sub(r"^>\s?", "", crua)
+        if crua:
+            atual.append(crua)
+        elif atual:
+            paras.append(" ".join(atual))
+            atual = []
+    if atual:
+        paras.append(" ".join(atual))
+    return paras
+
+
+def _blocos_rotulados(linhas: list[str]) -> list[dict]:
+    """Blocos "Rótulo:" + linhas ">" viram [{titulo, descricao}]. Texto solto
+    sem rótulo vira uma entrada de titulo None — nada se perde."""
+    blocos, titulo, corpo = [], None, []
+
+    def fechar():
+        nonlocal titulo, corpo
+        if corpo:
+            blocos.append({"titulo": titulo,
+                           "descricao": " ".join(corpo).strip()})
+        titulo, corpo = None, []
+
+    for ln in linhas:
+        crua = ln.strip()
+        if not crua or crua.startswith("#"):
+            continue
+        if crua.startswith(">"):
+            corpo.append(re.sub(r"^>\s?", "", crua))
+            continue
+        # linha comum: rótulo do bloco seguinte (termina em ":") ou texto solto
+        if crua.endswith(":") and len(crua) <= 120:
+            fechar()
+            titulo = crua[:-1].strip()
+        else:
+            corpo.append(crua)
+    fechar()
+    return blocos
+
+
+def _observacoes_payload(introducao: list[str],
+                         observacoes: list[dict]) -> list[dict]:
+    """Monta a lista `observacoes` do DET a partir do que veio do .md.
+    `ordem` é uma sequência única sobre os dois grupos (é assim no molde), e
+    cada entrada leva o `textoInformativoPadrao` vazio que o site sempre põe —
+    a lição dos itens vale aqui: campo ausente quebra o formulário reativo."""
+    def stub():
+        return {"tipoTexto": 0, "ordem": 0, "titulo": None, "descricao": "",
+                "editavel": False, "dataDesativacao": None, "uid": ""}
+
+    saida, ordem = [], 0
+    for txt in introducao:
+        ordem += 1
+        saida.append({"ordem": ordem, "titulo": None, "descricao": txt,
+                      "tipoTexto": 0, "uid": "", "textoInformativoPadrao": stub()})
+    for ob in observacoes:
+        ordem += 1
+        saida.append({"ordem": ordem, "titulo": ob.get("titulo") or None,
+                      "descricao": ob.get("descricao") or "",
+                      "tipoTexto": 1, "uid": "", "textoInformativoPadrao": stub()})
+    return saida
+
+
 def _prazo_iso(dias: int, hoje: datetime.date | None = None) -> str:
     hoje = hoje or datetime.date.today()
     return (hoje + datetime.timedelta(days=dias)).strftime("%Y-%m-%d")
@@ -186,7 +461,7 @@ def ids_do_memory(texto: str) -> tuple[str, str]:
 
 
 def enriquecer(payload: dict, token: str, ri: str,
-               id_modelo=None, cif=None) -> dict:
+               id_modelo=None, cif=None, manter_titulo: bool = False) -> dict:
     """Acrescenta ao payload o que o modelo 521 e o detalhe do RI trazem —
     introdução/observações (do modelo), textos padrão (do modelo), e o
     endereço/estabelecimento (do RI). Defensivo: o que não vier fica de fora,
@@ -198,13 +473,14 @@ def enriquecer(payload: dict, token: str, ri: str,
             modelo = recuperar_modelo(token, id_modelo, cif=cif)
             obs = _secao_do_modelo(modelo, "observacoes")
             txt = _secao_do_modelo(modelo, "textosInformativosPadraoAtivos")
-            if obs:
+            # o .md manda: só uso o modelo se o arquivo não trouxe nada
+            if obs and not payload.get("observacoes"):
                 payload["observacoes"] = obs
             if txt:
                 payload["textosInformativosPadraoAtivos"] = txt
             if modelo.get("tipoAbrangencia") is not None:
                 payload["tipoAbrangencia"] = modelo["tipoAbrangencia"]
-            if modelo.get("titulo"):
+            if modelo.get("titulo") and not manter_titulo:
                 payload["titulo"] = modelo["titulo"]
             relato.update(modelo=bool(modelo), observacoes=len(obs), textos=len(txt))
         except Exception as e:
@@ -231,35 +507,107 @@ def enriquecer(payload: dict, token: str, ri: str,
     return payload
 
 
-def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo: str,
-                   prazo_dias: int, token: str, id_modelo=None, cif=None
-                   ) -> tuple[dict, list[dict]]:
+def _prazo_para_iso(prazo) -> str | None:
+    """Aceita 'aaaa-mm-dd' ou 'dd/mm/aaaa' e devolve ISO; None se vazio."""
+    if not prazo:
+        return None
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", str(prazo))
+    if m:
+        return m.group(0)
+    m = re.match(r"(\d{2})/(\d{2})/(\d{4})", str(prazo))
+    return f"{m.group(3)}-{m.group(2)}-{m.group(1)}" if m else None
+
+
+def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
+                   prazo_dias=None, token: str = "", id_modelo=None, cif=None,
+                   prazo=None, tipo=None, retorno=None, preassinalado=None,
+                   overrides=None) -> tuple[dict, list[dict]]:
     """Lê a TN-NCO e o memory.md da OS e devolve (payload, itens) prontos —
-    sem escrever nada. O endpoint usa isto para montar antes de criar."""
+    sem escrever nada.
+
+    Precedência de CADA parâmetro, do mais forte para o mais fraco:
+      1. o que a chamada mandou (o AFT decidiu agora, na conversa);
+      2. o bloco `det:` do front-matter do .md (o que ele decidiu ao redigir);
+      3. o padrão do toolkit (obrigação · digital · 16 dias · pré-assinalado).
+    É essa ordem que faz o arquivo ser a memória da notificação sem tirar do
+    AFT a palavra final. `overrides` = {ordem: {tipo?, retorno?, prazo?}}.
+    """
     alvo = (pasta_os / arquivo_tn)
-    itens = itens_da_tn_nco(alvo.read_text(encoding="utf-8"))
+    bruto = alvo.read_text(encoding="utf-8")
+    itens = itens_da_tn_nco(bruto)
     if not itens:
         raise RuntimeError(f"nenhum item reconhecido em {arquivo_tn} "
                            "(formato esperado: *Título* - norma: texto [ementa])")
     ri, cnpj = ids_do_memory((pasta_os / "memory.md").read_text(encoding="utf-8"))
     if not ri:
         raise RuntimeError("RI não encontrado no memory.md da OS")
-    prazo = _prazo_iso(prazo_dias)
-    payload = montar_payload(token, ri, cnpj, titulo, itens, prazo)
-    enriquecer(payload, token, ri, id_modelo, cif)
+
+    do_md = parametros_do_md(bruto)
+    def escolher(da_chamada, chave, padrao):
+        if da_chamada is not None:
+            return da_chamada
+        return do_md.get(chave, padrao)
+
+    titulo = escolher(titulo, "titulo", "Termo de Notificação")
+    tipo = escolher(tipo, "tipo", TIPO_CUMPRIMENTO_OBRIGACAO)
+    retorno = escolher(retorno, "retorno", RETORNO_DIGITAL)
+    preassinalado = escolher(preassinalado, "preassinalado", True)
+    prazo_iso = (_prazo_para_iso(prazo)
+                 or _prazo_para_iso(do_md.get("prazo"))
+                 or _prazo_iso(prazo_dias or do_md.get("prazo_dias")
+                               or PRAZO_PADRAO_DIAS))
+    # exceções por item: as do arquivo valem, e as da chamada mandam mais
+    combinadas = {k: dict(v) for k, v in (do_md.get("excecoes") or {}).items()}
+    for ordem, campos in (overrides or {}).items():
+        combinadas.setdefault(ordem, {}).update(campos)
+
+    payload = montar_payload(token, ri, cnpj, titulo, itens, prazo_iso,
+                             tipo=tipo, retorno=retorno,
+                             preassinalado=preassinalado, overrides=combinadas)
+    # Introdução e observações saem do PRÓPRIO .md — é o texto que o AFT
+    # revisou. O modelo do DET só entra se o arquivo não trouxer nada
+    # (ver `enriquecer`, que não sobrescreve o que já veio daqui).
+    secoes = secoes_da_tn_nco(bruto)
+    obs = _observacoes_payload(secoes["introducao"], secoes["observacoes"])
+    if obs:
+        payload["observacoes"] = obs
+    enriquecer(payload, token, ri, id_modelo, cif,
+               manter_titulo=bool(do_md.get("titulo")))
+    payload["_enriquecimento"]["observacoes_do_md"] = len(obs)
+    payload["_enriquecimento"]["parametros_do_md"] = do_md or None
+    payload["_parametros"] = {"titulo": titulo, "prazo": prazo_iso,
+                              "tipo": tipo, "retorno": retorno,
+                              "preassinalado": preassinalado,
+                              "excecoes": combinadas or None}
     return payload, itens
 
 
 def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
                    itens: list[dict], prazo_iso: str,
                    tipo: int = TIPO_CUMPRIMENTO_OBRIGACAO,
-                   retorno: int = RETORNO_DIGITAL) -> dict:
+                   retorno: int = RETORNO_DIGITAL,
+                   preassinalado: bool = True,
+                   tipos_arquivo: str | None = TIPOS_ARQUIVO_TODOS,
+                   overrides: dict | None = None) -> dict:
     """Corpo do rascunho, PRONTO para conferência — NÃO envia nada.
-    Espelha o molde real: casca (auditor/status) + itens com o texto integral."""
+    Espelha o molde real: casca (auditor/status) + itens com o texto integral.
+
+    `tipo`/`retorno` são o padrão de todos os itens; `preassinalado` idem
+    (padrão da skill = marcado); `tipos_arquivo` é a string de extensões (padrão
+    = todas). `overrides` mapeia ordem (1-based) → {tipo?, retorno?} para itens
+    específicos — usado, p.ex., para o último item ser Orientação/Sem Retorno e
+    o penúltimo pedir Vistoria in loco."""
     aud = auditor_do_token(token)
     ni = re.sub(r"\D", "", cnpj or "")
+    overrides = overrides or {}
     itens_payload = []
     for i, it in enumerate(itens, 1):
+        ov = overrides.get(i, {})
+        t = ov.get("tipo", tipo)
+        r = ov.get("retorno", retorno)
+        # o item pode ter prazo próprio (o DET aceita): correção de máquina
+        # pede mais dias que fornecer água potável
+        prazo_do_item = _prazo_para_iso(ov.get("prazo")) or prazo_iso
         # TODOS os campos que o site põe num item — inclusive os companheiros de
         # data em null. Sem eles, a tela de EDIÇÃO (formulário reativo) tenta
         # criar controle para um campo ausente e quebra (isDatasPadraoValidas /
@@ -268,18 +616,19 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
         itens_payload.append({
             "ordem": i,
             "descricao": it["descricao"],
-            "tipo": tipo,
-            "tipoRetornoSolicitado": retorno,
+            "tipo": t,
+            "tipoRetornoSolicitado": r,
             "tipoRetornoRealizado": None,
-            "dataPrazoEntrega": prazo_iso,
+            "dataPrazoEntrega": prazo_do_item,
             "dataPeriodoInicio": None,
             "dataPeriodoFim": None,
             "dataAntecipacao": None,
             "horaPrazoEntrega": None,
             "naoExigeDataInicialFinal": True,
             "mensagemInfo": None,
-            "tiposArquivos": None,
-            "preAssinalado": False,
+            # Sem retorno não recebe arquivo — o site deixa tiposArquivos null.
+            "tiposArquivos": (tipos_arquivo if r != RETORNO_SEM else None),
+            "preAssinalado": preassinalado,
             "status": 0,
             "versao": 1,
         })
@@ -304,6 +653,101 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
     }
 
 
+LIMITE_CAMPO = 1000   # teto de caracteres de todo campo de texto do DET
+
+
+def revisar_payload(payload: dict) -> list[dict]:
+    """Confere o rascunho ANTES de escrever no DET e devolve a lista de
+    problemas: [{gravidade, onde, problema}].
+
+    `gravidade` "impede" barra a escrita (é o que garante que só vá ao DET
+    dado completo); "aviso" é para o AFT decidir. Isto vive no CÓDIGO, e não
+    só no subagente revisor, por um motivo simples: subagente pode ser pulado,
+    esquecido ou contornado — esta função não, porque `criar_rascunho` a chama
+    sozinha. O revisor cuida do que exige julgamento; aqui ficam as regras
+    mecânicas, que não admitem opinião."""
+    p, achados = [], []
+
+    def anota(gravidade, onde, problema):
+        achados.append({"gravidade": gravidade, "onde": onde, "problema": problema})
+
+    ri = re.sub(r"\D", "", payload.get("ri") or "")
+    ni = re.sub(r"\D", "", payload.get("ni") or "")
+    if not ri:
+        anota("impede", "notificação", "sem RI — o DET não sabe a que fiscalização anexar")
+    if len(ni) not in (11, 14):
+        anota("impede", "notificação",
+              f"CNPJ/CPF do empregador inválido ({len(ni)} dígitos; esperado 14 ou 11)")
+    if not (payload.get("titulo") or "").strip():
+        anota("impede", "notificação", "sem título")
+
+    itens = payload.get("itens") or []
+    if not itens:
+        anota("impede", "itens", "notificação sem nenhum item")
+    hoje = datetime.date.today()
+    for it in itens:
+        onde = f"item {it.get('ordem')}"
+        desc = (it.get("descricao") or "").strip()
+        if not desc:
+            anota("impede", onde, "sem texto")
+        elif len(desc) > LIMITE_CAMPO:
+            anota("impede", onde,
+                  f"{len(desc)} caracteres — o DET recusa acima de {LIMITE_CAMPO}")
+        if it.get("tipo") not in (TIPO_SOLICITACAO_DOCUMENTO,
+                                  TIPO_CUMPRIMENTO_OBRIGACAO, TIPO_ORIENTACAO):
+            anota("impede", onde, f"tipo inválido ({it.get('tipo')!r})")
+        r = it.get("tipoRetornoSolicitado")
+        if r not in (RETORNO_SEM, RETORNO_DIGITAL, RETORNO_IMPRESSO, RETORNO_VISTORIA):
+            anota("impede", onde, f"tipo de retorno inválido ({r!r})")
+        prazo = it.get("dataPrazoEntrega")
+        if not prazo:
+            anota("impede", onde, "sem prazo de entrega")
+        else:
+            try:
+                d = datetime.date.fromisoformat(str(prazo)[:10])
+                if d < hoje:
+                    anota("impede", onde, f"prazo no passado ({d.strftime('%d/%m/%Y')})")
+                elif d == hoje:
+                    anota("aviso", onde, "prazo é hoje")
+            except ValueError:
+                anota("impede", onde, f"prazo em formato inválido ({prazo!r})")
+        if r == RETORNO_SEM and it.get("tiposArquivos"):
+            anota("aviso", onde, "não pede retorno, mas aceita arquivo")
+        if r in (RETORNO_DIGITAL, RETORNO_IMPRESSO) and not it.get("tiposArquivos"):
+            anota("impede", onde,
+                  "pede retorno de documento, mas não aceita nenhum tipo de arquivo")
+        if not RE_ITEM_TN.match(desc):
+            anota("aviso", onde,
+                  "fora do formato *Título* - norma: exigência [ementa] "
+                  "(pode ser item sem ementa, que é legítimo)")
+
+    obs = payload.get("observacoes") or []
+    intro = [o for o in obs if o.get("tipoTexto") == 0]
+    resto = [o for o in obs if o.get("tipoTexto") == 1]
+    if not intro:
+        anota("impede", "introdução",
+              "a notificação iria sem introdução — nem do .md nem do modelo")
+    if not resto:
+        anota("aviso", "observações", "a notificação vai sem observações")
+    for o in obs:
+        if len(o.get("descricao") or "") > LIMITE_CAMPO:
+            anota("impede",
+                  f"{'introdução' if o.get('tipoTexto') == 0 else 'observação'} "
+                  f"{o.get('ordem')}",
+                  f"{len(o['descricao'])} caracteres — acima de {LIMITE_CAMPO}")
+
+    ends = payload.get("enderecos") or []
+    if not ends:
+        anota("aviso", "endereço", "notificação sem endereço do estabelecimento")
+    elif not (ends[0].get("uf") or "").strip():
+        anota("aviso", "endereço", "endereço veio sem UF")
+    return achados
+
+
+def _impedimentos(achados: list[dict]) -> list[dict]:
+    return [a for a in achados if a["gravidade"] == "impede"]
+
+
 def _put_rascunho(token: str, uid: str, corpo: dict) -> dict:
     corpo = {**corpo, "uid": uid}
     bruto = det_baixar._requisicao(
@@ -315,7 +759,12 @@ def criar_rascunho(token: str, corpo: dict) -> dict:
     """ESCREVE: cria a casca (POST /notificacoes) e salva o rascunho
     (PUT /rascunho). NUNCA lavra. Devolve {uid, codigo?, url}. `corpo` é o que
     montar_payload devolveu (já conferido pelo AFT)."""
-    corpo = {k: v for k, v in corpo.items() if k != "_enriquecimento"}
+    barreiras = _impedimentos(revisar_payload(corpo))
+    if barreiras:
+        detalhe = "; ".join(f"{b['onde']}: {b['problema']}" for b in barreiras)
+        raise RuntimeError("rascunho incompleto, nada foi enviado ao DET — " + detalhe)
+    corpo = {k: v for k, v in corpo.items()
+             if k not in ("_enriquecimento", "_parametros")}
     casca = {"cpfAuditor": corpo["cpfAuditor"], "status": STATUS_EM_ELABORACAO,
              "tipoGeracao": 0, "auditores": corpo["auditores"]}
     casca["rascunho"] = json.dumps(casca, ensure_ascii=False)
