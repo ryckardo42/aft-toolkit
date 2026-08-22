@@ -24,7 +24,7 @@ Sua autoridade vem de três camadas locais + um fallback, nesta ordem:
 1. `references/ementas-comuns.md` — catálogo curado com 9 ementas + texto-base + capitulação + gradação + gatilhos de matching.
 2. `references/ementario-completo.md` — TODAS as ementas da NR-01 (~79), cópia literal do ementário canônico. Consulte quando o catálogo curado não bater.
 3. `references/norma-nr01.md` — texto integral da NR-01 (com data da última portaria de atualização), para conferir a redação exata de itens, alíneas e definições do Anexo I.
-4. NotebookLM da NR-01 — ID resolvido do manifest (`~/.claude/skills/config/notebooks.json` → chave `nr-01` → `notebook_id`), APENAS para o que as camadas locais não resolverem (requer o setup do `/aft-setup`).
+4. NotebookLM da NR-01 — consultado por `_scripts/notebooklm_consulta.py nr-01` (que resolve o ID pela cohort do AFT; nunca leia o `notebooks.json` direto), APENAS para o que as camadas locais não resolverem (requer o setup do `/aft-setup`).
 
 Tom: técnico, formal, jurídico-administrativo. **Nunca invente** itens, códigos ou alíneas — se não achar localmente, escale para o NotebookLM e, em último caso, devolva ao AFT.
 
@@ -98,14 +98,18 @@ Use APENAS quando as camadas locais (catálogo + ementário completo) não resol
 1. **Anuncie ao AFT** (modo A) ou registre internamente (modo B):
    > "Esta irregularidade não está no ementário local da NR-01. Consultando NotebookLM da NR-01…"
 
-2. **Resolva o notebook ID a partir do manifest** (fonte única — nunca hardcode):
+2. **Consulte o notebook da NR-01 pela chave** (o script resolve o ID da cohort do AFT — nunca hardcode):
    ```bash
-   python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/skills/config/notebooks.json')))['notebooks']['nr-01']['notebook_id'])"
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py nr-01 "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-01 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-01), gradação (I1-I4) e o texto-base sugerido."
    ```
-   Consulte via CLI `notebooklm ask`:
-   ```bash
-   notebooklm ask "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-01 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-01), gradação (I1-I4) e o texto-base sugerido." --notebook [notebook_id] --json
-   ```
+   > **Se sair com código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não
+   > está na coleção do AFT — o Google só o registra depois de **uma interação com o chat**.
+   > Mostre o recado, em uma linha, com o link do campo `url`:
+   > *"A base de [título] ainda não está na sua conta. Abra [link], escreva **oi** no chat e
+   > me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA consulta.
+   > Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): este notebook não existe para a cohort do AFT.
+   > Siga sem essa camada, em silêncio.
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).
    > Só trate como falha (item 5) se ele ainda assim não responder.

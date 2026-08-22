@@ -24,8 +24,10 @@ Uso:
     python notebooklm_acesso.py --json     # idem (a saída sempre é JSON)
 
 Saída: uma linha JSON com
-    estado           ok | cli-ausente | sessao-expirada
-    total            quantos notebooks o mapa tem
+    estado           ok | cli-ausente | sessao-expirada | mapa-ausente
+    cohort           a cohort do AFT (1 = originais, 2 = cópias)
+    sem_copia        [{chave, titulo}] -> não existem para esta cohort
+    total            quantos notebooks o mapa tem PARA ESTA COHORT
     disponiveis      [{chave, titulo}]            -> o Claude já consulta
     indisponiveis    [{chave, titulo, url}]       -> precisam do primeiro acesso
     erros            [{chave, titulo, detalhe}]   -> falha de rede/CLI, não é acesso
@@ -70,14 +72,35 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
-def mapa_notebooks() -> dict:
-    """Le o config/notebooks.json que acompanha as skills."""
-    aqui = Path(__file__).resolve()
-    for base in (aqui.parent, *aqui.parents):
-        alvo = base / "config" / "notebooks.json"
-        if alvo.is_file():
-            return json.loads(alvo.read_text(encoding="utf-8")).get("notebooks", {})
-    return {}
+def mapa_notebooks() -> tuple[dict, int, list]:
+    """Os notebooks que existem PARA A COHORT deste AFT, ja com o ID resolvido.
+
+    Desde a duplicacao do catalogo (19/08/2026) cada notebook tem um ID por
+    cohort, e alguns nao foram duplicados. Sondar o ID da cohort errada daria
+    "sem acesso" em tudo, para todo AFT da cohort 2 - por isso quem resolve o ID
+    aqui e o mesmo _scripts/notebook_id.py que as skills usam.
+
+    Devolve (mapa, cohort, sem_copia), com o mapa no formato antigo
+    ({chave: {title, essencial, notebook_id}}) para nao mexer no resto.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        from notebook_id import cohort as _cohort, mapa as _mapa, resolver as _resolver
+    except Exception:
+        return {}, 0, []
+    bruto = _mapa()
+    if not bruto:
+        return {}, 0, []
+    c = _cohort(bruto)
+    fora, dentro = [], {}
+    for chave, info in bruto.get("notebooks", {}).items():
+        r = _resolver(chave, bruto, c)
+        if r["estado"] != "ok":
+            fora.append({"chave": chave, "titulo": info.get("title", chave)})
+            continue
+        dentro[chave] = {"title": r["titulo"], "notebook_id": r["id"],
+                         "essencial": info.get("essencial", 0)}
+    return dentro, c, fora
 
 
 def _rodar(cli: str, *args: str) -> tuple[int, str]:
@@ -147,9 +170,11 @@ def sondar(cli: str, chave: str, info: dict) -> dict:
 
 
 def main() -> int:
-    notebooks = mapa_notebooks()
+    notebooks, cohort, sem_copia = mapa_notebooks()
     saida = {
         "estado": "ok",
+        "cohort": cohort,
+        "sem_copia": sem_copia,   # notebooks que nao existem para esta cohort
         "total": len(notebooks),
         "disponiveis": [],
         "indisponiveis": [],

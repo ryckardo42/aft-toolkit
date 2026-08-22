@@ -141,12 +141,18 @@ Para cada irregularidade sem auto, busque o **código da ementa** no formato `XX
 Estratégia em 3 camadas (mesma de `/aft-auditoria-geral`):
 
 **Camada 1 — NotebookLM (preferencial, requer o setup do /aft-setup):**
-1. Resolva o `notebook_id`: leia `~/.claude/skills/config/notebooks.json` e pegue a key da NR (`nr-12`, `nr-35`, `nr-06`...). Para legislação trabalhista, use `ementario-legis` / `jornada` / `informalidade`.
+1. Escolha a **key** do notebook: a da NR (`nr-12`, `nr-35`, `nr-06`...) ou, para legislação trabalhista, `ementario-legis` / `jornada` / `informalidade`. O script resolve o ID pela cohort do AFT; nunca leia o `notebooks.json` direto.
    - **Nem toda NR tem notebook próprio.** Quando não houver key específica para a NR, **busque no notebook geral de SST `ementario-sst`** — ele cobre o ementário SST inteiro. Não desista da Camada 1 só porque falta a key da NR.
 2. Consulte:
    ```bash
-   notebooklm ask "Qual ementa do ementário cobre a infração ao [BASE_LEGAL] sobre [DESCRICAO]? Retorne o código (formato XXXXXX-X) e a descrição oficial." --notebook [notebook_id] --json
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> "Qual ementa do ementário cobre a infração ao [BASE_LEGAL] sobre [DESCRICAO]? Retorne o código (formato XXXXXX-X) e a descrição oficial."
    ```
+   > **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+   > AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+   > o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+   > **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+   > consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).
    > Só passe à Camada 2 se ele ainda assim não responder.

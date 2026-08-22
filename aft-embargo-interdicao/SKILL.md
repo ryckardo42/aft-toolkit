@@ -81,21 +81,27 @@ cabeçalho do arquivo; corpo, rodapé e estilos do template continuam intactos.
 O toolkit mantém uma base de **precedentes reais**: mais de uma centena de Relatórios
 Técnicos de Interdição/Embargo (máquinas NR-12, obras NR-18/NR-35, e outros), cada um com
 objetos interditados, ementas, fatores de risco, medidas de proteção e documentos
-solicitados. Ela vive no NotebookLM, na key `interdicoes` do
-`~/.claude/skills/config/notebooks.json`.
+solicitados. Ela vive no NotebookLM, na key `interdicoes`.
 
 - **Quando consultar:** sempre no **Modo C**; e no **Modo A** quando o AFT não ditar o
   conteúdo das seções 5, 6 ou 7 (fatores de risco, medidas de proteção, documentos) — os
   precedentes viram a minuta proposta, que o AFT revisa.
 - **Como consultar** (uma pergunta objetiva por situação):
   ```bash
-  notebooklm ask "Situação encontrada: [descrição objetiva]. Há precedentes de interdição para essa situação? Cite os números dos termos, as ementas usadas (código e descrição), como foi redigida a seção de fatores de risco (risco atual x risco de referência, excesso de risco) e quais medidas de proteção e documentos foram exigidos." --notebook [notebook_id de 'interdicoes'] --json
+  python ~/.claude/skills/_scripts/notebooklm_consulta.py interdicoes "Situação encontrada: [descrição objetiva]. Há precedentes de interdição para essa situação? Cite os números dos termos, as ementas usadas (código e descrição), como foi redigida a seção de fatores de risco (risco atual x risco de referência, excesso de risco) e quais medidas de proteção e documentos foram exigidos."
   ```
+  > **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+  > AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+  > o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+  > **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+  > consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+  > **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
 - **Como apresentar:** cite os termos precedentes pelo número (rastreabilidade), mas deixe
   claro que precedente **não substitui** a avaliação do caso concreto — a decisão de
   interditar é ato do AFT (art. 161 da CLT).
-- **Se a key `interdicoes` não existir** no `notebooks.json` (ou o NotebookLM não responder
-  mesmo após a reconexão automática), **pule a camada sem alarde**: no Modo C, diga que a
+- **Se a consulta não devolver precedentes** (código 2 ou 3 — a key não existe para esta
+  cohort) ou o NotebookLM não responder mesmo após a reconexão automática, **pule a camada
+  sem alarde**: no Modo C, diga que a
   base de precedentes não está configurada e siga com a análise pelos critérios da NR-03;
   nos demais modos, peça os dados ao AFT como sempre.
 - Os precedentes **não dispensam** o sub-fluxo 4b (resolução de ementas): eles servem de
@@ -221,8 +227,7 @@ a **capitulação** citada na irregularidade e os **autos derivados** do passo 7
      da NR-18 **não classifica** a dimensão cautelar, por decisão de projeto — essa
      leitura é desta skill (passo 0 e item 5).
    - **Se o gatilho não casar com nada**, não force: vá à camada 2.
-2. **NotebookLM** (se configurado pelo `/aft-setup`): leia
-   `~/.claude/skills/config/notebooks.json` e consulte **os dois** notebooks —
+2. **NotebookLM** (se configurado pelo `/aft-setup`): consulte **os dois** notebooks —
    o `ementario-sst` (código, descrição e capitulação) **e o da NR específica**
    do caso (`nr-12`, `nr-18`, `nr-35`...). O da NR não é opcional: é ele que
    confere o texto do subitem contra o fato e costuma apontar **ementa aplicável
@@ -230,8 +235,14 @@ a **capitulação** citada na irregularidade e os **autos derivados** do passo 7
    318265-7, ausente na resolução feita só pelo ementário).
    Para cada irregularidade, pergunte (uma consulta por irregularidade, em paralelo):
    ```bash
-   notebooklm ask "Qual é o código da ementa no formato XXXXXX-X, a descrição completa da ementa e a capitulação legal para a seguinte infração: [descrição objetiva da irregularidade]?" --notebook [notebook_id] --json
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> "Qual é o código da ementa no formato XXXXXX-X, a descrição completa da ementa e a capitulação legal para a seguinte infração: [descrição objetiva da irregularidade]?"
    ```
+   > **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+   > AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+   > o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+   > **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+   > consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).
    > Só passe à camada seguinte se ele ainda assim não responder.
@@ -889,7 +900,7 @@ Competência delegada pela Portaria 1719/2014...
 | Mesma ementa atinge múltiplos objetos | 1 único auto na Fase 7, listando todos os objetos na parte 2 (não duplicar) |
 | Ementa ficou como `[EMENTA A PREENCHER]` no RT | Pular esta ementa na Fase 7 e avisar o AFT no fechamento |
 | AFT em dúvida se a situação justifica interdição | Modo C: consultar o notebook `interdicoes` e apresentar precedentes análogos — sugerir, nunca decidir |
-| Key `interdicoes` ausente no notebooks.json | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
+| A consulta a `interdicoes` sai com código 2 ou 3 | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
 | AFT de outra SRTE | Template é universal, nenhum ajuste necessário |
