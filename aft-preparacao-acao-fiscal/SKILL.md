@@ -411,6 +411,26 @@ pendente até o CNPJ ser informado.
 
 ---
 
+## FASE 4.6 — Outros CNPJs no endereço
+
+Com a terceirização ampla, é comum o AFT chegar ao estabelecimento e encontrar
+**várias pessoas jurídicas registradas no mesmo lote** — prestadoras de "apoio
+administrativo" abertas ano a ano, com telefone e e-mail da principal. Descobrir
+isso **antes** da visita muda a ação fiscal.
+
+Se houver **CEP** do local (FASE 0/1), **chame a `/aft-cnpjs-endereco`** com o
+CEP e o CNPJ da OS — não duplique a lógica dela aqui. Ela descobre os CNPJs do
+CEP pelo navegador embutido (só o CEP é enviado), cruza os cadastros
+localmente e grava a seção `## CNPJs no mesmo endereço` no `memory.md`.
+
+- No `preparacao.md`, resuma em 1-3 linhas (seção `## CNPJs no mesmo endereço`)
+  e alimente os `## Pontos de atenção para a visita`: identificar de qual CNPJ
+  é cada trabalhador encontrado e quem exerce a direção de fato.
+- Sem navegador na sessão ou site fora do ar, a skill degrada sozinha — registre
+  a pendência e siga; a preparação nunca trava por isso.
+
+---
+
 ## FASE 5 — Checklist de documentos a solicitar
 
 A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
@@ -477,6 +497,11 @@ principais agentes: <agente> (5), <agente> (3) · partes mais atingidas: ...
 Relatório completo: Acidentes/Relatorio-Acidentes-<cnpj>.md (+ .docx)".
 Sem consulta: o motivo ("sem CAT na base", "base não configurada" ou "CNPJ
 pendente"). NUNCA nome de trabalhador aqui>
+
+## CNPJs no mesmo endereço
+<resumo em 1-3 linhas da /aft-cnpjs-endereco (FASE 4.6): quantos CNPJs no CEP,
+quantos no mesmo lote, sinais de possível grupo econômico — detalhe no
+memory.md → ## CNPJs no mesmo endereço. Sem consulta: o motivo>
 
 ## Temas a verificar
 - <tema 1>
@@ -601,6 +626,7 @@ Ementas da OS: K no memory.md   ·   🗺️ Maps: link no preparacao.md
 ⚙️ Grau de risco <1-4> · SESMT devido: <resumo> <(na lista: <resumo>)> · CIPA devida: <2×ef> efetivos e <2×su> suplentes (paritária)   (só se a FASE 3.5 rodou)
 🚻 NR-24 devida: <n> instalações sanitárias (<n>M/<n>F) · <n> mictórios · <n> bebedouros   (só se a FASE 3.6 rodou; sendo obra, escreva "NR-18 (canteiro)" e acrescente os chuveiros)
 🚑 CATs: N (óbitos: X, <período>) — relatório em Acidentes/   (só se a FASE 4.5 rodou)
+🏢 CNPJs no endereço: N no CEP, M no mesmo lote — indícios no memory.md   (só se a FASE 4.6 rodou)
 ⏱️ Vencimento da OS: <dd/mm/aaaa>   (só se a OS foi lida)
 🗂️ Sessão no menu lateral: automática (aparece no próximo reinício do app)
 
@@ -622,6 +648,7 @@ Próximos passos:
 - Chama `/aft-nr24-dimensionamento` (FASE 3.6) para as instalações sanitárias, mictórios, lavatórios e bebedouros devidos, a partir dos homens e mulheres da Relação de Vínculos — sem os flags de exposição, com uma linha no documento sobre o que a exposição mudaria. Sendo canteiro de obras (CNAE 41/42/43 ou "SPE" no nome), a mesma skill aplica a NR-18 no lugar da NR-24, e o `.docx` diz em que sinal se baseou.
 - Trata a Relação de Vínculos Ativos do SFIT com o próprio `vinculos_ativos.py` (FASE 3.1), inteiramente local: nem o PDF nem a lista nominal entram no contexto do modelo.
 - Chama `/aft-relatorio-acidentes` (FASE 4.5) para o histórico de CATs do CNPJ — o script dela processa tudo localmente e grava em `Acidentes/`; a preparação usa só os agregados.
+- Chama `/aft-cnpjs-endereco` (FASE 4.6) para descobrir outros CNPJs no CEP do local e os indícios de grupo econômico — só o CEP vai ao site de busca; o cruzamento é local.
 - Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho institucional da lotação do AFT.
 - Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
 - Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).

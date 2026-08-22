@@ -1,13 +1,13 @@
 {
  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code e Codex (Windows)",
  "repo": "github.com/ryckardo42/aft-toolkit",
- "data": "2026-08-21",
+ "data": "2026-08-22",
  "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 49,
-  "scripts": 47,
+  "skills": 50,
+  "scripts": 48,
   "dados": 6,
-  "commit": "ver `git log -1` — atualizado em 21/08/2026"
+  "commit": "ver `git log -1` — atualizado em 22/08/2026"
  },
  "atores": [
   {
@@ -176,8 +176,13 @@
    "skills": [
     {
      "nome": "/aft-preparacao-acao-fiscal",
-     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Salva preparacao.md na pasta da OS.",
+     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Consulta os outros CNPJs do endereço (FASE 4.6, via /aft-cnpjs-endereco). Salva preparacao.md na pasta da OS.",
      "tech": "chama /aft-nova-auditoria · .depara_[CNPJ].json na raiz da OS · model: opus"
+    },
+    {
+     "nome": "/aft-cnpjs-endereco",
+     "role": "Descobre os outros CNPJs registrados no endereço da fiscalização (cenário da terceirização ampla: várias pessoas jurídicas no mesmo lote) e cruza os cadastros públicos em busca de indícios de grupo econômico: mesmo lote com endereço normalizado (QUADRA027 = QD 27), CNAE de apoio administrativo em série, telefone/e-mail/sócios compartilhados entre raízes de CNPJ distintas, aberturas escalonadas. Descoberta por CEP na Casa dos Dados via navegador embutido (só o CEP é enviado); aceita também consulta de sistema interno colada (--parse). Tudo indício, a confirmar em campo. Chamada pela /aft-preparacao-acao-fiscal (FASE 4.6).",
+     "tech": "cnpjs_endereco.py (urllib puro; APIs abertas minhareceita.org/BrasilAPI, só o CNPJ é enviado) · navegador embutido com extração via JavaScript (nunca página crua) · grava ## CNPJs no mesmo endereço no memory.md · model: sonnet"
     },
     {
      "nome": "/aft-NAD",
