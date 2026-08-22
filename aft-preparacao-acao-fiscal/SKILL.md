@@ -443,6 +443,22 @@ A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma l
    - **Sim** → encadeie a skill `/aft-NAD` passando a lista aprovada (ela faz a busca de ementa e monta o texto — não duplique essa lógica aqui).
    - **Não/depois** → apenas registre a lista aprovada no `preparacao.md` como pendência, para rodar `/aft-NAD` mais tarde.
 
+### A NAD preliminar (a notificação que se leva em mãos)
+
+**Ofereça sempre aqui, no fim da preparação — nunca no começo.** A NAD preliminar é a notificação que o AFT leva impressa, entrega na empresa e tem assinada durante a inspeção física. Ela precisa existir **antes** da visita, e só neste ponto da skill se sabe o que aquela OS pede: CNAE, grau de risco, histórico de acidentes, temas da denúncia e o checklist da FASE 5 já estão levantados. Perguntar no início seria pedir uma decisão sem essa informação.
+
+Ao oferecer, diga com essas palavras — "a notificação que o senhor leva em mãos e entrega assinada na empresa" —, porque é o que faz o AFT entender por que vale gastar dois minutos agora.
+
+**Aceito, o roteiro é este:**
+
+1. **Login.** Sem token do DET, **abra o site no navegador do assistente** e peça o login do AFT (via principal — `~/.claude/skills/config/canal-token-det.md`). Nunca peça a senha, nunca a guarde. Sem navegador próprio, peça o **Sincronizar** da extensão.
+2. **Itens.** Encadeie a `/aft-NAD`: ela puxa os itens do **modelo canônico** (identificação `11301`, CIF `358070`, ou o que estiver no `aft-config.md`) e o checklist desta preparação acrescenta o que for específico daquela OS. O AFT risca o que não quiser.
+3. **Prévia + revisor**, e só com o "sim" dele a criação (FASE 4.5 da `/aft-NAD`).
+4. **PDF do rascunho** (`"pdf": true`, 5 linhas em branco) gravado no pacote da OS, para ele imprimir e levar.
+5. **Sem RI no `memory.md`**, diga em uma linha que a criação fica para quando o número existir — e siga: o `.md` continua servindo para colar à mão.
+
+> **Por que o PDF é do rascunho, e não da lavrada.** Neste fluxo o papel é entregue **em mãos** e assinado no local; a notificação ainda não foi transmitida, então sai sem número ("NOTIFICAÇÃO Nº." em branco). É o esperado — e é o único caso em que se imprime rascunho. A lavratura continua sendo ato do AFT, no site, depois da visita.
+
 ---
 
 ## FASE 6 — Gravar o preparacao.md
@@ -650,7 +666,7 @@ Próximos passos:
 - Chama `/aft-relatorio-acidentes` (FASE 4.5) para o histórico de CATs do CNPJ — o script dela processa tudo localmente e grava em `Acidentes/`; a preparação usa só os agregados.
 - Chama `/aft-cnpjs-endereco` (FASE 4.6) para descobrir outros CNPJs no CEP do local e os indícios de grupo econômico — só o CEP vai ao site de busca; o cruzamento é local.
 - Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho institucional da lotação do AFT.
-- Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
+- Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação — é a **NAD preliminar**, que ele leva em mãos e entrega assinada na empresa. Aquela skill puxa os itens do modelo do DET e, com o RI conhecido, oferece criar o rascunho no site; a lavratura continua sendo ato do AFT.
 - Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).
 - Sucede naturalmente para `/aft-inspecao-fisica` depois da visita (fora do escopo desta skill).
 - Não confundir com `/aft-inspecao-fisica` (relato do que já foi constatado, DEPOIS da visita).

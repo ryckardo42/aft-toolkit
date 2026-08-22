@@ -899,6 +899,16 @@ class Handler(BaseHTTPRequestHandler):
             if not p.get("confirmar"):
                 return self._json(200, {"ok": True, "previa": True, "resumo": resumo})
             res = det_criar.criar_rascunho(token, payload)
+            # PDF do rascunho, para o AFT levar impresso e assinar na empresa
+            # (é a NAD preliminar). Só quando pedido: gera arquivo na pasta.
+            if p.get("pdf"):
+                try:
+                    caminho = det_criar.baixar_pdf_rascunho(
+                        token, res["uid"], res["codigo"], alvo,
+                        linhas=p.get("pdf_linhas", det_criar.LINHAS_PDF_RASCUNHO))
+                    res["pdf"] = str(caminho)
+                except Exception as e:
+                    res["pdf_erro"] = f"{type(e).__name__}: {e}"
             self._json(200, {"ok": True, "previa": False, "resumo": resumo, **res})
         except det_baixar.TokenExpirado as e:
             _DET_TOKEN["token"] = None
