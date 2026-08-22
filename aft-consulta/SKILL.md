@@ -57,12 +57,8 @@ do fato**, nunca nome/CPF/empresa.
 
 ## FASE 2 — Resolver o(s) notebook(s)
 
-O mapa dos notebooks está em `~/.claude/skills/config/notebooks.json` (fonte única — nunca
-fixe ID no código). Resolva a(s) **key(s)** pelo assunto e pegue o `notebook_id`:
-
-```bash
-python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/skills/config/notebooks.json')))['notebooks']['<key>']['notebook_id'])"
-```
+Escolha a(s) **key(s)** pelo assunto. Você não precisa do ID: quem o resolve, pela **cohort**
+do AFT, é o script da Fase 3. Nunca fixe ID no código nem leia o `notebooks.json` direto.
 
 ### Como escolher a key
 
@@ -84,6 +80,8 @@ python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/sk
   | trabalho infantil | `trabalho-infantil` · aprendizagem → `aprendizagem` |
   | dupla visita (ME/EPP, art. 627-A) | `dupla-visita` |
   | regulamento/competência da inspeção | `rit` |
+  | proteção de dados, LGPD na fiscalização | `lgpd` |
+  | norma técnica ABNT/ISO citada em laudo | `normas-abnt-iso` |
   | doença ocupacional, nexo | `doencas-trabalho` · PCD → `pcd` |
 
 > **Não desista da Camada 1 só porque falta a key exata da NR**: caia no `ementario-sst`.
@@ -97,8 +95,15 @@ python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/sk
 Escreva a pergunta num arquivo (evita problemas de acento no shell) e use `--prompt-file`:
 
 ```bash
-notebooklm ask --notebook [notebook_id] --json --prompt-file [pergunta.txt]
+python ~/.claude/skills/_scripts/notebooklm_consulta.py <key> --prompt-file [pergunta.txt]
 ```
+
+> **Código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não está na coleção do
+> AFT — o Google só o registra depois de **uma interação com o chat**. Diga, em uma linha, com
+> o link do campo `url`: *"A base de [título] ainda não está na sua conta. Abra [link], escreva
+> **oi** no chat e me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA
+> consulta. Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+> **Código 3** (nada no stdout): não existe para a cohort do AFT; siga sem essa camada.
 
 > **Reconexão automática:** se a sessão tiver expirado, o `notebooklm` se reautentica sozinho
 > pelo `NOTEBOOKLM_REFRESH_CMD`. Só trate como falha se ele ainda assim não responder.
