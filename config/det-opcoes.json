@@ -1,0 +1,118 @@
+{
+ "_o_que_e": "Todas as opções do formulário 'Item Solicitado' do DET, com as regras de dependência entre elas. Fonte única do toolkit: det_criar.py lê daqui para montar e conferir o rascunho, e as skills leem daqui para explicar as opções ao AFT. Não repita este conteúdo em nenhum outro lugar.",
+ "_fonte": "Código-fonte do próprio DET (bundle Angular do site, chunk 251), lido em 22/08/2026 — as mesmas tabelas que o formulário usa para montar e validar a tela. Conferido contra as telas reais do site.",
+ "_verificado_em": "2026-08-22",
+ "_quando_reconferir": "Se o DET mudar a tela do item (opção nova, campo novo, comportamento diferente). O bundle é servido sem login: baixe index.html, ache o runtime, e nele o chunk que contém 'Vistoria in loco'.",
+
+ "tipo_do_item": {
+  "campo_no_payload": "tipo",
+  "obrigatorio": true,
+  "opcoes": {
+   "0": {
+    "rotulo": "Solicitação de Documento",
+    "palavras_no_frontmatter": ["solicitacao", "solicitacao_documento", "documento"],
+    "tooltip_do_site": "Solicitar documentos ao empregador",
+    "retornos_permitidos": [1, 2],
+    "retorno_padrao": 1
+   },
+   "1": {
+    "rotulo": "Exigência do Cumprimento de Obrigação",
+    "palavras_no_frontmatter": ["obrigacao", "cumprimento"],
+    "tooltip_do_site": "Exigir o cumprimento de obrigações e a correção de irregularidades e a adoção de medidas que eliminem os riscos para a segurança e saúde dos trabalhadores",
+    "retornos_permitidos": [0, 1, 2, 3],
+    "retorno_padrao": 1
+   },
+   "2": {
+    "rotulo": "Orientação",
+    "palavras_no_frontmatter": ["orientacao"],
+    "tooltip_do_site": "Orientar o empregador, atendidos os critérios administrativos de oportunidade e conveniência, quanto ao cumprimento da legislação trabalhista",
+    "retornos_permitidos": [0],
+    "retorno_padrao": 0
+   }
+  }
+ },
+
+ "retorno_solicitado": {
+  "campo_no_payload": "tipoRetornoSolicitado",
+  "obrigatorio": true,
+  "depende_do_tipo": "As opções da lista mudam conforme o Tipo escolhido — ver `retornos_permitidos` de cada tipo. Combinação fora dessa lista é impossível na tela do site.",
+  "opcoes": {
+   "0": {
+    "rotulo": "Sem Retorno",
+    "palavras_no_frontmatter": ["sem", "sem_retorno"],
+    "tooltip_do_site": "O item notificado será inspecionado em fiscalização futura"
+   },
+   "1": {
+    "rotulo": "Digital",
+    "palavras_no_frontmatter": ["digital"],
+    "tooltip_do_site": "O documento deve ser entregue eletronicamente, via DET, conforme data predeterminada na notificação"
+   },
+   "2": {
+    "rotulo": "Impresso",
+    "palavras_no_frontmatter": ["impresso"],
+    "tooltip_do_site": "O documento deve ser entregue fisicamente ao Auditor Fiscal do Trabalho, em local e data predeterminados na notificação"
+   },
+   "3": {
+    "rotulo": "Vistoria in loco do Auditor",
+    "palavras_no_frontmatter": ["vistoria", "vistoria_in_loco"],
+    "tooltip_do_site": "Indica que o Auditor Fiscal do Trabalho realizará inspeção nos locais de trabalho, a fim de averiguar o cumprimento dos itens notificados"
+   }
+  }
+ },
+
+ "regras_do_formulario": {
+  "_origem": "Reproduzem o que o formulário do site faz sozinho ao AFT trocar Tipo ou Retorno. O toolkit as aplica ao montar o payload, para não gravar item que a tela jamais criaria.",
+  "prazo_de_entrega": {
+   "campo_no_payload": "dataPrazoEntrega",
+   "obrigatorio_quando_retorno_for": [1, 2, 3],
+   "apagado_quando_retorno_for": [0],
+   "observacao": "Sem Retorno não tem prazo: o item será verificado em fiscalização futura."
+  },
+  "hora_da_entrega": {
+   "campo_no_payload": "horaPrazoEntrega",
+   "so_faz_sentido_quando_retorno_for": [2, 3],
+   "observacao": "Hora só existe para entrega física ou visita do auditor; nos demais casos o site apaga."
+  },
+  "tipos_de_arquivo": {
+   "campo_no_payload": "tiposArquivos",
+   "habilitado_somente_quando_retorno_for": [1],
+   "observacao": "Só a entrega Digital recebe arquivo pelo DET. Em Impresso, Vistoria ou Sem Retorno o site apaga a seleção — mandar extensões nesses casos é gravar dado que a tela não mostraria.",
+   "padrao_do_toolkit": "marcar TODOS os grupos, por via das dúvidas (decisão do AFT em 22/08/2026)"
+  },
+  "datas_inicial_e_final": {
+   "campos_no_payload": ["dataPeriodoInicio", "dataPeriodoFim"],
+   "desabilitados_quando": "naoExigeDataInicialFinal = true",
+   "observacao": "São o PERÍODO a que o documento se refere (ex.: AFD de tal data a tal data), não o prazo de entrega."
+  }
+ },
+
+ "tipos_de_arquivo": {
+  "campo_no_payload": "tiposArquivos",
+  "formato": "string única com as extensões separadas por vírgula e espaço, na ordem dos grupos abaixo; null quando nada está marcado",
+  "grupos": {
+   "documentos": {"rotulo": "Documento Texto", "extensoes": [".txt", ".pdf", ".doc", ".docx", ".odt", ".re"]},
+   "planilhas": {"rotulo": "Planilhas", "extensoes": [".xls", ".xlsx", ".ods", ".csv"]},
+   "imagens": {"rotulo": "Imagens", "extensoes": [".jpg", ".jpeg", ".png", ".mp4", ".mpeg4"]},
+   "jornadas": {"rotulo": "Arquivos de Jornada", "extensoes": [".afd", ".afdt", ".acjef", ".aej", ".txt"]},
+   "compactados": {"rotulo": "Arquivo Compactado", "extensoes": [".zip"]}
+  },
+  "todos": ".txt, .pdf, .doc, .docx, .odt, .re, .xls, .xlsx, .ods, .csv, .jpg, .jpeg, .png, .mp4, .mpeg4, .afd, .afdt, .acjef, .aej, .txt, .zip",
+  "observacao_do_txt_repetido": "O .txt aparece DUAS vezes de propósito: o site concatena os grupos sem remover repetição (ele está em Documento Texto e em Arquivos de Jornada). Reproduzir igual é o que faz a tela reconhecer a seleção.",
+  "como_o_site_le_de_volta": "Ao reabrir o item, o site marca cada grupo procurando uma extensão-chave na string: .doc, .xls, .jpg, .afd, .zip."
+ },
+
+ "texto_da_notificacao": {
+  "campo_no_payload": "observacoes",
+  "observacao": "NÃO existe campo `introducao`: os dois blocos da tela moram nesta mesma lista, separados por tipoTexto.",
+  "tipo_texto": {
+   "0": {"rotulo": "Introdução", "onde_aparece": "antes dos itens"},
+   "1": {"rotulo": "Observação", "onde_aparece": "depois dos itens"}
+  }
+ },
+
+ "outros_enums": {
+  "status_da_notificacao": {"0": "Em Elaboração", "1": "Confirmada", "2": "Cancelada"},
+  "status_do_item": {"0": "Inicial", "1": "Recebido", "2": "Rejeitado", "3": "Dispensado"},
+  "tipo_ni": {"0": "CNPJ", "1": "CPF"}
+ }
+}

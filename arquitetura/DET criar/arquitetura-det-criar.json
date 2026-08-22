@@ -217,7 +217,8 @@
    "causa": "No formulário do site, selecionar o RI faz surgir o campo Abrangência como obrigatório.",
    "correcao": "Mandar tipoAbrangencia no payload (o modelo pode fornecer)."
   },
-  "Procurar um campo `introducao` no payload: ele existe no topo mas vem SEMPRE nulo. Introdução e observações moram na mesma lista `observacoes`, e só o `tipoTexto` (0/1) as separa. Quem gravar a introdução como observação comum a vê no lugar errado da notificação."
+  "Procurar um campo `introducao` no payload: ele existe no topo mas vem SEMPRE nulo. Introdução e observações moram na mesma lista `observacoes`, e só o `tipoTexto` (0/1) as separa. Quem gravar a introdução como observação comum a vê no lugar errado da notificação.",
+  "Supor que os quatro retornos valem para qualquer tipo. Não valem: a lista depende do tipo, e quem monta pela API consegue gravar o que a tela jamais criaria — item de Orientação com retorno digital, arquivo em item de Vistoria, prazo em item Sem Retorno. Foram exatamente os três defeitos corrigidos em 22/08/2026, descobertos porque o AFT mandou as telas do site."
  ],
  "metodo_de_investigacao": {
   "principio": "Não deduzir contrato de API por nome de campo. Confirmar no bundle público e, quando possível, capturar o que o próprio site envia.",
@@ -256,6 +257,10 @@
    "data": "22/08/2026",
    "o_que_provou": "fluxo completo a partir de um .md padrão da skill, com a chamada levando só pasta e arquivo: parâmetros lidos do front-matter, prazo calculado (16 dias), 7 itens, introdução e 2 observações, revisão mecânica sem impedimentos, parecer do subagente e rascunho criado — conferido lendo de volta do DET",
    "achado_do_revisor": "apontou sozinho os itens que mandavam adequar sem pedir documento, o prazo único para exigências de porte muito diferente e dois itens que embutiam duas medidas — o que virou a regra do fecho de comprovação"
+  },
+  {
+   "data": "22/08/2026 (tarde)",
+   "o_que_provou": "com o item 5 pedido como Vistoria e o 6 como Orientação: o 5 saiu sem tipos de arquivo, o 6 teve o retorno corrigido para Sem Retorno e perdeu o prazo, e os demais seguiram digitais com todos os arquivos. Combinações impossíveis forçadas à mão foram barradas pela conferência."
   }
  ],
  "parametros_do_endpoint": {
@@ -316,5 +321,29 @@
   "via_2_alternativa": "extensão Sync DET, para assistente sem navegador",
   "texto_canonico": "config/canal-token-det.md",
   "privacidade": "o token vive só na RAM do painel: nunca em disco, nunca no chat, nunca em argumento de linha de comando (ficaria no histórico do shell)"
+ },
+ "opcoes_do_det": {
+  "fonte_unica": "config/det-opcoes.json — espelha o formulário 'Item Solicitado' do site, com as dependências entre os campos. det_criar.py lê de lá (opcoes(), retornos_permitidos(), retorno_padrao(), aceita_arquivo(), exige_prazo()); nada disso é duplicado em código.",
+  "de_onde_veio": "bundle Angular público do DET (chunk 251), lido em 22/08/2026 — as mesmas tabelas que o formulário usa. Não precisa de login: index.html -> runtime -> o chunk que contém 'Vistoria in loco'.",
+  "tipo_manda_no_retorno": {
+   "0 Solicitação de Documento": [
+    1,
+    2
+   ],
+   "1 Exigência do Cumprimento de Obrigação": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "2 Orientação": [
+    0
+   ]
+  },
+  "prazo": "obrigatório em Digital/Impresso/Vistoria; APAGADO em Sem Retorno",
+  "hora_da_entrega": "só faz sentido em Impresso e Vistoria; o site apaga nos demais",
+  "tipos_de_arquivo": "habilitados SOMENTE em Digital (allowEnableArquivos === DIGITAL no código do site). Padrão do toolkit: todos os grupos marcados",
+  "autocorrecao": "montar_payload usa retorno_padrao(tipo, preferido): se o tipo não aceita o retorno pedido, cai no padrão daquele tipo. É o que impede um item de Orientação de nascer digital só porque digital é o padrão da skill",
+  "barreira": "revisar_payload marca como 'impede' a combinação fora da tabela, o item com arquivo em retorno não-digital e a entrega digital sem nenhum tipo de arquivo"
  }
 }
