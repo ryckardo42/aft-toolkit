@@ -802,6 +802,41 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self._json(404, {"ok": False, "erro": "rota desconhecida"})
 
+    def _recarregar(self):
+        """POST /api/recarregar — recarrega os módulos do DET (det_baixar,
+        det_sync, det_criar) SEM derrubar o processo, PRESERVANDO o token na
+        RAM. Existe porque reiniciar o serviço apaga o token e obriga o AFT a
+        sincronizar de novo — durante uma sessão de desenvolvimento isso custava
+        vários logins. Só localhost (como todo o resto).
+
+        O que NÃO recarrega: o próprio servir_painel.py (trocar o servidor por
+        baixo de si mesmo exige reiniciar) e o gerar_painel.py (é chamado como
+        subprocesso a cada F5, então já pega a versão nova sozinho).
+        `importlib.reload` atualiza o objeto módulo no lugar, então as
+        referências globais daqui continuam válidas; a ordem respeita a
+        dependência (det_criar usa det_baixar)."""
+        import importlib
+        recarregados, erros = [], []
+        for mod in (det_baixar, det_sync, det_criar):
+            try:
+                importlib.reload(mod)
+                recarregados.append(mod.__name__)
+            except Exception as e:
+                erros.append(f"{mod.__name__}: {type(e).__name__}: {e}")
+        import time
+        self._json(200 if not erros else 500, {
+            "ok": not erros,
+            "recarregados": recarregados,
+            "erros": erros or None,
+            # o token sobrevive: é estado deste processo, que continua vivo
+            "token_preservado": bool(_token_atual()),
+            "token_validade_s": max(0, int(_DET_TOKEN["exp"] - time.time()))
+                                if _DET_TOKEN["token"] else 0,
+            "aviso": ("servir_painel.py e gerar_painel.py não entram aqui: o "
+                      "primeiro exige reiniciar, o segundo é subprocesso e já "
+                      "recarrega sozinho"),
+        })
+
     def _det_criar(self):
         """POST /api/det-criar — ESCREVE um rascunho de notificação no DET.
         Corpo {pasta, arquivo, titulo?, prazo_dias?, confirmar}. Sem
@@ -823,17 +858,44 @@ class Handler(BaseHTTPRequestHandler):
             if not token:
                 return self._json(409, {"ok": False, "token_expirado": True,
                                         "erro": "sem token — sincronize no DET e tente de novo"})
+            # overrides: {"10": {"retorno": 3}, "11": {"tipo": 2, "retorno": 0}}
+            ov = {int(k): v for k, v in (p.get("overrides") or {}).items()}
+            # None = "a chamada não opinou" → vale o front-matter do .md e,
+            # na falta dele, o padrão do toolkit (ver det_criar.preparar_de_os)
             payload, itens = det_criar.preparar_de_os(
-                alvo, arquivo, p.get("titulo") or "Termo de Notificação",
-                int(p.get("prazo_dias") or 16), token,
-                id_modelo=p.get("modelo"), cif=p.get("cif"))
+                alvo, arquivo, p.get("titulo"),
+                int(p["prazo_dias"]) if p.get("prazo_dias") else None, token,
+                id_modelo=p.get("modelo"), cif=p.get("cif"),
+                prazo=p.get("prazo"),
+                tipo=int(p["tipo"]) if p.get("tipo") is not None else None,
+                retorno=int(p["retorno"]) if p.get("retorno") is not None else None,
+                preassinalado=p.get("preassinalado"),
+                overrides=ov)
+            revisao = det_criar.revisar_payload(payload)
             resumo = {"ri": payload["ri"], "ni": payload["ni"],
                       "titulo": payload["titulo"],
                       "prazo": payload["dataPrazoEntregaPadrao"],
                       "n_itens": len(payload["itens"]),
+                      "parametros": payload.get("_parametros"),
+                      "revisao": revisao,
+                      "impede_envio": [a for a in revisao
+                                       if a["gravidade"] == "impede"],
                       "enriquecimento": payload.get("_enriquecimento"),
-                      "itens": [{"ordem": it["ordem"], "descricao": it["descricao"][:80]}
-                                for it in payload["itens"]]}
+                      "itens": [{"ordem": it["ordem"], "tipo": it["tipo"],
+                                 "retorno": it["tipoRetornoSolicitado"],
+                                 "preAssinalado": it["preAssinalado"],
+                                 "arquivos": bool(it["tiposArquivos"]),
+                                 "descricao": it["descricao"][:60]}
+                                for it in payload["itens"]],
+                      # introdução (tipoTexto 0) e observações (tipoTexto 1) —
+                      # o AFT precisa VER esses textos na prévia, senão só
+                      # descobre o que foi gravado abrindo o DET.
+                      "observacoes": [{"ordem": o["ordem"],
+                                       "tipoTexto": o["tipoTexto"],
+                                       "titulo": o.get("titulo"),
+                                       "caracteres": len(o.get("descricao") or ""),
+                                       "descricao": o.get("descricao") or ""}
+                                      for o in payload.get("observacoes") or []]}
             if not p.get("confirmar"):
                 return self._json(200, {"ok": True, "previa": True, "resumo": resumo})
             res = det_criar.criar_rascunho(token, payload)
@@ -914,6 +976,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._det_baixar()
         if self.path == "/api/det-criar":
             return self._det_criar()
+        if self.path == "/api/recarregar":
+            return self._recarregar()
         if self.path != "/api/acao":
             return self._json(404, {"ok": False, "erro": "rota desconhecida"})
         try:

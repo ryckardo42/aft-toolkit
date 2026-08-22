@@ -163,7 +163,7 @@ python ~/.claude/skills/_scripts/servir_painel.py "<OS_ATIVAS>" --abrir
 - Para encerrar o servidor: `Ctrl+C` no terminal onde roda (ou reiniciar o computador —
   ele não se instala sozinho, só roda quando chamado).
 - **Sempre ligado (padrão da instalação):** para não depender de abrir terminal —
-  necessário para a sincronização automática do DET pela extensão Chrome (abaixo). O
+  necessário para a sincronização com o DET (abaixo). O
   `/aft-setup` instala isso por padrão e o `/aft-atualizar` garante em quem ainda não tem;
   se faltar nesta máquina, instale com:
   ```bash
@@ -172,14 +172,14 @@ python ~/.claude/skills/_scripts/servir_painel.py "<OS_ATIVAS>" --abrir
   No Windows usa o Agendador de Tarefas (gatilho "ao fazer logon", `pythonw.exe` sem
   janela, reinício automático se cair); no macOS um LaunchAgent com `KeepAlive`. Remover:
   `instalar_servidor_painel.py remover`. Status: `... status`.
-- **Sync do DET pela extensão Chrome** ("SisOS — Sync DET", da Chrome Web Store): com o
-  servidor no ar e o "Painel local" ativado nas opções da extensão, o botão flutuante
-  **Sincronizar** no site do DET envia o token de sessão do próprio AFT para
-  `POST /api/det-sync`; o `det_sync.py` consulta a API oficial do DET para cada OS com
-  CNPJ/CPF ou RI e atualiza a seção `## Notificações DET` dos memory.md: notificação
-  nova → linha `- [ ] <COD> — prazo <data>`; prazo que mudou → data atualizada na linha;
-  `ri:` vazio → preenchido. O estado `[ ]`/`[x]` nunca é alterado e o token nunca é
-  gravado em disco. Requer estar logado no DET no navegador.
+- **Sync do DET:** com o servidor no ar e o AFT logado no DET, o `det_sync.py` consulta
+  a API oficial para cada OS com CNPJ/CPF ou RI e atualiza a seção `## Notificações DET`
+  dos memory.md: notificação nova → linha `- [ ] <COD> — prazo <data>`; prazo que mudou →
+  data atualizada na linha; `ri:` vazio → preenchido. O estado `[ ]`/`[x]` nunca é
+  alterado e o token nunca é gravado em disco. O que dispara isso é o token de sessão,
+  que chega por uma de duas vias — **o navegador do próprio assistente** (principal) ou
+  **a extensão Chrome "Sync DET"** (alternativa, com o botão flutuante **Sincronizar** no
+  site) —, descritas em `~/.claude/skills/config/canal-token-det.md`.
 
 ## Passo 4 — (Opcional) Publicar na aba Artefatos
 

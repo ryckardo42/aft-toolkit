@@ -35,7 +35,7 @@ description: >
 
 Gera o **texto** de uma notificação para a empresa **corrigir** irregularidades de Segurança e Medicina do Trabalho constatadas em inspeção física ou auditoria documental. O AFT cola o resultado no DET (campo Introdução + um Item Solicitado por irregularidade + campo Observações) e o documento fica salvo como `.md` na pasta da OS.
 
-Esta skill **só redige o texto da notificação**. Ela não lavra auto de infração (isso é `/aft-auditoria-geral` → `/aft-gera-ai`). O preenchimento do template no DET é manual (o AFT cola cada bloco) — o toolkit não automatiza o DET.
+Esta skill **redige o texto da notificação e grava os parâmetros dela** (prazo, tipo de item, retorno). Ela não lavra auto de infração (isso é `/aft-auditoria-geral` → `/aft-gera-ai`) e **não lavra a notificação**: com o painel local no ar, o toolkit consegue montar o **rascunho** no DET a partir deste `.md`, mas quem confere e transmite é sempre o AFT, no site. Sem o painel, o AFT cola os blocos à mão — por isso a FASE 4 continua entregando cada bloco pronto para copiar.
 
 ## Pasta base
 `<OS_ATIVAS>/<EMPREGADOR> <CNPJ>/`
@@ -197,6 +197,30 @@ Formato de cada item:
 *Procedimento de Trabalho* - item 12.14.1 da NR-12: Elaborar procedimentos de trabalho e segurança para máquinas e equipamentos, específicos e padronizados, a partir da apreciação de riscos. [312467-3]
 ```
 
+#### Fecho de comprovação (obrigatório)
+
+Item que manda **fazer** sem dizer **como comprovar** deixa o empregador sem saber o que anexar no DET — e deixa o AFT sem prova para conferir depois. Por isso, todo item com **retorno digital ou impresso** termina dizendo o que apresentar. Duas regras canônicas, da mais específica para a mais geral:
+
+**1. Adequação de máquina ou equipamento (NR-12).** Sempre feche com:
+
+```
+Apresentar laudo técnico de adequação, assinado por profissional legalmente habilitado, com a respectiva ART e registro fotográfico da adequação realizada.
+```
+
+**2. Qualquer outro item que mande "adequar"** (ergonomia, instalações, ambiente). Feche com:
+
+```
+Apresentar documento com registro fotográfico das adequações.
+```
+
+Regras de aplicação:
+
+- **A regra 1 vence a 2.** Máquina da NR-12 já pede laudo com ART e fotografia — não acrescente a frase da regra 2 por cima, ou o item pedirá registro fotográfico duas vezes.
+- **Só se aplica a item com retorno digital ou impresso.** Item que o AFT marcou como `retorno: sem` ou `vistoria` (FASE 3.5) não recebe fecho nenhum: ali a comprovação é a próxima visita, e pedir documento contradiz o parâmetro.
+- **Não duplique.** Se a exigência já manda apresentar laudo, ART, relatório ou registro fotográfico, ela já tem fecho — deixe como está.
+- **Conte os caracteres.** O fecho da regra 1 tem 155 caracteres, e o teto do campo é 1000. Estourando, enxugue a exigência, nunca o fecho.
+- Quando o item exigir documento de outra natureza (medição, laudo ergonômico, comprovante de treinamento), redija o fecho no mesmo espírito: **o que apresentar**, com quem assina, quando isso for exigível.
+
 ### Observações (FIXAS — copie literalmente)
 
 ```
@@ -208,6 +232,34 @@ Dúvidas:
 ```
 
 > Esse texto de observações é o boilerplate canônico do AFT — reproduza-o verbatim, sem reescrever ou "consertar" a redação.
+
+---
+
+## FASE 3.5 — Parâmetros do DET (o que faz a notificação existir)
+
+Texto sozinho não vira notificação. O DET exige, de **cada item**, o que a empresa deve devolver e até quando. Esses parâmetros ficam gravados no front-matter do `.md` (FASE 4) — é o que permite criar a notificação depois, noutro dia e noutra sessão, sem depender da memória da conversa.
+
+**Padrão do toolkit** — aplique sem perguntar quando o AFT não disser nada:
+
+| Parâmetro | Padrão | O que significa no DET |
+|---|---|---|
+| `tipo` | `obrigacao` | Exigência do Cumprimento de Obrigação — a natureza da NCO |
+| `retorno` | `digital` | a empresa anexa a comprovação pelo próprio DET |
+| `prazo_dias` | `16` | dias corridos, contados da criação da notificação |
+| `preassinalado` | `sim` | o item já nasce marcado |
+| `arquivos` | `todos` | aceita qualquer extensão que o DET permite |
+
+**Pergunte só o que muda o resultado**, numa passagem só, depois da tabela de itens:
+
+1. **Prazo** — data fixa (`dd/mm/aaaa`) ou "tantos dias"? Sem resposta, valem os 16 dias.
+2. **Exceções** — algum item foge do padrão? Os dois casos frequentes:
+   - item que só manda **fazer**, sem pedir documento (organizar o local de pega, orientar os trabalhadores, cessar uma prática) → `retorno: sem` ou `retorno: vistoria`, para não obrigar a empresa a inventar um documento;
+   - item redigido como conselho, não como obrigação → `tipo: orientacao`.
+3. **Prazo próprio de um item** — quando uma exigência é claramente mais pesada que as outras (instalar proteção com ART, contratar profissional habilitado), ofereça prazo maior só para ela.
+
+Não pergunte item a item: ofereça o padrão e recolha apenas as exceções.
+
+> **O prazo vira data fixa.** O DET grava uma data, não uma contagem. "16 dias" é calculado no dia em que a notificação é criada — se o AFT lavrar dias depois, a data continua a mesma. Por isso a FASE 4 **sempre informa a data que ficou** e lembra que ela pode ser alterada direto no DET.
 
 ---
 
@@ -246,14 +298,35 @@ Dúvidas:
 ```
 ````
 
-Em seguida, **salve o documento completo** (introdução + todos os itens em sequência + observações, sem os rótulos "📋 ITEM N") na pasta da OS:
+Em seguida, **salve o documento completo** (front-matter + introdução + todos os itens em sequência + observações, sem os rótulos "📋 ITEM N") na pasta da OS:
 
 ```bash
 PATH_MD="$PASTA_OS/tn-nco-$(date +%Y-%m-%d).md"
 # Se já existe arquivo do mesmo dia, adicione sufixo -2, -3...
 ```
 
-Confirme ao AFT: arquivo salvo + nº de itens. Se não houver pasta de OS resolvida, pergunte onde salvar (ou ofereça a Área de Trabalho).
+O arquivo começa pelo **front-matter com os parâmetros da FASE 3.5** — é ele que permite criar a notificação no DET depois, sem a conversa. Grave só o que foi decidido; omita a seção `excecoes` quando não houver nenhuma:
+
+```markdown
+---
+det:
+  titulo: Termo de Notificação
+  prazo: 07/09/2026          # data fixa; ou prazo_dias: 16
+  tipo: obrigacao            # solicitacao | obrigacao | orientacao
+  retorno: digital           # sem | digital | impresso | vistoria
+  preassinalado: sim
+  arquivos: todos
+  excecoes:
+    - item: 7
+      retorno: vistoria
+---
+
+Em conformidade com a legislação em vigor, especialmente o previsto na alínea X...
+```
+
+O `item:` da exceção é a **posição** do item no documento (1 = o primeiro). Escreva em palavras, nunca com os números do banco de dados — o arquivo é para o AFT ler.
+
+Confirme ao AFT, em uma linha cada: arquivo salvo + nº de itens; **a data de prazo que ficou** (por extenso, `dd/mm/aaaa`) e que ela pode ser alterada direto no DET, item a item, se ele preferir; e as exceções gravadas, se houver.
 
 ---
 
@@ -272,7 +345,8 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Entrada automática:** esta skill sempre consulta antes a `/aft-autos-lavrados` (FASE 0.5) — o AFT não precisa rodá-la à mão.
 - **Origem natural:** logo após `/aft-auditoria-geral` ou `/aft-PGR-analise` identificarem irregularidades + ementas, ofereça rodar `/aft-tn-nco` para a empresa corrigir (especialmente em dupla visita / ME-EPP, onde a correção precede a autuação).
 - **Interdição/embargo:** para as irregularidades que motivaram a medida, o caminho é `/aft-auditoria-AR-NR12` (julgar o laudo/AR apresentado) e depois `/aft-embargo-interdicao-levantamento` (levantar) ou `/aft-embargo-interdicao-manutencao` (manter) — não a notificação NCO.
-- Depois de gerar, o AFT cola os blocos manualmente no DET (o toolkit não automatiza o preenchimento do DET).
+- **Criar o rascunho no DET** (opcional, exige o painel local no ar e o token do DET — veja como obtê-lo em `~/.claude/skills/config/canal-token-det.md`): a prévia sai de `POST /api/det-criar` sem `confirmar`. Antes de confirmar, chame a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` e o JSON da prévia — ele julga o que a conferência automática não julga (o retorno combina com o que o item pede? o prazo é exequível?). Mostre o parecer ao AFT e só confirme com o "sim" dele. O toolkit **nunca** lavra: o rascunho fica no DET esperando a revisão e o clique dele.
+- Sem o painel, o AFT cola os blocos manualmente no DET.
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 
 ---
@@ -285,6 +359,9 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Nunca decida sozinho** incluir ou excluir irregularidade de interdição/embargo: apresente o rito próprio, deixe desmarcada e siga a escolha do AFT.
 - A consulta ao Sistema Auditor **não pode travar a notificação**: se falhar, avise em uma frase e siga pelo `memory.md`.
 - Redija cada item como **obrigação a cumprir** (verbo de ação no infinitivo), não como descrição da falha.
+- **Todo item com retorno digital/impresso leva fecho de comprovação** (FASE 3): adequação de máquina da NR-12 pede laudo com ART e fotografia; os demais "adequar" pedem documento com registro fotográfico. Item sem fecho é item que a empresa não sabe como comprovar.
+- **Nunca salve o `.md` sem o front-matter `det:`** — sem prazo, tipo e retorno gravados, a notificação não pode ser criada depois sem perguntar tudo de novo.
+- **Sempre informe a data de prazo que ficou**, mesmo quando o AFT não pediu prazo nenhum (aí valem os 16 dias). Ele precisa saber a data antes de lavrar.
 - **Respeite o teto de 1000 caracteres** por campo do DET (cada item e o campo de observações). Conte e mostre a contagem na apresentação; se estourar, resolva com o AFT antes de entregar.
 - Encoding **UTF-8** em todo o pipeline.
 - Esta skill **não** lavra auto, **não** clica no DET e **não** define prazos no texto — apenas redige a notificação de correção.

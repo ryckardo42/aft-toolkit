@@ -31,10 +31,12 @@ description: >
 
 ## Como funciona
 
-O servidor do painel (porta 8347) guarda por **25 minutos** o token que a
-extensão Chrome "Sync DET" entrega quando o AFT clica em **Sincronizar** na
-aba do DET. Esta skill só dispara o download por esse servidor — o token nunca
-passa por aqui. O que chega vai todo para o pacote da notificação, dentro de
+O servidor do painel (porta 8347) guarda por cerca de **25 minutos** o token de
+sessão do DET. Ele chega por uma de duas vias — **1) o navegador do próprio
+assistente** (principal) ou **2) a extensão Chrome "Sync DET"** (alternativa) —
+descritas em `~/.claude/skills/config/canal-token-det.md`. **Leia esse arquivo
+quando faltar token**; não repita o procedimento aqui. Esta skill só dispara o
+download pelo servidor — o token nunca passa por esta conversa. O que chega vai todo para o pacote da notificação, dentro de
 `NOTIFICACOES/` (a raiz da OS fica limpa):
 
 ```
@@ -103,10 +105,9 @@ Leia o JSON devolvido:
   AFT (é o caso típico de pedidos de prorrogação).
 - O canal de comunicação é SOMENTE LEITURA: responder ou registrar ciência é
   ato do AFT, no site do DET.
-- `token_expirado: true` → peça ao AFT, **em uma frase**: abrir a aba do DET
-  no Chrome e clicar no botão flutuante **Sincronizar** (canto inferior
-  direito). Aguarde a confirmação e repita a chamada — o token vale 25 min,
-  um Sincronizar cobre o lote inteiro.
+- `token_expirado: true` → renove o token pela via 1 (o seu navegador) ou peça
+  o **Sincronizar** ao AFT, conforme `~/.claude/skills/config/canal-token-det.md`,
+  e repita a chamada. Um envio cobre o lote inteiro pelos ~25 min seguintes.
 - `painel_fora: true` → volte ao Passo 0.
 - Outro erro → registre e **siga para o próximo código**; nunca trave o lote.
 

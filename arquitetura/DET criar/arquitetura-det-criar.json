@@ -1,0 +1,320 @@
+{
+ "projeto": "DET criar — redação de RASCUNHO de notificação no DET pela API oficial (AFT Toolkit)",
+ "data": "2026-08-22",
+ "status": "EXPERIMENTAL — provado em produção (5 rascunhos reais criados e conferidos), mas AINDA NÃO PUBLICADO no repositório: vive na cópia instalada (~/.claude/skills/_scripts/) e no worktree. Ver `estado_atual`.",
+ "resumo": "Irmã de ESCRITA do subsistema 'DET baixar' (leitura). A partir de uma TN-NCO (.md) já redigida pelo AFT, cria no DET uma notificação em RASCUNHO para um RI existente: casca (POST /notificacoes) + preenchimento (PUT /notificacoes/{uid}/rascunho), com os itens da TN-NCO, a introdução/observações de um modelo do próprio AFT e o endereço do RI. Usa o mesmo token emprestado pela extensão Sync DET, guardado em RAM pelo servidor do painel. A LAVRATURA nunca é chamada — é ato de autoridade, sempre um clique do AFT no site.",
+ "regra_inviolavel": "NUNCA chamar PUT /notificacoes/{uid}/lavratura. O toolkit para no rascunho. A fronteira é técnica (a própria API separa os três estágios) e de princípio (o assistente redige a minuta; o AFT decide e transmite). Nenhuma conveniência futura justifica automatizar a lavratura.",
+ "estado_atual": {
+  "funciona_e_foi_provado": [
+   "Criar rascunho para RI existente, com empregador resolvido pelo DET",
+   "11 itens vindos da TN-NCO, com o texto integral (formato *Título* - norma: texto [ementa])",
+   "Introdução e observações vindas de um modelo do AFT (por Identificação)",
+   "Endereço vindo do detalhe do RI",
+   "Tipo e retorno por item (padrão + overrides pontuais)",
+   "Todos os tipos de arquivo marcados; preAssinalado por padrão",
+   "Prazo por data fixa ou por N dias à frente",
+   "A tela de EDIÇÃO do DET abre e carrega tudo, editável, sem erro de console"
+  ],
+  "nao_publicado": "As últimas mudanças (tipos de arquivo, preAssinalado padrão, tipo/retorno por item, prazo fixo) estão SÓ na cópia instalada e no worktree, a pedido do AFT. Uma publicação do toolkit sobrescreveria a cópia instalada com a versão anterior do repo.",
+  "backup_local": "~/Documents/aft-toolkit-history/backups-local/det-criar-20260821/ (det_criar.py, servir_painel.py, LEIA-ME.txt com o comando de restauração). Fora do aft-toolkit, imune a publicação.",
+  "falta": [
+   "Interface: não há skill de chat nem botão no painel — só o endpoint HTTP",
+   "Publicação no repositório (commit → PR → merge → publicar.py)",
+   "Fluxo para notificação de APRESENTAÇÃO de documentos (usaria tipo 0 e/ou 2)"
+  ]
+ },
+ "onde_mora": {
+  "motor": "_scripts/det_criar.py — montar_payload, enriquecer, criar_rascunho, preparar_de_os, e as leituras (recuperar_crua, recuperar_modelo, recuperar_detalhe_ri, listar_modelos)",
+  "endpoints_locais": "_scripts/servir_painel.py — POST /api/det-criar (prévia/criação) e GET /api/det-molde?codigo= (lê uma notificação inteira; usado na descoberta do molde)",
+  "token": "mesmo cache em RAM do painel, abastecido pelo Sincronizar da extensão e pelo auto-push v3.0 (ver arquitetura 'Extensao Chrome' e 'DET baixar')",
+  "nota_tecnica": "cofre aft-toolkit-history: det-criar-rascunho.md (história e decisões)",
+  "irmao_de_leitura": "arquitetura/DET baixar/ — download de notificação (o mesmo token, o mesmo servidor)"
+ },
+ "fluxo": [
+  "1. O AFT redige a TN-NCO normalmente (.md na pasta da OS), uma linha por item: *Título* - norma: texto [ementa].",
+  "2. O token do DET já está no painel (Sincronizar da extensão / auto-push v3.0).",
+  "3. POST /api/det-criar {pasta, arquivo, modelo?, cif?, prazo|prazo_dias, tipo?, retorno?, preassinalado?, overrides?} SEM confirmar → devolve a PRÉVIA (payload montado + resumo item a item). Nada é enviado ao DET.",
+  "4. O AFT confere a prévia. Com confirmar:true, o motor escreve.",
+  "5. ESCRITA parte 1 — casca: POST /notificacoes {cpfAuditor, status:0, tipoGeracao:0, auditores:[{cpf,nome,cif}], rascunho:'<json da própria casca>'} → devolve {uid, codigo}.",
+  "6. ESCRITA parte 2 — conteúdo: PUT /notificacoes/{uid}/rascunho com o payload completo (RI, ni, título, itens, observações, endereço, datas-padrão).",
+  "7. O rascunho aparece 'Em Elaboração' na lista do DET, editável na tela e imprimível em PDF.",
+  "8. A LAVRATURA é do AFT, no site. O toolkit não a chama."
+ ],
+ "api_det": {
+  "base": "https://auditor-det.sit.trabalho.gov.br/services/auditor/v1",
+  "autenticacao": "Authorization: Bearer <token de sessão do AFT>",
+  "escrita": [
+   {
+    "metodo": "POST",
+    "caminho": "/notificacoes",
+    "para": "cria a casca (status 0 EM_ELABORACAO). O auditor sai do próprio JWT: sit_username→cpf, name→nome, sit_cif→cif. Devolve uid e codigo.",
+    "obs": "o site manda também rascunho:'<json da casca>' — replicado"
+   },
+   {
+    "metodo": "PUT",
+    "caminho": "/notificacoes/{uid}/rascunho",
+    "para": "grava o conteúdo do rascunho (itens, observações, endereço, RI, título)",
+    "obs": "o corpo leva o uid junto"
+   },
+   {
+    "metodo": "PUT",
+    "caminho": "/notificacoes/{uid}/lavratura",
+    "para": "LAVRA — efeito legal",
+    "obs": "NUNCA CHAMADO PELO TOOLKIT (ver regra_inviolavel)"
+   }
+  ],
+  "leitura_de_apoio": [
+   {
+    "metodo": "GET",
+    "caminho": "/notificacoes/{uid}",
+    "para": "lê uma notificação inteira — usado para descobrir o molde e conferir o que foi gravado"
+   },
+   {
+    "metodo": "POST",
+    "caminho": "/modelos-notificacao",
+    "para": "LISTA modelos com filtro {isPesquisaPadrao:false, idModelo:<Identificação>, cifAuditor:<CIF>, tituloModelo:null, tituloNotificacao:null, autoria:'M'} → devolve o uid real",
+    "obs": "PEGADINHA: a Identificação que o AFT vê (ex.: um número de 3 dígitos) NÃO é o uid. GET /modelos-notificacao/<numero> devolve 400 'Parâmetro de URL uid inválido'."
+   },
+   {
+    "metodo": "GET",
+    "caminho": "/modelos-notificacao/{uid}",
+    "para": "detalhe do modelo: observacoes (a introdução consagrada pelo AFT), textos padrão, tipoAbrangencia, titulo"
+   },
+   {
+    "metodo": "GET",
+    "caminho": "/fiscalizacoes/detalhe/{ri}",
+    "para": "empregador e endereços do RI — de onde sai o endereço do rascunho"
+   },
+   {
+    "metodo": "GET",
+    "caminho": "/fiscalizacoes/situacao/{ri}",
+    "para": "situação do RI (não usado ainda)"
+   }
+  ],
+  "fonte": "Bundle público do front Angular do DET. index.html → runtime.<hash>.js → chunk 251 (~550 KB) tem as telas de notificação; main.<hash>.js tem auth/SSO. O hash muda a cada deploy."
+ },
+ "enums": {
+  "status_notificacao": {
+   "0": "EM_ELABORACAO (rascunho)",
+   "1": "CONFIRMADA (lavrada)",
+   "2": "CANCELADA"
+  },
+  "tipo_do_item": {
+   "0": "Solicitação de Documento",
+   "1": "Exigência do Cumprimento de Obrigação",
+   "2": "Orientação"
+  },
+  "tipo_retorno_solicitado": {
+   "0": "Sem Retorno",
+   "1": "Digital",
+   "2": "Impresso",
+   "3": "Vistoria in loco do Auditor"
+  },
+  "tipo_abrangencia": {
+   "0": "Toda a Empresa",
+   "1": "Somente o Estabelecimento Notificado",
+   "2": "Estabelecimento Notificado e os demais indicados"
+  },
+  "status_arquivo_entregue": {
+   "0": "INICIAL",
+   "1": "RECEBIDO",
+   "2": "REJEITADO",
+   "3": "DISPENSADO"
+  },
+  "tipo_ni": {
+   "0": "CNPJ (14 dígitos)",
+   "1": "CPF (11 dígitos)"
+  },
+  "tipo_texto_da_observacao": {
+   "0": "Introdução (aparece antes dos itens)",
+   "1": "Observação (aparece depois dos itens)"
+  }
+ },
+ "estrutura_do_payload": {
+  "principio": "O molde correto NÃO é uma notificação LAVRADA (que já promoveu tudo para campos diretos), e sim o que a TELA DE EDIÇÃO espera deserializar. Num rascunho, o conteúdo vive no campo `rascunho` (string JSON) e os campos diretos (itens, titulo) vêm VAZIOS — ler os campos diretos de um rascunho engana.",
+  "topo": {
+   "cpfAuditor": "do JWT",
+   "status": "0 (EM_ELABORACAO)",
+   "tipoGeracao": "0",
+   "tipoAbrangencia": "0/1/2 — campo OBRIGATÓRIO no formulário do site",
+   "tipoNi": "0 CNPJ / 1 CPF, conforme o tamanho do ni",
+   "auditores": "[{cpf, nome, cif}] do JWT",
+   "ri": "só dígitos",
+   "ni": "CNPJ/CPF do empregador, só dígitos",
+   "titulo": "ex.: 'Termo de Notificação' (o modelo pode fornecer)",
+   "dataPrazoEntregaPadrao": "ISO aaaa-mm-dd",
+   "dataPeriodoInicioPadrao / dataPeriodoFimPadrao / horaPrazoEntregaPadrao": "null — precisam EXISTIR",
+   "estabelecimentos / contatos / entregas": "[] (lista vazia, como o site; não null)",
+   "observacoes": "OS DOIS BLOCOS DE TEXTO DA TELA, na mesma lista, separados por `tipoTexto`: 0 = Introdução (antes dos itens), 1 = Observações (depois deles). NÃO existe campo `introducao` no topo — numa notificação lavrada ele vem nulo. Fonte preferencial: o próprio .md da /aft-tn-nco; o modelo do DET só entra quando o arquivo não traz nada.",
+   "textosInformativosPadraoAtivos": "do modelo, sem uids (o DET injeta os seus se ausente)",
+   "enderecos": "[{tipo, logradouro, numero, complemento, bairro, cep, municipio, uf, uid:''}]",
+   "itens": "lista (ver abaixo)"
+  },
+  "item": {
+   "ordem": "1-based",
+   "descricao": "texto integral do item — o MESMO formato da TN-NCO: *Título* - norma: texto [ementa]",
+   "tipo": "ver enums.tipo_do_item",
+   "tipoRetornoSolicitado": "ver enums.tipo_retorno_solicitado",
+   "tipoRetornoRealizado": "null",
+   "dataPrazoEntrega": "ISO aaaa-mm-dd",
+   "dataPeriodoInicio / dataPeriodoFim / dataAntecipacao / horaPrazoEntrega": "null — OBRIGATÓRIO EXISTIREM (ver armadilhas.form_reativo)",
+   "naoExigeDataInicialFinal": "true (o checkbox 'Não exige data inicial e final')",
+   "mensagemInfo": "null",
+   "tiposArquivos": "string de extensões separadas por ', ' — null quando o retorno é Sem Retorno",
+   "preAssinalado": "true (padrão adotado pelo AFT)",
+   "status": "0",
+   "versao": "1"
+  },
+  "observacao": {
+   "ordem": "sequência ÚNICA sobre os dois grupos (a introdução ocupa as primeiras ordens)",
+   "tipoTexto": "0 = introdução · 1 = observação",
+   "titulo": "rótulo em negrito na tela (ex.: 'Dúvidas'); null quando o texto não tem rótulo",
+   "descricao": "o texto (teto de 1000 caracteres, como todo campo do DET)",
+   "uid": "'' em registro novo",
+   "textoInformativoPadrao": "stub fixo {tipoTexto:0, ordem:0, titulo:null, descricao:'', editavel:false, dataDesativacao:null, uid:''} — o site põe em TODA entrada escrita pelo auditor; a lição dos itens vale aqui"
+  }
+ },
+ "tipos_de_arquivo": {
+  "formato": "STRING de extensões separadas por ', ' — não é array de flags. O front monta a partir de 5 checkboxes.",
+  "grupos": {
+   "Documento Texto": ".txt, .pdf, .doc, .docx, .odt, .re",
+   "Planilhas": ".xls, .xlsx, .ods, .csv",
+   "Imagens": ".jpg, .jpeg, .png, .mp4, .mpeg4",
+   "Arquivos de Jornada": ".afd, .afdt, .acjef, .aej, .txt",
+   "Arquivo Compactado": ".zip"
+  },
+  "todos_marcados": ".txt, .pdf, .doc, .docx, .odt, .re, .xls, .xlsx, .ods, .csv, .jpg, .jpeg, .png, .mp4, .mpeg4, .afd, .afdt, .acjef, .aej, .txt, .zip",
+  "reverso": "Para MARCAR os checkboxes na tela, o front só testa a presença de uma extensão representativa por grupo: .doc→documentos, .xls→planilhas, .jpg→imagens, .afd→jornadas, .zip→compactados. A string precisa conter ao menos essas cinco.",
+  "regra": "Item com retorno Sem Retorno não recebe arquivo: tiposArquivos fica null (comportamento do site, replicado)."
+ },
+ "armadilhas": [
+  {
+   "nome": "form_reativo — a tela de EDIÇÃO abria VAZIA",
+   "sintoma": "Rascunho criado pela API aparecia correto na VISUALIZAÇÃO e no PDF, mas a tela de Editar Notificação vinha em branco.",
+   "causa": "A edição monta um formulário reativo Angular com um controle por campo de data de cada item. Faltando esses campos no item, addControl roda sobre FormGroup indefinido e o formulário inteiro morre. A visualização é só leitura e não sofre — por isso o PDF saía bom e enganava.",
+   "erro_no_console": "TypeError: Cannot read properties of undefined (reading 'get') em isDatasPadraoValidas / addControl / _setUpControl",
+   "correcao": "Incluir em cada item TODOS os campos companheiros de data (dataPeriodoInicio, dataPeriodoFim, dataAntecipacao, horaPrazoEntrega = null; naoExigeDataInicialFinal = true) e, no topo, as datas-padrão e estabelecimentos/contatos/entregas como [].",
+   "como_diagnosticar_de_novo": "Abrir a tela pelo Claude in Chrome e ler o console (read_console_messages, onlyErrors). O nome da função no stack aponta o campo que falta."
+  },
+  {
+   "nome": "modelo por Identificação, não por uid",
+   "sintoma": "400 'Parâmetro de URL uid inválido'",
+   "causa": "A Identificação do modelo que o AFT vê não é o uid (hex longo).",
+   "correcao": "POST /modelos-notificacao com filtro idModelo (+cifAuditor) para achar o uid, e então GET /modelos-notificacao/{uid}."
+  },
+  {
+   "nome": "ler campos diretos de um rascunho engana",
+   "causa": "Em rascunho, itens/titulo/observacoes vêm vazios nos campos diretos; o conteúdo está no campo `rascunho` (string JSON).",
+   "correcao": "Para conferir o que foi gravado, fazer json.loads(notificacao['rascunho'])."
+  },
+  {
+   "nome": "endereço esparso",
+   "causa": "O detalhe do RI traz vários endereços; é preciso preferir o de fiscalização (tipo 2, com uf). Em estabelecimento rural o cadastro do DET pode ser pobre (ex.: só bairro e CEP).",
+   "situacao": "Não é defeito do toolkit — é o dado do registro. O campo fica editável na tela."
+  },
+  {
+   "nome": "Abrangência é obrigatória",
+   "causa": "No formulário do site, selecionar o RI faz surgir o campo Abrangência como obrigatório.",
+   "correcao": "Mandar tipoAbrangencia no payload (o modelo pode fornecer)."
+  },
+  "Procurar um campo `introducao` no payload: ele existe no topo mas vem SEMPRE nulo. Introdução e observações moram na mesma lista `observacoes`, e só o `tipoTexto` (0/1) as separa. Quem gravar a introdução como observação comum a vê no lugar errado da notificação."
+ ],
+ "metodo_de_investigacao": {
+  "principio": "Não deduzir contrato de API por nome de campo. Confirmar no bundle público e, quando possível, capturar o que o próprio site envia.",
+  "ler_o_bundle": "curl do index.html → achar runtime.<hash>.js → montar a URL do chunk (o 251 tem as telas de notificação) → procurar o serviço (getUrl(), nomes de método) e os enums.",
+  "capturar_o_site": "Claude in Chrome: executar o fluxo real (Criar Notificação → selecionar RI → Abrangência → Salvar Rascunho) e ler a requisição com read_network_requests (urlPattern 'rascunho'). Depois ler a notificação de volta e comparar campo a campo com a que o toolkit gera.",
+  "ler_o_console": "read_console_messages com onlyErrors — foi o que revelou a causa do formulário vazio.",
+  "conferir_o_gravado": "GET /api/det-molde?codigo=<CODIGO> e inspecionar o campo `rascunho`."
+ },
+ "testes_realizados": [
+  {
+   "o_que": "1º rascunho — 11 itens, sem modelo",
+   "resultado": "criou; faltaram introdução, observações e endereço"
+  },
+  {
+   "o_que": "2º rascunho — com modelo (introdução/observações) + endereço do RI",
+   "resultado": "introdução e observações OK; edição ainda vazia"
+  },
+  {
+   "o_que": "rascunho criado PELO SITE (referência)",
+   "resultado": "revelou que o conteúdo mora no campo `rascunho` e mostrou os campos que faltavam"
+  },
+  {
+   "o_que": "3º rascunho — itens com campos completos",
+   "resultado": "TELA DE EDIÇÃO FUNCIONA: 11 itens editáveis, sem erro no console"
+  },
+  {
+   "o_que": "4º rascunho — tipos/retornos por item, tipos de arquivo, pré-assinalado, prazo fixo",
+   "resultado": "tudo conforme: 9 itens Solicitação de Documento/Digital, penúltimo Vistoria in loco, último Orientação/Sem Retorno"
+  },
+  {
+   "data": "22/08/2026",
+   "o_que_provou": "introdução e observações do .md gravadas no rascunho: 1 entrada tipoTexto 0 e 2 tipoTexto 1 (com título), lidas de volta do DET dentro do campo `rascunho`",
+   "como_foi_conferido": "GET da notificação criada e leitura do JSON de dentro de `rascunho` — os campos diretos de um rascunho vêm vazios e enganam"
+  },
+  {
+   "data": "22/08/2026",
+   "o_que_provou": "fluxo completo a partir de um .md padrão da skill, com a chamada levando só pasta e arquivo: parâmetros lidos do front-matter, prazo calculado (16 dias), 7 itens, introdução e 2 observações, revisão mecânica sem impedimentos, parecer do subagente e rascunho criado — conferido lendo de volta do DET",
+   "achado_do_revisor": "apontou sozinho os itens que mandavam adequar sem pedir documento, o prazo único para exigências de porte muito diferente e dois itens que embutiam duas medidas — o que virou a regra do fecho de comprovação"
+  }
+ ],
+ "parametros_do_endpoint": {
+  "pasta": "nome da pasta da OS em OS ATIVAS (obrigatório)",
+  "arquivo": "nome do .md da TN-NCO dentro da pasta (obrigatório)",
+  "titulo": "padrão 'Termo de Notificação'",
+  "prazo": "data fixa dd/mm/aaaa ou aaaa-mm-dd (vence prazo_dias)",
+  "prazo_dias": "N dias à frente de hoje (padrão 16)",
+  "modelo": "Identificação do modelo do AFT (traz introdução/observações)",
+  "cif": "CIF do auditor, para filtrar o modelo",
+  "tipo": "tipo padrão dos itens (enums.tipo_do_item)",
+  "retorno": "retorno padrão dos itens (enums.tipo_retorno_solicitado)",
+  "preassinalado": "true por padrão",
+  "overrides": "{ordem: {tipo?, retorno?}} — exceções por item (ex.: último como Orientação/Sem Retorno)",
+  "confirmar": "sem ele = PRÉVIA (não escreve); true = cria"
+ },
+ "proximos_passos": [
+  "Publicar no repositório (hoje só local + backup)",
+  "Interface: skill de chat (ex.: /aft-det-notificar) e/ou botão no painel, com prévia obrigatória antes de escrever",
+  "Notificação de APRESENTAÇÃO de documentos (NAD) usando tipo 0 e/ou 2 — o inventário de tipos já está mapeado",
+  "Integrar com a /aft-NAD e a /aft-tn-nco, que já redigem os textos hoje colados à mão",
+  "Avaliar as demais escritas mapeadas e NÃO implementadas: avaliar arquivo entregue, deferir/indeferir prorrogação, responder canal de comunicação — todas com o mesmo princípio (o AFT confirma, e nada irreversível sem ele)"
+ ],
+ "privacidade": "Este arquivo não contém dado real de empresa, trabalhador, RI, CNPJ, CIF ou código de notificação — só placeholders e estrutura. Os identificadores usados nos testes ficam no cofre local (aft-toolkit-history), fora do repositório.",
+ "de_onde_saem_introducao_e_observacoes": {
+  "fonte": "o .md gerado pela /aft-tn-nco, lido por det_criar.secoes_da_tn_nco()",
+  "regra_posicional": "o que vem ANTES do primeiro item é introdução; depois do último, cada bloco 'Rótulo:' + linhas '>' é uma observação (Rótulo vira titulo, o texto vira descricao)",
+  "cabecalhos_opcionais": "'## Introdução' / '## Observações', quando o arquivo os tiver, mandam mais que a posição — mas NÃO são exigidos: o formato que a skill já produz é suficiente, e é o que existe nos arquivos antigos",
+  "precedencia": "o .md vence o modelo do DET. O modelo é fallback, para quando o arquivo não traz texto nenhum",
+  "por_que_nao_constante_no_codigo": "a introdução e as observações da TN-NCO são texto canônico do AFT, mas ele pode editar o .md antes de criar o rascunho — ler do arquivo respeita a edição"
+ },
+ "parametros_da_notificacao": {
+  "onde_moram": "front-matter `det:` no topo do .md da /aft-tn-nco, escrito em palavras (obrigacao/digital), nunca nos números do enum",
+  "campos": "titulo · prazo (dd/mm/aaaa) OU prazo_dias · tipo · retorno · preassinalado · arquivos · excecoes[{item, tipo?, retorno?, prazo?}]",
+  "padrao_do_toolkit": "tipo obrigacao (1) · retorno digital (1) · 16 dias corridos · pré-assinalado · todos os tipos de arquivo",
+  "precedencia": "o que a chamada mandou > o front-matter > o padrão. Para isso valer, o painel manda None quando o pedido não traz o campo: antes mandava o próprio padrão, e o front-matter nunca seria lido",
+  "prazo_por_item": "a exceção aceita `prazo` — o DET tem dataPrazoEntrega em cada item",
+  "armadilha": "separar_frontmatter() roda ANTES de qualquer leitura de conteúdo; sem isso a configuração entraria na introdução e apareceria para o empregador",
+  "sem_pyyaml": "parser à mão: nem todo Windows de AFT tem PyYAML, e o formato é restrito ao que a skill grava. Sem bloco `det:`, devolve {} e vale o padrão — arquivo antigo continua funcionando"
+ },
+ "revisao_em_duas_camadas": {
+  "por_que_duas": "subagente pode ser pulado, esquecido ou não chamado; a função no código, não. A garantia de 'só vai ao DET dado completo' precisa estar onde não dá para contornar",
+  "camada_dura": "det_criar.revisar_payload(), chamada pela própria criar_rascunho() antes do POST. Achados com gravidade impede|aviso; qualquer 'impede' levanta erro e NADA é enviado",
+  "o_que_impede": "RI ausente · CNPJ/CPF fora de 14/11 dígitos · sem título · sem itens · item sem prazo · prazo no passado · texto acima de 1000 caracteres · tipo/retorno fora da tabela · item que pede documento sem aceitar arquivo · notificação sem introdução",
+  "o_que_e_so_aviso": "endereço ausente ou sem UF (defeito conhecido do enriquecimento) · item fora do formato canônico (pode ser item sem ementa, que é legítimo) · prazo hoje · sem observações",
+  "camada_de_julgamento": "agents/aft-revisor-notificacao.md — lê o .md e a prévia isolado da conversa que os produziu; julga coerência entre o texto do item e o tipo/retorno, exequibilidade do prazo, verificabilidade da exigência, item que embute duas exigências, e o fecho de comprovação. Sugere; não escreve no DET, não edita arquivo, não decide",
+  "nao_repete": "o subagente recebe o resultado da camada dura em resumo.revisao e tem ordem de não refazer aquele trabalho"
+ },
+ "fecho_de_comprovacao": {
+  "origem": "primeiro parecer real do subagente (22/08/2026): dois itens mandavam 'adequar' com retorno Digital sem pedir documento nenhum. O AFT elevou o achado a regra da skill",
+  "regra_1": "adequação de máquina/equipamento (NR-12) → laudo técnico de adequação, assinado por profissional legalmente habilitado, com a respectiva ART e registro fotográfico da adequação realizada (155 caracteres)",
+  "regra_2": "qualquer outro 'adequar' → documento com registro fotográfico das adequações (61 caracteres)",
+  "condicoes": "a regra 1 vence a 2 (a da NR-12 já contém a fotografia) · só vale para retorno digital ou impresso · não se aplica a item que já pede laudo/ART/relatório/foto",
+  "onde_mora": "na redação (FASE 3 da skill) e na revisão (o subagente cobra o que escapou)"
+ },
+ "como_o_token_chega": {
+  "via_1_principal": "navegador do próprio assistente — lê sessionStorage['token'] da aba do DET logada e entrega por `det_token.py --gravar` (stdin, nunca argumento de comando)",
+  "via_2_alternativa": "extensão Sync DET, para assistente sem navegador",
+  "texto_canonico": "config/canal-token-det.md",
+  "privacidade": "o token vive só na RAM do painel: nunca em disco, nunca no chat, nunca em argumento de linha de comando (ficaria no histórico do shell)"
+ }
+}
