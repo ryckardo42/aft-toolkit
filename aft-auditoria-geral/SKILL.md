@@ -201,7 +201,7 @@ Antes de qualquer consulta externa, leia o arquivo `ementas-frequentes.md` desta
 
 **Camada 1 — NotebookLM (preferencial, requer setup do /aft-setup):**
 
-1. Resolva o notebook_id: leia `~/.claude/skills/config/notebooks.json` e busque a key correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
+1. Resolva o notebook_id com `python ~/.claude/skills/_scripts/notebook_id.py <key>` (nunca leia o `notebooks.json` direto: o ID depende da cohort do AFT; código 3 e sem saída = não existe para ele, troque de key), buscando a key correspondente à NR (ex: `nr-12`, `nr-35`). Para infrações de **legislação trabalhista** (CLT, jornada, vínculo), use as keys `ementario-legis` (geral), `informalidade` (vínculo) ou `jornada` (jornada/horário). Para SST em geral, `ementario-sst` também responde.
 2. Consulte o NotebookLM (a reconexão é automática — ver nota abaixo). Escreva a pergunta num arquivo para evitar problemas de acento no shell e use `--prompt-file`:
    ```bash
    notebooklm ask --notebook [notebook_id] --json --prompt-file [pergunta.txt]

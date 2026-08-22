@@ -1,198 +1,364 @@
 {
-  "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso aos notebooks e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst). O campo 'essencial' (1..N) marca os notebooks do dia a dia: sao os que o AFT deve abrir primeiro para dar o primeiro acesso (ver /aft-notebooklm-login, Passo 5).",
+  "_descricao": "Mapa de notebooks do NotebookLM usados pelas skills do AFT Toolkit. O acesso e concedido pelo mantenedor via https://notebooks-aft.vercel.app. Cada skill resolve o notebook pela chave (ex: nr-12, ementario-sst) chamando _scripts/notebook_id.py — nunca lendo este arquivo direto, porque o ID depende da cohort do AFT. Campos: 'ids' mapeia cohort -> notebook_id; 'publico' marca o notebook de link publico (mesmo endereco para todas as cohorts); 'chave_site' e o nome da mesma entrada no mapa do site, quando difere; 'essencial' (1..N) marca os notebooks do dia a dia, os primeiros que o AFT deve abrir (ver /aft-notebooklm-login, Passo 5).",
+  "_cohorts": "Cada notebook do NotebookLM comporta 1.000 leitores. A cohort 1 (originais) lotou em 19/08/2026 e o catalogo foi duplicado: quem se cadastrou depois entra na cohort 2 e enxerga as copias. A cohort do AFT vem do campo 'notebooklm_cohort' do aft-config.md. Notebook sem entrada para a cohort do AFT nao existe para ele: a skill segue sem essa camada, sem alarde.",
+  "cohort_ativa": 2,
+  "cap_por_notebook": 1000,
   "notebooks": {
     "aprendizagem": {
-      "notebook_id": "a9444ee8-ee98-460b-8c28-9e55c5989e8d",
-      "title": "Aprendizagem Profissional"
+      "title": "Aprendizagem Profissional",
+      "publico": true,
+      "ids": {
+        "1": "a9444ee8-ee98-460b-8c28-9e55c5989e8d"
+      }
     },
     "det": {
-      "notebook_id": "227eca8a-a99a-4eb0-b23b-d1a8d4682973",
-      "title": "DET"
+      "title": "DET",
+      "ids": {
+        "1": "227eca8a-a99a-4eb0-b23b-d1a8d4682973",
+        "2": "59491706-f8a7-4070-90e2-c6903285e08a"
+      }
     },
     "discriminacao": {
-      "notebook_id": "b0226841-b486-40a0-8b1b-35435a359927",
-      "title": "Discriminação no Trabalho"
+      "title": "Discriminação no Trabalho",
+      "ids": {
+        "1": "b0226841-b486-40a0-8b1b-35435a359927",
+        "2": "8286e798-efc1-4109-b313-cec2441b5aaf"
+      }
     },
     "doencas-trabalho": {
-      "notebook_id": "63b32ac4-2725-4c0e-ace0-7c46563b9640",
-      "title": "Análise de Doenças do Trabalho"
+      "title": "Análise de Doenças do Trabalho",
+      "chave_site": "doencas-do-trabalho",
+      "ids": {
+        "1": "63b32ac4-2725-4c0e-ace0-7c46563b9640",
+        "2": "8a7b8b7a-eb71-4c6c-8d17-ba4e58e0cd33"
+      }
     },
     "dupla-visita": {
-      "notebook_id": "046abfff-ddb4-49b8-96bc-b748502a50c1",
-      "title": "Dupla Visita"
+      "title": "Dupla Visita",
+      "ids": {
+        "1": "046abfff-ddb4-49b8-96bc-b748502a50c1",
+        "2": "2903a6d1-ded1-47ce-a0c3-fb5411b7acb8"
+      }
     },
     "ementario-legis": {
-      "notebook_id": "aeae6464-eb1b-4e06-86c2-49936058755a",
       "title": "Ementário Legislação",
-      "essencial": 2
+      "essencial": 2,
+      "chave_site": "ementario-legislacao",
+      "ids": {
+        "1": "aeae6464-eb1b-4e06-86c2-49936058755a",
+        "2": "92db38af-24c4-4a99-8beb-b6bae0e65c70"
+      }
     },
     "ementario-sst": {
-      "notebook_id": "8a5af173-06c5-46c1-9031-1b10a7b6b7a3",
       "title": "Ementário SST",
-      "essencial": 1
+      "essencial": 1,
+      "ids": {
+        "1": "8a5af173-06c5-46c1-9031-1b10a7b6b7a3",
+        "2": "6aab6a1f-7f44-4176-83f3-f8f5fac6be0f"
+      }
     },
     "esocial": {
-      "notebook_id": "a7f16f6a-8333-4f3d-91df-d7aca3e53d6d",
-      "title": "ESocial"
+      "title": "ESocial",
+      "ids": {
+        "1": "a7f16f6a-8333-4f3d-91df-d7aca3e53d6d",
+        "2": "14cf555b-14af-4e65-a64b-ded4420de585"
+      }
     },
     "fgts-digital": {
-      "notebook_id": "e78c73aa-ede5-4e24-9884-4b984adcfa73",
-      "title": "FGTS Digital"
+      "title": "FGTS Digital",
+      "publico": true,
+      "ids": {
+        "1": "e78c73aa-ede5-4e24-9884-4b984adcfa73"
+      }
     },
     "guia-analise-acidentes": {
-      "notebook_id": "aefa56af-5eb5-4558-8454-827173be228c",
-      "title": "Guia de Análise de Acidentes de Trabalho"
+      "title": "Guia de Análise de Acidentes de Trabalho",
+      "chave_site": "analise-de-acidente",
+      "ids": {
+        "1": "aefa56af-5eb5-4558-8454-827173be228c",
+        "2": "c4e29dec-b418-4e59-98dc-a3da45d3eb47"
+      }
     },
     "informalidade": {
-      "notebook_id": "c0b0d976-3b59-49c1-83f0-21111939bdc7",
       "title": "Informalidade",
-      "essencial": 11
+      "essencial": 11,
+      "ids": {
+        "1": "c0b0d976-3b59-49c1-83f0-21111939bdc7",
+        "2": "b1c4a781-91d0-4d46-9c22-5d5ca280cb53"
+      }
     },
     "interdicoes": {
-      "notebook_id": "ff4ce617-28db-425b-a318-16cba0f8d167",
-      "title": "Interdições RGI"
+      "title": "Interdições RGI",
+      "publico": true,
+      "ids": {
+        "1": "ff4ce617-28db-425b-a318-16cba0f8d167"
+      }
     },
     "jornada": {
-      "notebook_id": "6986d52a-a56c-4854-80c5-c203dc3ae829",
-      "title": "JORNADA e Khronos"
+      "title": "JORNADA e Khronos",
+      "chave_site": "jornada-e-khronos",
+      "ids": {
+        "1": "6986d52a-a56c-4854-80c5-c203dc3ae829",
+        "2": "3c94879b-3803-4066-941d-f98590084af8"
+      }
+    },
+    "lgpd": {
+      "title": "LGPD",
+      "ids": {
+        "1": "83673b63-5f63-492f-9dc4-1adab00d996a",
+        "2": "c389fecf-2552-4798-8208-3e89bff143e4"
+      }
     },
     "manual-lavratura-ai": {
-      "notebook_id": "5dcc16f8-3dcb-4677-8b56-3ce6730e8865",
-      "title": "manual lavratura de auto de infração"
+      "title": "manual lavratura de auto de infração",
+      "chave_site": "manual-lavratura-de-ai",
+      "ids": {
+        "1": "5dcc16f8-3dcb-4677-8b56-3ce6730e8865",
+        "2": "23b030c5-9ed6-45fb-aac5-45f99ab0c4d7"
+      }
     },
     "motorista-profissional": {
-      "notebook_id": "24be4caf-120b-424a-b56a-76b445053f55",
-      "title": "Motorista profissional"
+      "title": "Motorista profissional",
+      "chave_site": "motoristas-profissionais",
+      "ids": {
+        "1": "24be4caf-120b-424a-b56a-76b445053f55",
+        "2": "53505dce-8c8d-45c7-a1df-55abc6107328"
+      }
+    },
+    "normas-abnt-iso": {
+      "title": "Normas ABNT ISO",
+      "ids": {
+        "1": "2ba09cfe-67a3-4afe-b480-2cd468d52c33",
+        "2": "2364af1e-d4d0-4c4e-b8d5-afedcd380f52"
+      }
     },
     "notas-tecnicas-sit": {
-      "notebook_id": "e5d22a2d-9d65-43f4-87c5-e8d7c62c0069",
-      "title": "Notas técnicas e precedentes adm SIT MTE"
+      "title": "Notas técnicas e precedentes adm SIT MTE",
+      "chave_site": "notas-tecnicas",
+      "ids": {
+        "1": "e5d22a2d-9d65-43f4-87c5-e8d7c62c0069",
+        "2": "996080fb-094e-45b2-b143-944e6b2a0acb"
+      }
     },
     "nr-01": {
-      "notebook_id": "3b17b41a-3152-4c72-9b45-d57060434ae8",
       "title": "NR-01 PGR",
-      "essencial": 4
+      "essencial": 4,
+      "chave_site": "nr-01-pgr",
+      "ids": {
+        "1": "3b17b41a-3152-4c72-9b45-d57060434ae8",
+        "2": "5a00f44b-f55d-4dfb-b0a5-347d614266fe"
+      }
     },
     "nr-03": {
-      "notebook_id": "721b73ea-a96c-4a40-8f2a-bb22bd57becb",
       "title": "NR-03",
-      "essencial": 5
+      "essencial": 5,
+      "ids": {
+        "1": "721b73ea-a96c-4a40-8f2a-bb22bd57becb",
+        "2": "519d5f83-9a95-4294-9a94-223657f2ac5e"
+      }
     },
     "nr-04": {
-      "notebook_id": "c529b09a-61b1-4611-beed-3c73f9ad7396",
       "title": "NR-04 SESMT",
-      "essencial": 8
+      "essencial": 8,
+      "chave_site": "nr-04-sesmt",
+      "ids": {
+        "1": "c529b09a-61b1-4611-beed-3c73f9ad7396",
+        "2": "ce13cc26-3f7d-4051-99b6-9cbf13f16344"
+      }
     },
     "nr-05": {
-      "notebook_id": "3e6bd601-c5c7-48c8-8dd7-a49e6240b332",
       "title": "NR-05 CIPA",
-      "essencial": 9
+      "essencial": 9,
+      "chave_site": "nr-05-cipa",
+      "ids": {
+        "1": "3e6bd601-c5c7-48c8-8dd7-a49e6240b332",
+        "2": "cf7c6e83-4397-4100-8e86-2481d63c02d4"
+      }
     },
     "nr-06": {
-      "notebook_id": "21664a25-ed94-4c3e-9bab-dd619294095e",
-      "title": "NR-06 EPI"
+      "title": "NR-06 EPI",
+      "chave_site": "nr-06-epi",
+      "ids": {
+        "1": "21664a25-ed94-4c3e-9bab-dd619294095e",
+        "2": "b2c11052-d4f1-4fec-8485-47b8fdcd97cb"
+      }
     },
     "nr-07": {
-      "notebook_id": "9c378bd1-26b4-4e5e-9878-035b7793cd38",
-      "title": "NR 07 - PCMSO"
+      "title": "NR 07 - PCMSO",
+      "chave_site": "nr-07-pcmso",
+      "ids": {
+        "1": "9c378bd1-26b4-4e5e-9878-035b7793cd38",
+        "2": "632700c1-5718-4f25-8c0f-db83502245ce"
+      }
     },
     "nr-09": {
-      "notebook_id": "148e8dd5-dc55-48ee-93b9-373e4676a8e7",
-      "title": "NR-09"
+      "title": "NR-09",
+      "ids": {
+        "1": "148e8dd5-dc55-48ee-93b9-373e4676a8e7",
+        "2": "97cd1e5a-fd7b-4d78-9550-3aed7a8fa080"
+      }
     },
     "nr-10": {
-      "notebook_id": "20b2a283-2a25-403d-bcb2-58e41bb9b40d",
       "title": "NR-10",
-      "essencial": 7
+      "essencial": 7,
+      "ids": {
+        "1": "20b2a283-2a25-403d-bcb2-58e41bb9b40d",
+        "2": "3b687ca1-73ec-4b31-b3dc-be25cd080ba3"
+      }
     },
     "nr-11": {
-      "notebook_id": "8e934d2d-b2a1-48da-bf90-3d7317dcf9a5",
-      "title": "NR-11"
+      "title": "NR-11",
+      "ids": {
+        "1": "8e934d2d-b2a1-48da-bf90-3d7317dcf9a5",
+        "2": "1f8537b3-35b4-48cd-b2af-93deb97aafcd"
+      }
     },
     "nr-12": {
-      "notebook_id": "90bf6539-b105-4bef-b1af-973f102a0187",
       "title": "NR-12",
-      "essencial": 3
+      "essencial": 3,
+      "ids": {
+        "1": "90bf6539-b105-4bef-b1af-973f102a0187",
+        "2": "fc12c547-ea0b-4274-9dd5-5b11c850295e"
+      }
     },
     "nr-13": {
-      "notebook_id": "a9723b57-78fc-4f2a-b499-097d7b26977a",
       "title": "NR-13",
-      "essencial": 13
+      "essencial": 13,
+      "ids": {
+        "1": "a9723b57-78fc-4f2a-b499-097d7b26977a",
+        "2": "66cce10f-6a54-4d42-a763-3fb77eec0cf6"
+      }
     },
     "nr-15": {
-      "notebook_id": "750c2ef8-4701-4839-bc10-560d44fd2711",
-      "title": "NR-15"
+      "title": "NR-15",
+      "ids": {
+        "1": "750c2ef8-4701-4839-bc10-560d44fd2711",
+        "2": "6089f44b-f117-4269-9e34-141876c22203"
+      }
     },
     "nr-17": {
-      "notebook_id": "03c2c3b4-f83e-41c5-803d-83ef92818fe1",
-      "title": "NR 17 Ergonomia"
+      "title": "NR 17 Ergonomia",
+      "ids": {
+        "1": "03c2c3b4-f83e-41c5-803d-83ef92818fe1",
+        "2": "5dca2953-829c-4d36-a87c-f4208d524b30"
+      }
     },
     "nr-18": {
-      "notebook_id": "6b9f1fbb-4d99-478c-9f6b-64b7a5f98808",
       "title": "NR-18",
-      "essencial": 6
+      "essencial": 6,
+      "ids": {
+        "1": "6b9f1fbb-4d99-478c-9f6b-64b7a5f98808",
+        "2": "f46af430-055b-49cd-97b4-30967a1be69f"
+      }
     },
     "nr-20": {
-      "notebook_id": "09ff79d5-5dce-4398-951b-e459c442cb6b",
-      "title": "NR-20 Segurança e Saúde com Inflamáveis"
+      "title": "NR-20 Segurança e Saúde com Inflamáveis",
+      "ids": {
+        "1": "09ff79d5-5dce-4398-951b-e459c442cb6b",
+        "2": "783bcf53-b25b-4b5d-843e-86a317189c86"
+      }
     },
     "nr-21": {
-      "notebook_id": "503d6437-90e2-4dc2-992b-cde219b2b89e",
-      "title": "NR-21"
+      "title": "NR-21",
+      "ids": {
+        "1": "503d6437-90e2-4dc2-992b-cde219b2b89e",
+        "2": "ff9b9d40-3768-4624-9d18-031795dfa078"
+      }
     },
     "nr-24": {
-      "notebook_id": "af01f7e7-3216-4467-a226-c1870ad298de",
       "title": "NR-24",
-      "essencial": 10
+      "essencial": 10,
+      "ids": {
+        "1": "af01f7e7-3216-4467-a226-c1870ad298de",
+        "2": "683198c5-d7d7-487b-b748-4f091a86d619"
+      }
     },
     "nr-31": {
-      "notebook_id": "3339f269-ddc6-4496-98d6-4858f83bfab8",
-      "title": "NR-31"
+      "title": "NR-31",
+      "ids": {
+        "1": "3339f269-ddc6-4496-98d6-4858f83bfab8",
+        "2": "5d75efce-b262-41f2-9b1b-b358f0ca9c78"
+      }
     },
     "nr-32": {
-      "notebook_id": "851c15d2-6297-4924-aaf5-88efc7176435",
-      "title": "NR-32: Segurança e Saúde em Serviços de Saúde"
+      "title": "NR-32: Segurança e Saúde em Serviços de Saúde",
+      "ids": {
+        "1": "851c15d2-6297-4924-aaf5-88efc7176435",
+        "2": "f116ef38-0673-42d5-984e-591944496ff0"
+      }
     },
     "nr-33": {
-      "notebook_id": "cda8fd33-647a-4164-b037-1e425a12b1d5",
-      "title": "NR-33 Espaço Confinado"
+      "title": "NR-33 Espaço Confinado",
+      "ids": {
+        "1": "cda8fd33-647a-4164-b037-1e425a12b1d5",
+        "2": "3a29bd11-5c94-4d3a-a48b-c9020baae142"
+      }
     },
     "nr-35": {
-      "notebook_id": "12435239-9d3d-44b5-b473-a9deddc382f9",
       "title": "NR 35: Trabalho em Altura",
-      "essencial": 12
+      "essencial": 12,
+      "ids": {
+        "1": "12435239-9d3d-44b5-b473-a9deddc382f9",
+        "2": "af075599-adf2-4fd0-9bd9-9e2d2427c64c"
+      }
     },
     "nr-36": {
-      "notebook_id": "e9fb4dbd-7732-4f40-9b71-fd13859cd232",
-      "title": "NR-36 Frigoríficos"
+      "title": "NR-36 Frigoríficos",
+      "ids": {
+        "1": "e9fb4dbd-7732-4f40-9b71-fd13859cd232",
+        "2": "abf14dcf-7a23-4b85-9359-7322d505035a"
+      }
     },
     "nr-38": {
-      "notebook_id": "8d060715-3c8d-482c-afb6-aeaaa1c12adb",
-      "title": "NR-38"
+      "title": "NR-38",
+      "ids": {
+        "1": "8d060715-3c8d-482c-afb6-aeaaa1c12adb",
+        "2": "79660a39-eca4-498d-a29a-a4df74f3152e"
+      }
     },
     "pcd": {
-      "notebook_id": "b66aa747-fe9c-4622-8403-ecb95d97f41b",
-      "title": "PCD"
+      "title": "PCD",
+      "publico": true,
+      "ids": {
+        "1": "b66aa747-fe9c-4622-8403-ecb95d97f41b"
+      }
     },
     "protocolos-seguranca-inspecao": {
-      "notebook_id": "92636d02-a6b3-482a-ae26-2bdcdcef1bcf",
-      "title": "Protocolos de Segurança na Inspeção do Trabalho"
+      "title": "Protocolos de Segurança na Inspeção do Trabalho",
+      "chave_site": "protocolo-de-seguranca",
+      "publico": true,
+      "ids": {
+        "1": "92636d02-a6b3-482a-ae26-2bdcdcef1bcf"
+      }
     },
     "riscos-psicossociais": {
-      "notebook_id": "5622870e-4688-47d3-a390-b2d64dd798c3",
-      "title": "Fatores de Riscos Psicossociais Relacionados ao Trabalho"
+      "title": "Fatores de Riscos Psicossociais Relacionados ao Trabalho",
+      "chave_site": "fatores-psicossociais",
+      "ids": {
+        "1": "5622870e-4688-47d3-a390-b2d64dd798c3",
+        "2": "3b738828-f454-42d3-9865-5b7f02f2212c"
+      }
     },
     "rit": {
-      "notebook_id": "8bef7c2e-a904-4ea7-973b-120ada3fd1c7",
-      "title": "RIT - Regulamento da Inspeção do Trabalho"
+      "title": "RIT - Regulamento da Inspeção do Trabalho",
+      "ids": {
+        "1": "8bef7c2e-a904-4ea7-973b-120ada3fd1c7",
+        "2": "37fba5ab-df08-4c88-8d61-00126236389f"
+      }
     },
     "terceirizacao": {
-      "notebook_id": "782ca2d3-9d00-4bba-a707-d5d2e7f25ced",
-      "title": "Terceirização"
+      "title": "Terceirização",
+      "ids": {
+        "1": "782ca2d3-9d00-4bba-a707-d5d2e7f25ced",
+        "2": "d50b5367-6ff3-44da-9ab3-3e0ac4cf8749"
+      }
     },
     "trabalho-infantil": {
-      "notebook_id": "0bf946be-2759-4f45-91e4-557340b3529a",
-      "title": "Trabalho Infantil"
+      "title": "Trabalho Infantil",
+      "ids": {
+        "1": "0bf946be-2759-4f45-91e4-557340b3529a",
+        "2": "1d4a77d7-2b00-4e8f-b3e9-91f294075b54"
+      }
     }
   }
 }

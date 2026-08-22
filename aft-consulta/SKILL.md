@@ -57,12 +57,17 @@ do fato**, nunca nome/CPF/empresa.
 
 ## FASE 2 — Resolver o(s) notebook(s)
 
-O mapa dos notebooks está em `~/.claude/skills/config/notebooks.json` (fonte única — nunca
-fixe ID no código). Resolva a(s) **key(s)** pelo assunto e pegue o `notebook_id`:
+Resolva a(s) **key(s)** pelo assunto e peça o ID ao resolvedor — nunca fixe ID no código
+nem leia o `notebooks.json` direto: cada notebook tem um ID por **cohort**, e só o script
+sabe qual é a do AFT.
 
 ```bash
-python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/skills/config/notebooks.json')))['notebooks']['<key>']['notebook_id'])"
+python ~/.claude/skills/_scripts/notebook_id.py <key>
 ```
+
+Saiu com **código 3** e sem imprimir nada? Aquele notebook não existe para a cohort do AFT
+(nem todo notebook da cohort 1 foi duplicado). Escolha outra key — `ementario-sst` costuma
+cobrir — e siga; não é erro nem motivo de alarde.
 
 ### Como escolher a key
 
@@ -84,6 +89,8 @@ python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/sk
   | trabalho infantil | `trabalho-infantil` · aprendizagem → `aprendizagem` |
   | dupla visita (ME/EPP, art. 627-A) | `dupla-visita` |
   | regulamento/competência da inspeção | `rit` |
+  | proteção de dados, LGPD na fiscalização | `lgpd` |
+  | norma técnica ABNT/ISO citada em laudo | `normas-abnt-iso` |
   | doença ocupacional, nexo | `doencas-trabalho` · PCD → `pcd` |
 
 > **Não desista da Camada 1 só porque falta a key exata da NR**: caia no `ementario-sst`.

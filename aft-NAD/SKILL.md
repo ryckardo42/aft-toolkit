@@ -76,7 +76,7 @@ Para cada documento, busque o **código da ementa** no formato `XXXXXX-X` (ex.: 
 Estratégia em 3 camadas (mesma de `/aft-tn-nco` e `/aft-auditoria-geral`):
 
 **Camada 1 — NotebookLM (preferencial):**
-1. Resolva o `notebook_id`: leia `~/.claude/skills/config/notebooks.json`.
+1. Resolva o `notebook_id` com `python ~/.claude/skills/_scripts/notebook_id.py <key>` (nunca leia o `notebooks.json` direto: o ID depende da cohort do AFT; código 3 e sem saída = não existe para ele, troque de key).
    - Documento de **SST** (PGR, PCMSO, ASO, laudo, atas CIPA, AET) → key da NR (`nr-01`, `nr-07`, `nr-05`, `nr-17`...). Sem key específica → `ementario-sst`.
    - Documento de **jornada/ponto** → `jornada`. **eSocial** → `esocial`. **FGTS** → `fgts-digital`. **Registro/vínculo** → `informalidade`. Legislação trabalhista geral → `ementario-legis`.
 2. Consulte:

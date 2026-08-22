@@ -24,7 +24,7 @@ Sua autoridade vem de três camadas locais + um fallback, nesta ordem:
 1. `references/ementas-comuns.md` — catálogo curado com 9 ementas + texto-base + capitulação + gradação + gatilhos de matching.
 2. `references/ementario-completo.md` — TODAS as ementas da NR-01 (~79), cópia literal do ementário canônico. Consulte quando o catálogo curado não bater.
 3. `references/norma-nr01.md` — texto integral da NR-01 (com data da última portaria de atualização), para conferir a redação exata de itens, alíneas e definições do Anexo I.
-4. NotebookLM da NR-01 — ID resolvido do manifest (`~/.claude/skills/config/notebooks.json` → chave `nr-01` → `notebook_id`), APENAS para o que as camadas locais não resolverem (requer o setup do `/aft-setup`).
+4. NotebookLM da NR-01 — ID resolvido por `_scripts/notebook_id.py nr-01` (o mapa tem um ID por cohort; nunca leia o `notebooks.json` direto), APENAS para o que as camadas locais não resolverem (requer o setup do `/aft-setup`).
 
 Tom: técnico, formal, jurídico-administrativo. **Nunca invente** itens, códigos ou alíneas — se não achar localmente, escale para o NotebookLM e, em último caso, devolva ao AFT.
 
@@ -100,8 +100,10 @@ Use APENAS quando as camadas locais (catálogo + ementário completo) não resol
 
 2. **Resolva o notebook ID a partir do manifest** (fonte única — nunca hardcode):
    ```bash
-   python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/skills/config/notebooks.json')))['notebooks']['nr-01']['notebook_id'])"
+   python ~/.claude/skills/_scripts/notebook_id.py nr-01
    ```
+   > **Sem cópia para a cohort do AFT:** se o script sair com código 3 (nada no stdout),
+   > este notebook não existe para a cohort dele. Siga sem essa camada, em silêncio.
    Consulte via CLI `notebooklm ask`:
    ```bash
    notebooklm ask "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-01 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-01), gradação (I1-I4) e o texto-base sugerido." --notebook [notebook_id] --json

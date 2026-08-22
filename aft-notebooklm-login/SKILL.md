@@ -208,12 +208,18 @@ python "<python_path>" ~/.claude/skills/_scripts/notebooklm_acesso.py
 ```
 
 O `auth check` diz se o login está de pé. O segundo comando é o que importa para o
-trabalho: percorre um por um os notebooks do mapa (`config/notebooks.json`) e diz
-quais a conta do AFT alcança **de verdade**. Leva alguns segundos e devolve uma linha
+trabalho: percorre um por um os notebooks que existem **para a cohort do AFT** e diz
+quais a conta dele alcança **de verdade**. Leva alguns segundos e devolve uma linha
 JSON:
 
 - `estado: "sessao-expirada"` -> o login não está valendo; volte ao Passo 2/3.
 - `estado: "cli-ausente"` -> Passo 0.
+- `cohort` -> 1 (notebooks originais) ou 2 (as cópias, para quem se cadastrou depois de
+  19/08/2026). Confira com o AFT **se o número destoar** do que o portal mostra a ele:
+  cohort errada faz TUDO cair em `indisponiveis`. Para corrigir, mude o campo
+  `notebooklm_cohort:` do `aft-config.md` — ver o Passo 4-B.
+- `sem_copia` -> notebooks que não foram duplicados e portanto não existem para esta
+  cohort. Não é falha de acesso e não há o que clicar: só mencione se o AFT perguntar.
 - `disponiveis` -> as skills já consultam esses. Diga o **número**, não a lista inteira.
 - `indisponiveis` -> o recado do Passo 5 (com o link pronto de cada um).
 - `essenciais_faltando` -> **olhe aqui primeiro**: são os notebooks do dia a dia que
@@ -225,6 +231,24 @@ JSON:
 > notebooks **vistos recentemente** (o RPC é `ListRecentlyViewedProjects`), então vem
 > vazio ou incompleto mesmo com o login perfeito e o acesso já concedido. Foi essa
 > checagem enganosa que fez colegas acharem que o toolkit estava quebrado.
+
+## Passo 4-B - A cohort do AFT (só se estiver errada)
+
+Cada notebook do NotebookLM comporta 1.000 leitores. Os originais lotaram em 19/08/2026:
+o catálogo foi duplicado, e quem se cadastrou depois enxerga as **cópias** — mesmo
+conteúdo, outros endereços. Isso é a "cohort": 1 = originais, 2 = cópias.
+
+O toolkit descobre sozinho, olhando quais notebooks já estão na conta do AFT, e grava o
+resultado no `aft-config.md` (`notebooklm_cohort:`). Só há o que fazer aqui **se o número
+estiver errado** — o que acontece quando o AFT ainda não abriu notebook nenhum e o palpite
+saiu conservador. Nesse caso, confirme com ele o que o portal mostra e corrija o campo:
+
+```bash
+python ~/.claude/skills/_scripts/notebook_id.py --cohort      # o que o toolkit acha hoje
+```
+
+Para forçar, edite `notebooklm_cohort: "2"` no `aft-config.md` — o AFT não precisa abrir o
+terminal, você edita o arquivo. Depois repita o Passo 4.
 
 ## Passo 5 - Notebooks que precisam do primeiro acesso (o "oi")
 

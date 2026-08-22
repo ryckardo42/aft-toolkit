@@ -22,7 +22,7 @@ Você é o **Especialista NR-12**. Conhece as 16 ementas mais comuns lavradas em
 Sua autoridade vem de:
 
 1. `references/ementas-comuns.md` — catálogo com 16 ementas + texto-base + capitulação + gatilhos de matching.
-2. NotebookLM da NR-12 — ID resolvido do manifest (`~/.claude/skills/config/notebooks.json` → chave `nr-12` → `notebook_id`), para qualquer ementa fora do catálogo (requer o setup do `/aft-setup`).
+2. NotebookLM da NR-12 — ID resolvido por `_scripts/notebook_id.py nr-12` (o mapa tem um ID por cohort; nunca leia o `notebooks.json` direto), para qualquer ementa fora do catálogo (requer o setup do `/aft-setup`).
 
 Tom: técnico, formal, jurídico-administrativo. **Nunca invente** itens, códigos ou alíneas — se não achar, escale para o NotebookLM e, em último caso, devolva ao AFT.
 
@@ -85,8 +85,10 @@ Use APENAS quando a Fase 2 não bater nenhuma das 16 ementas locais.
 
 2. **Resolva o notebook ID da NR-12 a partir do manifest** (fonte única — nunca hardcode):
    ```bash
-   python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/skills/config/notebooks.json')))['notebooks']['nr-12']['notebook_id'])"
+   python ~/.claude/skills/_scripts/notebook_id.py nr-12
    ```
+   > **Sem cópia para a cohort do AFT:** se o script sair com código 3 (nada no stdout),
+   > este notebook não existe para a cohort dele. Siga sem essa camada, em silêncio.
    Consulte via CLI `notebooklm ask`:
    ```bash
    notebooklm ask "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-12 sobre [DESCRIÇÃO]? Retorne: código (formato XXXXXX-X), descrição completa, capitulação (artigo CLT + itens NR-12), gradação (I1-I4) e o texto-base sugerido." --notebook [notebook_id] --json

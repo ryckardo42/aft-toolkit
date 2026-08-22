@@ -81,8 +81,8 @@ cabeçalho do arquivo; corpo, rodapé e estilos do template continuam intactos.
 O toolkit mantém uma base de **precedentes reais**: mais de uma centena de Relatórios
 Técnicos de Interdição/Embargo (máquinas NR-12, obras NR-18/NR-35, e outros), cada um com
 objetos interditados, ementas, fatores de risco, medidas de proteção e documentos
-solicitados. Ela vive no NotebookLM, na key `interdicoes` do
-`~/.claude/skills/config/notebooks.json`.
+solicitados. Ela vive no NotebookLM, na key `interdicoes`, cujo ID sai de
+`python ~/.claude/skills/_scripts/notebook_id.py interdicoes`.
 
 - **Quando consultar:** sempre no **Modo C**; e no **Modo A** quando o AFT não ditar o
   conteúdo das seções 5, 6 ou 7 (fatores de risco, medidas de proteção, documentos) — os
@@ -94,8 +94,9 @@ solicitados. Ela vive no NotebookLM, na key `interdicoes` do
 - **Como apresentar:** cite os termos precedentes pelo número (rastreabilidade), mas deixe
   claro que precedente **não substitui** a avaliação do caso concreto — a decisão de
   interditar é ato do AFT (art. 161 da CLT).
-- **Se a key `interdicoes` não existir** no `notebooks.json` (ou o NotebookLM não responder
-  mesmo após a reconexão automática), **pule a camada sem alarde**: no Modo C, diga que a
+- **Se o resolvedor não devolver ID** para a key `interdicoes` (nada no stdout, código 2 ou
+  3), ou o NotebookLM não responder mesmo após a reconexão automática, **pule a camada sem
+  alarde**: no Modo C, diga que a
   base de precedentes não está configurada e siga com a análise pelos critérios da NR-03;
   nos demais modos, peça os dados ao AFT como sempre.
 - Os precedentes **não dispensam** o sub-fluxo 4b (resolução de ementas): eles servem de
@@ -221,8 +222,8 @@ a **capitulação** citada na irregularidade e os **autos derivados** do passo 7
      da NR-18 **não classifica** a dimensão cautelar, por decisão de projeto — essa
      leitura é desta skill (passo 0 e item 5).
    - **Se o gatilho não casar com nada**, não force: vá à camada 2.
-2. **NotebookLM** (se configurado pelo `/aft-setup`): leia
-   `~/.claude/skills/config/notebooks.json` e consulte **os dois** notebooks —
+2. **NotebookLM** (se configurado pelo `/aft-setup`): resolva os IDs com
+   `python ~/.claude/skills/_scripts/notebook_id.py <key>` e consulte **os dois** notebooks —
    o `ementario-sst` (código, descrição e capitulação) **e o da NR específica**
    do caso (`nr-12`, `nr-18`, `nr-35`...). O da NR não é opcional: é ele que
    confere o texto do subitem contra o fato e costuma apontar **ementa aplicável
@@ -889,7 +890,7 @@ Competência delegada pela Portaria 1719/2014...
 | Mesma ementa atinge múltiplos objetos | 1 único auto na Fase 7, listando todos os objetos na parte 2 (não duplicar) |
 | Ementa ficou como `[EMENTA A PREENCHER]` no RT | Pular esta ementa na Fase 7 e avisar o AFT no fechamento |
 | AFT em dúvida se a situação justifica interdição | Modo C: consultar o notebook `interdicoes` e apresentar precedentes análogos — sugerir, nunca decidir |
-| Key `interdicoes` ausente no notebooks.json | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
+| `notebook_id.py interdicoes` não devolve ID (código 2 ou 3) | Pular a camada de precedentes sem alarde; no Modo C, analisar pelos critérios da NR-03 e avisar que a base não está configurada |
 | Pasta `interdicao-embargo/` já existe (mesmo termo) | Reutilizar; sobrescrever `autos.md` e a cópia do `.docx` é idempotente (backup automático antes) |
 | Pasta `interdicao-embargo/` já tem RT/autos de OUTRO termo | Sufixar os arquivos novos com o nº do termo (`RT_Interdicao_<termo>.docx`, `autos_<termo>.md`) para não sobrescrever |
 | AFT de outra SRTE | Template é universal, nenhum ajuste necessário |

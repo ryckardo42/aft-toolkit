@@ -95,8 +95,8 @@ Para cada bloco extraia:
 Para cada auto, valide o código da ementa:
 - Formato obrigatório: `\d{6}-\d` (6 dígitos, hífen, 1 dígito verificador). Ex: `312358-8`.
 - Se o auditor não forneceu o código, use a busca em 3 camadas:
-  1. **NotebookLM** (se configurado): resolva o notebook da NR em
-     `~/.claude/skills/config/notebooks.json` (key `nr-XX` ou `ementario-sst`) e consulte:
+  1. **NotebookLM** (se configurado): resolva o notebook da NR com
+     `python ~/.claude/skills/_scripts/notebook_id.py <key>` (key `nr-XX` ou `ementario-sst`) e consulte:
      ```bash
      notebooklm ask "Qual o código da ementa (formato XXXXXX-X) para [irregularidade]?" --notebook [id] --json
      ```

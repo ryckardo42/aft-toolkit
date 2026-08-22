@@ -141,7 +141,7 @@ Para cada irregularidade sem auto, busque o **código da ementa** no formato `XX
 Estratégia em 3 camadas (mesma de `/aft-auditoria-geral`):
 
 **Camada 1 — NotebookLM (preferencial, requer o setup do /aft-setup):**
-1. Resolva o `notebook_id`: leia `~/.claude/skills/config/notebooks.json` e pegue a key da NR (`nr-12`, `nr-35`, `nr-06`...). Para legislação trabalhista, use `ementario-legis` / `jornada` / `informalidade`.
+1. Resolva o `notebook_id` com `python ~/.claude/skills/_scripts/notebook_id.py <key>`, pegando a key da NR (`nr-12`, `nr-35`, `nr-06`...). Para legislação trabalhista, use `ementario-legis` / `jornada` / `informalidade`. Nunca leia o `notebooks.json` direto: o ID depende da cohort do AFT, e código 3 (sem saída) significa que aquele notebook não existe para ele — troque de key e siga.
    - **Nem toda NR tem notebook próprio.** Quando não houver key específica para a NR, **busque no notebook geral de SST `ementario-sst`** — ele cobre o ementário SST inteiro. Não desista da Camada 1 só porque falta a key da NR.
 2. Consulte:
    ```bash

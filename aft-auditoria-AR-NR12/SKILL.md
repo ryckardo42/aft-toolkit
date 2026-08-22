@@ -330,7 +330,10 @@ com bloqueio (12.5.8).
 Para citar itens literais da NR-12 (e do Anexo específico da máquina: VI panificação, VIII
 prensas, etc.), consulte o NotebookLM se configurado pelo `/aft-setup`:
 
-1. Leia `~/.claude/skills/config/notebooks.json` e identifique a key da `nr-12`.
+1. Resolva o ID do notebook da NR-12:
+   ```bash
+   python ~/.claude/skills/_scripts/notebook_id.py nr-12
+   ```
 2. Consulte (uma pergunta objetiva por tema; paralelize quando forem vários):
    ```bash
    notebooklm ask "Transcreva literalmente o item X.Y da NR-12 [ou do Anexo N] na redação vigente" --notebook <notebook_id> --json
