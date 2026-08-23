@@ -437,8 +437,8 @@
     {
       "nome": "checar_rt_autos.py",
       "caminho": "_scripts/checar_rt_autos.py",
-      "papel": "Confere a coerência entre a Seção 4 do RT (.docx) e os autos (autos.md) — pega divergência quando um é editado e o outro não acompanha.",
-      "runtime": "Python stdlib"
+      "papel": "Confere a coerência entre a Seção 4 do RT (.docx ou .pdf) e os autos (autos.md) — pega divergência quando um é editado e o outro não acompanha.",
+      "runtime": "Python stdlib + pdfplumber (só para RT em PDF)"
     },
     {
       "nome": "gerar_painel.py",

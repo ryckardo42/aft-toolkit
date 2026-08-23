@@ -791,12 +791,13 @@ Na mesma pasta `interdicao-embargo/` criada no passo 6, salve:
 
 As irregularidades do RT e o `autos.md` precisam bater. Eles podem desalinhar quando o RT é
 editado (trocar ementas por itens de NR, tirar/incluir irregularidade — ex.: NR-01/NR-35).
-Rode o verificador comparando o `.docx` do RT com o `autos.md` (ele reconhece os dois
-formatos do RT e, no formato por objeto, conta uma ementa repetida em vários objetos
-uma vez só, como a regra 7.1 manda):
+Rode o verificador comparando o RT com o `autos.md` — o RT pode ser o `.docx` do
+`montar_rt.py` **ou o `.pdf`** (no Modo B, o RT que o AFT tem em mãos costuma ser o PDF
+impresso do Termo já lavrado). Ele reconhece os dois formatos do RT e, no formato por
+objeto, conta uma ementa repetida em vários objetos uma vez só, como a regra 7.1 manda:
 
 ```bash
-python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx]" "[caminho do autos.md]"
+python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx ou .pdf]" "[caminho do autos.md]"
 ```
 
 - **Sem divergência** (exit 0) → siga para 7.6.
