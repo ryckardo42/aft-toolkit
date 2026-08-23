@@ -16,8 +16,14 @@ antes de você sair de casa:
   continua sendo sua, na autuação — e as exceções (falta de registro, grave e iminente,
   reincidência, fraude, embaraço) continuam valendo.
 - **Porte ME/EPP no cadastro, mas sem opção pelo Simples** → o toolkit avisa que o porte
-  sozinho não basta para presumir dupla visita. Se a empresa já foi optante e saiu, ele
-  mostra a data da exclusão — indício de que cresceu além do porte.
+  sozinho não basta para presumir dupla visita, cruzando com a atividade real ("um
+  frigorífico com atacado de carnes e transporte próprio dificilmente ainda é ME"). Se a
+  empresa já foi optante e saiu, ele mostra a data da exclusão — indício de que cresceu
+  além do porte. **E o checklist de documentos ganha um item obrigatório**: a notificação
+  (NAD) passa a pedir a Escrituração Contábil Fiscal (ECF) dos dois últimos
+  anos-calendário, com os recibos de transmissão — não apresentada, a ação fiscal
+  prossegue considerando o porte como não comprovado. É a empresa quem comprova o porte
+  que declara; você pode riscar o item, como qualquer outro.
 
 O dado vem dos dados abertos da Receita, atualizados todo mês (bem mais frescos que o
 porte cadastral). Para a certeza do dia, a consulta atualizada é o portal do Simples
