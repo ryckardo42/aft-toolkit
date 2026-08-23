@@ -117,6 +117,57 @@ _(OS SFIT nº <os> / demanda nº <demanda> — ementas a fiscalizar)_
 - Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Na linha de origem, cite o(s) documento(s) que você leu (OS, Demanda ou ambos); vindo os dois, deduplique por código.
 - As caixas `- [ ]` são para marcar, ao longo da fiscalização, o que já foi verificado/autuado — a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção.
 
+### FASE 1.15 — Cadastro na Receita (antes de qualquer busca)
+
+**Rode primeiro, sempre que houver CNPJ, sem perguntar.** É a mesma consulta do
+cartão CNPJ que o AFT já faz no site da Receita: dado público de pessoa
+jurídica. Vem antes da FASE 1.2 de propósito — o cadastro oficial dá o chão
+firme (razão social exata, CNAE, endereço, porte) que torna a busca aberta
+depois muito mais precisa.
+
+```bash
+python ~/.claude/skills/_scripts/consulta_cnpj.py <CNPJ14> --os
+```
+
+O que cada campo destrava na preparação:
+
+| Campo | Onde é usado |
+|---|---|
+| `razao_social`, `nome_fantasia` | termos exatos para a busca da FASE 1.2 |
+| `cnae` + `cnaes_secundarios` | **FASE 3.5** (grau de risco NR-04, SESMT, CIPA) e **FASE 3.2/3.19** (perfil ocupacional × CNAE) |
+| `endereco` | **FASE 4** (acesso/Google Maps) e **FASE 4.6** (outros CNPJs no endereço) |
+| `municipio`/`uf` | confirma a lotação e o deslocamento |
+| `situacao` | se não for ATIVA, muda a ação fiscal inteira |
+| `porte`, `simples` | leitura de porte do estabelecimento (FASE 3.5) |
+| `telefone`, `telefone2` | contato institucional para a visita |
+| `abertura` | idade da empresa — contexto de exigibilidade de programas |
+
+**Três achados que merecem virar `## Pontos de atenção para a visita`:**
+
+1. **Situação cadastral diferente de ATIVA** (BAIXADA, INAPTA, SUSPENSA), com a
+   data. O AFT precisa saber **antes de sair** — pode não haver empresa no
+   endereço, ou haver sucessão.
+2. **CNAEs secundários com risco que o principal esconde.** É comum: principal
+   de escritório, secundários de imunização, instalação hidráulica, limpeza em
+   altura. Isso muda EPI, NR aplicável e o que procurar no local. Registre como
+   **indício** — a atividade real se confirma na inspeção.
+3. **Endereço do cadastro divergente** do que o AFT tem (da denúncia, da OS).
+   Pode ser filial, mudança não atualizada, ou endereço só contábil.
+
+Se a atividade que aparecer na FASE 1.2 **destoar do CNAE** daqui, isso já é o
+ponto de atenção previsto naquela fase — agora com a fonte oficial para
+confrontar.
+
+**Se der erro** (sem rede, CNPJ não encontrado): **siga em silêncio** para a
+FASE 1.2. A preparação nunca trava por causa do cadastro.
+
+> **Limites.** Não vem e-mail do empregador (a Receita não distribui esse campo
+> nos dados abertos), e o pacote não diz de quando é o retrato — para ato com
+> efeito legal, confirme na fonte oficial. CPF/CAEPF não é consultado por aqui.
+> Nada aqui enquadra nada: é insumo de planejamento, e quem decide é o AFT.
+
+---
+
 ### FASE 1.2 — Perfil da empresa (busca rápida na internet)
 
 Chegar sabendo o que a empresa produz muda a visita: indica o processo produtivo, o
@@ -265,9 +316,142 @@ número por conta própria.
 
 ---
 
+## FASE 3.2 — LRE do eSocial (se o AFT já baixou no SISFGTS)
+
+**Rode sempre, sem perguntar.** É uma checagem barata: se a empresa não tiver
+dados baixados, o script responde em milissegundos e a fase acaba aqui.
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py --achar <CNPJ14>
+```
+
+- **`SISFGTS: NAO ENCONTRADO`** (não instalado, ou disco do Parallels fora do ar)
+  ou **`NENHUM ARQUIVO`** (o AFT não baixou o eSocial desse CNPJ) → **ignore em
+  silêncio e siga para a FASE 3.5.** Não avise, não pergunte, não sugira baixar:
+  nem toda ação fiscal usa o SISFGTS, e a preparação não depende disso.
+- **Achou** → gere/atualize o painel e siga abaixo:
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py "<PASTA_OS>" <CNPJ14> "<EMPREGADOR>"
+```
+
+Isso grava `<PASTA_OS>/eSocial/` (painel, CSV, resumo) — a `/aft-lre-esocial`
+documenta o formato. O cartão no `/aft-painel` passa a existir sozinho.
+
+### O que vai para o `preparacao.md`
+
+Só **números**, como todo o resto do arquivo (sem nome, sem CPF):
+
+```markdown
+## LRE do eSocial
+- Vínculos no LRE: <total> · ativos <n> · desligados <n> · PCD <n>
+- Admissões desde <marco>: <n> — transmitidas no prazo <n>
+- **Indício de registro tardio: <n>** (mesmo dia <n> · após a admissão <n>)
+- Painel: `eSocial/LRE_painel.html`
+```
+
+### Efetivo: o LRE prevalece sobre a Relação de Vínculos
+
+Tendo as duas fontes (FASE 3.1 e esta), **o número de ativos do LRE prevalece** —
+ele vem do eSocial e costuma estar mais atualizado que a Relação de Vínculos do
+SFIT, que é um retrato com atraso. Use o LRE no `preparacao.md`, no
+dimensionamento da FASE 3.5 (SESMT/CIPA) e na NR-24 da FASE 3.6.
+
+**Divergindo em mais de 5%**, registre as duas em uma linha e siga com a do LRE:
+
+```markdown
+Efetivo: <N do LRE> (LRE eSocial de <data>) · Relação de Vínculos de <data>: <M>
+— divergência de <n> a conferir no local
+```
+
+A divergência é dado de fiscalização, não erro a esconder: pode ser filial não
+separada, cessão, defasagem da Relação — ou trabalhador sem registro.
+
+### Perfil ocupacional × CNAE
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py --perfil "<PASTA_OS>"
+```
+
+Devolve as ocupações mais frequentes entre os ativos (por CBO) e as cotas. Os
+CBOs dizem **o que a empresa realmente faz** — muitas vezes com mais fidelidade
+que o CNAE declarado.
+
+**Compare com o CNAE da FASE 3.5** e, havendo descompasso relevante, registre no
+`preparacao.md` e leve para o `.docx`. Exemplos do que é descompasso relevante:
+
+- CNAE de **comércio** e CBOs de **produção/abate/usinagem** → atividade
+  industrial não declarada; muda o grau de risco (NR-04) e, com ele, SESMT e CIPA;
+- CNAE **genérico** e CBOs concentrados numa atividade específica (ex.: Magarefe,
+  Desossador, Retalhador de carne → frigorífico, campo da **NR-36**);
+- CBOs de **construção** sem CNAE de obra → canteiro, campo da **NR-18**.
+
+O que fazer com o achado:
+
+1. Cite no `preparacao.md`, em uma linha, as ocupações que sustentam a leitura.
+2. Se o descompasso puxar **outra NR**, acrescente a frente correspondente ao
+   quadro de triagem do `.docx` (FASE 7).
+3. Se puxar **outro grau de risco**, avise: SESMT e CIPA da FASE 3.5 podem estar
+   subdimensionados. **Não recalcule por conta própria** com um CNAE que você
+   supôs — o CNAE é o declarado; o perfil é indício para o AFT verificar no local.
+
+> O CBO é declarado pelo empregador, como o CNAE. Divergência é **pista para
+> conferir em campo**, nunca conclusão.
+
+### Cotas de PCD e aprendizes
+
+O mesmo `--perfil` traz as duas. Leve para o `preparacao.md` e para o `.docx`:
+
+- **PCD** — art. 93 da Lei 8.213/91. O painel já compara o declarado com a cota
+  da faixa. Abaixo da cota, entra no quadro de triagem como frente a verificar.
+- **Aprendizes** — art. 429 da CLT, 5% a 15%. **A base não é o efetivo total:**
+  exclui cargos de direção, gerência e de confiança e as funções que exigem nível
+  técnico ou superior. O script mostra a faixa sobre o total apenas como **ordem
+  de grandeza** — escreva assim no `.docx`, nunca como "cota devida". Quem apura
+  a base é o AFT.
+
+Os dois números vêm do que o **empregador declarou** no eSocial: valem como
+triagem, e a conferência é em campo.
+
+---
+
+### Seção destacada no `preparacao.docx` — quem procurar no local
+
+Havendo **pelo menos um** indício, o `.docx` (FASE 7) ganha uma seção própria,
+em destaque, com a **lista nominal**:
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py --indicios "<PASTA_OS>"
+```
+
+Título: **"Registro tardio no eSocial — conferir no local"**. Para cada
+trabalhador: nome, matrícula, cargo, data de admissão, data de recepção no
+eSocial e o atraso. Abra a seção com esta orientação ao AFT:
+
+> Verificar, para cada um: ficha/livro de registro (art. 41 da CLT), data real
+> de início da prestação de serviços e **ASO admissional** (NR-07) — o exame
+> admissional é devido **antes** de o trabalhador assumir a função, e a
+> transmissão tardia do eSocial costuma vir acompanhada de ASO tardio ou
+> ausente. Confrontar também com a folha e o controle de jornada do período.
+
+> ⚠️ **REGRA DURA — nomes.** Vale a mesma exceção da FASE 3.1: estes nomes
+> podem aparecer no chat e no `preparacao.docx` porque são exatamente as
+> pessoas que o AFT vai procurar e cujos documentos vai pedir — sem o nome ele
+> não consegue. **Nunca** no `preparacao.md`, nunca em busca na internet.
+> Se forem **mais de 25**, nomeie os 25 de maior atraso e diga a quantidade
+> restante, remetendo ao painel (filtro "Indício tardio") e ao
+> `eSocial/LRE_vinculos.csv` — o `.docx` é documento de campo, não listagem.
+
+**É indício, não prova.** No `.docx`, escreva "indício de registro tardio (a
+conferir)", nunca "registro tardio" como fato. Quem decide, olhando ficha e
+documentos no local, é o AFT.
+
+---
+
 ## FASE 3.5 — Grau de risco (NR-04), SESMT e CIPA devidos
 
-Com o **efetivo** (FASE 3.1, FASE 2 ou contagem da lista da FASE 3) e o **CNAE** (FASE 0),
+Com o **efetivo** (FASE 3.1, FASE 2 ou contagem da lista da FASE 3) e o **CNAE** (FASE 0 ou,
+na falta dele, o cadastro da Receita da FASE 1.15),
 dá para saber, antes de sair de casa, que SESMT e que CIPA aquele estabelecimento deve
 ter — e chegar sabendo exatamente o que confrontar com a ata de eleição e com a
 documentação do serviço especializado.
@@ -476,6 +660,11 @@ houve FASE 0, registre só a origem informada pelo AFT>
 Vencimento da OS: <dd/mm/aaaa>   <!-- só se a OS foi lida -->
 
 ## Perfil da empresa
+**Cadastro na Receita** (FASE 1.15 — só se houve CNPJ): razão social, situação
+cadastral (com a data, se não for ATIVA), abertura, natureza jurídica, porte,
+Simples, CNAE principal e secundários, endereço e telefones. Uma linha por
+bloco, sem inventar o que não veio.
+
 <2 a 4 parágrafos da busca da FASE 1.2, cada um com a fonte; ou "nada relevante
 encontrado em fontes abertas". É indício para orientar a visita, não prova>
 
@@ -494,6 +683,8 @@ Google Maps: <link montado na FASE 4> · <link exato do lugar, se houve busca at
 <quantitativo e perfil, SEM nomes/CPFs reais — ex.: "32 trabalhadores, produção e logística">
 <com Relação de Vínculos (FASE 3.1): "<N> empregados (<H> homens, <M> mulheres) ·
 PCD <n> · aprendizes <n> · menores de 18 <n> — Relação de Vínculos de <dd/mm/aaaa>">
+<havendo TAMBÉM o LRE (FASE 3.2), o efetivo que vale é o dos ativos do LRE, que é
+mais atual; divergindo mais de 5%, registre as duas e marque "a conferir no local">
 CNAE <código> — grau de risco <1-4> (Anexo I da NR-04)   <!-- FASE 3.5 -->
 SESMT devido: <ex.: "2 técnicos de segurança (tempo integral)"> · na Relação de
 Vínculos: <ex.: "2 técnicos" ou "não conferido"> — indício, confirmar em campo
@@ -505,6 +696,19 @@ turno (item 24.1.1)   <!-- FASE 3.6; ou o motivo de não ter sido calculada -->
 <!-- sendo canteiro de obras, a linha acima é da NR-18 (item 18.5): "<n> conjuntos
 sanitários masculinos e <n> femininos · <n> mictórios · <n> chuveiros · <n>
 bebedouros — canteiro de obras (NR-18), por <sinal que motivou>" -->
+
+## LRE do eSocial
+<SÓ com a FASE 3.2 tendo achado dados no SISFGTS; sem eles, omita a seção inteira.
+Só números, NUNCA nome ou CPF — a lista nominal vai no preparacao.docx>
+Vínculos no LRE: <total> · ativos <n> · desligados <n> · PCD <n>
+Admissões desde <marco>: <n> — transmitidas no prazo <n>
+**Indício de registro tardio: <n>** (mesmo dia <n> · após a admissão <n>)
+Cota PCD (art. 93 da Lei 8.213/91): declarados <n> · devidos <n> — <faixa>
+Aprendizes declarados: <n> — art. 429 da CLT, 5% a 15%; base a apurar pelo AFT
+Perfil ocupacional: <3 a 5 ocupações mais frequentes, com a contagem>
+<havendo descompasso com o CNAE, uma linha dizendo qual e por quê>
+Painel: `eSocial/LRE_painel.html` — lista nominal na seção própria do
+preparacao.docx, para conferir ficha/registro e ASO no local
 
 ## Histórico de acidentes (CATs)
 <SÓ os agregados do resumo da /aft-relatorio-acidentes (FASE 4.5) — ex.:
@@ -542,7 +746,7 @@ Não inclua nome nem CPF de trabalhador em nenhum campo — só o token, se prec
 
 O `preparacao.md` é a ficha da preparação; o **`preparacao.docx` é o que o AFT imprime e leva na visita**. Ele abre com o perfil da empresa (FASE 1.2), o quadro de pessoal (FASE 3.1) e os dimensionamentos devidos (FASE 3.5), e o corpo é uma **triagem** — para cada frente da OS, o que dá para constatar no local e o que, só faltando isso, precisa ser notificado.
 
-Ordem das seções: **1.** A empresa · **2.** Quadro de pessoal (só com Relação de Vínculos) · **3.** Grau de risco, SESMT e CIPA · **4.** NR-24 — instalações sanitárias e conforto, ou **NR-18 — áreas de vivência do canteiro**, quando o script detecta obra (só com Relação de Vínculos, que é o que separa homens de mulheres) · **5.** Quadro de triagem · **6.** Documentos a exigir ainda na visita · **7.** O que só então vai para o DET. O script numera sozinho, pulando as que não se aplicam.
+Ordem das seções: **1.** A empresa · **2.** Quadro de pessoal (só com Relação de Vínculos) · **3.** Grau de risco, SESMT e CIPA · **4.** NR-24 — instalações sanitárias e conforto, ou **NR-18 — áreas de vivência do canteiro**, quando o script detecta obra (só com Relação de Vínculos, que é o que separa homens de mulheres) · **5.** Registro tardio no eSocial — conferir no local (só quando a FASE 3.2 achou ao menos um indício; é a seção com lista nominal) · **6.** Quadro de triagem · **7.** Documentos a exigir ainda na visita · **8.** O que só então vai para o DET. O script numera sozinho, pulando as que não se aplicam.
 
 **A tese do documento (não a perca de vista ao redigir):** documento pedido por notificação chega depois e já ajustado, e adia a ação fiscal. O objetivo é que a inspeção física constate a maioria das irregularidades e sobre o mínimo para o DET. Portanto, ao preencher, empurre tudo o que for possível para a coluna do meio.
 

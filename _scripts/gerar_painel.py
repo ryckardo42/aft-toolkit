@@ -466,6 +466,27 @@ def listar_docs(pasta: Path) -> list[str]:
         return []
 
 
+def ler_lre_esocial(pasta: Path) -> dict:
+    """Resumo do LRE do eSocial (skill /aft-lre-esocial), se a OS tiver.
+
+    Lê apenas o eSocial/resumo.json — números agregados, sem PII. O painel
+    com nome/CPF fica no eSocial/LRE_painel.html e só é aberto por clique.
+    OS sem a pasta eSocial/ devolvem {} e não ganham cartão nenhum."""
+    arq = pasta / "eSocial" / "resumo.json"
+    if not arq.is_file():
+        return {}
+    try:
+        with open(arq, encoding="utf-8") as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    if not (pasta / "eSocial" / "LRE_painel.html").is_file():
+        return {}
+    return {"ativos": d.get("ativos", 0), "tardios": d.get("tardios", 0),
+            "total": d.get("total", 0), "gerado": d.get("gerado", ""),
+            "marco": d.get("marco", "")}
+
+
 def parse_emails(pasta: Path) -> list[dict]:
     """Lê o email.md da OS (e-mails redigidos pela /aft-email) e devolve
     [{titulo, assunto, corpo}], do mais recente para o mais antigo — cada
@@ -1442,6 +1463,27 @@ function cartaoEmails(o,i){
    '<button class="mini" onclick="copiaEmail('+i+','+k+')">copiar e-mail</button>'+
    (e.assunto?'<button class="mini" onclick="copiaEmail('+i+','+k+',\\'assunto\\')">copiar assunto</button>':'')+
    '</div>').join('')+'</div>'}
+// LRE do eSocial (skill /aft-lre-esocial): cartão enxuto, só ativos e
+// indício de registro tardio. Só aparece se a OS tiver eSocial/resumo.json —
+// nem toda fiscalização baixa esses dados do SISFGTS. O painel completo (com
+// nome e CPF) abre em outra aba, e só no modo interativo local.
+function cartaoLre(o){
+ const L=o.lre;if(!L||!L.total)return '';
+ const link=ATIVO&&o.pasta;
+ const cab='<div class="cartao"><h3>LRE eSocial'+
+  (L.gerado?' <span class="cont">'+esc(L.gerado)+'</span>':'')+'</h3>';
+ const n=(v,r,cor)=>'<div style="flex:1"><div style="font-size:22px;font-weight:600'+
+  (cor?';color:'+cor:'')+'">'+v+'</div><div style="font-size:11px;color:var(--t3)">'+r+'</div></div>';
+ return cab+'<div style="display:flex;gap:18px;margin:2px 0 10px">'+
+  n(L.ativos,'ativos')+
+  n(L.tardios,'indício de registro tardio'+(L.marco?'<br>desde '+esc(L.marco):''),
+    L.tardios?'var(--perigo,#b3261e)':'')+
+  '</div>'+
+  (link?'<a class="doc-link" target="_blank" href="'+urlLre(o)+'">abrir o painel do LRE</a>'
+       :'<span style="font-size:11px;color:var(--t3)">painel em '+
+        esc('eSocial/LRE_painel.html')+'</span>')+
+  '</div>'}
+function urlLre(o){return '/lre/'+encodeURIComponent(o.pasta)}
 function cartaoRelatorios(o){
  if(!(o.docs&&o.docs.length))return '';
  return '<div class="cartao"><h3>Relatórios da OS <span class="cont">'+o.docs.length+
@@ -1511,6 +1553,7 @@ function abre(i){
  h+=cartaoAcoes(o,i);
  h+=cartaoComandosPorFase(o,i);
  h+=cartaoEmails(o,i);
+ h+=cartaoLre(o);
  h+=cartaoRelatorios(o);
  h+='</div></div>';
  h+=secaoAutos(o,i);
@@ -1920,6 +1963,9 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "inspecao": (o.get("inspecao_fisica") or {}) if com_pasta else {},
             # Relatórios .md também podem conter PII: idem, só na versão local.
             "docs": (o.get("docs") or []) if com_pasta else [],
+            # LRE do eSocial: só números agregados; o link só funciona
+            # no modo interativo local (ver cartaoLre).
+            "lre": (o.get("lre") or {}) if com_pasta else {},
             # E-mails redigidos (email.md): texto que o AFT vai mandar para
             # fora — idem, nunca no Artifact publicado.
             "emails": (o.get("emails") or []) if com_pasta else [],
@@ -2172,6 +2218,7 @@ def main() -> int:
         os_["inspecao_fisica"] = parse_inspecao_fisica(Path(os_["caminho"]))
         # Relatórios .md da pasta (idem: só na versão local).
         os_["docs"] = listar_docs(Path(os_["caminho"]))
+        os_["lre"] = ler_lre_esocial(Path(os_["caminho"]))
         # E-mails redigidos pela /aft-email (idem: só na versão local).
         os_["emails"] = parse_emails(Path(os_["caminho"]))
         # Autos lavrados: autos-lavrados.md + scan ao vivo (opcional).
