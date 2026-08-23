@@ -204,18 +204,17 @@ só com as fichas e os relatórios `.md`**:
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
 │   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
 ├── interdicao-embargo/           ← termo, RT, laudos, juntados
-├── RELATÓRIOS DE FISCALIZAÇÃO/   ← todo relatório de fiscalização (ver regra abaixo)
+├── Relatórios de Fiscalização/   ← todo relatório de fiscalização (ver regra abaixo)
 │   ├── Relatorio auditoria RI <ri>.docx/.md/.json   ← /aft-relatorio
-│   ├── RI <ri> - autos e anexos.pdf                 ← dossiê do /aft-autos-pdf-reunidos
-│   └── relatorio-sfitweb.docx                       ← /minha-risfitweb
+│   └── RI <ri> - autos e anexos.pdf                 ← cópia do dossiê feita pelo /aft-relatorio
 └── fotos/
 ```
 
-> **Pasta padrão para relatórios — `RELATÓRIOS DE FISCALIZAÇÃO/`.** Todo documento cujo
+> **Pasta padrão para relatórios — `Relatórios de Fiscalização/`.** Todo documento cujo
 > propósito é ser um **relatório** da fiscalização (não uma notificação, não um auto,
 > não uma minuta de trabalho em andamento) vai nessa subpasta — crie-a se não existir.
-> Referência: `/aft-relatorio` (Relatório Final Simplificado) e `/minha-risfitweb`
-> (relatório de avaliação de ementas para o SFITWEB) já gravam ali. Documento de
+> Referência: o `/aft-relatorio` já grava ali (é dele o nome canônico da pasta, com
+> maiúsculas e minúsculas exatamente assim). Documento de
 > relatório avulso pedido fora de skill (ver `/aft-modelo-docx`) segue a mesma regra.
 > Isso é diferente da regra de `.md` na raiz abaixo: os `.md`/`.json` que acompanham um
 > relatório (fonte do `.docx`) ficam **dentro** desta subpasta, junto do `.docx` — não
@@ -272,12 +271,11 @@ Regras do plano:
   para `OS <nº da OS>.pdf` quando o número for extraído; sem número legível, mantenha o
   nome original e avise no plano. Nunca mova para `NOTIFICACOES/` nem `AUTOS/` — não é
   nem notificação nem auto, é o documento de abertura da fiscalização.
-- **Relatórios de fiscalização** → subpasta `RELATÓRIOS DE FISCALIZAÇÃO/` (crie se não
+- **Relatórios de fiscalização** → subpasta `Relatórios de Fiscalização/` (crie se não
   existir): relatório final (`Relatorio auditoria RI <ri>.docx/.md/.json`), dossiê de
-  autos e anexos (`RI <ri> - autos e anexos.pdf`), relatório de ementas do SFITWEB
-  (`relatorio-sfitweb.docx`) e qualquer outro relatório avulso solto na raiz que não
-  seja notificação, auto ou minuta de trabalho em andamento (esses seguem as regras
-  próprias acima).
+  autos e anexos (`RI <ri> - autos e anexos.pdf`) e qualquer outro relatório avulso
+  solto na raiz que não seja notificação, auto ou minuta de trabalho em andamento
+  (esses seguem as regras próprias acima).
 - Fotos: subpasta `fotos/` (crie se estiverem soltas; renomeie `FOTO/` → `fotos/`).
 - Trabalho do AFT em andamento (.docx/.md de minutas e análises): **fica na raiz**,
   intocado, anotado no memory.md.

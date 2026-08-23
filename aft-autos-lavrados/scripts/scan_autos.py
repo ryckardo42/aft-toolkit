@@ -71,7 +71,9 @@ RE_RAZAO_SOCIAL = re.compile(r"Nome/Razão Social:\s*(.+?)\s*$", re.MULTILINE)
 # -layout separa "Porte Econômico: X" de "Natureza Jurídica: Y" por vários
 # espaços, mas o fallback pypdf pode concatenar sem espaço nenhum — por
 # isso a captura usa lookahead no próximo rótulo em vez de contar espaços.
-RE_PORTE_ECONOMICO = re.compile(r"Porte\s*Econômico:\s*(.+?)(?=Natureza\s*Jurídica|\n|$)")
+# Depois do ":" só espaço/tab (nunca \s, que engoliria a quebra de linha e capturaria
+# a linha seguinte como porte quando o campo vem em branco no rascunho).
+RE_PORTE_ECONOMICO = re.compile(r"Porte\s*Econômico:[ \t]*(.+?)(?=Natureza\s*Jurídica|\n|$)")
 RE_NRO_TRABALHADORES = re.compile(r"N[ºo°]\s*Trabalhadores\s*\(total\)\s*:\s*(-?\d+)")
 
 
