@@ -36,6 +36,7 @@ aft-jornada-analise
 aft-jornada-atestado
 aft-jornada-auto-afd-aej
 aft-jornada-valida-afd-aej
+aft-lre-esocial
 aft-modelo-docx
 aft-notebooklm-login
 aft-nova-auditoria
