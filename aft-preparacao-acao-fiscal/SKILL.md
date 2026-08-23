@@ -117,6 +117,57 @@ _(OS SFIT nº <os> / demanda nº <demanda> — ementas a fiscalizar)_
 - Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Na linha de origem, cite o(s) documento(s) que você leu (OS, Demanda ou ambos); vindo os dois, deduplique por código.
 - As caixas `- [ ]` são para marcar, ao longo da fiscalização, o que já foi verificado/autuado — a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção.
 
+### FASE 1.15 — Cadastro na Receita (antes de qualquer busca)
+
+**Rode primeiro, sempre que houver CNPJ, sem perguntar.** É a mesma consulta do
+cartão CNPJ que o AFT já faz no site da Receita: dado público de pessoa
+jurídica. Vem antes da FASE 1.2 de propósito — o cadastro oficial dá o chão
+firme (razão social exata, CNAE, endereço, porte) que torna a busca aberta
+depois muito mais precisa.
+
+```bash
+python ~/.claude/skills/_scripts/consulta_cnpj.py <CNPJ14> --os
+```
+
+O que cada campo destrava na preparação:
+
+| Campo | Onde é usado |
+|---|---|
+| `razao_social`, `nome_fantasia` | termos exatos para a busca da FASE 1.2 |
+| `cnae` + `cnaes_secundarios` | **FASE 3.5** (grau de risco NR-04, SESMT, CIPA) e **FASE 3.2/3.19** (perfil ocupacional × CNAE) |
+| `endereco` | **FASE 4** (acesso/Google Maps) e **FASE 4.6** (outros CNPJs no endereço) |
+| `municipio`/`uf` | confirma a lotação e o deslocamento |
+| `situacao` | se não for ATIVA, muda a ação fiscal inteira |
+| `porte`, `simples` | leitura de porte do estabelecimento (FASE 3.5) |
+| `telefone`, `telefone2` | contato institucional para a visita |
+| `abertura` | idade da empresa — contexto de exigibilidade de programas |
+
+**Três achados que merecem virar `## Pontos de atenção para a visita`:**
+
+1. **Situação cadastral diferente de ATIVA** (BAIXADA, INAPTA, SUSPENSA), com a
+   data. O AFT precisa saber **antes de sair** — pode não haver empresa no
+   endereço, ou haver sucessão.
+2. **CNAEs secundários com risco que o principal esconde.** É comum: principal
+   de escritório, secundários de imunização, instalação hidráulica, limpeza em
+   altura. Isso muda EPI, NR aplicável e o que procurar no local. Registre como
+   **indício** — a atividade real se confirma na inspeção.
+3. **Endereço do cadastro divergente** do que o AFT tem (da denúncia, da OS).
+   Pode ser filial, mudança não atualizada, ou endereço só contábil.
+
+Se a atividade que aparecer na FASE 1.2 **destoar do CNAE** daqui, isso já é o
+ponto de atenção previsto naquela fase — agora com a fonte oficial para
+confrontar.
+
+**Se der erro** (sem rede, CNPJ não encontrado): **siga em silêncio** para a
+FASE 1.2. A preparação nunca trava por causa do cadastro.
+
+> **Limites.** Não vem e-mail do empregador (a Receita não distribui esse campo
+> nos dados abertos), e o pacote não diz de quando é o retrato — para ato com
+> efeito legal, confirme na fonte oficial. CPF/CAEPF não é consultado por aqui.
+> Nada aqui enquadra nada: é insumo de planejamento, e quem decide é o AFT.
+
+---
+
 ### FASE 1.2 — Perfil da empresa (busca rápida na internet)
 
 Chegar sabendo o que a empresa produz muda a visita: indica o processo produtivo, o
@@ -399,7 +450,8 @@ documentos no local, é o AFT.
 
 ## FASE 3.5 — Grau de risco (NR-04), SESMT e CIPA devidos
 
-Com o **efetivo** (FASE 3.1, FASE 2 ou contagem da lista da FASE 3) e o **CNAE** (FASE 0),
+Com o **efetivo** (FASE 3.1, FASE 2 ou contagem da lista da FASE 3) e o **CNAE** (FASE 0 ou,
+na falta dele, o cadastro da Receita da FASE 1.15),
 dá para saber, antes de sair de casa, que SESMT e que CIPA aquele estabelecimento deve
 ter — e chegar sabendo exatamente o que confrontar com a ata de eleição e com a
 documentação do serviço especializado.
@@ -608,6 +660,11 @@ houve FASE 0, registre só a origem informada pelo AFT>
 Vencimento da OS: <dd/mm/aaaa>   <!-- só se a OS foi lida -->
 
 ## Perfil da empresa
+**Cadastro na Receita** (FASE 1.15 — só se houve CNPJ): razão social, situação
+cadastral (com a data, se não for ATIVA), abertura, natureza jurídica, porte,
+Simples, CNAE principal e secundários, endereço e telefones. Uma linha por
+bloco, sem inventar o que não veio.
+
 <2 a 4 parágrafos da busca da FASE 1.2, cada um com a fonte; ou "nada relevante
 encontrado em fontes abertas". É indício para orientar a visita, não prova>
 

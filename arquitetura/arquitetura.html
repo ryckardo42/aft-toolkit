@@ -138,7 +138,7 @@ const ARCH = {
   "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
     "skills": 51,
-    "scripts": 39,
+    "scripts": 40,
     "dados": 6,
     "commit": "ver `git log -1` — atualizado em 23/08/2026"
   },
@@ -756,6 +756,12 @@ const ARCH = {
       "caminho": "_scripts/cbo.json",
       "papel": "Tabela de ocupacoes CBO usada pelo lre_esocial.py para nomear o cargo de cada vinculo no painel do LRE.",
       "runtime": "dado (JSON)"
+    },
+    {
+      "nome": "consulta_cnpj.py",
+      "caminho": "_scripts/consulta_cnpj.py",
+      "papel": "Consulta o cadastro da empresa na Receita Federal por CNPJ, pelos dados abertos (sem credencial). Valida o digito verificador antes de ir a rede, guarda cache local por CNPJ e alterna entre duas fontes publicas. Modo --os imprime chave=valor ja formatado para o memory.md (CNAE XXXX-X/XX, CEP e telefone pontuados, datas dd/mm/aaaa). Usado pelo Passo 1.5 da /aft-nova-auditoria e pela FASE 1.15 da /aft-preparacao-acao-fiscal.",
+      "runtime": "Python stdlib"
     }
   ],
   "dados": [
@@ -989,6 +995,10 @@ const ARCH = {
     {
       "topico": "LRE do eSocial: painel na pasta da OS e o indicio de registro tardio (23/08/2026)",
       "txt": "Nova /aft-lre-esocial le o arquivo que o SISFGTS grava ao baixar o eSocial (eSocial_idA_LRE_*.txt - JSON em latin-1, apesar da extensao .txt) e monta um painel navegavel na subpasta eSocial/ da OS, com cartao no /aft-painel. O indicio de registro tardio tem tres salvaguardas, todas nascidas de falso positivo real: (1) so admissoes a partir de 02/01/2026, quando o registro eletronico passou a valer para todas as empresas - antes a obrigatoriedade era escalonada por grupo, e apontar atraso ali faria o AFT perseguir vinculo talvez nao obrigado; (2) o campo e dhrecepcao (quando o eSocial recebeu o evento), nunca processamento_datahora, que e processamento interno e chegou a acusar 792 dias de atraso onde o real foram 4; (3) so admissao nova (tpadmissao=1), porque cedido, transferido de mesmo grupo, sucessao e mudanca de CPF carregam a data de admissao ORIGINAL - num caso real, 26 de 38 indicios eram cessao. O numero nunca e relatado sem o recorte temporal: '12 indicios entre as admissoes desde 02/01/2026', jamais '12 indicios'."
+    },
+    {
+      "topico": "Cadastro da Receita por CNPJ: via publica, nao a API do SIT (23/08/2026)",
+      "txt": "A /aft-nova-auditoria (Passo 1.5) e a /aft-preparacao-acao-fiscal (FASE 1.15) passaram a puxar sozinhas o cadastro da empresa na RFB quando ha CNPJ: razao social, situacao cadastral, CNAE principal e secundarios, endereco, telefones, natureza juridica, porte e Simples. O SISFGTS faz essa consulta pela API interna do SIT (apicpfcnpj.sit.trabalho.gov.br/api/v1.2/Empresas), mas ela exige token OAuth2 emitido com o client_id do aplicativo oficial - um script do toolkit usando esse client_id estaria se identificando ao SSO federal como se fosse o SISFGTS. Descartado por legitimidade, nao por dificuldade tecnica. A via publica (dados abertos da RFB, mesmo conteudo do cartao CNPJ) dispensa credencial e ainda traz QSA e CNAEs secundarios, que a rota do SIT nao retorna. Nao traz o e-mail do empregador (a RFB nao distribui esse campo no dado aberto: o mesmo dado aparece como ENDERECO ELETRONICO no cartao CNPJ) nem a data do lote - por isso as duas skills mandam confirmar na fonte oficial para ato com efeito legal. O dado do cadastro nunca sobrescreve o que o AFT informou: em divergencia prevalece o dele, com aviso de uma linha."
     }
   ],
   "diferencas": [
