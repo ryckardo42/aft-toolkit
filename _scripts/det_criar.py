@@ -80,14 +80,25 @@ def recuperar_crua(token: str, codigo: str) -> dict:
     return json.loads(det_baixar._requisicao(token, f"/notificacoes/{uid}").decode("utf-8"))
 
 
-def listar_modelos(token: str, id_modelo=None, cif=None) -> list[dict]:
+def listar_modelos(token: str, id_modelo=None, cif=None, autoria="T") -> list[dict]:
     """POST /modelos-notificacao com filtro (mesmo corpo do site) — devolve a
     lista de modelos. `id_modelo` é a Identificação que o AFT vê; `cif` filtra
-    por auditor (modelo de equipe). Leitura pura."""
+    por auditor (modelo de equipe). Leitura pura.
+
+    `autoria` é o mesmo seletor dos três botões da tela de pesquisa:
+      "M" somente meus modelos · "P" somente públicos · "T" todos os cadastrados.
+    O padrão aqui é **"T"**, e isso é uma decisão, não um detalhe: o AFT usa
+    modelo de COLEGA (identificação + CIF de outro auditor) como se fosse
+    canônico da equipe. Até 22/08/2026 este código mandava "M" — copiado do
+    filtro PADRÃO do site — e por isso só achava modelo do próprio auditor:
+    modelo de colega voltava "não encontrado", sem explicação. Nem todo modelo
+    compartilhado é "público": no teste, nem o do AFT nem o do colega apareciam
+    em "P", e só "T" alcançava os dois."""
     filtro = {"isPesquisaPadrao": False,
               "idModelo": int(id_modelo) if id_modelo else None,
               "cifAuditor": str(cif) if cif else None,
-              "tituloModelo": None, "tituloNotificacao": None, "autoria": "M"}
+              "tituloModelo": None, "tituloNotificacao": None,
+              "autoria": autoria}
     r = json.loads(det_baixar._requisicao(
         token, "/modelos-notificacao", corpo=filtro, metodo="POST").decode("utf-8"))
     return r if isinstance(r, list) else (r.get("modelos") or [])
@@ -113,6 +124,29 @@ def recuperar_modelo(token: str, id_modelo, cif=None) -> dict:
         return alvo
     return json.loads(det_baixar._requisicao(
         token, f"/modelos-notificacao/{uid}").decode("utf-8"))
+
+
+def itens_do_modelo(token: str, id_modelo, cif=None) -> list[dict]:
+    """Os itens que um modelo do DET carrega — a lista padrão de documentos que
+    o AFT (ou um colega) consagrou. Leitura pura.
+
+    Ficam em `modelositem` (minúsculas, como todo o detalhe do modelo), e o
+    texto vem SEM o formato canônico da TN-NCO: são frases inteiras, do jeito
+    que o auditor as escreveu. Devolve o essencial de cada um, já com os nomes
+    que o resto deste módulo usa."""
+    modelo = recuperar_modelo(token, id_modelo, cif=cif)
+    saida = []
+    for it in (modelo.get("modelositem") or []):
+        desc = (it.get("descricao") or "").strip()
+        if not desc:
+            continue
+        saida.append({"descricao": desc,
+                      "tipo": it.get("tipo"),
+                      "retorno": it.get("tipoRetornoSolicitado"),
+                      "tiposArquivos": it.get("tiposArquivos"),
+                      "preAssinalado": it.get("preAssinalado"),
+                      "grupo": it.get("nmgrupo") or it.get("grupo")})
+    return saida
 
 
 def recuperar_detalhe_ri(token: str, ri: str) -> dict:
@@ -167,12 +201,56 @@ def auditor_do_token(token: str) -> dict:
             "nome": d.get("name") or "", "cif": str(d.get("sit_cif") or "")}
 
 
+RE_CABECALHO = re.compile(r"^#{1,6}\s*(.+?)\s*$")
+
+
+def _indice_secao(linhas: list[str], prefixo: str) -> int | None:
+    """Índice do cabeçalho markdown cujo nome começa por `prefixo` (sem acento,
+    minúsculas). None se o arquivo não tiver esse cabeçalho."""
+    for i, ln in enumerate(linhas):
+        m = RE_CABECALHO.match(ln.strip())
+        if m and _sem_acento(m.group(1)).lower().startswith(prefixo):
+            return i
+    return None
+
+
+def _fim_da_secao(linhas: list[str], inicio: int) -> int:
+    """Onde termina a seção que começa em `inicio`: no próximo cabeçalho."""
+    for i in range(inicio + 1, len(linhas)):
+        if RE_CABECALHO.match(linhas[i].strip()):
+            return i
+    return len(linhas)
+
+
 def itens_da_tn_nco(texto: str) -> list[dict]:
-    """Extrai os itens de uma TN-NCO (.md). Cada linha "*Título* - norma:
-    texto [ementa]" vira um item. Devolve [{titulo, ementa, descricao}] na
-    ordem do arquivo; `descricao` é a linha INTEIRA (texto do item no DET)."""
+    """Extrai os itens de um .md de notificação (TN-NCO ou NAD).
+
+    Dois formatos, e o explícito manda:
+
+    1. **Seção `## Itens`** — cada parágrafo dela é um item, siga ou não o
+       formato canônico. É o que permite gravar no arquivo os itens que vieram
+       de um MODELO do DET, cujo texto é frase corrida ("Carta com nomes,
+       telefones e e-mails dos prepostos..."), sem título nem ementa.
+    2. **Sem essa seção** — vale a regra de sempre: cada linha no formato
+       "*Título* - norma: texto [ementa]" é um item. É o que mantém válidos os
+       arquivos gerados antes de 22/08/2026.
+
+    Devolve [{titulo, ementa, descricao}] na ordem do arquivo; `descricao` é o
+    texto INTEIRO do item, como vai para o DET."""
+    _, corpo = separar_frontmatter(texto)
+    linhas = corpo.splitlines()
+    i = _indice_secao(linhas, "itens")
+    if i is not None:
+        trecho = linhas[i + 1:_fim_da_secao(linhas, i)]
+        itens = []
+        for p in _paragrafos(trecho):
+            m = RE_ITEM_TN.match(p)
+            itens.append({"titulo": m.group("titulo").strip() if m else None,
+                          "ementa": m.group("ementa") if m else None,
+                          "descricao": p})
+        return itens
     itens = []
-    for linha in texto.splitlines():
+    for linha in linhas:
         linha = linha.strip()
         m = RE_ITEM_TN.match(linha)
         if m:
@@ -358,6 +436,13 @@ def parametros_do_md(texto: str) -> dict:
         p["preassinalado"] = _verdadeiro(simples["preassinalado"])
     if simples.get("arquivos"):
         p["arquivos"] = simples["arquivos"]
+    # o modelo do DET que originou a notificação (identificação e, se for de
+    # colega, a CIF dele) — fica no arquivo para a criação não depender da
+    # conversa nem do aft-config.md de quem rodar
+    if simples.get("modelo"):
+        p["modelo"] = re.sub(r"\D", "", simples["modelo"]) or None
+    if simples.get("cif"):
+        p["cif"] = re.sub(r"\D", "", simples["cif"]) or None
     if excecoes:
         limpas = {}
         for ordem, campos in excecoes.items():
@@ -398,6 +483,19 @@ def secoes_da_tn_nco(texto: str) -> dict:
     """
     _, corpo = separar_frontmatter(texto)   # a configuração não é introdução
     linhas = corpo.splitlines()
+    # Com a seção "## Itens" explícita, ela é a fronteira: o que vem antes é
+    # introdução, o que vem depois é observação. É o mesmo recorte de sempre,
+    # só que declarado em vez de deduzido.
+    i = _indice_secao(linhas, "itens")
+    if i is not None:
+        antes, depois = linhas[:i], linhas[_fim_da_secao(linhas, i):]
+        for j, ln in enumerate(depois):
+            m = RE_CABECALHO.match(ln.strip())
+            if m and _sem_acento(m.group(1)).lower().startswith("observa"):
+                depois = depois[j + 1:]
+                break
+        return {"introducao": [p for p in _paragrafos(antes) if p],
+                "observacoes": _blocos_rotulados(depois)}
     idx_itens = [i for i, ln in enumerate(linhas) if RE_ITEM_TN.match(ln.strip())]
     if not idx_itens:
         return {"introducao": [], "observacoes": []}
@@ -529,8 +627,17 @@ def enriquecer(payload: dict, token: str, ri: str,
                 payload["textosInformativosPadraoAtivos"] = txt
             if modelo.get("tipoAbrangencia") is not None:
                 payload["tipoAbrangencia"] = modelo["tipoAbrangencia"]
-            if modelo.get("titulo") and not manter_titulo:
-                payload["titulo"] = modelo["titulo"]
+            # ATENÇÃO ao nome do campo: o DETALHE do modelo devolve as chaves em
+            # MINÚSCULAS e com outro nome — `titulonotificacao`, `titulomodelo`,
+            # `modelositem` —, diferente do JSON de uma notificação (`titulo`,
+            # `itens`). Procurar `titulo` aqui nunca achava nada, e a notificação
+            # saía com o título genérico do toolkit em vez do título do modelo
+            # (numa NAD, "Notificação para Apresentação de Documentos").
+            titulo_do_modelo = modelo.get("titulonotificacao") or modelo.get("titulo")
+            if titulo_do_modelo and not manter_titulo:
+                payload["titulo"] = titulo_do_modelo
+            relato["titulo_do_modelo"] = titulo_do_modelo
+            relato["itens_no_modelo"] = len(modelo.get("modelositem") or [])
             relato.update(modelo=bool(modelo), observacoes=len(obs), textos=len(txt))
         except Exception as e:
             relato["modelo_erro"] = str(e)[:150]
@@ -585,8 +692,10 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
     bruto = alvo.read_text(encoding="utf-8")
     itens = itens_da_tn_nco(bruto)
     if not itens:
-        raise RuntimeError(f"nenhum item reconhecido em {arquivo_tn} "
-                           "(formato esperado: *Título* - norma: texto [ementa])")
+        raise RuntimeError(
+            f"nenhum item reconhecido em {arquivo_tn} — esperado uma seção "
+            "'## Itens' (um parágrafo por item) ou linhas no formato "
+            "'*Título* - norma: texto [ementa]'")
     ri, cnpj = ids_do_memory((pasta_os / "memory.md").read_text(encoding="utf-8"))
     if not ri:
         raise RuntimeError("RI não encontrado no memory.md da OS")
@@ -598,6 +707,8 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
         return do_md.get(chave, padrao)
 
     titulo = escolher(titulo, "titulo", "Termo de Notificação")
+    id_modelo = escolher(id_modelo, "modelo", None)
+    cif = escolher(cif, "cif", None)
     tipo = escolher(tipo, "tipo", TIPO_CUMPRIMENTO_OBRIGACAO)
     retorno = escolher(retorno, "retorno", RETORNO_DIGITAL)
     preassinalado = escolher(preassinalado, "preassinalado", True)
@@ -787,10 +898,9 @@ def revisar_payload(payload: dict) -> list[dict]:
             anota("impede", onde,
                   "entrega digital sem nenhum tipo de arquivo aceito — a empresa "
                   "não teria como anexar")
-        if not RE_ITEM_TN.match(desc):
-            anota("aviso", onde,
-                  "fora do formato *Título* - norma: exigência [ementa] "
-                  "(pode ser item sem ementa, que é legítimo)")
+        # (não se confere aqui o FORMATO do texto do item: um item vindo de
+        # modelo do DET é frase corrida, sem título nem ementa, e é legítimo.
+        # Julgar a redação é trabalho do subagente revisor, que lê o .md.)
 
     obs = payload.get("observacoes") or []
     intro = [o for o in obs if o.get("tipoTexto") == 0]
@@ -817,6 +927,41 @@ def revisar_payload(payload: dict) -> list[dict]:
 
 def _impedimentos(achados: list[dict]) -> list[dict]:
     return [a for a in achados if a["gravidade"] == "impede"]
+
+
+# Linhas em branco que o DET acrescenta ao PDF de um rascunho, para o AFT
+# preencher itens à mão no local. É o padrão do próprio site (0 a 100).
+LINHAS_PDF_RASCUNHO = 5
+
+
+def baixar_pdf_rascunho(token: str, uid: str, codigo: str, pasta_os: Path,
+                        linhas: int = LINHAS_PDF_RASCUNHO) -> Path:
+    """Baixa o PDF de uma notificação EM ELABORAÇÃO e grava no pacote da OS.
+
+    É o "Gerar PDF da Notificação para download" do site:
+    GET /notificacoes/{uid}/pdf?numeroDeLinhas=N. No rascunho o site pergunta o
+    N (padrão 5) — são linhas em branco para o AFT completar itens à mão na
+    empresa; na notificação já lavrada ele manda 0 sem perguntar.
+
+    O arquivo sai como `notificacao-<CODIGO>-rascunho.pdf`, e o sufixo NÃO é
+    enfeite: o `det_baixar` grava a versão lavrada como
+    `notificacao-<CODIGO>.pdf` e PULA o download quando o arquivo já existe.
+    Mesmo nome faria o rascunho ocupar o lugar do documento definitivo, para
+    sempre e em silêncio."""
+    linhas = max(0, min(int(linhas), 100))
+    # rascunho recém-criado pode voltar sem código; o uid sempre existe e serve
+    # de nome, para o arquivo nunca virar "notificacao-None-rascunho.pdf"
+    codigo = (codigo or uid or "").strip() or uid
+    destino = det_baixar.pasta_do_pacote(pasta_os, codigo) / \
+        f"notificacao-{codigo}-rascunho.pdf"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    bruto = det_baixar._requisicao(token, f"/notificacoes/{uid}/pdf",
+                                   params={"numeroDeLinhas": linhas},
+                                   timeout=det_baixar.TIMEOUT_BLOB)
+    if not bruto:
+        raise RuntimeError("o DET devolveu um PDF vazio")
+    destino.write_bytes(bruto)
+    return destino
 
 
 def _put_rascunho(token: str, uid: str, corpo: dict) -> dict:

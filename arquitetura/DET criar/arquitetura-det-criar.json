@@ -261,6 +261,10 @@
   {
    "data": "22/08/2026 (tarde)",
    "o_que_provou": "com o item 5 pedido como Vistoria e o 6 como Orientação: o 5 saiu sem tipos de arquivo, o 6 teve o retorno corrigido para Sem Retorno e perdeu o prazo, e os demais seguiram digitais com todos os arquivos. Combinações impossíveis forçadas à mão foram barradas pela conferência."
+  },
+  {
+   "data": "22/08/2026 (fim da tarde)",
+   "o_que_provou": "NAD criada a partir de modelo de OUTRO auditor (9 itens) e a partir do modelo canônico (4 itens), ambas lidas de volta do DET; PDF do rascunho baixado pelo painel com as 5 linhas em branco conferidas no texto extraído do PDF."
   }
  ],
  "parametros_do_endpoint": {
@@ -345,5 +349,25 @@
   "tipos_de_arquivo": "habilitados SOMENTE em Digital (allowEnableArquivos === DIGITAL no código do site). Padrão do toolkit: todos os grupos marcados",
   "autocorrecao": "montar_payload usa retorno_padrao(tipo, preferido): se o tipo não aceita o retorno pedido, cai no padrão daquele tipo. É o que impede um item de Orientação de nascer digital só porque digital é o padrão da skill",
   "barreira": "revisar_payload marca como 'impede' a combinação fora da tabela, o item com arquivo em retorno não-digital e a entrega digital sem nenhum tipo de arquivo"
+ },
+ "modelos_de_notificacao": {
+  "busca": "POST /modelos-notificacao com {idModelo, cifAuditor, autoria}. autoria: M meus · P públicos · T todos os cadastrados. O toolkit usa SEMPRE 'T' — com 'M' (o filtro padrão do site, copiado por engano) o modelo de colega nunca era encontrado.",
+  "modelo_de_colega": "funciona sem ser público: nem o do AFT nem o do colega apareciam em 'P', e 'T' alcançava os dois. Basta identificação + CIF do dono.",
+  "chaves_em_minusculas": "o DETALHE do modelo usa outros nomes que o JSON de uma notificação: `modelositem` (não `itens`), `titulonotificacao` (não `titulo`), `titulomodelo`. Procurar `itens`/`titulo` ali não acha nada — e o toolkit passou semanas sem ver que modelo carrega itens.",
+  "o_que_o_modelo_carrega": "itens (texto corrido, com tipo/retorno/tiposArquivos/preAssinalado próprios), observações (introdução tipoTexto 0 + observações tipoTexto 1) e o título da notificação",
+  "modelo_canonico_do_toolkit": "identificação 11301, CIF 358070 — a 'Primeira notificação'. Padrão de fábrica da NAD preliminar, trocável em aft-config.md (modelo_nad_det e cif_modelo_nad). É diferente de número embutido em skill: o AFT troca sem tocar em código."
+ },
+ "pdf_do_rascunho": {
+  "endpoint": "GET /notificacoes/{uid}/pdf?numeroDeLinhas=N",
+  "numeroDeLinhas": "0 a 100; o site pergunta (padrão 5) quando a notificação está EM ELABORAÇÃO e manda 0 quando já lavrada. São linhas em branco para o AFT completar itens à mão.",
+  "quando_usar": "SÓ na NAD preliminar, que é entregue em mãos e assinada na inspeção física. Sai sem número de notificação (o número só existe após a lavratura) — e isso é o esperado nesse fluxo.",
+  "nome_do_arquivo": "notificacao-<CODIGO>-rascunho.pdf, dentro do pacote NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/. O sufixo é ESSENCIAL: det_baixar grava a lavrada como notificacao-<CODIGO>.pdf e pula o download se o arquivo existir — mesmo nome faria o rascunho tomar o lugar do definitivo, em silêncio.",
+  "como_pedir": "POST /api/det-criar com confirmar:true e pdf:true (pdf_linhas opcional)"
+ },
+ "itens_no_md": {
+  "secao_itens": "o .md aceita uma seção '## Itens' em que CADA PARÁGRAFO é um item, siga ou não o formato canônico. Existe porque item vindo de modelo é frase corrida, sem título nem ementa.",
+  "compatibilidade": "sem a seção, vale a regra antiga (linhas '*Título* - norma: texto [ementa]') — os .md gerados antes de 22/08/2026 continuam válidos, conferido nos arquivos reais que existiam.",
+  "fronteira": "com a seção declarada, ela também separa introdução (antes) de observações (depois), no lugar da dedução por posição.",
+  "decisao_do_aft": "os itens do modelo são GRAVADOS no .md, não puxados na hora: o arquivo vira o registro completo, o AFT pode riscar itens antes de criar, e a criação não depende de o modelo continuar existindo no DET."
  }
 }

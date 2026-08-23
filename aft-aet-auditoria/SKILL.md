@@ -96,6 +96,15 @@ AET costuma ser documento longo, com muita tabela de posto de trabalho. Lida dir
 conversa, ela consome o contexto e o limite de uso do AFT, e é **recobrada a cada turno** da
 análise. Por isso a leitura é feita fora da conversa, por um agente próprio.
 
+**Antes de medir, veja se o extrato já existe.** Se
+`<OS_ATIVAS>/[PASTA_EMPRESA]/aet-extrato.md` já estiver na pasta, a extração já foi feita
+- por uma execução anterior deste skill, ou por um fluxo de trabalho que extraiu os
+documentos numa triagem inicial. Confira que ele cobre as cinco ementas do roteiro abaixo
+e **analise sobre ele**: não meça o PDF nem delegue de novo. Extrair duas vezes a mesma
+AET é o desperdício mais caro deste skill - é justamente o custo que a delegação existe
+para evitar. Só refaça a extração se o extrato estiver vazio, truncado ou visivelmente
+fora do roteiro e, nesse caso, diga ao AFT em uma linha por que está refazendo.
+
 Descubra primeiro o tamanho do documento:
 
 ```bash
@@ -426,13 +435,16 @@ econômica** do estabelecimento, **CNPJ** (apenas dígitos).
 
 **Regras de redação do subtítulo 2:**
 
-- Estruture as evidências em **lista numérica** (`1)`, `1.1)`, `2)`...), cada item ligando o
-  fato à exigência da NR-17. Esta é a forma de tornar a análise rastreável no auto.
-  **Separe cada item por linha em branco** no `autos.md` — é o que o `/aft-gera-ai` converte
-  em quebra de linha real no Sistema Auditor; uma lista numérica sem quebra entre os itens
-  sai como um único parágrafo corrido. A conclusão jurídica e o parágrafo de dano coletivo
-  (abaixo) também ficam isolados, cada um no seu próprio parágrafo, nesta ordem: conclusão
-  jurídica logo após a última evidência/enquadramento; dano coletivo fechando o bloco II.
+- Estruture as evidências em **parágrafos corridos, nunca em lista numérica** (nada de
+  `1)`, `1.1)`, `2)`...): um parágrafo por evidência, ligando o fato à exigência da NR-17,
+  separado do seguinte por linha em branco. **Separe cada parágrafo por linha em branco**
+  no `autos.md` — é o que o `/aft-gera-ai` converte em quebra de linha real no Sistema
+  Auditor; um bloco sem quebra entre os parágrafos sai como um único parágrafo corrido
+  ilegível. Quando um ponto elabora o parágrafo anterior (ex.: um exemplo específico de um
+  achado geral), funda as duas frases no mesmo parágrafo em vez de abrir um item novo. A
+  conclusão jurídica e o parágrafo de dano coletivo (abaixo) também ficam isolados, cada um
+  no seu próprio parágrafo, nesta ordem: conclusão jurídica logo após a última
+  evidência/enquadramento; dano coletivo fechando o bloco II.
 - Descreva os **fatos concretos** com precisão técnica e tom oficial.
 - Cite o **dispositivo da NR-17** violado (item exato, ex: 17.3.3, 17.3.8, 17.4.1(d),
   17.4.2, 17.4.3).

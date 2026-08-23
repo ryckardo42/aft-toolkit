@@ -148,6 +148,7 @@ Capture o JSON do stdout. Estrutura:
       "ementa_num": "001839-2", "ementa_descricao": "Deixar de controlar...",
       "historico_raw": "Trata-se de fiscalização...", "data_lavratura": "13/03/2026",
       "cnpj_autuado": "...", "razao_social_autuado": "...",
+      "porte_economico": "Outros", "nro_trabalhadores": 53,
       "status_duplicidade": "unico", "warnings": [] }
   ],
   "errors": []
@@ -155,6 +156,8 @@ Capture o JSON do stdout. Estrutura:
 ```
 
 Cada auto traz `status_duplicidade` (`unico` · `mantido_ultimo` · `cancelado_presumido` · `manter_todos` · `revisar`) e, quando cancelado, `substituido_por` com o AI do válido — o script já resolve isso; a interpretação está no Passo 2.5.
+
+`porte_economico` e `nro_trabalhadores` só vêm preenchidos em auto **efetivamente lavrado** — o Sistema Auditor exige os dois campos antes da lavratura, mas em rascunho/"Em elaboração" saem em branco (porte) ou com o placeholder `-1` (trabalhadores); o script já filtra isso e devolve `null` nesse caso. Uso no Passo 6.5.
 
 **Tratamento de casos:**
 - `pasta_auditor: null` + `match_estrategia: nao_encontrado` + `candidatos_alternativos: []` → OS sem autos transmitidos. Siga ao Passo 4 com lista vazia.
@@ -331,6 +334,34 @@ Depois, adicione 1 linha em `## Registro de atividades` (append na tabela; não 
 
 > O `memory.md` do toolkit é um markdown simples (sem schema rígido nem limite de linhas) — basta editar as duas seções com a tool `Edit`, sem validador externo.
 
+### Passo 6.5 — Aproveitar Porte/Nº de trabalhadores do primeiro auto lavrado
+
+Várias skills do toolkit perguntam ao AFT o porte da empresa (regra de dupla visita,
+pares de ementa ME/EPP × geral) e o número de trabalhadores (CIPA, SESMT, NR-24) — dado
+que, uma vez que exista ao menos **um** auto efetivamente lavrado, já está preenchido no
+próprio PDF (campos `porte_economico`/`nro_trabalhadores` do scan, Passo 2). Poupe essa
+pergunta nas próximas skills que abrirem esta OS:
+
+1. Entre os autos **válidos** desta rodada (Passo 2.5), pegue o primeiro (ordem
+   cronológica) que tiver `porte_economico` e/ou `nro_trabalhadores` não-nulos. Como os
+   dois campos são do cadastro do empregador, não da ementa, o valor é o mesmo em todos
+   os autos da mesma OS — um único auto com o dado já basta.
+2. **Só grave o que ainda não está no `memory.md`.** Verifique se já existe uma linha
+   `**Porte:**` e/ou `**Nº de trabalhadores:**` no corpo (geralmente logo abaixo do
+   `**CNPJ:**`/`**CPF:**`). Se já existir, **não sobrescreva** — pode ter sido escrita ou
+   corrigida à mão pelo AFT, e o dado do PDF nunca prevalece sobre isso. Só complete o
+   que estiver faltando.
+3. Formato da linha (mesma linha para os dois campos, se ambos faltarem; separe com
+   `·` se só um faltar e o outro já existir e precisar ficar ao lado):
+   ```markdown
+   **Porte:** <porte_economico> (<"não ME/EPP" se "Outros", "ME/EPP" se "ME" ou "EPP">) · **Nº de trabalhadores:** <nro_trabalhadores>   <!-- extraído do AI <numero_ai> lavrado, <data_lavratura> -->
+   ```
+   Use Edit cirúrgico, inserindo a linha logo após `**CNPJ:**`/`**CPF:**` do cabeçalho —
+   não crie seção nova para isso.
+4. Nenhum auto válido desta rodada trouxe os campos (todos `null`) → não toque nessa
+   parte do `memory.md`; segue tudo igual, sem pendência a registrar (não é erro, só
+   significa que os autos ainda são rascunho ou o texto do PDF não bateu com o padrão).
+
 ### Passo 7 — Reportar ao AFT
 
 **Modo OS única:**
@@ -363,6 +394,9 @@ Use `⚠` para linhas com pendentes > 0, com autos `revisar` não decididos, ou 
 - `memory.md` é editado por chave (número do AI nas linhas `[x]`/`(cancelado)`; ementa nas `[ ]` pendentes) — não duplica linhas.
 - Linha em "Registro de atividades" é append-only.
 - A extração é determinística — mesma entrada, mesma saída.
+- Porte/Nº de trabalhadores (Passo 6.5): só escreve se a linha ainda não existir no
+  `memory.md` — rodar de novo nunca sobrescreve um valor já gravado (do PDF ou digitado
+  pelo AFT).
 
 ## Erros comuns e tratamento
 

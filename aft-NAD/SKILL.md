@@ -49,10 +49,32 @@ Guarde: `PASTA_OS`, `EMPREGADOR`.
 
 ---
 
+## FASE 0.5 — O modelo do DET (a lista que o AFT já consagrou)
+
+Quase todo AFT tem, no DET, um **modelo de notificação** com a lista de documentos que ele sempre pede no início da fiscalização — e pode adotar o modelo de um colega. Puxar esses itens evita reescrever o que já está pronto.
+
+1. **Ache o número do modelo**, nesta ordem:
+   - o campo `modelo_nad_det` do `aft-config.md` (e `cif_modelo_nad`, a CIF do dono do modelo);
+   - **sem esses campos, use o modelo canônico do toolkit: identificação `11301`, CIF `358070`** — a "Primeira notificação", com a lista que serve a qualquer início de fiscalização (contato dos prepostos, relação de prestadores de serviço, PGR com inventário e plano de ação, relação de máquinas do item 12.18.1 da NR-12). Diga ao AFT qual modelo está usando, e que ele pode trocar pelo dele gravando os dois campos no `aft-config.md`.
+   - se ele disser que não quer modelo nenhum, siga sem — a skill funciona igual.
+
+> **Modelo de outro auditor funciona, e não precisa ser "público".** A busca usa o filtro "todos os modelos cadastrados"; basta a identificação e a CIF do dono. Nunca peça ao colega para marcar o modelo como público.
+2. **Puxe os itens** (precisa do painel no ar e do token — `~/.claude/skills/config/canal-token-det.md`):
+   ```bash
+   python ~/.claude/skills/_scripts/det_criar.py   # itens_do_modelo(token, id_modelo, cif)
+   ```
+   Na prática, quem chama é o painel; sem token, ofereça abrir o DET no seu navegador para o AFT logar.
+3. **Mostre os itens do modelo ao AFT** e deixe-o riscar o que não quer. Eles entram como estão — texto do modelo é do AFT, não se reescreve.
+
+> **Sem token ou sem modelo, não trave.** Diga em uma linha que a lista virá só da FASE 1 e siga.
+
+---
+
 ## FASE 1 — Coletar os documentos a solicitar
 
-A fonte é **contexto da sessão + lista colada** (a skill detecta):
+A fonte é **os itens do modelo (FASE 0.5) + contexto da sessão + lista colada** (a skill detecta):
 
+0. **Do modelo:** os itens aprovados na FASE 0.5 entram primeiro, na ordem do modelo.
 1. **Encadeada:** se a sessão já contém um checklist de documentos aprovado pelo AFT (saída de `/aft-preparacao-acao-fiscal`), reaproveite-o direto.
 2. **Colada:** se o AFT colou uma lista de documentos no prompt, use-a.
 3. **Standalone sem lista:** pergunte ao AFT quais documentos solicitar. Pode oferecer um catálogo comum como ponto de partida (PGR, PCMSO, ASOs, controles de jornada — AFD/AEJ, atas da CIPA, certificados de treinamento NR-XX, folha de pagamento, contratos de trabalho, laudo/AET), mas **não presuma** — o AFT decide o que pedir. **Nunca** ofereça "livro/ficha de registro de empregados": o registro é feito no eSocial, e livro/ficha não existem mais.
@@ -185,14 +207,68 @@ Dúvidas:
 ```
 ````
 
-Em seguida, **salve o documento completo** (introdução + todos os itens em sequência + observações, sem os rótulos "📋 ITEM N") na pasta da OS:
+Em seguida, **salve o documento completo** na pasta da OS:
 
 ```bash
 PATH_MD="$PASTA_OS/nad-$(date +%Y-%m-%d).md"
 # Se já existe arquivo do mesmo dia, adicione sufixo -2, -3...
 ```
 
-Confirme ao AFT: arquivo salvo + nº de itens. Se não houver pasta de OS resolvida, pergunte onde salvar.
+O arquivo tem **quatro partes**, nesta ordem — é o formato que permite criar a notificação no DET depois, sem depender da conversa:
+
+````markdown
+---
+det:
+  titulo: Notificação para Apresentação de Documentos
+  prazo_dias: 16          # ou prazo: dd/mm/aaaa
+  tipo: solicitacao       # a NAD é Solicitação de Documento
+  retorno: digital        # a empresa anexa pelo DET
+  preassinalado: sim
+  arquivos: todos
+  modelo: 11301           # só se veio de modelo (FASE 0.5)
+  cif: 358070             # a CIF do DONO do modelo
+---
+
+# Notificação para Apresentação de Documentos
+
+<introdução, copiada literalmente>
+
+## Itens
+
+<um parágrafo por item — os do modelo entram com o texto do modelo,
+ os redigidos aqui entram no formato *Título* - base legal: Apresentar... [ementa]>
+
+## Observações
+
+<os blocos "Rótulo:" + linhas ">">
+````
+
+> **Por que a seção `## Itens` existe.** Item vindo de modelo do DET é frase corrida, sem título nem ementa — não casa com o formato canônico. Com a seção declarada, o motor lê **cada parágrafo** dela como um item, venha do modelo ou da sua redação. Arquivos antigos, sem a seção, continuam valendo pela regra de sempre.
+
+Confirme ao AFT, em uma linha cada: arquivo salvo + nº de itens (dizendo quantos vieram do modelo); **a data de prazo que ficou**, e que ela pode ser alterada direto no DET. Se não houver pasta de OS resolvida, pergunte onde salvar.
+
+---
+
+## FASE 4.5 — Criar o rascunho no DET (ofereça)
+
+Com o painel local no ar e o **RI** no `memory.md`, ofereça criar o rascunho da notificação no DET a partir do `.md` — em segundos, sem digitar item por item no site.
+
+1. **Token:** siga `~/.claude/skills/config/canal-token-det.md`. Sem token, **ofereça abrir o DET no navegador do assistente** para o AFT logar (via principal) ou peça o Sincronizar da extensão.
+2. **Prévia primeiro:** `POST /api/det-criar` sem `confirmar` — devolve o que seria gravado, com a conferência automática já aplicada.
+3. **Revisor:** chame a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` e o JSON da prévia. Mostre o parecer.
+4. **Só com o "sim" do AFT**, repita com `confirmar: true`.
+5. **Sem RI no `memory.md`**, diga isso em uma linha e não ofereça — OS recém-criada pode ainda não ter o número.
+
+> O toolkit **nunca lavra**. O rascunho fica "Em Elaboração" no DET; conferir, lavrar e transmitir são atos do AFT, no site.
+
+### O PDF para levar impresso (só na NAD preliminar)
+
+Quando a notificação vai ser **entregue em mãos na empresa** — o caso da NAD preliminar, gerada na preparação, antes da visita —, acrescente `"pdf": true` à chamada de criação. O PDF do **rascunho** é baixado para o pacote da OS, em `NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/notificacao-<CODIGO>-rascunho.pdf`.
+
+- **5 linhas em branco** ao final, o padrão do próprio DET (`pdf_linhas`, de 0 a 100): são para o AFT completar itens à mão, no local.
+- O PDF sai **sem número de notificação** ("NOTIFICAÇÃO Nº." em branco) — é rascunho, o número só existe depois da lavratura. **É o esperado neste fluxo**: o AFT entrega o papel na empresa e colhe a assinatura durante a inspeção física.
+- **Só neste caso.** Nas demais NADs, a notificação é transmitida pelo DET e não há o que imprimir; o PDF definitivo vem depois, pela `/aft-det-baixar`.
+- O sufixo `-rascunho` no nome **não é enfeite**: a `/aft-det-baixar` grava a versão lavrada como `notificacao-<CODIGO>.pdf` e pula o download se o arquivo já existir. Mesmo nome faria o rascunho tomar o lugar do documento definitivo, em silêncio.
 
 ---
 
@@ -210,7 +286,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 
 - **Origem natural:** ao final de `/aft-preparacao-acao-fiscal`, quando o checklist de documentos a solicitar for aprovado pelo AFT.
 - **Também standalone**, a qualquer momento: quando o AFT quer pedir mais documentos durante uma fiscalização já em andamento.
-- Depois de gerar, o AFT cola os blocos manualmente no DET (o toolkit não automatiza o preenchimento do DET).
+- **Criar o rascunho no DET** (FASE 4.5): com o painel no ar e o RI conhecido, o toolkit monta a notificação a partir do `.md`, sempre com o `aft-revisor-notificacao` passando antes e com a lavratura ficando para o AFT. Sem painel, ele cola os blocos à mão — por isso a FASE 4 continua entregando cada bloco pronto para copiar.
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 - Não confundir com `/aft-tn-nco` (verbo "Corrigir", para irregularidade já constatada).
 

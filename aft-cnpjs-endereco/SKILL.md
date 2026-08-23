@@ -64,23 +64,60 @@ de tokens; o roteiro abaixo custa poucos milhares):
 1. Abra `https://casadosdados.com.br/solucao/cnpj/pesquisa-avancada` no
    navegador embutido (`preview_start` com `url`, ou `navigate` se já aberto).
 2. `read_page` com `filter: interactive` — localize o campo de CEP (placeholder
-   "Somente 8 digitos") e o link "Pesquisar".
-3. Preencha o CEP (só dígitos) com `form_input` no ref do campo; clique em
-   "Pesquisar" (ref do link).
-4. Extraia o resultado com `javascript_tool` (nunca com `get_page_text` sem
+   "Somente 8 digitos"). O link "Pesquisar" **pode não aparecer** nessa listagem;
+   se não aparecer, clique-o por texto (passo 4), não perca tempo procurando o ref.
+3. **Digite o CEP com TECLADO REAL, nunca com `form_input`.** O formulário é uma
+   aplicação Vue: o `form_input` grava o `value` no DOM e o campo *mostra* o CEP,
+   mas o modelo do site não recebe o valor e a busca sai **sem filtro nenhum**.
+
+   ```
+   computer  action=triple_click  ref=<ref do campo de CEP>
+   computer  action=type          text=<cep, só dígitos>
+   ```
+
+4. Clique em "Pesquisar" por texto, com `javascript_tool`:
+
+   ```js
+   (() => { const a=[...document.querySelectorAll('a')]
+     .find(e=>(e.innerText||'').trim()==='Pesquisar'); a.click(); return 'ok'; })()
+   ```
+
+5. Extraia o resultado com `javascript_tool` (nunca com `get_page_text` sem
    filtro nem `read_page` completo):
 
    ```js
-   const t = document.body.innerText;
-   const m = t.match(/Encontrado \d+ resultados?/);
-   JSON.stringify({resultado: m ? m[0] : null,
-     linhas: t.split('\n').filter(l => /\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/.test(l))});
+   (() => { const t = document.body.innerText;
+     const m = t.match(/Encontrado[^\n]*/);
+     return JSON.stringify({resultado: m ? m[0] : null,
+       linhas: t.split('\n').filter(l => /\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/.test(l))}); })()
    ```
 
-5. Cada linha vem como `CNPJ - RAZÃO SOCIAL` + situação. A busca gratuita é
-   **limitada a 20 resultados**: se "Encontrado N" for 20 ou mais, avise o AFT
-   que a lista pode estar truncada e refine (o formulário tem filtros de bairro
-   e razão social) ou registre a limitação.
+6. **CONFIRA QUE O FILTRO PEGOU antes de usar qualquer linha.** É o passo que
+   separa resultado útil de resultado silenciosamente errado:
+
+   - "Encontrado" na casa dos **milhões** (ex.: "72.823.328 resultados") significa
+     que o CEP **não** foi aplicado e o site devolveu a base inteira. As linhas vêm
+     com cara de lista legítima — CNPJs e razões sociais reais — mas de empresas de
+     qualquer lugar do país. **Descarte, volte ao passo 3 e digite de novo com
+     teclado.** Nunca reporte essa lista ao AFT.
+   - Sanidade barata: CNPJs de um mesmo CEP tendem a ser da mesma praça. Se as
+     razões sociais não têm relação com o município da ação fiscal, desconfie do
+     filtro antes de desconfiar do endereço.
+
+7. Cada linha vem como `CNPJ - RAZÃO SOCIAL` + situação. A busca gratuita lista
+   **20 por página**, ordenadas por CNPJ decrescente: se "Encontrado N" for maior
+   que 20, **a empresa da OS pode nem estar entre as exibidas**. Refine (o
+   formulário tem filtros de situação, bairro e razão social) e, ainda assim,
+   registre a limitação.
+
+> **CEP não é lote.** Em prédio ou condomínio com CEP exclusivo, a descoberta por
+> CEP isola o imóvel e funciona bem. Em distrito industrial, bairro ou via longa,
+> um único CEP cobre centenas de empresas — num caso real, o CEP de um parque
+> industrial devolveu 645 CNPJs (170 ativos), e nem a empresa da OS nem a que se
+> procurava apareceram na primeira página. Nesses casos, diga ao AFT que a FASE 1
+> é inconclusiva e vá para a FASE 2 com os CNPJs já conhecidos: o cruzamento
+> cadastral (sócio, telefone, e-mail em comum) continua valendo e costuma ser a
+> evidência mais forte de qualquer maneira.
 
 **Degradação:** sem navegador na sessão (ferramenta ausente ou com erro), ou
 com o site fora do ar/mudado, **não trave**: diga o que houve, siga com o que

@@ -117,7 +117,86 @@ _(OS SFIT nº <os> / demanda nº <demanda> — ementas a fiscalizar)_
 - Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Na linha de origem, cite o(s) documento(s) que você leu (OS, Demanda ou ambos); vindo os dois, deduplique por código.
 - As caixas `- [ ]` são para marcar, ao longo da fiscalização, o que já foi verificado/autuado — a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção.
 
-### FASE 1.15 — Metas de regularização: destaque das ementas I3/I4
+### FASE 1.15 — Cadastro na Receita (antes de qualquer busca)
+
+**Rode primeiro, sempre que houver CNPJ, sem perguntar.** É a mesma consulta do
+cartão CNPJ que o AFT já faz no site da Receita: dado público de pessoa
+jurídica. Vem antes da FASE 1.2 de propósito — o cadastro oficial dá o chão
+firme (razão social exata, CNAE, endereço, porte) que torna a busca aberta
+depois muito mais precisa.
+
+```bash
+python ~/.claude/skills/_scripts/consulta_cnpj.py <CNPJ14> --os
+```
+
+O que cada campo destrava na preparação:
+
+| Campo | Onde é usado |
+|---|---|
+| `razao_social`, `nome_fantasia` | termos exatos para a busca da FASE 1.2 |
+| `cnae` + `cnaes_secundarios` | **FASE 3.5** (grau de risco NR-04, SESMT, CIPA) e **FASE 3.2/3.19** (perfil ocupacional × CNAE) |
+| `endereco` | **FASE 4** (acesso/Google Maps) e **FASE 4.6** (outros CNPJs no endereço) |
+| `municipio`/`uf` | confirma a lotação e o deslocamento |
+| `situacao` | se não for ATIVA, muda a ação fiscal inteira |
+| `porte`, `simples`, `simples_desde`, `simples_exclusao` | leitura de porte e **dupla visita** (achado 4 abaixo) |
+| `telefone`, `telefone2` | contato institucional para a visita |
+| `abertura` | idade da empresa — contexto de exigibilidade de programas |
+
+**Quatro achados que merecem virar `## Pontos de atenção para a visita`:**
+
+1. **Situação cadastral diferente de ATIVA** (BAIXADA, INAPTA, SUSPENSA), com a
+   data. O AFT precisa saber **antes de sair** — pode não haver empresa no
+   endereço, ou haver sucessão.
+2. **CNAEs secundários com risco que o principal esconde.** É comum: principal
+   de escritório, secundários de imunização, instalação hidráulica, limpeza em
+   altura. Isso muda EPI, NR aplicável e o que procurar no local. Registre como
+   **indício** — a atividade real se confirma na inspeção.
+3. **Endereço do cadastro divergente** do que o AFT tem (da denúncia, da OS).
+   Pode ser filial, mudança não atualizada, ou endereço só contábil.
+4. **Leitura de porte para a dupla visita (art. 627-A da CLT).** O `porte`
+   cadastral é declaração da própria empresa e vive desatualizado — quem dá a
+   leitura confiável é a opção pelo Simples Nacional, que exige ser ME/EPP
+   (LC 123/2006) e cai sozinha quando a receita estoura o limite:
+   - **`simples=sim`** → a empresa é **necessariamente ME ou EPP**. Registre nos
+     pontos de atenção: "Optante do Simples Nacional desde `simples_desde` —
+     empresa ME/EPP, candidata ao critério de dupla visita (art. 627-A da CLT)".
+     **Invocar a dupla visita é decisão do AFT na autuação**, e as quebras
+     continuam valendo (falta de registro, grave e iminente, reincidência,
+     fraude, embaraço). **Não grave `**Dupla visita:**` no memory.md** — essa
+     linha é da `/aft-auditoria-geral`, quando o AFT decidir.
+   - **`porte` ME/EPP sem `simples=sim`** → o porte cadastral **não basta** para
+     presumir dupla visita. Formule o achado como leitura de indício, cruzando
+     com a atividade e o que mais a preparação já sabe (CNAEs, efetivo da
+     Relação de Vínculos, perfil da FASE 1.2) — no molde: *"Porte cadastral:
+     MICRO EMPRESA, mas sem registro de opção pelo Simples no dado aberto da
+     Receita. O porte declarado sugere dupla visita, mas a via confiável (o
+     Simples) não confirma — e um frigorífico de abate de bovinos com atacado
+     de carnes e transporte próprio dificilmente ainda é ME de verdade."* Se
+     vier `simples_exclusao`, some ao indício: já foi optante e saiu nessa
+     data. A certeza, no dia, é a consulta manual do AFT no portal do Simples
+     Nacional (tem captcha, não dá para automatizar):
+     <https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes.aspx?id=21>
+     **E gera consequência documental:** este achado acrescenta o item
+     obrigatório de ECF ao checklist da FASE 5 (ver lá) — é a empresa quem
+     comprova o porte que declara.
+   - O retrato dos dados abertos é mensal (defasagem de até ~1 mês) — bem mais
+     fresco que o porte cadastral, mas diga a ressalva junto com o achado.
+
+Se a atividade que aparecer na FASE 1.2 **destoar do CNAE** daqui, isso já é o
+ponto de atenção previsto naquela fase — agora com a fonte oficial para
+confrontar.
+
+**Se der erro** (sem rede, CNPJ não encontrado): **siga em silêncio** para a
+FASE 1.2. A preparação nunca trava por causa do cadastro.
+
+> **Limites.** Não vem e-mail do empregador (a Receita não distribui esse campo
+> nos dados abertos), e o pacote não diz de quando é o retrato — para ato com
+> efeito legal, confirme na fonte oficial. CPF/CAEPF não é consultado por aqui.
+> Nada aqui enquadra nada: é insumo de planejamento, e quem decide é o AFT.
+
+---
+
+### FASE 1.16 — Metas de regularização: destaque das ementas I3/I4
 
 Nos projetos de fiscalização de SST, a fiscalização só conta para a meta do projeto
 quando o AFT obtém a **regularização de um mínimo de ementas de gradação I3 ou I4**:
@@ -162,6 +241,8 @@ Três limites (não os perca de vista):
 - Se a OS não alcançar o mínimo com as próprias ementas, diga isso ao AFT e lembre
   que ementas I3/I4 pertinentes constatadas em campo também contam — a
   `/aft-consulta` ajuda a localizar o código certo na hora.
+
+---
 
 ### FASE 1.2 — Perfil da empresa (busca rápida na internet)
 
@@ -311,9 +392,142 @@ número por conta própria.
 
 ---
 
+## FASE 3.2 — LRE do eSocial (se o AFT já baixou no SISFGTS)
+
+**Rode sempre, sem perguntar.** É uma checagem barata: se a empresa não tiver
+dados baixados, o script responde em milissegundos e a fase acaba aqui.
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py --achar <CNPJ14>
+```
+
+- **`SISFGTS: NAO ENCONTRADO`** (não instalado, ou disco do Parallels fora do ar)
+  ou **`NENHUM ARQUIVO`** (o AFT não baixou o eSocial desse CNPJ) → **ignore em
+  silêncio e siga para a FASE 3.5.** Não avise, não pergunte, não sugira baixar:
+  nem toda ação fiscal usa o SISFGTS, e a preparação não depende disso.
+- **Achou** → gere/atualize o painel e siga abaixo:
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py "<PASTA_OS>" <CNPJ14> "<EMPREGADOR>"
+```
+
+Isso grava `<PASTA_OS>/eSocial/` (painel, CSV, resumo) — a `/aft-lre-esocial`
+documenta o formato. O cartão no `/aft-painel` passa a existir sozinho.
+
+### O que vai para o `preparacao.md`
+
+Só **números**, como todo o resto do arquivo (sem nome, sem CPF):
+
+```markdown
+## LRE do eSocial
+- Vínculos no LRE: <total> · ativos <n> · desligados <n> · PCD <n>
+- Admissões desde <marco>: <n> — transmitidas no prazo <n>
+- **Indício de registro tardio: <n>** (mesmo dia <n> · após a admissão <n>)
+- Painel: `eSocial/LRE_painel.html`
+```
+
+### Efetivo: o LRE prevalece sobre a Relação de Vínculos
+
+Tendo as duas fontes (FASE 3.1 e esta), **o número de ativos do LRE prevalece** —
+ele vem do eSocial e costuma estar mais atualizado que a Relação de Vínculos do
+SFIT, que é um retrato com atraso. Use o LRE no `preparacao.md`, no
+dimensionamento da FASE 3.5 (SESMT/CIPA) e na NR-24 da FASE 3.6.
+
+**Divergindo em mais de 5%**, registre as duas em uma linha e siga com a do LRE:
+
+```markdown
+Efetivo: <N do LRE> (LRE eSocial de <data>) · Relação de Vínculos de <data>: <M>
+— divergência de <n> a conferir no local
+```
+
+A divergência é dado de fiscalização, não erro a esconder: pode ser filial não
+separada, cessão, defasagem da Relação — ou trabalhador sem registro.
+
+### Perfil ocupacional × CNAE
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py --perfil "<PASTA_OS>"
+```
+
+Devolve as ocupações mais frequentes entre os ativos (por CBO) e as cotas. Os
+CBOs dizem **o que a empresa realmente faz** — muitas vezes com mais fidelidade
+que o CNAE declarado.
+
+**Compare com o CNAE da FASE 3.5** e, havendo descompasso relevante, registre no
+`preparacao.md` e leve para o `.docx`. Exemplos do que é descompasso relevante:
+
+- CNAE de **comércio** e CBOs de **produção/abate/usinagem** → atividade
+  industrial não declarada; muda o grau de risco (NR-04) e, com ele, SESMT e CIPA;
+- CNAE **genérico** e CBOs concentrados numa atividade específica (ex.: Magarefe,
+  Desossador, Retalhador de carne → frigorífico, campo da **NR-36**);
+- CBOs de **construção** sem CNAE de obra → canteiro, campo da **NR-18**.
+
+O que fazer com o achado:
+
+1. Cite no `preparacao.md`, em uma linha, as ocupações que sustentam a leitura.
+2. Se o descompasso puxar **outra NR**, acrescente a frente correspondente ao
+   quadro de triagem do `.docx` (FASE 7).
+3. Se puxar **outro grau de risco**, avise: SESMT e CIPA da FASE 3.5 podem estar
+   subdimensionados. **Não recalcule por conta própria** com um CNAE que você
+   supôs — o CNAE é o declarado; o perfil é indício para o AFT verificar no local.
+
+> O CBO é declarado pelo empregador, como o CNAE. Divergência é **pista para
+> conferir em campo**, nunca conclusão.
+
+### Cotas de PCD e aprendizes
+
+O mesmo `--perfil` traz as duas. Leve para o `preparacao.md` e para o `.docx`:
+
+- **PCD** — art. 93 da Lei 8.213/91. O painel já compara o declarado com a cota
+  da faixa. Abaixo da cota, entra no quadro de triagem como frente a verificar.
+- **Aprendizes** — art. 429 da CLT, 5% a 15%. **A base não é o efetivo total:**
+  exclui cargos de direção, gerência e de confiança e as funções que exigem nível
+  técnico ou superior. O script mostra a faixa sobre o total apenas como **ordem
+  de grandeza** — escreva assim no `.docx`, nunca como "cota devida". Quem apura
+  a base é o AFT.
+
+Os dois números vêm do que o **empregador declarou** no eSocial: valem como
+triagem, e a conferência é em campo.
+
+---
+
+### Seção destacada no `preparacao.docx` — quem procurar no local
+
+Havendo **pelo menos um** indício, o `.docx` (FASE 7) ganha uma seção própria,
+em destaque, com a **lista nominal**:
+
+```bash
+python ~/.claude/skills/_scripts/lre_esocial.py --indicios "<PASTA_OS>"
+```
+
+Título: **"Registro tardio no eSocial — conferir no local"**. Para cada
+trabalhador: nome, matrícula, cargo, data de admissão, data de recepção no
+eSocial e o atraso. Abra a seção com esta orientação ao AFT:
+
+> Verificar, para cada um: ficha/livro de registro (art. 41 da CLT), data real
+> de início da prestação de serviços e **ASO admissional** (NR-07) — o exame
+> admissional é devido **antes** de o trabalhador assumir a função, e a
+> transmissão tardia do eSocial costuma vir acompanhada de ASO tardio ou
+> ausente. Confrontar também com a folha e o controle de jornada do período.
+
+> ⚠️ **REGRA DURA — nomes.** Vale a mesma exceção da FASE 3.1: estes nomes
+> podem aparecer no chat e no `preparacao.docx` porque são exatamente as
+> pessoas que o AFT vai procurar e cujos documentos vai pedir — sem o nome ele
+> não consegue. **Nunca** no `preparacao.md`, nunca em busca na internet.
+> Se forem **mais de 25**, nomeie os 25 de maior atraso e diga a quantidade
+> restante, remetendo ao painel (filtro "Indício tardio") e ao
+> `eSocial/LRE_vinculos.csv` — o `.docx` é documento de campo, não listagem.
+
+**É indício, não prova.** No `.docx`, escreva "indício de registro tardio (a
+conferir)", nunca "registro tardio" como fato. Quem decide, olhando ficha e
+documentos no local, é o AFT.
+
+---
+
 ## FASE 3.5 — Grau de risco (NR-04), SESMT e CIPA devidos
 
-Com o **efetivo** (FASE 3.1, FASE 2 ou contagem da lista da FASE 3) e o **CNAE** (FASE 0),
+Com o **efetivo** (FASE 3.1, FASE 2 ou contagem da lista da FASE 3) e o **CNAE** (FASE 0 ou,
+na falta dele, o cadastro da Receita da FASE 1.15),
 dá para saber, antes de sair de casa, que SESMT e que CIPA aquele estabelecimento deve
 ter — e chegar sabendo exatamente o que confrontar com a ata de eleição e com a
 documentação do serviço especializado.
@@ -483,11 +697,43 @@ A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma l
 
 > **Registro de empregados não se pede em livro nem em ficha.** O registro é feito no **eSocial** — livro e ficha de registro não existem mais. **Nunca** liste no checklist "livro de registro", "ficha de registro" ou "sistema eletrônico de registro de empregados". Para as ementas de REGISTRO, o caminho é a consulta do próprio AFT ao eSocial, cruzada em campo com quem está trabalhando no local; se for o caso, peça folha de pagamento, contratos e recibos — nunca o livro.
 
+> **Item obrigatório quando o achado 4 da FASE 1.15 apontou porte ME/EPP sem
+> opção pelo Simples:** inclua no checklist (e na NAD que sair dele) o pedido de
+> ECF, com este texto fixo, copiado literalmente — só as duas referências de ano
+> são calculadas: os **dois últimos anos-calendário encerrados** (em 2026:
+> "2024 e 2025"):
+>
+> ```
+> Escrituração Contábil Fiscal (ECF) dos anos-calendário de <AAAA-2> e <AAAA-1>, com os respectivos recibos de transmissão. Não sendo apresentada, a ação fiscal prosseguirá considerando o porte da empresa como não comprovado.
+> ```
+>
+> É o instrumento que resolve o porte de verdade: quem declara ME/EPP comprova —
+> a receita bruta da ECF diz se a empresa cabe no limite da LC 123/2006. O item
+> entra como obrigatório na lista sugerida; o AFT ainda pode riscá-lo, como
+> qualquer outro. Empresa **optante do Simples** não precisa dele (o porte já
+> está confirmado — e optante entrega PGDAS-D/DEFIS, não ECF).
+
 1. Apresente a lista ao AFT como **sugestão**, nunca como decisão tomada — ele risca, ajusta ou acrescenta itens.
 2. **Não invente** exigência documental sem base — cada item candidato deve estar amparado por uma NR/artigo (mesmo que a ementa exata só seja resolvida depois, na `/aft-NAD`).
 3. Após aprovação do AFT, pergunte se ele quer **gerar a notificação agora**:
    - **Sim** → encadeie a skill `/aft-NAD` passando a lista aprovada (ela faz a busca de ementa e monta o texto — não duplique essa lógica aqui).
    - **Não/depois** → apenas registre a lista aprovada no `preparacao.md` como pendência, para rodar `/aft-NAD` mais tarde.
+
+### A NAD preliminar (a notificação que se leva em mãos)
+
+**Ofereça sempre aqui, no fim da preparação — nunca no começo.** A NAD preliminar é a notificação que o AFT leva impressa, entrega na empresa e tem assinada durante a inspeção física. Ela precisa existir **antes** da visita, e só neste ponto da skill se sabe o que aquela OS pede: CNAE, grau de risco, histórico de acidentes, temas da denúncia e o checklist da FASE 5 já estão levantados. Perguntar no início seria pedir uma decisão sem essa informação.
+
+Ao oferecer, diga com essas palavras — "a notificação que o senhor leva em mãos e entrega assinada na empresa" —, porque é o que faz o AFT entender por que vale gastar dois minutos agora.
+
+**Aceito, o roteiro é este:**
+
+1. **Login.** Sem token do DET, **abra o site no navegador do assistente** e peça o login do AFT (via principal — `~/.claude/skills/config/canal-token-det.md`). Nunca peça a senha, nunca a guarde. Sem navegador próprio, peça o **Sincronizar** da extensão.
+2. **Itens.** Encadeie a `/aft-NAD`: ela puxa os itens do **modelo canônico** (identificação `11301`, CIF `358070`, ou o que estiver no `aft-config.md`) e o checklist desta preparação acrescenta o que for específico daquela OS. O AFT risca o que não quiser.
+3. **Prévia + revisor**, e só com o "sim" dele a criação (FASE 4.5 da `/aft-NAD`).
+4. **PDF do rascunho** (`"pdf": true`, 5 linhas em branco) gravado no pacote da OS, para ele imprimir e levar.
+5. **Sem RI no `memory.md`**, diga em uma linha que a criação fica para quando o número existir — e siga: o `.md` continua servindo para colar à mão.
+
+> **Por que o PDF é do rascunho, e não da lavrada.** Neste fluxo o papel é entregue **em mãos** e assinado no local; a notificação ainda não foi transmitida, então sai sem número ("NOTIFICAÇÃO Nº." em branco). É o esperado — e é o único caso em que se imprime rascunho. A lavratura continua sendo ato do AFT, no site, depois da visita.
 
 ---
 
@@ -506,6 +752,11 @@ houve FASE 0, registre só a origem informada pelo AFT>
 Vencimento da OS: <dd/mm/aaaa>   <!-- só se a OS foi lida -->
 
 ## Perfil da empresa
+**Cadastro na Receita** (FASE 1.15 — só se houve CNPJ): razão social, situação
+cadastral (com a data, se não for ATIVA), abertura, natureza jurídica, porte,
+Simples, CNAE principal e secundários, endereço e telefones. Uma linha por
+bloco, sem inventar o que não veio.
+
 <2 a 4 parágrafos da busca da FASE 1.2, cada um com a fonte; ou "nada relevante
 encontrado em fontes abertas". É indício para orientar a visita, não prova>
 
@@ -524,6 +775,8 @@ Google Maps: <link montado na FASE 4> · <link exato do lugar, se houve busca at
 <quantitativo e perfil, SEM nomes/CPFs reais — ex.: "32 trabalhadores, produção e logística">
 <com Relação de Vínculos (FASE 3.1): "<N> empregados (<H> homens, <M> mulheres) ·
 PCD <n> · aprendizes <n> · menores de 18 <n> — Relação de Vínculos de <dd/mm/aaaa>">
+<havendo TAMBÉM o LRE (FASE 3.2), o efetivo que vale é o dos ativos do LRE, que é
+mais atual; divergindo mais de 5%, registre as duas e marque "a conferir no local">
 CNAE <código> — grau de risco <1-4> (Anexo I da NR-04)   <!-- FASE 3.5 -->
 SESMT devido: <ex.: "2 técnicos de segurança (tempo integral)"> · na Relação de
 Vínculos: <ex.: "2 técnicos" ou "não conferido"> — indício, confirmar em campo
@@ -535,6 +788,19 @@ turno (item 24.1.1)   <!-- FASE 3.6; ou o motivo de não ter sido calculada -->
 <!-- sendo canteiro de obras, a linha acima é da NR-18 (item 18.5): "<n> conjuntos
 sanitários masculinos e <n> femininos · <n> mictórios · <n> chuveiros · <n>
 bebedouros — canteiro de obras (NR-18), por <sinal que motivou>" -->
+
+## LRE do eSocial
+<SÓ com a FASE 3.2 tendo achado dados no SISFGTS; sem eles, omita a seção inteira.
+Só números, NUNCA nome ou CPF — a lista nominal vai no preparacao.docx>
+Vínculos no LRE: <total> · ativos <n> · desligados <n> · PCD <n>
+Admissões desde <marco>: <n> — transmitidas no prazo <n>
+**Indício de registro tardio: <n>** (mesmo dia <n> · após a admissão <n>)
+Cota PCD (art. 93 da Lei 8.213/91): declarados <n> · devidos <n> — <faixa>
+Aprendizes declarados: <n> — art. 429 da CLT, 5% a 15%; base a apurar pelo AFT
+Perfil ocupacional: <3 a 5 ocupações mais frequentes, com a contagem>
+<havendo descompasso com o CNAE, uma linha dizendo qual e por quê>
+Painel: `eSocial/LRE_painel.html` — lista nominal na seção própria do
+preparacao.docx, para conferir ficha/registro e ASO no local
 
 ## Histórico de acidentes (CATs)
 <SÓ os agregados do resumo da /aft-relatorio-acidentes (FASE 4.5) — ex.:
@@ -557,7 +823,7 @@ memory.md → ## CNPJs no mesmo endereço. Sem consulta: o motivo>
 <"N ementas a fiscalizar — ver memory.md → ## Ementas da OS" ou "OS sem tabela de ementas">
 
 ## Metas de regularização (I3/I4)
-<saída da FASE 1.15: as ementas I3/I4 da OS, com as [FÁCIL n/10] primeiro e a
+<saída da FASE 1.16: as ementas I3/I4 da OS, com as [FÁCIL n/10] primeiro e a
 justificativa de cada uma; a linha de resumo do script (quantas I3/I4, mínimo 2 ou 3,
 regra de construção civil se aplicada); e os lembretes de embargo/interdição e dupla
 visita. Sem ementas na OS, registre o motivo>
@@ -578,7 +844,7 @@ Não inclua nome nem CPF de trabalhador em nenhum campo — só o token, se prec
 
 O `preparacao.md` é a ficha da preparação; o **`preparacao.docx` é o que o AFT imprime e leva na visita**. Ele abre com o perfil da empresa (FASE 1.2), o quadro de pessoal (FASE 3.1) e os dimensionamentos devidos (FASE 3.5), e o corpo é uma **triagem** — para cada frente da OS, o que dá para constatar no local e o que, só faltando isso, precisa ser notificado.
 
-Ordem das seções: **1.** A empresa · **2.** Quadro de pessoal (só com Relação de Vínculos) · **3.** Grau de risco, SESMT e CIPA · **4.** NR-24 — instalações sanitárias e conforto, ou **NR-18 — áreas de vivência do canteiro**, quando o script detecta obra (só com Relação de Vínculos, que é o que separa homens de mulheres) · **5.** Quadro de triagem · **6.** Documentos a exigir ainda na visita · **7.** O que só então vai para o DET. O script numera sozinho, pulando as que não se aplicam.
+Ordem das seções: **1.** A empresa · **2.** Quadro de pessoal (só com Relação de Vínculos) · **3.** Grau de risco, SESMT e CIPA · **4.** NR-24 — instalações sanitárias e conforto, ou **NR-18 — áreas de vivência do canteiro**, quando o script detecta obra (só com Relação de Vínculos, que é o que separa homens de mulheres) · **5.** Registro tardio no eSocial — conferir no local (só quando a FASE 3.2 achou ao menos um indício; é a seção com lista nominal) · **6.** Quadro de triagem · **7.** Documentos a exigir ainda na visita · **8.** O que só então vai para o DET. O script numera sozinho, pulando as que não se aplicam.
 
 **A tese do documento (não a perca de vista ao redigir):** documento pedido por notificação chega depois e já ajustado, e adia a ação fiscal. O objetivo é que a inspeção física constate a maioria das irregularidades e sobre o mínimo para o DET. Portanto, ao preencher, empurre tudo o que for possível para a coluna do meio.
 
@@ -625,7 +891,7 @@ no JSON. A seção da NR-24 só existe com `--vinculos`: é dele que vêm homens
 
 **Como preencher cada coluna da triagem:**
 
-- **`constatar`** — o que se vê e o que se ouve: percurso pelo estabelecimento, entrevista reservada com quem opera, identificação de quem está trabalhando. Cite entre parênteses o código da ementa que aquele achado materializa. Nas frentes que tenham ementa de meta (FASE 1.15), trate a verificação dela como prioridade da visita — é a regularização dessas que faz a fiscalização contar para o projeto. Máquinas (NR-12), edificações (NR-08), incêndio (NR-23) e elétrico (NR-10) são quase inteiramente constatáveis a olho nu — trate-os assim.
+- **`constatar`** — o que se vê e o que se ouve: percurso pelo estabelecimento, entrevista reservada com quem opera, identificação de quem está trabalhando. Cite entre parênteses o código da ementa que aquele achado materializa. Nas frentes que tenham ementa de meta (FASE 1.16), trate a verificação dela como prioridade da visita — é a regularização dessas que faz a fiscalização contar para o projeto. Máquinas (NR-12), edificações (NR-08), incêndio (NR-23) e elétrico (NR-10) são quase inteiramente constatáveis a olho nu — trate-os assim.
 - **`na_hora`** — documento a exigir **durante** a visita, que costuma estar no estabelecimento (PGR e inventário de riscos, prontuário elétrico, atas da CIPA, procedimento e relação de autorizados de trabalho em altura). Deixe claro que apresentação prometida "para depois" vira notificação, e notificação atrasa a ação fiscal.
 - **`so_det`** — o mínimo: em regra, apenas "se a empresa não apresentar durante a visita".
 
@@ -673,7 +939,7 @@ Apresente o resumo final:
 
 Documentos no checklist: M   ·   NAD gerada: sim/não
 Ementas da OS: K no memory.md   ·   🗺️ Maps: link no preparacao.md
-🎯 Meta do projeto: N ementas I3/I4 na OS (mínimo: 2 ou 3) · M de fácil regularização   (só se a FASE 1.15 rodou)
+🎯 Meta do projeto: N ementas I3/I4 na OS (mínimo: 2 ou 3) · M de fácil regularização   (só se a FASE 1.16 rodou)
 🏭 <o que a empresa faz, em uma linha — da busca da FASE 1.2>
 👥 Efetivo: <N> (<H>H/<M>M · PCD <n> · aprendizes <n>)   (só se houve Relação de Vínculos)
 ⚙️ Grau de risco <1-4> · SESMT devido: <resumo> <(na lista: <resumo>)> · CIPA devida: <2×ef> efetivos e <2×su> suplentes (paritária)   (só se a FASE 3.5 rodou)
@@ -703,7 +969,7 @@ Próximos passos:
 - Chama `/aft-relatorio-acidentes` (FASE 4.5) para o histórico de CATs do CNPJ — o script dela processa tudo localmente e grava em `Acidentes/`; a preparação usa só os agregados.
 - Chama `/aft-cnpjs-endereco` (FASE 4.6) para descobrir outros CNPJs no CEP do local e os indícios de grupo econômico — só o CEP vai ao site de busca; o cruzamento é local.
 - Usa a biblioteca `modelo_docx.py` (`/aft-modelo-docx`) para o `preparacao.docx` (FASE 7) — o padrão visual do toolkit, com o cabeçalho institucional da lotação do AFT.
-- Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação.
+- Encadeia `/aft-NAD` (FASE 5) quando o AFT aprova gerar a notificação já na preparação — é a **NAD preliminar**, que ele leva em mãos e entrega assinada na empresa. Aquela skill puxa os itens do modelo do DET e, com o RI conhecido, oferece criar o rascunho no site; a lavratura continua sendo ato do AFT.
 - Delega à `/aft-consulta` toda dúvida técnica, pesquisa de ementa e enquadramento — esta skill não consulta NotebookLM. Se o AFT pedir aprofundamento em um tema durante a preparação, aponte a `/aft-consulta` (ou chame-a, se ele quiser na hora).
 - Sucede naturalmente para `/aft-inspecao-fisica` depois da visita (fora do escopo desta skill).
 - Não confundir com `/aft-inspecao-fisica` (relato do que já foi constatado, DEPOIS da visita).
@@ -723,7 +989,7 @@ Próximos passos:
 - Efetivo do estabelecimento é **homens + mulheres**; PCD, aprendizes e menores de 18 são recortes desse total e **não se somam** a ele.
 - Déficit de SESMT apurado antes da visita é **indício**, nunca constatação: o profissional pode estar sob outra ocupação, em outro estabelecimento, ou o serviço ser comum. Confirme em campo antes de qualquer conclusão.
 - Ementa é texto oficial: código e descrição copiados **literais** da demanda — nunca parafrasear.
-- **Gradação de ementa nunca se afirma de cabeça** — sempre pelo `metas_regularizacao.py` (FASE 1.15), que lê a base local; código fora da base se confere na `/aft-consulta`. A gradação e o selo `[FÁCIL]` **não entram** na seção `## Ementas da OS` do `memory.md` (o `preparacao_docx.py` exige a linha terminando na frente entre parênteses): moram na seção `## Metas de regularização (I3/I4)` do `preparacao.md`.
+- **Gradação de ementa nunca se afirma de cabeça** — sempre pelo `metas_regularizacao.py` (FASE 1.16), que lê a base local; código fora da base se confere na `/aft-consulta`. A gradação e o selo `[FÁCIL]` **não entram** na seção `## Ementas da OS` do `memory.md` (o `preparacao_docx.py` exige a linha terminando na frente entre parênteses): moram na seção `## Metas de regularização (I3/I4)` do `preparacao.md`.
 - A lista de ementas de fácil regularização é **tática de meta, nunca limite da fiscalização**: nenhuma ementa da OS deixa de ser verificada por não contar para a meta.
 - **Nunca** invente exigência documental, ementa ou dispositivo legal — o que não vier de fonte confiável, pergunte ao AFT ou deixe em aberto.
 - O checklist de documentos é sempre **sugestão para aprovação do AFT** — nunca gere a `/aft-NAD` sem essa aprovação explícita.
