@@ -54,18 +54,25 @@ def achar_sisfgts(base_informada=None):
     return None
 
 
-def achar_partes_lre(base, cnpj14):
-    """Partes do LRE ordenadas pela sequencia. O SISFGTS pagina de 1.000 em
-    1.000 (eSocial_idA_LRE_<n>_<8dig>.txt); ler so a parte 1 perde vinculos."""
+def achar_partes_grupo(base, cnpj14, grupo):
+    """Partes de um grupo de arquivos do eSocial no SISFGTS, ordenadas pela
+    sequencia. O SISFGTS pagina os resultados (eSocial_<grupo>_<n>_<8dig>.txt);
+    ler so a parte 1 perde registros. Grupos conhecidos: idA_LRE (vinculos),
+    idK_AFAST (afastamentos), idM_FOLHA (bases de FGTS da folha)."""
     pasta = Path(base) / "Arquivos" / "eSocial" / cnpj14
     if not pasta.is_dir():
         return []
     partes = []
-    for p in pasta.glob("eSocial_idA_LRE_*.txt"):
-        m = re.match(r"eSocial_idA_LRE_(\d+)_(\d{8})\.txt$", p.name)
+    for p in pasta.glob(f"eSocial_{grupo}_*.txt"):
+        m = re.match(rf"eSocial_{grupo}_(\d+)_(\d{{8}})\.txt$", p.name)
         if m:
             partes.append((int(m.group(1)), p))
     return [p for _, p in sorted(partes)]
+
+
+def achar_partes_lre(base, cnpj14):
+    """Partes do LRE (grupo idA). O SISFGTS pagina de 1.000 em 1.000 vinculos."""
+    return achar_partes_grupo(base, cnpj14, "idA_LRE")
 
 
 def ler_partes(partes):
@@ -179,6 +186,16 @@ def fmt_d(d):
 def fmt_cpf(c):
     c = (c or "").zfill(11)
     return f"{c[:3]}.{c[3:6]}.{c[6:9]}-{c[9:]}" if len(c) == 11 else (c or "")
+
+
+def fmt_cpf_mascarado(c):
+    """CPF mascarado (***.***.NNN-NN) para os paineis derivados (ferias e
+    folha): matricula + nome identificam o trabalhador; o CPF completo fica
+    so no LRE, que e o livro de registro propriamente dito."""
+    if not c:
+        return ""
+    c = str(c).zfill(11)
+    return f"***.***.{c[6:9]}-{c[9:]}" if len(c) == 11 else "***"
 
 
 def fmt_cnpj(c):
