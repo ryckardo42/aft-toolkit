@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-checar_rt_autos.py - coerencia entre as irregularidades do RT (.docx) e os autos
+checar_rt_autos.py - coerencia entre as irregularidades do RT (.docx ou .pdf) e os autos
 (autos.md). Cobre o RT nos dois formatos do montar_rt.py: "topico" (secao 4
 unica) e "objeto" (um bloco de irregularidades por objeto interditado).
 
@@ -18,7 +18,7 @@ NAO faz casamento por subitem (33.3.1 x 33.3.2 etc.) porque a relacao item-de-NR
 ementa e muitos-para-muitos e geraria ruido. Lista os dois lados para conferencia manual.
 
 Uso:
-    python checar_rt_autos.py "<RT.docx>" "<autos.md>"
+    python checar_rt_autos.py "<RT.docx|RT.pdf>" "<autos.md>"
 Exit 0 = sem divergencia detectada; 1 = ha divergencia (revisar).
 """
 
@@ -69,9 +69,18 @@ def eh_legenda(texto):
     return bool(RE_LEGENDA.match(texto))
 
 
-RE_IRREG_PDF = re.compile(r"IRREGULARIDADE(?:S)?\s*:?", re.IGNORECASE)
-RE_FATOR_PDF = re.compile(r"FATOR(?:ES)?\s+DE\s+RISCO", re.IGNORECASE)
+# No RT os rotulos vem com o "(S)"/"(ES)" do template ("IRREGULARIDADE(S):",
+# "FATOR(ES) DE RISCO E/OU RISCO(S) RELACIONADO(S):") e, impressos em PDF, com a
+# numeracao automatica do Word ja resolvida na frente ("4. IRREGULARIDADE(S):").
+RE_IRREG_PDF = re.compile(
+    r"^(?:\d+(?:\.\d+)*\.?\s*)?IRREGULARIDADE(?:\(S\)|S)?\s*:?\s*$", re.IGNORECASE)
+RE_FATOR_PDF = re.compile(
+    r"^(?:\d+(?:\.\d+)*\.?\s*)?FATOR(?:\(ES\)|ES)?\s+DE\s+RISCO", re.IGNORECASE)
 RE_RODAPE_PDF = re.compile(r"^T\.\s*(Interdi|Embargo)", re.IGNORECASE)
+# no PDF a ementa vem precedida do marcador da lista, que cada gerador imprime de
+# um jeito ("-", a bala, ou lixo como "(cid:127)"): em vez de tentar reconhecer o
+# marcador, aceita o codigo da ementa se ele estiver no comeco da linha
+PREFIXO_MAX_PDF = 12
 
 
 def ler_secao4_rt_pdf(rt_path):
@@ -105,7 +114,7 @@ def ler_secao4_rt_pdf(rt_path):
                 if linha and not RE_RODAPE_PDF.match(linha):
                     linhas.append(linha)
 
-    inicios = [i for i, t in enumerate(linhas) if RE_IRREG_PDF.fullmatch(t)]
+    inicios = [i for i, t in enumerate(linhas) if RE_IRREG_PDF.match(t)]
     if not inicios:
         return None, None
 
@@ -113,15 +122,16 @@ def ler_secao4_rt_pdf(rt_path):
     for ini in inicios:
         buffer = ""
         for t in linhas[ini + 1:]:
-            if RE_FATOR_PDF.search(t):
+            if RE_FATOR_PDF.match(t):
                 break
             textos.append(t)
             # no PDF a ementa quebra em varias linhas; um item novo comeca
-            # sempre por um codigo XXXXXX-X no inicio da linha
-            if CODE_RE.match(t):
+            # sempre por um codigo XXXXXX-X no comeco da linha
+            m = CODE_RE.search(t)
+            if m and m.start() <= PREFIXO_MAX_PDF:
                 if buffer:
                     itens.append(buffer.strip())
-                buffer = t
+                buffer = t[m.start():]        # descarta o marcador da lista
             elif buffer:
                 buffer += " " + t
         if buffer:
