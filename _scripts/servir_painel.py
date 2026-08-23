@@ -800,12 +800,17 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path.startswith("/doc/"):
             self._serve_doc()
         elif self.path.startswith("/lre/"):
-            self._serve_lre()
+            self._serve_painel_esocial("/lre/", "LRE_painel.html")
+        elif self.path.startswith("/ferias/"):
+            self._serve_painel_esocial("/ferias/", "Ferias_painel.html")
+        elif self.path.startswith("/folha/"):
+            self._serve_painel_esocial("/folha/", "Folha_painel.html")
         else:
             self._json(404, {"ok": False, "erro": "rota desconhecida"})
 
-    def _serve_lre(self):
-        """GET /lre/<pasta> — entrega o eSocial/LRE_painel.html da OS.
+    def _serve_painel_esocial(self, prefixo, arquivo):
+        """GET /lre/<pasta>, /ferias/<pasta> ou /folha/<pasta> — entrega o
+        painel correspondente da subpasta eSocial/ da OS.
 
         Já é HTML pronto (gerado pela /aft-lre-esocial), então vai como está,
         sem passar pelo conversor de markdown da rota /doc/. Contém dados
@@ -813,19 +818,19 @@ class Handler(BaseHTTPRequestHandler):
         pasta da OS — o nome da pasta é validado contra a listagem real, o que
         impede subir diretório (../) para ler arquivo de fora."""
         try:
-            pasta = urllib.parse.unquote(self.path[len("/lre/"):]).strip("/")
+            pasta = urllib.parse.unquote(self.path[len(prefixo):]).strip("/")
         except (ValueError, UnicodeDecodeError):
             return self._responde(400, b"pedido invalido",
                                   "text/plain; charset=utf-8")
         alvo = None
         for d in self.base.iterdir():          # só OS que existem de fato
             if d.is_dir() and d.name == pasta:
-                alvo = d / "eSocial" / "LRE_painel.html"
+                alvo = d / "eSocial" / arquivo
                 break
         if not alvo or not alvo.is_file():
             return self._responde(
-                404, "painel do LRE nao encontrado — rode a skill "
-                     "/aft-lre-esocial para esta OS".encode("utf-8"),
+                404, ("painel nao encontrado (eSocial/%s) — rode a skill "
+                      "/aft-lre-esocial para esta OS" % arquivo).encode("utf-8"),
                 "text/plain; charset=utf-8")
         self._responde(200, alvo.read_bytes(), "text/html; charset=utf-8")
 
