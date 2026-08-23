@@ -270,6 +270,80 @@ que já traz a completa.
 
 ---
 
+## 23/08/2026
+<!-- commit: nco-so-sem-auto-e-docx -->
+
+**A NCO deixou de repetir o que já virou auto de infração.** A regra da `/aft-tn-nco`
+mudou de lógica: antes ela puxava os autos lavrados para notificar tudo o que foi
+autuado; agora ela puxa os autos lavrados justamente para **excluir** esses itens da
+notificação. O raciocínio, vindo de fiscalização real: o auto de infração já é, por si,
+meio de coerção — a multa e o risco de agravamento pressionam a correção — e notificar
+de novo o mesmo fato confunde a empresa sobre o que ainda precisa corrigir e o que já
+foi punido. A NCO passa a servir ao que não tem auto: itens que você decidiu não autuar
+e, principalmente, a dupla visita, em que a autuação fica diferida para a segunda
+visita. Se você pedir o comportamento antigo ("notifica tudo o que foi autuado"), a
+skill avisa que a convenção mudou e pergunta antes de incluir. De quebra, além do texto
+para colar no DET, a skill agora grava também um `.docx` da notificação em
+`NOTIFICACOES/`, no padrão visual do toolkit — para leitura confortável e arquivo; quem
+vai ao DET continua sendo o texto puro do chat.
+
+---
+
+## 23/08/2026
+<!-- commit: autos-padronizados-e-validador -->
+
+**Autos de uma mesma leva saem padronizados, e o validador pega defeito de forma que o
+Sistema Auditor aceitava calado.** Melhorias colhidas numa fiscalização real de agosto:
+
+- A `/aft-auditoria-geral` agora fixa a frase de abertura do bloco de irregularidade —
+  uma fórmula para achado de campo, outra para achado documental, idêntica em todos os
+  autos da mesma fonte — e um fechamento padronizado de enquadramento. Também passa a
+  exigir que cada auto nomeie explicitamente a máquina ou equipamento envolvido (conferido
+  na fonte primária, nunca de memória) e a impedir que duas ementas da mesma NR, uma geral
+  e uma específica, autuem o mesmo ponto físico da máquina (princípio da especialidade).
+  Antes de apresentar, a skill relê a leva inteira lado a lado e corrige divergências.
+- Nos autos de AET (`/aft-aet-auditoria`), as evidências saem em parágrafos corridos, sem
+  lista numerada — no Sistema Auditor a lista virava um bloco ilegível.
+- O `/aft-gera-ai` ganhou avisos duros contra dois erros silenciosos que aconteceram de
+  verdade: subtítulo escrito sem acento ("FISCALIZACAO") e o passo do recuo de parágrafo
+  esquecido ao regenerar o TXT. E o validador (`validar_txt.py`) agora confere as três
+  coisas no arquivo final: subtítulos I/II/III presentes, acentuação correta e recuo
+  aplicado — defeitos que o Sistema Auditor importa sem reclamar e só apareciam quando
+  você conferia o auto já dentro do sistema.
+- Para quem usa Windows: o login do NotebookLM voltou a encontrar o Python certo na
+  instalação mais nova do pipx.
+
+---
+
+## 23/08/2026
+<!-- commit: porte-do-auto-lavrado -->
+
+**O porte da empresa e o número de trabalhadores vêm de graça do primeiro auto lavrado.**
+Várias skills perguntam o porte (regra de dupla visita, pares de ementa ME/EPP) e o
+número de trabalhadores (CIPA, SESMT, NR-24) — dados que, assim que existe um auto
+efetivamente lavrado, já estão impressos no próprio PDF do Sistema Auditor. A
+`/aft-autos-lavrados` agora extrai os dois campos na varredura e completa a ficha
+(`memory.md`) da OS com eles. Duas cautelas embutidas: auto ainda em rascunho não tem
+esses campos preenchidos (saem em branco no PDF) e é ignorado; e o que você já escreveu
+na ficha à mão nunca é sobrescrito — o dado do PDF só entra onde estiver faltando.
+
+---
+
+## 23/08/2026
+<!-- commit: organiza-os-ordem-servico -->
+
+**O `/aft-organiza-os` aprendeu a ler a Ordem de Serviço e a arrumar os relatórios.**
+Ao organizar uma pasta, a skill agora reconhece o PDF da Ordem de Serviço do SFIT,
+extrai o número da OS, o vencimento e a tabela inteira de ementas a fiscalizar (código e
+descrição literais, nunca resumidos) e grava tudo na ficha da OS — a mesma seção
+`## Ementas da OS` que o `/aft-nova-auditoria` cria quando você anexa a OS no cadastro.
+Pasta antiga que tem a Ordem de Serviço mas não tem essa seção na ficha passa a ser
+detectada e completada automaticamente. E os relatórios de fiscalização (relatório
+final, dossiê de autos e anexos, relatórios avulsos) ganharam morada oficial: a subpasta
+`Relatórios de Fiscalização/`, a mesma que o `/aft-relatorio` já usava.
+
+---
+
 ## 22/08/2026
 <!-- commit: tn-nco-parametros-e-revisor -->
 
@@ -803,6 +877,24 @@ partes, coisa que acontece ao colar o nome de outro sistema). O sintoma era a
 sincronização do Google Agenda (/aft-agenda-det) ou o /aft-painel pararem no
 meio com um ticket de erro. Agora o script se protege sozinho, como os demais
 scripts do toolkit já faziam, e imprime o resumo completo em qualquer console.
+
+---
+
+## 20/08/2026
+<!-- commit: extrato-ja-existe -->
+
+**PGR, AET e laudo da NR-12 não são mais extraídos duas vezes.** As três skills de análise
+de documento longo (`/aft-PGR-analise`, `/aft-aet-auditoria`, `/aft-auditoria-AR-NR12`)
+mandam o documento para o agente extrator antes de analisar, justamente para não gastar a
+sua conversa lendo cem páginas. Só que elas não conferiam se aquele documento **já tinha
+sido extraído antes** — e, no silêncio, mandavam extrair de novo. Quem sentia isso era
+quem extraiu o PGR numa etapa anterior (numa triagem de vários documentos entregues pela
+empresa, por exemplo) e depois acionou a skill: o mesmo documento ia para o extrator pela
+segunda vez, dobrando a parte mais cara do trabalho, sem nenhum aviso na tela. Agora cada
+uma das três olha primeiro se o extrato correspondente (`pgr-extrato.md`, `aet-extrato.md`
+ou `laudo-extrato.md`) já está na pasta da OS: se estiver, confere se ele cobre o roteiro
+esperado e vai direto para a análise. Se o extrato estiver vazio, truncado ou fora do
+roteiro, ela refaz a extração e diz a você por quê.
 
 ---
 
