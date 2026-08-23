@@ -9,10 +9,13 @@ description: >
   pasta da OS. Dispare com /aft-lre-esocial, "LRE do eSocial", "livro de
   registro de empregados", "vínculos do eSocial", "puxa o LRE dessa
   empresa", "quem está registrado no eSocial", "quadro de empregados",
-  "registro tardio", "quem foi admitido sem registro no prazo". Aceita 0 ou
-  1 argumento (CNPJ ou parte do nome da empresa); sem argumento, oferece as
-  OS ATIVAS que já têm dados baixados no SISFGTS. Read-only sobre o
-  SISFGTS: nunca escreve nele nem no banco Firebird.
+  "registro tardio", "quem foi admitido sem registro no prazo" — e também
+  para as análises derivadas: "férias vencidas", "férias em atraso",
+  "auditoria de férias", "quem está sem gozar férias", "buraco na folha",
+  "mês sem remuneração declarada", "auditar a remuneração do eSocial".
+  Aceita 0 ou 1 argumento (CNPJ ou parte do nome da empresa); sem
+  argumento, oferece as OS ATIVAS que já têm dados baixados no SISFGTS.
+  Read-only sobre o SISFGTS: nunca escreve nele nem no banco Firebird.
 ---
 
 # lre-esocial — Livro de Registro de Empregados (eSocial)
@@ -34,12 +37,17 @@ description: >
 Use quando o AFT já baixou os dados do eSocial de uma empresa **dentro do
 SISFGTS** e quer trabalhar esses vínculos na auditoria: ver quem está
 registrado, quem foi desligado e por quê, e **quais admissões chegaram ao
-eSocial fora do prazo**.
+eSocial fora do prazo**. Se o download incluiu os demais registros
+(afastamentos e folha), a skill oferece ainda **duas análises derivadas**:
+a auditoria de **férias** (vencidas, gozadas fora do prazo, prazo vencendo)
+e a auditoria da **remuneração declarada** (buracos na folha, 13º sem base,
+remuneração abaixo do contratual, desligado sem base rescisória).
 
 Cenários típicos:
 - Logo depois de baixar o eSocial no SISFGTS, para levar o quadro para a OS.
 - Antes da inspeção, para saber o efetivo declarado e os cargos.
 - Ao apurar registro em atraso (art. 41 da CLT) — a skill levanta o **indício**.
+- Ao apurar férias não concedidas no prazo (arts. 134 e 137 da CLT).
 - Para cruzar com a folha, o AFD/AEJ ou a relação de vínculos.
 
 **Não** acione para lavrar auto (é `/aft-auditoria-geral`), para trabalhador sem
@@ -71,8 +79,11 @@ registro nenhum (é `/aft-informalidade`) nem para analisar ponto (é
   empresa grande tem `_1_`, `_2_`, ... `_16_`. **Ler só a parte 1 perde os demais
   trabalhadores e falseia todos os números.** O script junta todas — nunca
   contorne isso lendo um arquivo só.
-- **Outros grupos na mesma pasta** (esta skill usa apenas o `idA`):
-  `idB`=alterações · `idK`=afastamentos · `idM`=folha · `idR`=rubricas.
+- **Outros grupos na mesma pasta**: `idB`=alterações · `idK`=afastamentos ·
+  `idM`=folha · `idR`=rubricas. O painel do LRE usa só o `idA`; a análise de
+  férias usa `idA`+`idK`; a análise da folha usa `idA`+`idM`+`idK`. Os grupos
+  `idK`/`idM` só existem se o AFT baixou o eSocial no SISFGTS com a opção
+  **"LRE e demais registros"** — se faltarem, os scripts avisam com essa frase.
 - **Saída:** subpasta `eSocial/` **dentro da pasta da OS**.
 
 ## Passo a passo
@@ -119,6 +130,33 @@ Grava dentro da OS:
 | `eSocial/lre-esocial.md` | resumo **sem nome e sem CPF** — aparece em "Relatórios da OS" no `/aft-painel` |
 | `eSocial/resumo.json` | números agregados que o `/aft-painel` lê para montar o cartão |
 
+### Passo 3b — Oferecer as análises de férias e de folha
+
+O `--achar` do Passo 2 já diz se o CNPJ tem afastamentos (`idK`). Se tiver,
+**ofereça as duas análises** logo depois do painel do LRE (não rode sem avisar:
+cada uma gera mais quatro arquivos na OS). Se o AFT pediu diretamente
+("férias vencidas", "buraco na folha"), rode direto a que ele pediu.
+
+```bash
+python ~/.claude/skills/_scripts/lre_ferias.py "<pasta da OS>" <CNPJ14> "<EMPREGADOR>"
+python ~/.claude/skills/_scripts/lre_folha.py "<pasta da OS>" <CNPJ14> "<EMPREGADOR>"
+```
+
+| Arquivo | O que é |
+|---|---|
+| `eSocial/Ferias_painel.html` | painel de férias por trabalhador: períodos aquisitivos, prazo concessivo, gozo, indícios (vencidas, fora do prazo, vencendo, abono, fracionamento) |
+| `eSocial/Ferias_analise.csv` | um período aquisitivo auditado por linha |
+| `eSocial/ferias.md` | resumo **sem nome e sem CPF** |
+| `eSocial/ferias_resumo.json` | números agregados (sem PII) |
+| `eSocial/Folha_painel.html` | painel da remuneração declarada: grade mês a mês por trabalhador, buracos, 13º, comparação com o salário contratual, bases rescisórias |
+| `eSocial/Folha_analise.csv` | um vínculo por linha, com os meses furados |
+| `eSocial/folha.md` | resumo **sem nome e sem CPF** |
+| `eSocial/folha_resumo.json` | números agregados (sem PII) |
+
+Se os grupos `idK`/`idM` não existirem, o script explica que falta baixar o
+eSocial com a opção **"LRE e demais registros"** no SISFGTS — repasse a frase
+ao AFT e pare; quem baixa é ele.
+
 ### Integração com o `/aft-painel`
 
 Na tela de detalhe da OS aparece um cartão enxuto **LRE eSocial** com dois
@@ -143,8 +181,16 @@ PCD e o número de **indícios de registro tardio** — este último **sempre
 acompanhado do recorte**: "N indícios entre as X admissões desde 02/01/2026". Informe o caminho real da
 pasta `eSocial/` e diga que o painel abre com duplo clique.
 
-**Sempre** repita o aviso: *registro tardio é indício, não prova* — e que os
-arquivos têm dados pessoais e são locais.
+Se rodou férias/folha, acrescente os números de cada uma **com a natureza do
+achado**: férias vencidas e gozo fora do prazo são indício de **dobra**
+(arts. 134 e 137 da CLT; Súmula 81 do TST); buraco na folha é mês sem base
+declarada **e sem afastamento que o justifique**. Lembre que gozo de 20 a 29
+dias pode ser abono pecuniário regular (art. 143) e que a folha mostra a base
+**declarada**, não o recolhimento — FGTS em atraso quem aponta é o SISFGTS.
+
+**Sempre** repita o aviso: *tudo é indício, não prova* — confirmar nos recibos
+de férias e na folha de pagamento antes de autuar — e que os arquivos têm
+dados pessoais e são locais.
 
 ### Passo 5 — Registrar no diário
 
@@ -201,6 +247,61 @@ python ~/.claude/skills/_scripts/diario_registrar.py "<pasta da OS>" --tipos D -
 > decide é o AFT**, conferindo caso a caso. Se for enquadrar, confirme ementa e
 > capitulação pelo `/aft-consulta`; **nunca invente código**.
 
+## Como a auditoria de férias é apurada (`lre_ferias.py`)
+
+Reconstitui os **períodos aquisitivos** (PA) de 12 meses a partir da admissão
+do LRE e casa cada PA com os afastamentos código 15 (férias) do grupo `idK`.
+Regras, todas documentadas no script:
+
+- **art. 134 + art. 137:** PA com prazo concessivo vencido sem gozo suficiente
+  = *férias vencidas* (indício de dobra). **Súmula 81 do TST:** dias gozados em
+  bloco iniciado após o prazo = *gozo fora do prazo* (dobra devida mesmo tendo
+  gozado).
+- **Abono pecuniário (art. 143) não aparece no arquivo.** Gozo de 20 a 29 dias
+  com prazo vencido vira "conferir abono", nunca dobra firme; dobra firme só
+  com gozo **abaixo de 20 dias**. Pela mesma razão, bloco de férias iniciado
+  após o prazo de um PA só completa esse PA até os 20 dias mínimos — o
+  excedente pertence ao PA seguinte. O que se reporta é o **mínimo certo**.
+- **Faltas injustificadas (art. 130) não constam** — assume-se direito a 30
+  dias. Mais um motivo de ser indício, não prova.
+- **art. 133, IV:** mais de 180 dias previdenciários dentro do PA zeram o PA
+  (contam-se os dias que excedem 15 por episódio de afastamento).
+- **Fracionamento (art. 134 §1º):** mais de 3 frações, fração menor que 5 dias
+  ou nenhuma de pelo menos 14 — apontado só quando a alocação não dividiu
+  blocos entre PAs (o corte artificial falsearia).
+- **Janela de dados — a proteção principal contra falso positivo:** só são
+  auditados PAs **iniciados depois** que a empresa entrou no eSocial (primeira
+  recepção no LRE), e vínculo vindo por sucessão/cessão
+  (`sucessaovinc_dttransf`) só é auditado a partir da **transferência**:
+  férias anteriores podem ter sido gozadas no empregador anterior sem deixar
+  rastro no arquivo. Num caso real, ignorar isso multiplicava os indícios por
+  dez — todos falsos.
+
+> **É indício, não prova.** Confirmar nos recibos de férias e na folha antes
+> de autuar; ementa e capitulação pelo `/aft-consulta` — **nunca invente
+> código**.
+
+## Como a folha é auditada (`lre_folha.py`)
+
+Usa a base **declarada** de FGTS por mês (tpValor 11 do S-5003, grupo `idM`),
+cruzada com o LRE e os afastamentos:
+
+- **Buraco na folha:** mês dentro do vínculo sem base declarada e sem
+  afastamento cobrindo 20 dias ou mais dele (férias não justificam buraco:
+  são remuneradas). Vínculo vindo por sucessão/cessão só conta a partir da
+  transferência — antes disso a folha era do empregador de origem.
+- **13º sem base:** ano fechado, com pelo menos 3 meses de base e sem
+  desligamento no ano, sem nenhuma base de 13º (tpValor 12).
+- **Abaixo do contratual:** os **últimos 3 meses fechados** abaixo de 90% do
+  salário do LRE (só salário mensal e vínculo ativo). Compara-se presente com
+  presente: mês antigo abaixo do salário **atual** é normal para quem teve
+  aumento.
+- **Sem base rescisória:** dispensa por iniciativa do empregador (motivos
+  02/03) sem nenhuma base rescisória de FGTS (tpValor 21/22).
+
+> **Base declarada não é recolhimento.** FGTS em atraso quem aponta é o
+> próprio SISFGTS — esta análise olha a remuneração e o vínculo, não o débito.
+
 ## Tabelas de código
 
 As descrições (motivo de desligamento, raça/cor, grau de instrução, jornada,
@@ -229,11 +330,12 @@ palpite.
 
 ## Privacidade
 
-- O `LRE_painel.html` e o `LRE_vinculos.csv` têm **nome, CPF, endereço e salário**
-  de trabalhadores. São arquivos **locais**: não publicar, não anexar em e-mail,
-  não subir para nuvem, não gerar como Artifact.
-- O `lre-esocial.md` é o único sem dado nominal — por isso é ele que o
-  `/aft-painel` exibe.
+- O `LRE_painel.html` e o `LRE_vinculos.csv` — e igualmente `Ferias_painel.html`,
+  `Ferias_analise.csv`, `Folha_painel.html` e `Folha_analise.csv` — têm **nome,
+  CPF, salário e afastamentos** de trabalhadores. São arquivos **locais**: não
+  publicar, não anexar em e-mail, não subir para nuvem, não gerar como Artifact.
+- Os `.md` (`lre-esocial.md`, `ferias.md`, `folha.md`) são os únicos sem dado
+  nominal — por isso são eles que aparecem no `/aft-painel`.
 - O HTML é autocontido (CSS/JS embutidos, **sem CDN**): abre offline e não faz
   requisição nenhuma.
 - A skill **não** acessa a API do SIT, não faz login e **não lê o banco Firebird**
@@ -250,3 +352,13 @@ palpite.
   `processamento_datahora` como **epoch em milissegundos**.
 - Campos condicionais (só aparecem quando há): bloco PCD (`def*`, `infocota`),
   CTPS (`seriectps`, `nrctps`), sucessão (`cnpjsucessora`), `nistrab` (PIS).
+- **Grupo `idK` (afastamentos):** um registro por afastamento, com `cpftrab`,
+  `matricula`, `codmotafast` (tabela 18 do eSocial: `01` acidente/doença do
+  trabalho, `03` doença comum, `15` férias, `17` licença maternidade),
+  `dtiniafast` e `dttermafast` (último dia afastado; em aberto = sem o campo).
+- **Grupo `idM` (folha):** um registro por base de FGTS, com `perapur`
+  (`AAAA-MM`, ou `AAAA` no 13º), `remFGTS` (valor) e `tpValor` (S-5003):
+  `11` remuneração mensal, `12` 13º salário, `21`/`22` bases rescisórias
+  (conferido empiricamente: só aparecem em desligados, e nas dispensas sem
+  justa causa). Tipos `13`/`14` existem mas não têm leiaute confirmado —
+  os scripts os exibem sem juízo, como "outras bases".
