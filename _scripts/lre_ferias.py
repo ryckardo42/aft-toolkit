@@ -121,6 +121,8 @@ def auditar_vinculo(v, eventos, janela_ini, hoje):
         janela_ini = transf
 
     ferias, inss = [], []
+    em_gozo = None   # ferias em aberto (sem dttermafast): o vinculo esta de
+                     # ferias NESTE momento -- muda a leitura do "vencendo"
     for r in sorted(eventos, key=lambda r: r.get("dtiniafast") or ""):
         i = d_iso(r.get("dtiniafast"))
         if not i:
@@ -128,6 +130,8 @@ def auditar_vinculo(v, eventos, janela_ini, hoje):
         t = d_iso(r.get("dttermafast")) or hoje
         if r.get("codmotafast") == COD_FERIAS:
             ferias.append({"ini": i, "fim": t, "dias": (t - i).days + 1})
+            if not r.get("dttermafast"):
+                em_gozo = i
         elif r.get("codmotafast") in COD_INSS:
             inss.append((i, t))
 
@@ -222,6 +226,10 @@ def auditar_vinculo(v, eventos, janela_ini, hoje):
             elif (prazo - hoje).days <= JANELA_VENCENDO:
                 p["status"] = "vencendo"
                 tot["vencendo"] += 1
+                if em_gozo:
+                    p["obs"] = (f"em gozo neste momento (férias em aberto "
+                                f"desde {fmt_d(em_gozo)}) - deve quitar se "
+                                f"completar o período")
             else:
                 p["status"] = "no-prazo"
         else:
