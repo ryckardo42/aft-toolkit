@@ -138,11 +138,11 @@ O que cada campo destrava na preparação:
 | `endereco` | **FASE 4** (acesso/Google Maps) e **FASE 4.6** (outros CNPJs no endereço) |
 | `municipio`/`uf` | confirma a lotação e o deslocamento |
 | `situacao` | se não for ATIVA, muda a ação fiscal inteira |
-| `porte`, `simples` | leitura de porte do estabelecimento (FASE 3.5) |
+| `porte`, `simples`, `simples_desde`, `simples_exclusao` | leitura de porte e **dupla visita** (achado 4 abaixo) |
 | `telefone`, `telefone2` | contato institucional para a visita |
 | `abertura` | idade da empresa — contexto de exigibilidade de programas |
 
-**Três achados que merecem virar `## Pontos de atenção para a visita`:**
+**Quatro achados que merecem virar `## Pontos de atenção para a visita`:**
 
 1. **Situação cadastral diferente de ATIVA** (BAIXADA, INAPTA, SUSPENSA), com a
    data. O AFT precisa saber **antes de sair** — pode não haver empresa no
@@ -153,6 +153,25 @@ O que cada campo destrava na preparação:
    **indício** — a atividade real se confirma na inspeção.
 3. **Endereço do cadastro divergente** do que o AFT tem (da denúncia, da OS).
    Pode ser filial, mudança não atualizada, ou endereço só contábil.
+4. **Leitura de porte para a dupla visita (art. 627-A da CLT).** O `porte`
+   cadastral é declaração da própria empresa e vive desatualizado — quem dá a
+   leitura confiável é a opção pelo Simples Nacional, que exige ser ME/EPP
+   (LC 123/2006) e cai sozinha quando a receita estoura o limite:
+   - **`simples=sim`** → a empresa é **necessariamente ME ou EPP**. Registre nos
+     pontos de atenção: "Optante do Simples Nacional desde `simples_desde` —
+     empresa ME/EPP, candidata ao critério de dupla visita (art. 627-A da CLT)".
+     **Invocar a dupla visita é decisão do AFT na autuação**, e as quebras
+     continuam valendo (falta de registro, grave e iminente, reincidência,
+     fraude, embaraço). **Não grave `**Dupla visita:**` no memory.md** — essa
+     linha é da `/aft-auditoria-geral`, quando o AFT decidir.
+   - **`porte` ME/EPP sem `simples=sim`** → o porte cadastral **não basta** para
+     presumir dupla visita. Se vier `simples_exclusao`, diga: já foi optante e
+     saiu nessa data — indício de que cresceu além do porte. Avise que a
+     certeza, no dia, é a consulta manual do AFT no portal do Simples Nacional
+     (tem captcha, não dá para automatizar):
+     <https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes.aspx?id=21>
+   - O retrato dos dados abertos é mensal (defasagem de até ~1 mês) — bem mais
+     fresco que o porte cadastral, mas diga a ressalva junto com o achado.
 
 Se a atividade que aparecer na FASE 1.2 **destoar do CNAE** daqui, isso já é o
 ponto de atenção previsto naquela fase — agora com a fonte oficial para
