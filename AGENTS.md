@@ -43,6 +43,17 @@ e nunca manda o AFT ao terminal.
   (nunca dentro de `python -c "..."`), e declare UTF-8 nos scripts gerados.
 - **Testar fora das pastas de fiscalização reais.** Script novo se prova em pasta de
   mentira antes de tocar em `OS ATIVAS/`.
+- **Skill que dirige navegador: teclado real, e sempre conferir o resultado.** Site
+  moderno (Vue, React, Angular) só recebe o que foi digitado de verdade — `computer`
+  com `triple_click` + `type`. Escrever no campo por outro caminho (`form_input`, ou
+  JavaScript com `.value`, mesmo disparando `input`/`change`) **falha em silêncio**: o
+  campo mostra o texto, o site não recebe nada, e a busca sai sem filtro devolvendo uma
+  lista plausível e errada (medido em 23/08/2026 na `/aft-cnpjs-endereco`: 72,8 milhões
+  de resultados com cara de resposta legítima). Por isso, toda skill de navegador
+  precisa de um **passo de sanidade** que reconheça o resultado sem filtro e o descarte
+  antes de mostrá-lo ao AFT. Quando o site tiver API própria e sessão já autenticada,
+  prefira a API ao formulário — é o que a extensão do DET faz, e por isso ela não sofre
+  desse defeito.
 
 ## Publicar: do ramo até a máquina do AFT
 
