@@ -93,7 +93,7 @@
 
 <h1>🔄 Sync DET — arquitetura completa</h1>
 <p class="sub">
-  Extensão <strong>v3.0.0</strong> para Chrome e Edge (Manifest V3) ·
+  Extensão <strong>v4.0.0</strong> para Chrome e Edge (Manifest V3) ·
   <a href="https://chromewebstore.google.com/detail/sync-det-%E2%80%94-sisos-aft-tool/khmecjbidgcndmgmkbpfncjgmmfehiem">página na Chrome Web Store</a><br>
   Como a extensão captura o token do DET, quem fala com a API oficial e como as
   notificações chegam ao <code>memory.md</code> de cada OS.
@@ -101,11 +101,40 @@
 
 <div class="card">
   <strong>A ideia em uma frase:</strong> a extensão <em>empresta o crachá</em>
-  (o token de sessão que o próprio site do DET usa) e entrega a um destino de
-  confiança — o <strong>painel local do AFT Toolkit</strong> (na sua máquina) ou o
-  <strong>SisOS</strong> (na nuvem) — que usa esse crachá para consultar a
-  <strong>API oficial do DET</strong> e gravar as notificações na ficha certa.
-  A extensão nunca lê a tela, nunca vê os dados das notificações.
+  (o token de sessão que o próprio site do DET usa) e entrega ao
+  <strong>painel local do AFT Toolkit</strong>, na sua própria máquina, que usa
+  esse crachá para consultar a <strong>API oficial do DET</strong> e gravar as
+  notificações na ficha certa. Desde a <strong>v4.0.0</strong> este é o único
+  destino: nada sai do computador. A extensão nunca lê a tela nem vê os dados
+  das notificações.
+</div>
+
+<div class="note ok">
+  <strong>Atualização v4.0.0 (21-22/08/2026).</strong> Saíram a permissão
+  <code>webRequest</code> (o token passou a ser lido de
+  <code>sessionStorage["token"]</code> pelo content script) e o destino SisOS na
+  nuvem — a extensão ficou com apenas <code>storage</code> e <code>tabs</code>, e
+  100% local. O <code>background.js</code> continua fazendo o envio ao painel
+  porque a página do DET não pode chamar <code>127.0.0.1</code> (o navegador
+  bloqueia site público → rede privada). A varredura das fichas passou a ser
+  paralela no servidor (<code>SYNC_PARALELO=5</code>): <strong>105 s → 28 s</strong>,
+  medido — sem alterar a extensão, já que o motor é o mesmo para todos os gatilhos.
+  Partes do diagrama abaixo ainda retratam o fluxo da v3.
+  <br><br>
+  <strong>A v4.0.0 NÃO está publicada na Chrome Web Store</strong> (decisão do AFT
+  em 22/08/2026; a submissão da v3 foi cancelada por ele). Ela roda em modo
+  desenvolvedor no computador dele. O repositório não versiona a extensão.
+</div>
+
+<div class="note">
+  <strong>Esta extensão é a via ALTERNATIVA de token, não a principal.</strong>
+  Desde 22/08/2026 a via principal é o <strong>navegador do próprio assistente</strong>:
+  ele lê o mesmo <code>sessionStorage["token"]</code> da aba do DET já logada e o
+  entrega ao painel, sem depender de instalação nem de aprovação de loja (medido:
+  ~0,001 s). A extensão existe para quem usa um assistente <em>sem</em> navegador
+  (Codex, Antigravity) ou prefere não depender dele. O texto canônico das duas vias,
+  para onde todas as skills apontam, é
+  <code>config/canal-token-det.md</code>.
 </div>
 
 <h2>1. Mapa geral</h2>
@@ -132,11 +161,11 @@
   <rect x="250" y="62" width="170" height="76" rx="10" fill="#f5f3ff" stroke="#8b5cf6"/>
   <text x="262" y="86" font-size="12.5" font-weight="700" fill="#4c1d95">background.js</text>
   <text x="262" y="103" font-size="10.5" fill="#5b21b6">service worker (MV3)</text>
-  <text x="262" y="120" font-size="10.5" fill="#5b21b6">webRequest → captura o token</text>
+  <text x="262" y="120" font-size="10.5" fill="#5b21b6">envia o token ao painel local</text>
 
   <rect x="40" y="170" width="180" height="76" rx="10" fill="#f0fdfa" stroke="#14b8a6"/>
   <text x="52" y="194" font-size="12.5" font-weight="700" fill="#134e4a">content.js</text>
-  <text x="52" y="211" font-size="10.5" fill="#0f766e">botão "Sincronizar" + toast</text>
+  <text x="52" y="211" font-size="10.5" fill="#0f766e">lê sessionStorage + botão Sincronizar</text>
   <text x="52" y="228" font-size="10.5" fill="#0f766e">injetado só na página do DET</text>
 
   <rect x="250" y="170" width="170" height="76" rx="10" fill="#fffbeb" stroke="#f59e0b"/>
@@ -524,7 +553,7 @@ Content-Type: application/json</code></pre>
   Gerado em 19/07/2026 · atualizado em 22/07/2026 (RI estrito por front-matter · alerta
   dispensável · arquitetura do painel ativo · indicador do popup e RI do destino nuvem
   corrigidos) · atualizado em 19/08/2026 (notificação cancelada fora da ficha · envelope do
-  canal de comunicação no painel) · Sync DET v3.0.0 · acompanha
+  canal de comunicação no painel) · Sync DET v4.0.0 · acompanha
   <code>arquitetura-sync-det.json</code>
   (a mesma arquitetura em formato estruturado, para consumo por máquina).
 </footer>

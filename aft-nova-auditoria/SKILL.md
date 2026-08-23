@@ -116,6 +116,58 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 > Se o AFT ainda não notificou nada pelo DET, deixe a seção de DET vazia — dá para
 > acrescentar depois (basta editar o `memory.md` ou rodar `/aft-det-630`/`/aft-nova-auditoria` de novo).
 
+## Passo 1.5 — Puxar os dados cadastrais da Receita (se houver CNPJ)
+
+**Se o AFT informou um CNPJ (14 dígitos), rode isto sem perguntar.** É a mesma
+consulta do cartão CNPJ que o AFT já faz no site da Receita — dado público de
+pessoa jurídica, nada de fiscalização sai da máquina além do próprio CNPJ.
+
+```bash
+python ~/.claude/skills/_scripts/consulta_cnpj.py <CNPJ14> --os
+```
+
+Devolve `chave=valor`, só com os campos que existem:
+
+```
+razao_social=...      situacao=ATIVA        situacao_desde=dd/mm/aaaa
+municipio=...         uf=...                abertura=dd/mm/aaaa
+cnae=XXXX-X/XX        cnae_descricao=...    cnaes_secundarios=...; ...
+natureza_juridica=... porte=...             simples=sim
+endereco=...          telefone=...          telefone2=...
+```
+
+**Como usar no Passo 3:**
+
+- Preencha com isso os campos que o AFT **não** informou: `municipio`, `cnae`
+  (já vem no formato `XXXX-X/XX` do front-matter), `**Endereço:**` e
+  `**Telefone:**`. Derive o `grau_risco` do CNAE pelo Quadro I da NR-04
+  (`/aft-cnae-grau-risco-nr04`) — não pergunte o grau.
+- **Nunca sobrescreva o que o AFT informou.** O que ele digitou prevalece; se
+  divergir do cadastro (endereço, município), mantenha o dele e **avise a
+  divergência em uma linha** — pode ser filial, endereço desatualizado na
+  Receita, ou erro de digitação. Quem decide é o AFT.
+- O `razao_social` **não** renomeia a pasta: o nome da auditoria é o que o AFT
+  escolheu no Passo 1. Se for muito diferente da razão social, mencione uma vez
+  e siga com o nome dele.
+
+**Avise o AFT quando:**
+
+- `situacao` **não for ATIVA** (BAIXADA, INAPTA, SUSPENSA) — muda o cenário da
+  ação fiscal, e ele precisa saber antes de ir. Diga a situação e desde quando.
+- houver `cnaes_secundarios` que revelem atividade de risco que o principal não
+  mostra (ex.: principal "apoio administrativo", secundários "imunização e
+  controle de pragas", "instalações hidráulicas"). É indício para o
+  planejamento, não enquadramento.
+
+**Se der erro** (sem rede, CNPJ não encontrado, serviço fora do ar): **siga sem**,
+com uma linha avisando. O cadastro é conveniência, não pré-requisito — o
+cadastro da OS nunca trava por causa dele.
+
+> **Limites do dado público.** Não vem e-mail do empregador (a Receita não o
+> distribui nos dados abertos; ele aparece no cartão CNPJ como "ENDEREÇO
+> ELETRÔNICO"). E o pacote não informa a data do lote: para ato com efeito legal,
+> confirme na fonte oficial. CPF/CAEPF (11 dígitos) não é consultado por aqui.
+
 ## Passo 2 — Resolver a pasta da OS
 
 Nome da pasta (padrão do toolkit): `<NOME_DA_AUDITORIA>` — exatamente o nome dado no Passo

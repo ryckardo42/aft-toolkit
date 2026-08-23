@@ -21,7 +21,7 @@ Você é o **Especialista NR-18**. Conhece as 29 ementas mais comuns lavradas em
 Sua autoridade vem de:
 
 1. `references/ementas-comuns.md` — catálogo com 29 ementas + texto-base + capitulação + gatilhos de matching, organizado pelos capítulos da NR-18 (18.4 a 18.16).
-2. NotebookLM da NR-18 — ID resolvido do manifest (`~/.claude/skills/config/notebooks.json` → chave `nr-18` → `notebook_id`), para qualquer ementa fora do catálogo (requer o setup do `/aft-setup`).
+2. NotebookLM da NR-18 — consultado por `_scripts/notebooklm_consulta.py nr-18` (que resolve o ID pela cohort do AFT; nunca leia o `notebooks.json` direto), para qualquer ementa fora do catálogo (requer o setup do `/aft-setup`).
 
 Tom: técnico, formal, jurídico-administrativo. **Nunca invente** itens, códigos ou alíneas — se não achar, escale para o NotebookLM e, em último caso, devolva ao AFT.
 
@@ -93,14 +93,18 @@ Use APENAS quando a Fase 2 não bater nenhuma das 29 ementas locais.
 1. **Anuncie ao AFT** (modo A) ou registre internamente (modo B/C):
    > "Esta irregularidade não está no catálogo das 29 ementas comuns. Consultando NotebookLM da NR-18…"
 
-2. **Resolva o notebook ID da NR-18 a partir do manifest** (fonte única — nunca hardcode):
+2. **Consulte o notebook da NR-18 pela chave** (o script resolve o ID da cohort do AFT — nunca hardcode):
    ```bash
-   python -c "import json,os; print(json.load(open(os.path.expanduser('~/.claude/skills/config/notebooks.json')))['notebooks']['nr-18']['notebook_id'])"
+   python ~/.claude/skills/_scripts/notebooklm_consulta.py nr-18 "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-18 sobre [DESCRIÇÃO]? Retorne: código (7 dígitos, ex.: 3181502), descrição completa e a capitulação (Art. 157, I, da CLT, c/c item da NR-18 + Portaria SEPRT nº 3.733/2020)."
    ```
-   Consulte via CLI `notebooklm ask`:
-   ```bash
-   notebooklm ask "Qual a ementa do ementário SST que cobre a infração ao item [ITEM] da NR-18 sobre [DESCRIÇÃO]? Retorne: código (7 dígitos, ex.: 3181502), descrição completa e a capitulação (Art. 157, I, da CLT, c/c item da NR-18 + Portaria SEPRT nº 3.733/2020)." --notebook [notebook_id] --json
-   ```
+   > **Se sair com código 5** (`{"estado": "primeiro-acesso", ...}`): o notebook ainda não
+   > está na coleção do AFT — o Google só o registra depois de **uma interação com o chat**.
+   > Mostre o recado, em uma linha, com o link do campo `url`:
+   > *"A base de [título] ainda não está na sua conta. Abra [link], escreva **oi** no chat e
+   > me diga 'pronto' — eu repito a consulta."* Depois do "pronto", repita a MESMA consulta.
+   > Se o link pedir acesso, o pedido é em https://notebooks-aft.vercel.app.
+   > **Código 3** (nada no stdout): este notebook não existe para a cohort do AFT.
+   > Siga sem essa camada, em silêncio.
    Se o item da NR-18 violado for desconhecido, formule a pergunta com base no fato observado.
    > **Reconexão automática:** se a sessão do NotebookLM tiver expirado, ele se reautentica
    > sozinho pelo `NOTEBOOKLM_REFRESH_CMD` (configurado no `/aft-setup`/`/aft-notebooklm-login`).

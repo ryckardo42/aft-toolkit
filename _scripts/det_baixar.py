@@ -17,6 +17,8 @@ download; convenção pedida pelo AFT em 21/08/2026 — sem o prefixo
     NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/
         notificacao-<CODIGO>.pdf              o PDF da notificação
         relatorio-atendimento-<CODIGO>.pdf    o Relatório de Atendimento
+                                              (TODOS os itens: entregues e não
+                                              entregues, com hash de cada arquivo)
         item<N>_<descrição do item>/          um por item solicitado
             <arquivo entregue>
             invalidados/<arquivo>             o que o AFT rejeitou/dispensou
@@ -37,7 +39,7 @@ ver a nota sync-det-e-extensao.md para o método de conferência no bundle):
 
     POST /services/auditor/v1/notificacoes/pesquisa          (codigoNotificacao)
     GET  /services/auditor/v1/notificacoes/{uid}/pdf?numeroDeLinhas=0
-    GET  /services/auditor/v1/notificacoes/{uid}/pdf-relatorio-atendimento
+    GET  /services/auditor/v1/notificacoes/{uid}/pdf-relatorio-atendimento?tipo=2
     GET  /services/auditor/v1/itens-notificacao?uidNotificacao={uid}
     GET  /services/auditor/v1/arquivos-item?uidItem={uid}
     GET  /services/auditor/v1/arquivos-item/{uid}/blob
@@ -156,7 +158,8 @@ class TokenExpirado(RuntimeError):
 # ── HTTP (urllib puro, como no det_sync) ─────────────────────────────────────
 
 def _requisicao(token: str, caminho: str, *, params: dict | None = None,
-                corpo: dict | None = None, timeout: int = TIMEOUT_JSON) -> bytes:
+                corpo: dict | None = None, timeout: int = TIMEOUT_JSON,
+                metodo: str | None = None) -> bytes:
     url = DET_BASE + caminho
     if params:
         url += "?" + urllib.parse.urlencode(params)
@@ -168,7 +171,8 @@ def _requisicao(token: str, caminho: str, *, params: dict | None = None,
             "Content-Type": "application/json",
             "Accept": "application/json, text/plain, */*",
         },
-        method="POST" if corpo is not None else "GET",
+        # metodo explícito vence (POST casca, PUT rascunho); senão infere.
+        method=metodo or ("POST" if corpo is not None else "GET"),
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -380,14 +384,27 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     # Relatório de Atendimento: é uma FOTOGRAFIA do estado da notificação —
     # entrega nova da empresa o deixa velho. Por isso é baixado SEMPRE e
     # regravado (o DET carimba data de emissão no PDF, então comparar bytes
-    # não diz nada). tipo=0/exibeHistorico=true são os padrões do modal do
-    # site; o tipo é OBRIGATÓRIO (400 sem ele, constatado em 21/08/2026).
+    # não diz nada). O tipo é OBRIGATÓRIO (400 "Parâmetro de URL tipo
+    # inválido" sem ele, constatado em 21/08/2026) e MUDA O CONTEÚDO do PDF:
+    # é o rádio "Itens da notificação" do modal do site (chunk 251 do bundle
+    # do auditor-det, componente app-modal-emitir-relatorio-atendimento,
+    # conferido em 23/08/2026) —
+    #     tipo=0  Somente Não Entregues  (padrão do modal; relatório de exceção)
+    #     tipo=1  Somente Entregues
+    #     tipo=2  Todos os Itens
+    # Aqui se pede SEMPRE tipo=2. Com tipo=0, numa empresa que atendeu tudo o
+    # PDF sai dizendo "não consta item para o critério selecionado", com 0
+    # itens e 0 arquivos — parece download vazio, e quem o lesse esperando o
+    # inventário do que foi entregue concluiria o contrário do que ele diz.
+    # tipo=2 é superconjunto: traz o que faltou (a prova de omissão do art.
+    # 630, §4º, da CLT) E o que veio, com status, histórico e MD5/SHA1 de cada
+    # arquivo. exibeHistorico=true é o padrão do modal e se mantém.
     try:
         _migrar(f"relatorio-atendimento-{codigo}.pdf")
         destino = raiz / f"relatorio-atendimento-{codigo}.pdf"
         novo_pdf = _requisicao(token,
                                f"/notificacoes/{uid}/pdf-relatorio-atendimento",
-                               params={"tipo": 0, "exibeHistorico": "true"},
+                               params={"tipo": 2, "exibeHistorico": "true"},
                                timeout=TIMEOUT_BLOB)
         if not destino.exists() or destino.stat().st_size == 0:
             conta(_salvar(destino, novo_pdf))

@@ -75,6 +75,7 @@ import json
 import re
 import subprocess
 import sys
+import urllib.parse
 from pathlib import Path
 
 # Console do Windows é cp1252: sem isto, o JSON final (nomes de empregador com
@@ -465,6 +466,27 @@ def listar_docs(pasta: Path) -> list[str]:
         return []
 
 
+def ler_lre_esocial(pasta: Path) -> dict:
+    """Resumo do LRE do eSocial (skill /aft-lre-esocial), se a OS tiver.
+
+    Lê apenas o eSocial/resumo.json — números agregados, sem PII. O painel
+    com nome/CPF fica no eSocial/LRE_painel.html e só é aberto por clique.
+    OS sem a pasta eSocial/ devolvem {} e não ganham cartão nenhum."""
+    arq = pasta / "eSocial" / "resumo.json"
+    if not arq.is_file():
+        return {}
+    try:
+        with open(arq, encoding="utf-8") as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    if not (pasta / "eSocial" / "LRE_painel.html").is_file():
+        return {}
+    return {"ativos": d.get("ativos", 0), "tardios": d.get("tardios", 0),
+            "total": d.get("total", 0), "gerado": d.get("gerado", ""),
+            "marco": d.get("marco", "")}
+
+
 def parse_emails(pasta: Path) -> list[dict]:
     """Lê o email.md da OS (e-mails redigidos pela /aft-email) e devolve
     [{titulo, assunto, corpo}], do mais recente para o mais antigo — cada
@@ -751,14 +773,16 @@ color:var(--t3);margin:0 0 8px}
 .venc ul{margin:0;padding-left:18px;font-size:13.5px}
 .venc li{margin-bottom:5px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.ordena{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.ordena{display:flex;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.ordena label + select + label{margin-left:10px}
 .ordena label{font:11px var(--sans);font-weight:700;letter-spacing:.08em;
 text-transform:uppercase;color:var(--t3)}
 .ordena select{font:13px var(--serif);color:var(--t1);background:var(--paper);
 border:1px solid var(--bd);border-radius:8px;padding:5px 10px;cursor:pointer}
 .ordena select:focus{outline:none;border-color:var(--coral-deep);
 box-shadow:0 0 0 3px rgba(176,89,62,.18)}
-.card{background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
+.card{display:block;color:inherit;text-decoration:none;
+background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
 border-radius:10px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s}
 .card:hover{box-shadow:0 3px 14px rgba(20,20,19,.10)}
 .card.urgente,.card.vencido{border-left-color:var(--coral-deep)}
@@ -788,6 +812,15 @@ z-index:9;width:80vw;max-height:94vh;background:var(--paper);
 border:1px solid var(--bd);border-radius:14px;
 box-shadow:0 24px 70px rgba(20,20,19,.35);overflow-y:auto;padding:28px clamp(18px,3vw,40px) 44px}
 #detalhe.aberto,#veu.aberto{display:block}
+/* Auditoria em aba própria (#so=): a página é o dossiê. O painel — título,
+   abas, contadores, grade, calendário — não é escondido por cima: sai. */
+body.solo{padding:0}
+body.solo > h1,body.solo > .sub,body.solo > .abas,
+body.solo > #vista-painel,body.solo > #vista-cal,body.solo > #veu{display:none}
+body.solo #detalhe{position:static;transform:none;top:auto;left:auto;
+margin:0 auto;width:min(1280px,100%);max-height:none;overflow:visible;
+border:none;border-radius:0;box-shadow:none;min-height:100vh}
+body.solo footer{max-width:1280px;margin:0 auto;padding:0 34px}
 #detalhe h2{font-size:24px;margin:0 6px 2px 0}
 #detalhe .fechar{position:sticky;top:-4px;float:right;background:var(--cream);
 border:1px solid var(--bd);border-radius:8px;padding:6px 14px;cursor:pointer;
@@ -1148,13 +1181,12 @@ function aviso(t){let a=document.getElementById('aviso-copiado');
  if(!a){a=document.createElement('div');a.id='aviso-copiado';document.body.appendChild(a)}
  a.textContent=t;a.style.display='block';clearTimeout(a._t);
  a._t=setTimeout(()=>a.style.display='none',2200)}
-async function api(p,semReabrir){
+async function api(p){
  try{const r=await fetch('/api/acao',{method:'POST',
   headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
   const j=await r.json();
   if(!j.ok){aviso('Erro: '+(j.erro||'?'));return}
-  if(!semReabrir)sessionStorage.setItem('painel-reabrir',p.pasta);
-  location.reload();
+   location.reload();
  }catch(e){aviso('Servidor do painel não respondeu — abra pelo http://127.0.0.1:8347')}}
 function copia(t){
  const fim=()=>aviso('Copiado — cole no Claude Code: '+t);
@@ -1431,6 +1463,27 @@ function cartaoEmails(o,i){
    '<button class="mini" onclick="copiaEmail('+i+','+k+')">copiar e-mail</button>'+
    (e.assunto?'<button class="mini" onclick="copiaEmail('+i+','+k+',\\'assunto\\')">copiar assunto</button>':'')+
    '</div>').join('')+'</div>'}
+// LRE do eSocial (skill /aft-lre-esocial): cartão enxuto, só ativos e
+// indício de registro tardio. Só aparece se a OS tiver eSocial/resumo.json —
+// nem toda fiscalização baixa esses dados do SISFGTS. O painel completo (com
+// nome e CPF) abre em outra aba, e só no modo interativo local.
+function cartaoLre(o){
+ const L=o.lre;if(!L||!L.total)return '';
+ const link=ATIVO&&o.pasta;
+ const cab='<div class="cartao"><h3>LRE eSocial'+
+  (L.gerado?' <span class="cont">'+esc(L.gerado)+'</span>':'')+'</h3>';
+ const n=(v,r,cor)=>'<div style="flex:1"><div style="font-size:22px;font-weight:600'+
+  (cor?';color:'+cor:'')+'">'+v+'</div><div style="font-size:11px;color:var(--t3)">'+r+'</div></div>';
+ return cab+'<div style="display:flex;gap:18px;margin:2px 0 10px">'+
+  n(L.ativos,'ativos')+
+  n(L.tardios,'indício de registro tardio'+(L.marco?'<br>desde '+esc(L.marco):''),
+    L.tardios?'var(--perigo,#b3261e)':'')+
+  '</div>'+
+  (link?'<a class="doc-link" target="_blank" href="'+urlLre(o)+'">abrir o painel do LRE</a>'
+       :'<span style="font-size:11px;color:var(--t3)">painel em '+
+        esc('eSocial/LRE_painel.html')+'</span>')+
+  '</div>'}
+function urlLre(o){return '/lre/'+encodeURIComponent(o.pasta)}
 function cartaoRelatorios(o){
  if(!(o.docs&&o.docs.length))return '';
  return '<div class="cartao"><h3>Relatórios da OS <span class="cont">'+o.docs.length+
@@ -1500,18 +1553,66 @@ function abre(i){
  h+=cartaoAcoes(o,i);
  h+=cartaoComandosPorFase(o,i);
  h+=cartaoEmails(o,i);
+ h+=cartaoLre(o);
  h+=cartaoRelatorios(o);
  h+='</div></div>';
  h+=secaoAutos(o,i);
  P.innerHTML=h;P.classList.add('aberto');V.classList.add('aberto');P.scrollTop=0;
 }
-function fecha(){P.classList.remove('aberto');V.classList.remove('aberto');ABERTA=null}
+function fechaVista(){P.classList.remove('aberto');V.classList.remove('aberto');ABERTA=null}
+// Fechar tira o #os= da barra de endereços — assim o botão voltar do navegador
+// devolve a auditoria. Em file:// o pushState é barrado: o hash vazio resolve.
+function fecha(){
+ if(/^#(os|so)=/.test(location.hash||'')){
+  try{history.pushState(null,'',location.pathname+location.search)}
+  catch(e){location.hash=''}}
+ saiSolo();fechaVista()}
 V.addEventListener('click',fecha);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fecha()});
-// Depois de uma ação, reabre o mesmo card (a página recarrega para refletir a edição).
-(function(){const alvo=sessionStorage.getItem('painel-reabrir');
- if(!alvo)return;sessionStorage.removeItem('painel-reabrir');
- const i=DATA.os.findIndex(o=>o.pasta===alvo);if(i>=0)abre(i)})();
+// ---- Um endereço por auditoria ---------------------------------------------
+// Cada card é um link para "#os=<pasta>". Com isso o navegador faz de graça o
+// que o painel não fazia: ⌘/Ctrl+clique e clique do meio abrem a auditoria em
+// aba própria, o endereço pode ser copiado e favoritado, e o botão voltar
+// funciona. O hash também é o que reabre a mesma auditoria depois de uma ação
+// (a página recarrega) — por isso não há mais nada guardado em sessionStorage.
+function chaveOS(o,i){return o.pasta||('os'+i)}
+const TITULO_PAINEL=document.title;
+// Dois endereços, dois jeitos de ver a mesma auditoria:
+//   #os=<pasta>  → o painel, com a auditoria aberta por cima da grade;
+//   #so=<pasta>  → SÓ a auditoria, ocupando a página (é o que abre em aba).
+function rotaOS(){
+ const m=/^#(os|so)=(.*)$/.exec(location.hash||'');
+ if(!m){saiSolo();fechaVista();return}
+ const chave=decodeURIComponent(m[2]);
+ const i=DATA.os.findIndex((o,k)=>chaveOS(o,k)===chave);
+ if(i<0){saiSolo();fechaVista();return}
+ if(m[1]==='so'){
+  document.body.classList.add('solo');
+  // Com várias abas abertas, o nome da empresa na aba é o que as distingue.
+  document.title=DATA.os[i].empregador+' — AFT';
+ }else saiSolo();
+ abre(i)}
+function saiSolo(){
+ document.body.classList.remove('solo');document.title=TITULO_PAINEL}
+window.addEventListener('hashchange',rotaOS);
+// "abrir auditoria": em nova aba, o link do card vale como está (#so=). Nesta
+// tela (padrão), o clique simples é desviado para #os= — abre por cima da grade
+// sem sair do painel. Clique com ⌘/Ctrl/⇧ ou do meio nunca é desviado: aí o AFT
+// pediu explicitamente a aba, e ela vem com a página só da auditoria.
+function modoAbrir(v){
+ document.querySelectorAll('.grid .card').forEach(c=>{
+  if(v==='aba')c.target='_blank';else c.removeAttribute('target')});
+ localStorage.setItem('painel-abrir',v)}
+document.addEventListener('click',e=>{
+ const a=e.target.closest&&e.target.closest('.grid .card');if(!a)return;
+ if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0)return;
+ if((localStorage.getItem('painel-abrir')||'tela')==='aba')return;
+ e.preventDefault();
+ location.hash='#os='+a.getAttribute('href').slice(4)});
+(function(){const sel=document.getElementById('abrir');if(!sel)return;
+ const v=localStorage.getItem('painel-abrir')||'tela';
+ sel.value=v;modoAbrir(v)})();
+rotaOS();
 // Auto-refresh: o servidor expõe /api/estado com um carimbo da última mudança
 // nos memory.md — inclusive as gravadas pelo sync da extensão Chrome do DET.
 // Quando o carimbo muda, a página recarrega sozinha (o GET / regenera o
@@ -1525,8 +1626,7 @@ if(ATIVO){let carimbo=null;
   carimbo=j.estado;
   const a=document.activeElement; // não derruba o AFT no meio de uma digitação
   if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;
-  if(P.classList.contains('aberto')&&ABERTA)sessionStorage.setItem('painel-reabrir',ABERTA);
-  location.reload();
+   location.reload();
  }catch(e){}},4000)}
 // ---- Calendário de trabalho (diário de atividades) --------------------------
 // Dados: DATA.diario = entradas {d (ISO), emp, os (pasta), t (letras A-F),
@@ -1647,7 +1747,7 @@ function calRegistrar(){
  const det=(document.getElementById('cal-det').value||'').trim();
  if(!tipos){aviso('Marque pelo menos uma atividade (A-F)');return}
  if(!/^[0-9]{2}[/][0-9]{2}[/][0-9]{4}$/.test(data)){aviso('Data no formato dd/mm/aaaa');return}
- api({acao:'atividade',pasta:pasta,texto:det,data:data,tipos:tipos},true)}
+ api({acao:'atividade',pasta:pasta,texto:det,data:data,tipos:tipos})}
 // Ordem dos cards. A grade nasce por data de criação da auditoria; a opção
 // "prazo de DET" só reposiciona os mesmos cards (cada um carrega a sua posição
 // em data-det), sem regerar a página. A escolha vale para as próximas aberturas.
@@ -1863,6 +1963,9 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "inspecao": (o.get("inspecao_fisica") or {}) if com_pasta else {},
             # Relatórios .md também podem conter PII: idem, só na versão local.
             "docs": (o.get("docs") or []) if com_pasta else [],
+            # LRE do eSocial: só números agregados; o link só funciona
+            # no modo interativo local (ver cartaoLre).
+            "lre": (o.get("lre") or {}) if com_pasta else {},
             # E-mails redigidos (email.md): texto que o AFT vai mandar para
             # fora — idem, nunca no Artifact publicado.
             "emails": (o.get("emails") or []) if com_pasta else [],
@@ -1975,8 +2078,11 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         pend = any(d.get("atualizacao_pendente") for d in vivas)
         pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
                      if pend else "")
+        # Endereço da auditoria. Sem pasta (Artifact publicado), cai no índice —
+        # o link continua funcionando dentro daquela versão publicada.
+        chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
         cards.append(f"""
-<div class="card {classe}" data-det="{o.get('ord_det', i)}" onclick="abre({i})">
+<a class="card {classe}" data-det="{o.get('ord_det', i)}" href="#so={chave}">
   <h2>{html.escape(o["empregador"])}</h2>
   <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ/CPF não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
   <span class="badge {classe}">{html.escape(rotulo)}</span>
@@ -1985,7 +2091,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
   </div>{msg_selo}{pend_selo}
-</div>""")
+</a>""")
 
     grade = ("".join(cards) if cards else
              '<div class="aviso-vazio">Nenhuma OS encontrada em OS ATIVAS. '
@@ -2024,6 +2130,11 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
   <select id="ordem" onchange="ordena(this.value)">
     <option value="criada">auditoria mais recente</option>
     <option value="det">prazo de DET mais urgente</option>
+  </select>
+  <label for="abrir">abrir auditoria</label>
+  <select id="abrir" onchange="modoAbrir(this.value)">
+    <option value="tela">nesta tela</option>
+    <option value="aba">em nova aba</option>
   </select>
 </div>
 <div class="grid">{grade}</div>
@@ -2107,6 +2218,7 @@ def main() -> int:
         os_["inspecao_fisica"] = parse_inspecao_fisica(Path(os_["caminho"]))
         # Relatórios .md da pasta (idem: só na versão local).
         os_["docs"] = listar_docs(Path(os_["caminho"]))
+        os_["lre"] = ler_lre_esocial(Path(os_["caminho"]))
         # E-mails redigidos pela /aft-email (idem: só na versão local).
         os_["emails"] = parse_emails(Path(os_["caminho"]))
         # Autos lavrados: autos-lavrados.md + scan ao vivo (opcional).

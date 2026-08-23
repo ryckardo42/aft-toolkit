@@ -1,14 +1,14 @@
 {
  "projeto": "Sync DET — SisOS / AFT Toolkit",
- "versao_extensao": "3.0.0",
+ "versao_extensao": "4.0.0",
  "manifest_version": 3,
  "navegadores": [
   "Google Chrome",
   "Microsoft Edge"
  ],
- "loja": "https://chromewebstore.google.com/detail/sync-det-%E2%80%94-sisos-aft-tool/khmecjbidgcndmgmkbpfncjgmmfehiem",
+ "loja": "Chrome Web Store. ATENÇÃO: a v4.0.0 está PRONTA no computador do AFT, mas NÃO foi publicada na loja (decisão do AFT em 22/08/2026 — a submissão da v3 foi cancelada por ele). Quem instalar pela loja recebe a versão anterior; a v4 roda em modo desenvolvedor. O repositório não versiona a extensão: ela vive fora, em ~/Documents/Claude/SisOS/.",
  "politica_privacidade": "https://sisos.vercel.app/privacidade",
- "resumo": "A extensão captura o token de sessão do DET no navegador do AFT e o entrega a um destino de confiança (painel local do AFT Toolkit ou SisOS na nuvem), que consulta a API oficial do DET e grava as notificações na ficha da OS correta. A extensão nunca lê a tela nem vê os dados das notificações.",
+ "resumo": "A extensão captura o token de sessão do DET no navegador do AFT e o entrega ao painel local do AFT Toolkit, que consulta a API oficial do DET e grava as notificações na ficha da OS correta. A extensão nunca lê a tela nem vê os dados das notificações. Desde 22/08/2026 ela é a VIA ALTERNATIVA de token: a principal é o navegador do próprio assistente (ver `posicao_entre_as_vias`).",
  "onde_mora": {
   "codigo_fonte": "~/Documents/Claude/SisOS/chrome-extension/ (repo GitHub ryckardo42/SisOS)",
   "instalada": "Perfil do navegador (Chrome Web Store / Edge Add-ons); atualiza sozinha pela loja",
@@ -131,7 +131,8 @@
     "POST /api/det-sync": "recebe {det_access_token} da extensão e chama det_sync.py",
     "GET /doc/<os>/<arquivo.md>": "visualiza relatórios .md da OS (validação de caminho: só .md dentro de OS ATIVAS)",
     "POST /api/det-token": "recebe {det_access_token} e SÓ guarda o token na RAM (validade = exp real do JWT); empurrado sozinho pela extensão v3.0 a cada navegação do AFT no DET (throttle 2 min). Canal leve que mantém o /aft-det-baixar pronto sem o Sincronizar manual.",
-    "POST /api/det-baixar": "download dos arquivos de uma notificação (ver arquitetura 'DET baixar'); usa o token guardado"
+    "POST /api/det-baixar": "download dos arquivos de uma notificação (ver arquitetura 'DET baixar'); usa o token guardado",
+    "POST /api/recarregar": "recarrega det_baixar/det_sync/det_criar via importlib.reload SEM derrubar o processo, PRESERVANDO o token na RAM — evita que cada mudança de código custe um novo Sincronizar ao AFT. Não recarrega o próprio servir_painel.py."
    }
   },
   "motor": {
@@ -147,7 +148,8 @@
     "Backup do memory.md antes de escrever (backup_arquivo.py → .backups/).",
     "Checkbox [ ]/[x] nunca alterado — 'respondida' é decisão do AFT.",
     "Linha com 2+ prazos escritos: ambígua — fica intocada.",
-    "AFT_DET_DRYRUN=1: consulta e relata sem gravar nada."
+    "AFT_DET_DRYRUN=1: consulta e relata sem gravar nada.",
+    "Varredura em PARALELO desde 22/08/2026 (SYNC_PARALELO=5, ThreadPoolExecutor): 16 OS levavam ~105s em fila e passaram a ~28s — medido no DET real, resultado idêntico. O ganho vale para TODOS os gatilhos (extensão, assistente, futuro botão do painel) porque o motor é o mesmo; a extensão não precisou mudar."
    ]
   }
  },
@@ -202,5 +204,29 @@
    "Validação de caminho nas ações e no /doc/: só memory.md/.md dentro de OS ATIVAS.",
    "Versão Artifact (publicada só com consentimento) NÃO leva inspeção física, anotações nem relatórios (PII)."
   ]
+ },
+ "v4_o_que_mudou": {
+  "data": "2026-08-21",
+  "removido_webRequest": "O token passou a ser lido de sessionStorage['token'] pelo content script (mesma origem do DET). Era o webRequest que jogava a extensão na revisão detalhada da Chrome Web Store.",
+  "removido_sisos": "Integração com a nuvem (sisos.vercel.app) retirada — o SisOS foi declarado inativo pelo AFT, substituído pelo painel local. A extensão virou 100% local.",
+  "removido_injected_js": "Código morto desde a v1, não referenciado no manifest.",
+  "permissoes_finais": [
+   "storage",
+   "tabs"
+  ],
+  "hosts_finais": [
+   "https://auditor-det.sit.trabalho.gov.br/*",
+   "http://127.0.0.1/*",
+   "http://localhost/*"
+  ],
+  "porque_o_service_worker_continua": "A página do DET (HTTPS pública) NÃO consegue chamar 127.0.0.1 — o navegador bloqueia (rede privada/mixed content); nem o /api/ping passa. O service worker, com host_permission, consegue. Por isso o fetch ao painel continua no background.js.",
+  "testado": "21-22/08/2026, carregada sem compactação: auto-push do token em ~5s após zerar o cache do painel; botão Sincronizar respondeu corretamente.",
+  "situacao": "pronta e testada localmente, NÃO publicada na Chrome Web Store (22/08/2026). Publicar é decisão e ato do AFT."
+ },
+ "posicao_entre_as_vias": {
+  "via_1_principal": "O navegador do próprio assistente. Ele lê sessionStorage['token'] da aba do DET já logada e entrega ao painel por det_token.py --gravar. Não depende de instalação nem de aprovação de loja; a entrega é instantânea.",
+  "via_2_alternativa": "Esta extensão. Existe para quem usa assistente SEM navegador (Codex, Antigravity) ou prefere não depender dele.",
+  "texto_canonico": "config/canal-token-det.md — as skills apontam para lá, e nenhuma repete o procedimento.",
+  "por_que_essa_ordem": "medido em 22/08/2026: pelo navegador o token chega em ~0,001s e sem depender de terceiros; pela extensão depende de a versão estar publicada e aprovada na Chrome Web Store."
  }
 }

@@ -377,6 +377,10 @@ path_windows: "C:\\Users\\joao\\Documents\\AFT"
 python_path: "C:\\Users\\joao\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
 # Navegador que o AFT usa com a conta Google do NotebookLM (chrome | edge):
 notebooklm_browser: ""     # perguntado e preenchido pelo Passo 7 / /aft-notebooklm-login
+# Cohort do NotebookLM: 1 = notebooks originais; 2 = as copias (quem se cadastrou
+# depois de 19/08/2026, quando os originais bateram o teto de 1.000 leitores).
+# Deixe em branco: o _scripts/notebook_id.py descobre e preenche sozinho.
+notebooklm_cohort: ""
 # Persona do assessor (opcional; vale so no chat, nunca em documento oficial):
 tratamento: "Dr. João"     # como o assistente chama o AFT na conversa
 nome_assessor: "Claudinho" # nome pelo qual o assistente atende

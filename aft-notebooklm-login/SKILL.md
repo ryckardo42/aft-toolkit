@@ -208,17 +208,23 @@ python "<python_path>" ~/.claude/skills/_scripts/notebooklm_acesso.py
 ```
 
 O `auth check` diz se o login está de pé. O segundo comando é o que importa para o
-trabalho: percorre um por um os notebooks do mapa (`config/notebooks.json`) e diz
-quais a conta do AFT alcança **de verdade**. Leva alguns segundos e devolve uma linha
+trabalho: percorre um por um os notebooks que existem **para a cohort do AFT** e diz
+quais a conta dele alcança **de verdade**. Leva alguns segundos e devolve uma linha
 JSON:
 
 - `estado: "sessao-expirada"` -> o login não está valendo; volte ao Passo 2/3.
 - `estado: "cli-ausente"` -> Passo 0.
+- `cohort` -> 1 (notebooks originais) ou 2 (as cópias, para quem se cadastrou depois de
+  19/08/2026). Confira com o AFT **se o número destoar** do que o portal mostra a ele:
+  cohort errada faz TUDO cair em `indisponiveis`. Para corrigir, mude o campo
+  `notebooklm_cohort:` do `aft-config.md` — ver o Passo 4-B.
+- `sem_copia` -> notebooks que não foram duplicados e portanto não existem para esta
+  cohort. Não é falha de acesso e não há o que clicar: só mencione se o AFT perguntar.
 - `disponiveis` -> as skills já consultam esses. Diga o **número**, não a lista inteira.
-- `indisponiveis` -> o recado do Passo 5 (com o link pronto de cada um).
-- `essenciais_faltando` -> **olhe aqui primeiro**: são os notebooks do dia a dia que
-  ainda faltam. Se essa lista estiver vazia, o AFT está pronto para trabalhar mesmo que
-  sobrem outros em `indisponiveis`.
+- `indisponiveis` -> **não é pendência.** São os que ainda não foram registrados na conta;
+  eles entram sozinhos, um a um, quando o AFT precisar (Passo 5). Não despeje a lista.
+- `essenciais_faltando` -> olhe se os **dois ementários** estão aí. Só eles justificam
+  pedir uma ação agora; os demais podem esperar a hora do uso.
 - `erros` -> falha de rede ou do CLI, **não** de acesso: ofereça tentar de novo depois.
 
 > **Nunca use `notebooklm list` como prova de que está tudo certo.** Ele mostra só os
@@ -226,44 +232,88 @@ JSON:
 > vazio ou incompleto mesmo com o login perfeito e o acesso já concedido. Foi essa
 > checagem enganosa que fez colegas acharem que o toolkit estava quebrado.
 
-## Passo 5 - Notebooks que precisam do primeiro acesso (o "oi")
+## Passo 4-B - A cohort do AFT (só se estiver errada)
 
-O Google só coloca um notebook compartilhado na coleção da conta depois que **a pessoa
-o abre uma vez**. Antes disso ele responde "not found" a qualquer consulta - e não há
-como o toolkit resolver isso por fora: o `ask` também falha, porque consulta o notebook
-antes de chegar ao chat. É **um clique por notebook, uma vez na vida**.
+Cada notebook do NotebookLM comporta 1.000 leitores. Os originais lotaram em 19/08/2026:
+o catálogo foi duplicado, e quem se cadastrou depois enxerga as **cópias** — mesmo
+conteúdo, outros endereços. Isso é a "cohort": 1 = originais, 2 = cópias.
 
-Se `indisponiveis` vier vazio, apenas confirme: *"O Claude consulta todos os N notebooks
-do ementário."* Se vier com itens, mande este recado (com os links do JSON):
+O toolkit descobre sozinho e grava o resultado no `aft-config.md`
+(`notebooklm_cohort:`), em duas tentativas: primeiro olha os notebooks que já estão na conta
+do AFT; se a conta ainda estiver vazia — o caso de quem acabou de se cadastrar e ainda não
+abriu nada —, pergunta ao servidor qual dos dois endereços ele alcança. **Não precisa
+perguntar nada ao AFT.**
+
+Só há o que fazer aqui se as duas tentativas falharem, e aí a causa é outra: sessão caída
+(volte ao Passo 2/3) ou acesso ainda não concedido pelo mantenedor. Se mesmo assim o número
+sair errado, confirme com o AFT o que o portal mostra a ele e corrija o campo:
+
+```bash
+python ~/.claude/skills/_scripts/notebook_id.py --cohort      # o que o toolkit acha hoje
+```
+
+Para forçar, edite `notebooklm_cohort: "2"` no `aft-config.md` — o AFT não precisa abrir o
+terminal, você edita o arquivo. Depois repita o Passo 4.
+
+## Passo 5 - O primeiro acesso ("oi"), sob demanda
+
+O Google só põe um notebook compartilhado na coleção da conta depois de **uma interação
+com o chat dele** - abrir o link não basta, e não há como o toolkit fazer isso por fora:
+o `ask` falha antes de chegar ao chat (`rpc_code=5`).
+
+**E cada "oi" custa uma consulta.** A conta gratuita do NotebookLM tem por volta de
+**50 consultas por dia**, e o "oi" é uma delas - venha da CLI ou do navegador. Registrar
+os 47 notebooks de uma vez gastaria o dia inteiro de quota antes de o AFT fiscalizar
+qualquer coisa. Por isso o toolkit **não pede isso**.
+
+### O que fazer aqui: só os dois ementários
+
+```
+Ementário SST · Ementário Legislação
+```
+
+Eles respondem à maior parte das consultas de enquadramento e custam 2 das 50. Se algum
+dos dois estiver em `indisponiveis`, mande o recado (link do campo `url`):
 
 > ✅ **O Claude já consulta N notebooks** do ementário.
 >
-> ⚠️ **Faltam M.** O Google só põe um notebook compartilhado na sua coleção depois que
-> **você** o abre uma vez - até lá, a consulta a esses temas falha. É rápido: abra o
-> notebook, escreva **oi** na caixa de chat e feche. Uma vez só, para sempre.
->
-> **Comece por estes - são os do dia a dia:**
-> - [Ementário SST](url) · [Ementário Legislação](url) · ...
->
-> **Os outros, só se você fiscalizar o tema:**
-> - [Título](url) · ...
+> ⚠️ Faltam dois, e são os que mais importam: [Ementário SST](url) e
+> [Ementário Legislação](url). Abra cada um, escreva **oi** na caixa de chat e feche —
+> o Google só põe o notebook na sua conta depois dessa primeira conversa. Uma vez só,
+> para sempre.
 >
 > Se algum pedir acesso, solicite em **https://notebooks-aft.vercel.app** com a sua conta
-> Google (o mantenedor libera; nesse caso o "oi" vem depois da liberação).
->
-> Quando terminar, me diga **"confere meus notebooks"** que eu confirmo o que entrou.
+> Google (o "oi" vem depois da liberação).
 
-Regras do recado:
-- **Dois blocos, nesta ordem.** Primeiro os que vierem com `essencial` no JSON (o script
-  já os devolve na ordem certa: ementários, NR-12, NR-01, NR-03, NR-18, NR-10, NR-04,
-  NR-05, NR-24, Informalidade, NR-35, NR-13) - são 13 no máximo e cobrem a maior parte da
-  fiscalização. Depois, os demais, deixando claro que são opcionais.
-- Link clicável sempre (o campo `url`). Se o segundo bloco passar de 15 itens, resuma-o
-  ("os outros N estão no portal") em vez de despejar a lista inteira.
-- **Não afirme que falta liberação** de acesso: "not found" é a mesma resposta para
-  "tem acesso e nunca abriu" e para "não tem acesso". O recado acima cobre os dois.
-- Não ofereça abrir os notebooks você mesmo: quem tem a conta Google no navegador é o
-  AFT, e o registro do primeiro acesso só vale feito por ele.
+Se os dois já estiverem disponíveis, **não peça nada**: diga que está pronto para
+trabalhar e siga.
+
+### Os outros 45: na hora em que forem usados
+
+Não liste, não peça, não trate como pendência. Quando uma skill precisar de um notebook
+que ainda não está na conta, o `notebooklm_consulta.py` sai com **código 5** e devolve o
+título e o link - e é ali, com o valor à vista, que o recado de uma linha aparece:
+
+> A base da NR-12 ainda não está na sua conta. Abra [link], escreva **oi** no chat e me
+> diga "pronto" - eu repito a consulta.
+
+Uma interrupção, uma consulta gasta, no momento em que ela serve para alguma coisa. Um
+AFT que fiscaliza máquina registra a NR-12 e nunca precisa da NR-32.
+
+### Se o AFT quiser registrar tudo de uma vez
+
+É escolha dele, e é legítima (útil antes de uma viagem, por exemplo). Mostre a lista
+completa a partir de `indisponiveis`, **com o aviso da quota**: são N notebooks, N das
+~50 consultas do dia. Sugira começar pelos `essencial` (o script já os devolve na ordem:
+ementários, NR-12, NR-01, NR-03, NR-18, NR-10, NR-04, NR-05, NR-24, Informalidade,
+NR-35, NR-13).
+
+Regras do recado, em qualquer dos casos:
+- Link clicável sempre (o campo `url`).
+- **Não afirme que falta liberação** de acesso: `not found` é a mesma resposta para
+  "tem acesso e nunca interagiu" e para "não tem acesso". O recado cobre os dois.
+- Não ofereça abrir os notebooks você mesmo: **abrir não registra nada** — o que registra
+  é a interação com o chat, e ela é do AFT, na conta dele.
 
 ## Passo 6 - Se nada funcionar (ambiente sem tela)
 

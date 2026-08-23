@@ -98,6 +98,7 @@ listar, ler ou gravar. Cada empresa tem pasta própria em `OS ATIVAS/` com a fic
 
 Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar:
 
+- Dúvida sobre como o toolkit funciona, ou perdido nele → `/aft-ajuda`
 - Toolkit instalado/funcionando → `/aft-doctor` · atualizar → `/aft-atualizar` · deu erro → `/aft-erro`
 - Cadastrar auditoria → `/aft-nova-auditoria` · prazos e panorama → `/aft-painel` · no Google Calendar → `/aft-agenda-det`
 - Pasta bagunçada jogada em OS ATIVAS (docs de antes do toolkit) → `/aft-organiza-os`

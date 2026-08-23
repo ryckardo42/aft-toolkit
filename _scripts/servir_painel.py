@@ -80,6 +80,7 @@ MAX_BODY = 64_000
 sys.path.insert(0, str(AQUI))
 import det_sync  # noqa: E402
 import det_baixar  # noqa: E402  (download dos arquivos de uma notificação)
+import det_criar  # noqa: E402  (rascunho de notificação — leitura do molde, por ora)
 import diario_registrar  # noqa: E402  (diário de atividades — letras A-F)
 
 # Token do DET emprestado pela extensão. Vive SÓ na RAM deste processo (nunca
@@ -794,10 +795,175 @@ class Handler(BaseHTTPRequestHandler):
                                  "fichas": len(mts)})
             except OSError as e:
                 self._json(500, {"ok": False, "erro": str(e)})
+        elif self.path.startswith("/api/det-molde"):
+            self._det_molde()
         elif self.path.startswith("/doc/"):
             self._serve_doc()
+        elif self.path.startswith("/lre/"):
+            self._serve_lre()
         else:
             self._json(404, {"ok": False, "erro": "rota desconhecida"})
+
+    def _serve_lre(self):
+        """GET /lre/<pasta> — entrega o eSocial/LRE_painel.html da OS.
+
+        Já é HTML pronto (gerado pela /aft-lre-esocial), então vai como está,
+        sem passar pelo conversor de markdown da rota /doc/. Contém dados
+        pessoais: por isso só o servidor local serve, e apenas de dentro da
+        pasta da OS — o nome da pasta é validado contra a listagem real, o que
+        impede subir diretório (../) para ler arquivo de fora."""
+        try:
+            pasta = urllib.parse.unquote(self.path[len("/lre/"):]).strip("/")
+        except (ValueError, UnicodeDecodeError):
+            return self._responde(400, b"pedido invalido",
+                                  "text/plain; charset=utf-8")
+        alvo = None
+        for d in self.base.iterdir():          # só OS que existem de fato
+            if d.is_dir() and d.name == pasta:
+                alvo = d / "eSocial" / "LRE_painel.html"
+                break
+        if not alvo or not alvo.is_file():
+            return self._responde(
+                404, "painel do LRE nao encontrado — rode a skill "
+                     "/aft-lre-esocial para esta OS".encode("utf-8"),
+                "text/plain; charset=utf-8")
+        self._responde(200, alvo.read_bytes(), "text/html; charset=utf-8")
+
+    def _recarregar(self):
+        """POST /api/recarregar — recarrega os módulos do DET (det_baixar,
+        det_sync, det_criar) SEM derrubar o processo, PRESERVANDO o token na
+        RAM. Existe porque reiniciar o serviço apaga o token e obriga o AFT a
+        sincronizar de novo — durante uma sessão de desenvolvimento isso custava
+        vários logins. Só localhost (como todo o resto).
+
+        O que NÃO recarrega: o próprio servir_painel.py (trocar o servidor por
+        baixo de si mesmo exige reiniciar) e o gerar_painel.py (é chamado como
+        subprocesso a cada F5, então já pega a versão nova sozinho).
+        `importlib.reload` atualiza o objeto módulo no lugar, então as
+        referências globais daqui continuam válidas; a ordem respeita a
+        dependência (det_criar usa det_baixar)."""
+        import importlib
+        recarregados, erros = [], []
+        for mod in (det_baixar, det_sync, det_criar):
+            try:
+                importlib.reload(mod)
+                recarregados.append(mod.__name__)
+            except Exception as e:
+                erros.append(f"{mod.__name__}: {type(e).__name__}: {e}")
+        import time
+        self._json(200 if not erros else 500, {
+            "ok": not erros,
+            "recarregados": recarregados,
+            "erros": erros or None,
+            # o token sobrevive: é estado deste processo, que continua vivo
+            "token_preservado": bool(_token_atual()),
+            "token_validade_s": max(0, int(_DET_TOKEN["exp"] - time.time()))
+                                if _DET_TOKEN["token"] else 0,
+            "aviso": ("servir_painel.py e gerar_painel.py não entram aqui: o "
+                      "primeiro exige reiniciar, o segundo é subprocesso e já "
+                      "recarrega sozinho"),
+        })
+
+    def _det_criar(self):
+        """POST /api/det-criar — ESCREVE um rascunho de notificação no DET.
+        Corpo {pasta, arquivo, titulo?, prazo_dias?, confirmar}. Sem
+        confirmar=true, devolve só a PRÉVIA (payload montado), sem tocar o DET.
+        Com confirmar=true, cria a casca + salva o rascunho — NUNCA lavra."""
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
+            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            pasta = (p.get("pasta") or "").strip()
+            arquivo = (p.get("arquivo") or "").strip()
+            if (not pasta or "/" in pasta or "\\" in pasta or pasta.startswith(".")
+                    or not arquivo or "/" in arquivo or "\\" in arquivo
+                    or not arquivo.endswith(".md")):
+                raise ValueError("pasta/arquivo inválidos")
+            alvo = (self.base / pasta).resolve()
+            if self.base.resolve() != alvo.parent or not alvo.is_dir():
+                raise ValueError(f"pasta {pasta} não encontrada em OS ATIVAS")
+            token = _token_atual()
+            if not token:
+                return self._json(409, {"ok": False, "token_expirado": True,
+                                        "erro": "sem token — sincronize no DET e tente de novo"})
+            # overrides: {"10": {"retorno": 3}, "11": {"tipo": 2, "retorno": 0}}
+            ov = {int(k): v for k, v in (p.get("overrides") or {}).items()}
+            # None = "a chamada não opinou" → vale o front-matter do .md e,
+            # na falta dele, o padrão do toolkit (ver det_criar.preparar_de_os)
+            payload, itens = det_criar.preparar_de_os(
+                alvo, arquivo, p.get("titulo"),
+                int(p["prazo_dias"]) if p.get("prazo_dias") else None, token,
+                id_modelo=p.get("modelo"), cif=p.get("cif"),
+                prazo=p.get("prazo"),
+                tipo=int(p["tipo"]) if p.get("tipo") is not None else None,
+                retorno=int(p["retorno"]) if p.get("retorno") is not None else None,
+                preassinalado=p.get("preassinalado"),
+                overrides=ov)
+            revisao = det_criar.revisar_payload(payload)
+            resumo = {"ri": payload["ri"], "ni": payload["ni"],
+                      "titulo": payload["titulo"],
+                      "prazo": payload["dataPrazoEntregaPadrao"],
+                      "n_itens": len(payload["itens"]),
+                      "parametros": payload.get("_parametros"),
+                      "revisao": revisao,
+                      "impede_envio": [a for a in revisao
+                                       if a["gravidade"] == "impede"],
+                      "enriquecimento": payload.get("_enriquecimento"),
+                      "itens": [{"ordem": it["ordem"], "tipo": it["tipo"],
+                                 "retorno": it["tipoRetornoSolicitado"],
+                                 "preAssinalado": it["preAssinalado"],
+                                 "arquivos": bool(it["tiposArquivos"]),
+                                 "descricao": it["descricao"][:60]}
+                                for it in payload["itens"]],
+                      # introdução (tipoTexto 0) e observações (tipoTexto 1) —
+                      # o AFT precisa VER esses textos na prévia, senão só
+                      # descobre o que foi gravado abrindo o DET.
+                      "observacoes": [{"ordem": o["ordem"],
+                                       "tipoTexto": o["tipoTexto"],
+                                       "titulo": o.get("titulo"),
+                                       "caracteres": len(o.get("descricao") or ""),
+                                       "descricao": o.get("descricao") or ""}
+                                      for o in payload.get("observacoes") or []]}
+            if not p.get("confirmar"):
+                return self._json(200, {"ok": True, "previa": True, "resumo": resumo})
+            res = det_criar.criar_rascunho(token, payload)
+            # PDF do rascunho, para o AFT levar impresso e assinar na empresa
+            # (é a NAD preliminar). Só quando pedido: gera arquivo na pasta.
+            if p.get("pdf"):
+                try:
+                    caminho = det_criar.baixar_pdf_rascunho(
+                        token, res["uid"], res["codigo"], alvo,
+                        linhas=p.get("pdf_linhas", det_criar.LINHAS_PDF_RASCUNHO))
+                    res["pdf"] = str(caminho)
+                except Exception as e:
+                    res["pdf_erro"] = f"{type(e).__name__}: {e}"
+            self._json(200, {"ok": True, "previa": False, "resumo": resumo, **res})
+        except det_baixar.TokenExpirado as e:
+            _DET_TOKEN["token"] = None
+            self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
+        except ValueError as e:
+            self._json(400, {"ok": False, "erro": str(e)})
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+
+    def _det_molde(self):
+        """GET /api/det-molde?codigo=XXX — JSON cru de uma notificação real,
+        para servir de molde à construção do rascunho (subsistema det-criar,
+        fase de descoberta). Leitura pura; usa o token guardado na RAM."""
+        try:
+            q = urllib.parse.urlparse(self.path).query
+            codigo = (urllib.parse.parse_qs(q).get("codigo") or [""])[0].strip().upper()
+            if not codigo:
+                return self._json(400, {"ok": False, "erro": "informe ?codigo="})
+            token = _token_atual()
+            if not token:
+                return self._json(409, {"ok": False, "token_expirado": True,
+                                        "erro": "sem token — sincronize no DET e tente de novo"})
+            self._json(200, {"ok": True, "notificacao": det_criar.recuperar_crua(token, codigo)})
+        except det_baixar.TokenExpirado as e:
+            _DET_TOKEN["token"] = None
+            self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
 
     def _serve_doc(self):
         """GET /doc/<pasta-da-OS>/<arquivo>.md — renderiza o relatório em HTML.
@@ -845,6 +1011,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._det_token()
         if self.path == "/api/det-baixar":
             return self._det_baixar()
+        if self.path == "/api/det-criar":
+            return self._det_criar()
+        if self.path == "/api/recarregar":
+            return self._recarregar()
         if self.path != "/api/acao":
             return self._json(404, {"ok": False, "erro": "rota desconhecida"})
         try:
