@@ -467,24 +467,41 @@ def listar_docs(pasta: Path) -> list[str]:
 
 
 def ler_lre_esocial(pasta: Path) -> dict:
-    """Resumo do LRE do eSocial (skill /aft-lre-esocial), se a OS tiver.
+    """Resumo do eSocial da OS (skill /aft-lre-esocial), se ela tiver.
 
-    Lê apenas o eSocial/resumo.json — números agregados, sem PII. O painel
-    com nome/CPF fica no eSocial/LRE_painel.html e só é aberto por clique.
+    Lê apenas os *_resumo.json da subpasta eSocial/ — números agregados, sem
+    PII. Os painéis com nome ficam nos .html e só abrem por clique. Além do
+    LRE (resumo.json), agrega férias (ferias_resumo.json) e folha
+    (folha_resumo.json) quando essas análises já rodaram — cada bloco só
+    entra se o painel .html correspondente também existir.
     OS sem a pasta eSocial/ devolvem {} e não ganham cartão nenhum."""
-    arq = pasta / "eSocial" / "resumo.json"
-    if not arq.is_file():
+    def _json_de(nome):
+        arq = pasta / "eSocial" / nome
+        if not arq.is_file():
+            return None
+        try:
+            with open(arq, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return None
+
+    d = _json_de("resumo.json")
+    if d is None or not (pasta / "eSocial" / "LRE_painel.html").is_file():
         return {}
-    try:
-        with open(arq, encoding="utf-8") as f:
-            d = json.load(f)
-    except (OSError, ValueError):
-        return {}
-    if not (pasta / "eSocial" / "LRE_painel.html").is_file():
-        return {}
-    return {"ativos": d.get("ativos", 0), "tardios": d.get("tardios", 0),
-            "total": d.get("total", 0), "gerado": d.get("gerado", ""),
-            "marco": d.get("marco", "")}
+    res = {"ativos": d.get("ativos", 0), "tardios": d.get("tardios", 0),
+           "total": d.get("total", 0), "gerado": d.get("gerado", ""),
+           "marco": d.get("marco", "")}
+    f = _json_de("ferias_resumo.json")
+    if f is not None and (pasta / "eSocial" / "Ferias_painel.html").is_file():
+        res["ferias"] = {"vencida": f.get("trab_vencida", 0),
+                         "foraPrazo": f.get("trab_fora_prazo", 0),
+                         "vencendo": f.get("trab_vencendo", 0)}
+    fo = _json_de("folha_resumo.json")
+    if fo is not None and (pasta / "eSocial" / "Folha_painel.html").is_file():
+        res["folha"] = {"buracos": fo.get("trab_buracos", 0),
+                        "sem13": fo.get("trab_sem_13", 0),
+                        "semResc": fo.get("trab_sem_rescisoria", 0)}
+    return res
 
 
 def parse_emails(pasta: Path) -> list[dict]:
@@ -1463,27 +1480,44 @@ function cartaoEmails(o,i){
    '<button class="mini" onclick="copiaEmail('+i+','+k+')">copiar e-mail</button>'+
    (e.assunto?'<button class="mini" onclick="copiaEmail('+i+','+k+',\\'assunto\\')">copiar assunto</button>':'')+
    '</div>').join('')+'</div>'}
-// LRE do eSocial (skill /aft-lre-esocial): cartão enxuto, só ativos e
-// indício de registro tardio. Só aparece se a OS tiver eSocial/resumo.json —
-// nem toda fiscalização baixa esses dados do SISFGTS. O painel completo (com
-// nome e CPF) abre em outra aba, e só no modo interativo local.
+// eSocial (skill /aft-lre-esocial): cartão com os agregados do LRE e, quando
+// as análises derivadas já rodaram, de férias e folha — sempre sem PII. Só
+// aparece se a OS tiver eSocial/resumo.json — nem toda fiscalização baixa
+// esses dados do SISFGTS. Os painéis completos (com nome) abrem em outra
+// aba, e só no modo interativo local.
 function cartaoLre(o){
  const L=o.lre;if(!L||!L.total)return '';
  const link=ATIVO&&o.pasta;
- const cab='<div class="cartao"><h3>LRE eSocial'+
+ const cab='<div class="cartao"><h3>eSocial'+
   (L.gerado?' <span class="cont">'+esc(L.gerado)+'</span>':'')+'</h3>';
  const n=(v,r,cor)=>'<div style="flex:1"><div style="font-size:22px;font-weight:600'+
   (cor?';color:'+cor:'')+'">'+v+'</div><div style="font-size:11px;color:var(--t3)">'+r+'</div></div>';
- return cab+'<div style="display:flex;gap:18px;margin:2px 0 10px">'+
-  n(L.ativos,'ativos')+
+ const linha=itens=>'<div style="display:flex;gap:18px;margin:2px 0 10px">'+itens.join('')+'</div>';
+ const perigo='var(--perigo,#b3261e)';
+ let corpo=linha([
+  n(L.ativos,'ativos'),
   n(L.tardios,'indício de registro tardio'+(L.marco?'<br>desde '+esc(L.marco):''),
-    L.tardios?'var(--perigo,#b3261e)':'')+
-  '</div>'+
-  (link?'<a class="doc-link" target="_blank" href="'+urlLre(o)+'">abrir o painel do LRE</a>'
-       :'<span style="font-size:11px;color:var(--t3)">painel em '+
-        esc('eSocial/LRE_painel.html')+'</span>')+
-  '</div>'}
-function urlLre(o){return '/lre/'+encodeURIComponent(o.pasta)}
+    L.tardios?perigo:'')]);
+ if(L.ferias)corpo+=linha([
+  n(L.ferias.vencida,'férias vencidas (dobra)',L.ferias.vencida?perigo:''),
+  n(L.ferias.foraPrazo,'gozo fora do prazo',L.ferias.foraPrazo?perigo:''),
+  n(L.ferias.vencendo,'prazo vencendo (60 d)')]);
+ if(L.folha)corpo+=linha([
+  n(L.folha.buracos,'com buraco na folha',L.folha.buracos?perigo:''),
+  n(L.folha.sem13,'ano sem 13º',L.folha.sem13?perigo:''),
+  n(L.folha.semResc,'sem base rescisória')]);
+ const lk=(pref,rot)=>'<a class="doc-link" target="_blank" href="'+pref+
+  encodeURIComponent(o.pasta)+'">'+rot+'</a>';
+ let links;
+ if(link){
+  links=lk('/lre/','abrir o painel do LRE');
+  if(L.ferias)links+=' &middot; '+lk('/ferias/','painel de férias');
+  if(L.folha)links+=' &middot; '+lk('/folha/','painel da folha');
+ }else{
+  links='<span style="font-size:11px;color:var(--t3)">painéis na pasta '+
+   esc('eSocial/')+' da OS</span>';
+ }
+ return cab+corpo+links+'</div>'}
 function cartaoRelatorios(o){
  if(!(o.docs&&o.docs.length))return '';
  return '<div class="cartao"><h3>Relatórios da OS <span class="cont">'+o.docs.length+

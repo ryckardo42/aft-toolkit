@@ -159,20 +159,26 @@ ao AFT e pare; quem baixa é ele.
 
 ### Integração com o `/aft-painel`
 
-Na tela de detalhe da OS aparece um cartão enxuto **LRE eSocial** com dois
-números — *ativos* e *indício de registro tardio* — e o link **abrir o painel do
-LRE**, que abre o `LRE_painel.html` em outra aba.
+Na tela de detalhe da OS aparece um cartão **eSocial** com os agregados do LRE
+(*ativos* e *indício de registro tardio*) e, quando as análises derivadas já
+rodaram, mais duas linhas de números — férias (*vencidas*, *gozo fora do
+prazo*, *prazo vencendo*) e folha (*buracos*, *ano sem 13º*, *sem base
+rescisória*) — e até três links: **abrir o painel do LRE**, **painel de
+férias** e **painel da folha**, cada um em outra aba.
 
 O cartão é **aditivo e silencioso**: só existe se a OS tiver
-`eSocial/resumo.json` **e** `eSocial/LRE_painel.html`. OS que nunca rodaram esta
-skill não mostram nada — nem todo AFT baixa esses dados do SISFGTS.
+`eSocial/resumo.json` **e** `eSocial/LRE_painel.html`; as linhas de férias e
+folha só aparecem se o `*_resumo.json` e o painel `.html` correspondentes
+existirem. OS que nunca rodaram esta skill não mostram nada — nem todo AFT
+baixa esses dados do SISFGTS.
 
-O link só funciona no **modo interativo** (painel servido pelo
-`servir_painel.py` em `127.0.0.1`), pela rota `/lre/<pasta da OS>`. Num
-`painel.html` aberto direto do disco, o cartão mostra os números e informa o
-caminho do arquivo, sem link — navegador não segue `file://` a partir de
-`http://`. A rota valida o nome da pasta contra as OS que existem de fato, o que
-impede subir diretório para ler arquivo de fora.
+Os links só funcionam no **modo interativo** (painel servido pelo
+`servir_painel.py` em `127.0.0.1`), pelas rotas `/lre/<pasta da OS>`,
+`/ferias/<pasta da OS>` e `/folha/<pasta da OS>`. Num `painel.html` aberto
+direto do disco, o cartão mostra os números e informa que os painéis estão na
+pasta `eSocial/` da OS, sem link — navegador não segue `file://` a partir de
+`http://`. As rotas validam o nome da pasta contra as OS que existem de fato,
+o que impede subir diretório para ler arquivo de fora.
 
 ### Passo 4 — Relatar ao AFT
 
