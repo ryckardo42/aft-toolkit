@@ -6,6 +6,91 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 23/08/2026
+<!-- commit: lre-esocial-skill -->
+
+**O Livro de Registro de Empregados do eSocial virou painel dentro da pasta da OS.** Se
+você já baixou os dados de uma empresa no SISFGTS, a nova `/aft-lre-esocial` lê aquele
+arquivo do LRE e monta, na pasta da auditoria, uma subpasta `eSocial/` com:
+
+- **`LRE_painel.html`** — painel para abrir com duplo clique: busca por nome, CPF,
+  matrícula ou cargo, filtros (ativos, desligados, indício, PCD), colunas ordenáveis e
+  detalhe de cada trabalhador;
+- **`LRE_vinculos.csv`** — a planilha dos vínculos, que abre em colunas no Excel;
+- **`lre-esocial.md`** — resumo **sem nome e sem CPF**, que aparece em "Relatórios da OS"
+  no `/aft-painel`.
+
+Dispare com `/aft-lre-esocial`, "puxa o LRE dessa empresa", "quem está registrado no
+eSocial" ou "quadro de empregados". Sem argumento, a habilidade oferece as OS que já têm
+dados baixados. Ela **só lê** o SISFGTS — nunca escreve nele nem no banco de dados dele.
+
+**No `/aft-painel`**, a OS ganha um cartão do eSocial com dois números — *ativos* e
+*indício de registro tardio* — e o link para abrir o painel do LRE.
+
+**Sobre o indício de registro tardio**, três cuidados que evitam perseguir vínculo à toa:
+
+1. **Só conta admissão a partir de 02/01/2026**, quando o registro eletrônico passou a ser
+   obrigatório para todas as empresas. Ao relatar, o número vem sempre com a data — "12
+   indícios entre as admissões desde 02/01/2026" —, nunca solto, porque sem o recorte a
+   informação engana.
+2. **Só admissão nova.** Trabalhador cedido, transferido de empresa do mesmo grupo ou
+   vindo de sucessão carrega a data de admissão original, e o registro aparece muito
+   depois sem que haja atraso nenhum. Num caso real, 26 de 38 "indícios" eram
+   exatamente isso.
+3. É **indício**, não constatação: o que o painel aponta você confirma nos documentos.
+
+**Na `/aft-preparacao-acao-fiscal`**, isso entrou sozinho: se houver dados baixados
+daquele CNPJ, o efetivo do LRE passa a valer sobre a Relação de Vínculos, e o perfil
+ocupacional é confrontado com o CNAE antes da visita. Se não houver, a preparação segue
+sem avisar nada — nem toda ação fiscal usa o SISFGTS.
+
+---
+
+## 23/08/2026
+<!-- commit: consulta-cnpj-rfb -->
+
+**A OS agora nasce sabendo quem é a empresa.** Quando você informa o CNPJ, o toolkit
+consulta sozinho o cadastro da Receita Federal e preenche o que antes você digitava à
+mão: razão social, município, endereço, telefones, CNAE principal (e daí o grau de risco
+da NR-04), natureza jurídica, porte e Simples Nacional. É a mesma consulta do cartão CNPJ
+que você já faz no site da Receita — dado público de empresa, sem login nem senha.
+
+Vale em duas habilidades:
+
+- **`/aft-nova-auditoria`** — ao cadastrar a auditoria, a ficha `memory.md` já sai
+  preenchida. O que **você** informou sempre prevalece: se o cadastro divergir, o toolkit
+  mantém o seu dado e avisa a diferença em uma linha — pode ser filial, endereço
+  desatualizado na Receita, ou engano de digitação. Quem decide é você.
+- **`/aft-preparacao-acao-fiscal`** — a consulta acontece **antes** da busca na internet,
+  para a pesquisa já partir da razão social exata. E alimenta o resto do planejamento: o
+  CNAE vai para o dimensionamento de SESMT e CIPA, o endereço vai para o acesso no mapa e
+  para a checagem de outros CNPJs no mesmo local.
+
+**Dois avisos que a preparação passa a te dar antes de você sair de casa:**
+
+1. **Empresa que não está ATIVA** (baixada, inapta, suspensa), com a data. Pode não haver
+   empresa no endereço, ou haver sucessão.
+2. **Atividade de risco escondida nos CNAEs secundários.** Acontece muito: o CNAE
+   principal é de escritório, e nos secundários aparecem imunização de pragas, instalação
+   hidráulica, limpeza. Muda o EPI, a NR aplicável e o que procurar no local. É indício
+   para orientar o olhar — a atividade real se confirma na inspeção.
+
+**O que a consulta não traz:** o e-mail do empregador. A Receita não distribui esse campo
+nos dados abertos (ele aparece no cartão CNPJ como "ENDEREÇO ELETRÔNICO"). E o pacote não
+diz de quando é o retrato — para ato com efeito legal, confirme na fonte oficial. Empregador
+pessoa física (CPF/CAEPF) não é consultado.
+
+Se faltar internet ou o CNPJ não for encontrado, nada trava: o toolkit avisa em uma linha e
+segue o fluxo normal.
+
+Para consultar avulso, fora das habilidades:
+
+```
+python ~/.claude/skills/_scripts/consulta_cnpj.py 00000000000191
+```
+
+---
+
 ## 22/08/2026
 <!-- commit: tn-nco-parametros-e-revisor -->
 
