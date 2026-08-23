@@ -43,6 +43,9 @@ download pelo servidor — o token nunca passa por esta conversa. O que chega va
 <OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/   ← data do primeiro download
 ├── notificacao-<CODIGO>.pdf              ← o PDF da notificação
 ├── relatorio-atendimento-<CODIGO>.pdf    ← SEMPRE refrescado (entrega nova o muda)
+│                                            emitido com TODOS os itens: o que veio
+│                                            (com MD5/SHA1) e o que faltou — a prova
+│                                            de omissão do art. 630, §4º, da CLT
 ├── historico-itens.md                    ← prorrogações, justificativas e status
 │                                            de cada item (derivado; regravado)
 ├── canal-comunicacao/                    ← só quando há mensagens na notificação

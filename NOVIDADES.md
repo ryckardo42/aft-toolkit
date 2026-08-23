@@ -91,6 +91,126 @@ python ~/.claude/skills/_scripts/consulta_cnpj.py 00000000000191
 
 ---
 
+## 23/08/2026
+<!-- commit: cnpjs-endereco-filtro-cep -->
+
+**Correção importante na busca de CNPJs por endereço: a lista podia vir errada sem
+avisar.** Na descoberta por CEP da `/aft-cnpjs-endereco`, o assistente preenchia o
+campo de CEP do site de consulta de um jeito que o site não reconhecia: o CEP
+aparecia escrito na tela, mas a busca saía **sem filtro nenhum** e devolvia a base
+inteira do país. O resultado era uma lista de vinte CNPJs e razões sociais reais, com
+toda a cara de resposta legítima, mas de empresas sem nenhuma relação com o endereço
+fiscalizado — e nada na tela indicava o erro. Agora o CEP é digitado com teclado de
+verdade, que o site aceita, e a habilidade passou a **conferir o resultado antes de
+usá-lo**: contagem na casa dos milhões significa filtro não aplicado, e a lista é
+descartada e a busca refeita, nunca repassada ao AFT. Descoberto pelo colega Diego
+rodando a habilidade numa fiscalização real, no dia seguinte ao lançamento.
+
+**E uma lição que ficou escrita na habilidade: CEP não é lote.** Em prédio ou
+condomínio com CEP exclusivo, a busca por CEP isola o imóvel e funciona muito bem. Em
+distrito industrial, bairro ou via longa, um único CEP cobre centenas de empresas —
+no caso real foram 645 CNPJs no mesmo CEP, dos quais 170 ativos, e a listagem
+gratuita mostra só 20 por página: nem a empresa da Ordem de Serviço nem a que se
+procurava apareciam. Nesse cenário a habilidade agora diz com todas as letras que a
+descoberta por CEP foi inconclusiva e parte para o cruzamento cadastral com os CNPJs
+que o AFT já conhece — que, nesse mesmo caso, encontrou sócio em comum entre as duas
+empresas, indício mais forte do que a simples proximidade física.
+
+---
+
+## 23/08/2026
+<!-- commit: simples-nacional-dupla-visita -->
+
+**A preparação agora lê o Simples Nacional para avisar sobre a dupla visita.** O porte
+que aparece no cadastro da Receita (ME/EPP) é declarado pela própria empresa e costuma
+ficar desatualizado: empresa que cresceu segue constando como pequena por anos. Já a
+opção pelo Simples Nacional é confiável na direção que importa: **quem é optante é,
+necessariamente, ME ou EPP** — e portanto candidata ao critério de dupla visita do
+art. 627-A da CLT.
+
+Na `/aft-preparacao-acao-fiscal`, a consulta do CNPJ passa a concluir isso para você,
+antes de você sair de casa:
+
+- **Empresa optante do Simples** → entra nos pontos de atenção da visita: "optante desde
+  dd/mm/aaaa, empresa ME/EPP, candidata à dupla visita". A decisão de aplicar o critério
+  continua sendo sua, na autuação — e as exceções (falta de registro, grave e iminente,
+  reincidência, fraude, embaraço) continuam valendo.
+- **Porte ME/EPP no cadastro, mas sem opção pelo Simples** → o toolkit avisa que o porte
+  sozinho não basta para presumir dupla visita, cruzando com a atividade real ("um
+  frigorífico com atacado de carnes e transporte próprio dificilmente ainda é ME"). Se a
+  empresa já foi optante e saiu, ele mostra a data da exclusão — indício de que cresceu
+  além do porte. **E o checklist de documentos ganha um item obrigatório**: a notificação
+  (NAD) passa a pedir a Escrituração Contábil Fiscal (ECF) dos dois últimos
+  anos-calendário, com os recibos de transmissão — não apresentada, a ação fiscal
+  prossegue considerando o porte como não comprovado. É a empresa quem comprova o porte
+  que declara; você pode riscar o item, como qualquer outro.
+
+O dado vem dos dados abertos da Receita, atualizados todo mês (bem mais frescos que o
+porte cadastral). Para a certeza do dia, a consulta atualizada é o portal do Simples
+Nacional ("Consulta Optantes") — ele exige resolver um captcha, então essa confirmação é
+manual, sua; a preparação te entrega o link pronto.
+
+Na consulta avulsa (`consulta_cnpj.py`), a linha "Regime" agora mostra desde quando a
+empresa é optante e alerta quando o porte cadastral é ME/EPP sem Simples.
+
+---
+
+## 23/08/2026
+<!-- commit: checar-rt-autos-pdf -->
+
+**Interdição: a conferência entre o Relatório Técnico e os autos agora aceita o RT em
+PDF.** Quando o Termo de Interdição já está lavrado e o que falta são os autos, o
+relatório que o AFT tem em mãos é o PDF impresso, não o Word que o toolkit gerou. Nessa
+situação a conferência automática (a que avisa quando o RT e os autos não batem) quebrava
+com erro de programa e abria ticket, e a checagem simplesmente não acontecia — justo no
+caso mais comum. Agora ela lê o RT tanto em Word quanto em PDF, nos dois formatos de
+relatório (por tópico e por objeto), contando uma ementa repetida em vários objetos uma
+vez só, como manda a regra de um auto por ementa. Correção do colega Diego.
+
+**Na revisão, um segundo defeito foi corrigido antes de ir para a sua máquina.** A
+primeira versão procurava no PDF um título escrito "IRREGULARIDADES", mas o relatório
+escreve "4. IRREGULARIDADE(S):" — com os parênteses e com o número da seção. O resultado
+seria uma conferência que nunca encontrava nada e avisava "não encontrei o bloco de
+irregularidades" em todo RT de verdade: sem quebrar, mas sem conferir. Agora os títulos
+são reconhecidos como aparecem no documento, e as ementas são localizadas pelo próprio
+código (formato 000000-0), sem depender do marcador de lista que cada impressora de PDF
+desenha de um jeito. Testado com relatório fictício nos dois formatos e nas duas mídias.
+
+**Limite que vale conhecer:** RT escaneado (foto do papel, sem texto de verdade dentro do
+PDF) não dá para conferir — a habilidade avisa. E, no PDF, o relatório precisa citar as
+ementas pelo código; se ele citar só itens de NR, a conferência acusa divergência de
+contagem para chamar a sua atenção, em vez de dizer que está tudo certo.
+
+---
+
+## 23/08/2026
+<!-- commit: relatorio-atendimento-completo -->
+
+**O Relatório de Atendimento que o `/aft-det-baixar` traz agora vem completo — com o que
+a empresa entregou e o que deixou de entregar.** Até aqui o toolkit pedia ao DET a versão
+"Somente Não Entregues" desse relatório, que é o que o site oferece marcado por padrão.
+Ela é um relatório de exceção: lista apenas as omissões. Numa empresa que atendeu tudo, o
+PDF saía dizendo "não consta item para o critério selecionado", com zero itens e zero
+arquivos — com cara de download vazio ou defeituoso. Pior: quem abrisse o arquivo
+esperando o inventário do que a empresa mandou leria exatamente o contrário do que ele
+diz.
+
+O DET emite esse relatório em três versões (é o rádio "Itens da notificação" do próprio
+site): somente não entregues, somente entregues e **todos os itens**. O toolkit passou a
+pedir sempre a terceira, que contém as outras duas. O PDF que vai para a pasta da
+notificação agora traz, item por item: o status, o histórico de eventos (prorrogações e
+justificativas) e, para cada arquivo enviado, nome, data, tamanho e os códigos MD5 e SHA1
+— a identificação oficial que prova que o arquivo analisado é o mesmo que a empresa
+transmitiu. E continua trazendo o que ficou sem entrega, que é a prova documental do
+art. 630, § 4º, da CLT.
+
+Nada muda no seu uso: é o mesmo botão e o mesmo comando de sempre, e o arquivo continua
+sendo regravado a cada download (entrega nova deixa o relatório velho). Notificações
+baixadas antes desta mudança ficam com a versão antiga no disco até o próximo download,
+que já traz a completa.
+
+---
+
 ## 22/08/2026
 <!-- commit: tn-nco-parametros-e-revisor -->
 
