@@ -188,6 +188,16 @@ def fmt_cpf(c):
     return f"{c[:3]}.{c[3:6]}.{c[6:9]}-{c[9:]}" if len(c) == 11 else (c or "")
 
 
+def fmt_cpf_mascarado(c):
+    """CPF mascarado (***.***.NNN-NN) para os paineis derivados (ferias e
+    folha): matricula + nome identificam o trabalhador; o CPF completo fica
+    so no LRE, que e o livro de registro propriamente dito."""
+    if not c:
+        return ""
+    c = str(c).zfill(11)
+    return f"***.***.{c[6:9]}-{c[9:]}" if len(c) == 11 else "***"
+
+
 def fmt_cnpj(c):
     c = re.sub(r"\D", "", c or "")
     return f"{c[:2]}.{c[2:5]}.{c[5:8]}/{c[8:12]}-{c[12:]}" if len(c) == 14 else c

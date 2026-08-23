@@ -53,7 +53,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from lre_esocial import (achar_sisfgts, achar_partes_grupo, ler_partes,
-                         d_iso, fmt_d, fmt_cpf, fmt_cnpj, MTV, UNID)
+                         d_iso, fmt_d, fmt_cpf_mascarado, fmt_cnpj, MTV, UNID)
 
 TP_MENSAL = 11
 TP_13 = 12
@@ -179,7 +179,7 @@ def auditar_vinculo(v, bases, afasts, jan_ini, jan_fim, hoje):
 
     com_base = [mensal[s] for s in meses if s in mensal]
     return {"mat": v.get("matricula", ""), "nome": v.get("nmtrab", ""),
-            "cpf": fmt_cpf(v.get("cpftrab")), "adm": dtadm, "des": dtdes,
+            "cpf": fmt_cpf_mascarado(v.get("cpftrab")), "adm": dtadm, "des": dtdes,
             "ativo": not dtdes, "mtv": v.get("mtvdeslig"),
             "sal": sal, "unid": v.get("undsalfixo"),
             "ini": ini, "fim": fim, "meses": len(meses),

@@ -144,7 +144,7 @@ python ~/.claude/skills/_scripts/lre_folha.py "<pasta da OS>" <CNPJ14> "<EMPREGA
 
 | Arquivo | O que é |
 |---|---|
-| `eSocial/Ferias_painel.html` | painel de férias por trabalhador: períodos aquisitivos, prazo concessivo, gozo, indícios (vencidas, fora do prazo, vencendo, abono, fracionamento) |
+| `eSocial/Ferias_painel.html` | painel de férias por trabalhador: seção **"Leitura da auditoria"** (os indícios caso a caso, em frases prontas), períodos aquisitivos, prazo concessivo, gozo, indícios (vencidas, fora do prazo, vencendo, abono, fracionamento) |
 | `eSocial/Ferias_analise.csv` | um período aquisitivo auditado por linha |
 | `eSocial/ferias.md` | resumo **sem nome e sem CPF** |
 | `eSocial/ferias_resumo.json` | números agregados (sem PII) |
@@ -332,8 +332,11 @@ palpite.
 
 - O `LRE_painel.html` e o `LRE_vinculos.csv` — e igualmente `Ferias_painel.html`,
   `Ferias_analise.csv`, `Folha_painel.html` e `Folha_analise.csv` — têm **nome,
-  CPF, salário e afastamentos** de trabalhadores. São arquivos **locais**: não
+  salário e afastamentos** de trabalhadores. São arquivos **locais**: não
   publicar, não anexar em e-mail, não subir para nuvem, não gerar como Artifact.
+- **CPF completo só no LRE** (que é o livro de registro). Os painéis e CSVs de
+  férias e folha mostram o CPF **mascarado** (`***.***.NNN-NN`): matrícula e
+  nome bastam para o trabalho, e o dado inteiro não circula à toa.
 - Os `.md` (`lre-esocial.md`, `ferias.md`, `folha.md`) são os únicos sem dado
   nominal — por isso são eles que aparecem no `/aft-painel`.
 - O HTML é autocontido (CSS/JS embutidos, **sem CDN**): abre offline e não faz

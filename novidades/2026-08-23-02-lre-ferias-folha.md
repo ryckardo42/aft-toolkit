@@ -42,9 +42,17 @@ mês a mês de cada trabalhador (`Folha_painel.html`, mais planilha e resumo) e 
 Um limite importante, dito com todas as letras no painel: o arquivo traz a base
 **declarada**, não o recolhimento — FGTS em atraso quem aponta é o próprio SISFGTS.
 
+**A leitura já vem pronta.** O painel de férias abre com a seção **"Leitura da
+auditoria"**: os indícios caso a caso, em frases prontas — quem tem férias vencidas e de
+qual período, quem está com o prazo vencendo (avisando quando o trabalhador está de
+férias neste momento), quem provavelmente vendeu 10 dias. E uma proteção a mais de
+privacidade: **os painéis e planilhas de férias e folha mostram o CPF mascarado**
+(`***.***.NNN-NN`) — matrícula e nome bastam para o trabalho; o CPF completo fica só no
+painel do LRE, que é o livro de registro propriamente.
+
 Dispare com "férias vencidas", "quem está sem gozar férias", "buraco na folha" ou rode a
 `/aft-lre-esocial` normalmente: ela oferece as duas análises quando os dados existem, e
 avisa qual opção marcar no SISFGTS quando faltam. Tudo local, como o resto da habilidade:
-nada sai da sua máquina.
+os painéis abrem sem internet e não fazem requisição nenhuma — nada sai da sua máquina.
 
 ---

@@ -73,7 +73,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from lre_esocial import (achar_sisfgts, achar_partes_grupo, ler_partes,
-                         d_iso, d_rec, fmt_d, fmt_cpf, fmt_cnpj)
+                         d_iso, d_rec, fmt_d, fmt_cpf_mascarado, fmt_cnpj)
 
 DIAS_FERIAS = 30          # art. 130 (sem as faltas, que o arquivo nao traz)
 ABONO_MAX = 10            # art. 143: ate 1/3 de 30 dias
@@ -263,7 +263,7 @@ def auditar_vinculo(v, eventos, janela_ini, hoje):
         meses_sem = round((hoje - ref).days / 30.44)
 
     return {"mat": v.get("matricula", ""), "nome": v.get("nmtrab", ""),
-            "cpf": fmt_cpf(v.get("cpftrab")), "adm": dtadm, "des": dtdes,
+            "cpf": fmt_cpf_mascarado(v.get("cpftrab")), "adm": dtadm, "des": dtdes,
             "ativo": not dtdes, "pas": pas, "tot": tot,
             "meses_sem": meses_sem, "n_ferias": len(ferias)}
 
@@ -328,6 +328,40 @@ def montar_linhas(trabs):
     out.sort(key=lambda x: (-(x["diasVenc"] + x["diasDobro"]),
                             -x["vencendo"], x["nome"]))
     return out
+
+
+def montar_leitura(linhas):
+    """A leitura da auditoria: os mesmos numeros dos cartoes, caso a caso, em
+    frases prontas para o AFT. Nome + matricula, nunca CPF."""
+    leit = {"vencida": [], "fora": [], "vencendo": [], "abono": [], "frac": []}
+    for x in linhas:
+        rot = f'{x["nome"]} (matrícula {x["mat"]})'
+        for p in x["pas"]:
+            if p["st"] == "vencida":
+                leit["vencida"].append(
+                    f'{rot}: período {p["ini"]} a {p["fim"]}, gozou '
+                    f'{p["dias"] or 0} de 30 dias; o prazo de concessão venceu '
+                    f'em {p["prazo"]}')
+            elif p["st"] == "fora-prazo":
+                leit["fora"].append(
+                    f'{rot}: período {p["ini"]} a {p["fim"]}, pelo menos '
+                    f'{p["dobro"]} dia(s) gozado(s) após o prazo de {p["prazo"]}')
+            elif p["st"] == "vencendo":
+                leit["vencendo"].append(
+                    f'{rot}: período {p["ini"]} a {p["fim"]}, gozou '
+                    f'{p["dias"] or 0} de 30; o prazo vence em {p["prazo"]}'
+                    + (f' — {p["obs"]}' if p.get("obs") else ''))
+            elif p["st"] == "abono":
+                leit["abono"].append(
+                    f'{rot}: período {p["ini"]} a {p["fim"]}, gozou '
+                    f'{p["dias"]} de 30 dentro do prazo — regular SE houve '
+                    f'abono de {DIAS_FERIAS - p["dias"]} dia(s); conferir o '
+                    f'recibo de férias')
+            if p.get("frac"):
+                leit["frac"].append(
+                    f'{rot}: período {p["ini"]} a {p["fim"]}, frações de férias '
+                    f'a conferir (art. 134 §1º)')
+    return leit
 
 
 def gravar_csv(destino, trabs):
@@ -470,6 +504,12 @@ tr.venc td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 .det table{font-size:12.5px}.det th{position:static;cursor:default}
 .note{background:var(--warnbg);border:1px solid var(--warn);color:var(--warn);
  border-radius:8px;padding:11px 13px;margin:14px 0;font-size:12.5px}
+.mv{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:0 0 14px}
+.mv details{margin:6px 0}
+.mv summary{cursor:pointer;font-size:13px;font-weight:600}
+.mv summary:hover{color:var(--ac)}
+.mv ul{margin:6px 0 10px;padding-left:22px;font-size:12.5px}
+.mv li{margin:3px 0}
 .pg{display:flex;gap:6px;align-items:center;justify-content:center;padding:12px;flex-wrap:wrap}
 .pg button{padding:6px 11px;border:1px solid var(--bd);border-radius:7px;background:var(--card);
  color:var(--tx);cursor:pointer;font-size:13px;min-width:36px}
@@ -501,6 +541,11 @@ mark{background:#ffe38a;color:#000;padding:0 1px;border-radius:2px}
  art. 130 não constam do arquivo. Gozo de 20 a 29 dias pode ser regular se houve
  <b>abono pecuniário</b> (art. 143), que também não aparece — dobra firme só com gozo abaixo
  de 20 dias. Confirmar nos recibos de férias e na folha antes de autuar.</div>
+<div class="mv"><b>Leitura da auditoria</b>
+ <div class="sm" style="margin:2px 0 4px">Os mesmos números dos cartões, caso a caso,
+  em frases prontas. Clique num grupo para abrir ou fechar. Tudo é indício: confirmar
+  nos recibos de férias antes de autuar.</div>
+ <div id="leitura"></div></div>
 <div class="bar">
  <input id="q" type="search" placeholder="Buscar por nome, CPF ou matrícula..." autocomplete="off">
  <button class="chip on" data-f="todos">Todos</button>
@@ -535,6 +580,17 @@ cVen.textContent=M.trabVencida; cDias.textContent=M.diasVencidos;
 cFp.textContent=M.trabForaPrazo; cFpSub.textContent=M.diasDobro+' dias após o prazo (S. 81 TST)';
 cVdo.textContent=M.trabVencendo; cAb.textContent=M.trabAbono;
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function bloco(t,cls,itens,aberto){
+ if(!itens.length)return '';
+ return `<details${aberto?' open':''}><summary><span class="tag ${cls}">${itens.length}</span> ${t}</summary>`+
+        `<ul>${itens.map(i=>'<li>'+esc(i)+'</li>').join('')}</ul></details>`;}
+leitura.innerHTML=(
+ bloco('Férias vencidas — indício de dobra (art. 137 da CLT)','t-w',M.leitura.vencida,true)+
+ bloco('Gozo fora do prazo — dobra devida (Súmula 81 do TST)','t-w',M.leitura.fora,true)+
+ bloco('Prazo concessivo vencendo em até 60 dias — vigiar','t-m',M.leitura.vencendo,true)+
+ bloco('Conferir abono pecuniário (art. 143) — provável regular','t-m',M.leitura.abono,false)+
+ bloco('Fracionamento a conferir (art. 134 §1º)','t-m',M.leitura.frac,false))
+ ||'<div class="sm">Nenhum indício nos períodos auditáveis.</div>';
 let filtro='todos',termo='',ord='diasVenc',asc=false,pag=1,tam=50;
 function norm(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function hl(s,t){s=esc(s); if(!t)return s;
@@ -669,6 +725,7 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
         "trabForaPrazo": ag["trab_fora_prazo"], "diasDobro": ag["dias_dobro"],
         "trabVencendo": ag["trab_vencendo"], "trabAbono": ag["trab_abono"],
         "trabFrac": ag["trab_frac"],
+        "leitura": montar_leitura(linhas),
     }
     destino = Path(pasta_os) / "eSocial"
     destino.mkdir(parents=True, exist_ok=True)
