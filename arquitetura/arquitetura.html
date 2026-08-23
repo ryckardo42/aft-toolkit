@@ -760,7 +760,7 @@ const ARCH = {
     {
       "nome": "consulta_cnpj.py",
       "caminho": "_scripts/consulta_cnpj.py",
-      "papel": "Consulta o cadastro da empresa na Receita Federal por CNPJ, pelos dados abertos (sem credencial). Valida o digito verificador antes de ir a rede, guarda cache local por CNPJ e alterna entre duas fontes publicas. Modo --os imprime chave=valor ja formatado para o memory.md (CNAE XXXX-X/XX, CEP e telefone pontuados, datas dd/mm/aaaa). Usado pelo Passo 1.5 da /aft-nova-auditoria e pela FASE 1.15 da /aft-preparacao-acao-fiscal.",
+      "papel": "Consulta o cadastro da empresa na Receita Federal por CNPJ, pelos dados abertos (sem credencial). Valida o digito verificador antes de ir a rede, guarda cache local por CNPJ e alterna entre duas fontes publicas. Modo --os imprime chave=valor ja formatado para o memory.md (CNAE XXXX-X/XX, CEP e telefone pontuados, datas dd/mm/aaaa), incluindo simples/simples_desde/simples_exclusao — e a opcao pelo Simples Nacional e o que sustenta a leitura de ME/EPP (dupla visita, art. 627-A da CLT) na FASE 1.15 da /aft-preparacao-acao-fiscal, ja que o porte cadastral e autodeclarado e vive desatualizado. Usado tambem pelo Passo 1.5 da /aft-nova-auditoria.",
       "runtime": "Python stdlib"
     }
   ],

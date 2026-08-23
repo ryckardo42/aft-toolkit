@@ -138,11 +138,11 @@ O que cada campo destrava na preparação:
 | `endereco` | **FASE 4** (acesso/Google Maps) e **FASE 4.6** (outros CNPJs no endereço) |
 | `municipio`/`uf` | confirma a lotação e o deslocamento |
 | `situacao` | se não for ATIVA, muda a ação fiscal inteira |
-| `porte`, `simples` | leitura de porte do estabelecimento (FASE 3.5) |
+| `porte`, `simples`, `simples_desde`, `simples_exclusao` | leitura de porte e **dupla visita** (achado 4 abaixo) |
 | `telefone`, `telefone2` | contato institucional para a visita |
 | `abertura` | idade da empresa — contexto de exigibilidade de programas |
 
-**Três achados que merecem virar `## Pontos de atenção para a visita`:**
+**Quatro achados que merecem virar `## Pontos de atenção para a visita`:**
 
 1. **Situação cadastral diferente de ATIVA** (BAIXADA, INAPTA, SUSPENSA), com a
    data. O AFT precisa saber **antes de sair** — pode não haver empresa no
@@ -153,6 +153,34 @@ O que cada campo destrava na preparação:
    **indício** — a atividade real se confirma na inspeção.
 3. **Endereço do cadastro divergente** do que o AFT tem (da denúncia, da OS).
    Pode ser filial, mudança não atualizada, ou endereço só contábil.
+4. **Leitura de porte para a dupla visita (art. 627-A da CLT).** O `porte`
+   cadastral é declaração da própria empresa e vive desatualizado — quem dá a
+   leitura confiável é a opção pelo Simples Nacional, que exige ser ME/EPP
+   (LC 123/2006) e cai sozinha quando a receita estoura o limite:
+   - **`simples=sim`** → a empresa é **necessariamente ME ou EPP**. Registre nos
+     pontos de atenção: "Optante do Simples Nacional desde `simples_desde` —
+     empresa ME/EPP, candidata ao critério de dupla visita (art. 627-A da CLT)".
+     **Invocar a dupla visita é decisão do AFT na autuação**, e as quebras
+     continuam valendo (falta de registro, grave e iminente, reincidência,
+     fraude, embaraço). **Não grave `**Dupla visita:**` no memory.md** — essa
+     linha é da `/aft-auditoria-geral`, quando o AFT decidir.
+   - **`porte` ME/EPP sem `simples=sim`** → o porte cadastral **não basta** para
+     presumir dupla visita. Formule o achado como leitura de indício, cruzando
+     com a atividade e o que mais a preparação já sabe (CNAEs, efetivo da
+     Relação de Vínculos, perfil da FASE 1.2) — no molde: *"Porte cadastral:
+     MICRO EMPRESA, mas sem registro de opção pelo Simples no dado aberto da
+     Receita. O porte declarado sugere dupla visita, mas a via confiável (o
+     Simples) não confirma — e um frigorífico de abate de bovinos com atacado
+     de carnes e transporte próprio dificilmente ainda é ME de verdade."* Se
+     vier `simples_exclusao`, some ao indício: já foi optante e saiu nessa
+     data. A certeza, no dia, é a consulta manual do AFT no portal do Simples
+     Nacional (tem captcha, não dá para automatizar):
+     <https://www8.receita.fazenda.gov.br/simplesnacional/aplicacoes.aspx?id=21>
+     **E gera consequência documental:** este achado acrescenta o item
+     obrigatório de ECF ao checklist da FASE 5 (ver lá) — é a empresa quem
+     comprova o porte que declara.
+   - O retrato dos dados abertos é mensal (defasagem de até ~1 mês) — bem mais
+     fresco que o porte cadastral, mas diga a ressalva junto com o achado.
 
 Se a atividade que aparecer na FASE 1.2 **destoar do CNAE** daqui, isso já é o
 ponto de atenção previsto naquela fase — agora com a fonte oficial para
@@ -620,6 +648,22 @@ localmente e grava a seção `## CNPJs no mesmo endereço` no `memory.md`.
 A partir da denúncia, dos temas e das **ementas da OS** (FASE 1.1), monte uma lista de **candidatos** a documentos que fazem sentido pedir pelo DET antes ou durante a visita (ex.: PGR, PCMSO, controles de jornada, atas da CIPA, folha de pagamento). As ementas indicam o caminho: NR-01 → PGR e inventário de riscos; NR-23 → medidas de prevenção contra incêndio; NR-10 → prontuário das instalações elétricas; e assim por diante.
 
 > **Registro de empregados não se pede em livro nem em ficha.** O registro é feito no **eSocial** — livro e ficha de registro não existem mais. **Nunca** liste no checklist "livro de registro", "ficha de registro" ou "sistema eletrônico de registro de empregados". Para as ementas de REGISTRO, o caminho é a consulta do próprio AFT ao eSocial, cruzada em campo com quem está trabalhando no local; se for o caso, peça folha de pagamento, contratos e recibos — nunca o livro.
+
+> **Item obrigatório quando o achado 4 da FASE 1.15 apontou porte ME/EPP sem
+> opção pelo Simples:** inclua no checklist (e na NAD que sair dele) o pedido de
+> ECF, com este texto fixo, copiado literalmente — só as duas referências de ano
+> são calculadas: os **dois últimos anos-calendário encerrados** (em 2026:
+> "2024 e 2025"):
+>
+> ```
+> Escrituração Contábil Fiscal (ECF) dos anos-calendário de <AAAA-2> e <AAAA-1>, com os respectivos recibos de transmissão. Não sendo apresentada, a ação fiscal prosseguirá considerando o porte da empresa como não comprovado.
+> ```
+>
+> É o instrumento que resolve o porte de verdade: quem declara ME/EPP comprova —
+> a receita bruta da ECF diz se a empresa cabe no limite da LC 123/2006. O item
+> entra como obrigatório na lista sugerida; o AFT ainda pode riscá-lo, como
+> qualquer outro. Empresa **optante do Simples** não precisa dele (o porte já
+> está confirmado — e optante entrega PGDAS-D/DEFIS, não ECF).
 
 1. Apresente a lista ao AFT como **sugestão**, nunca como decisão tomada — ele risca, ajusta ou acrescenta itens.
 2. **Não invente** exigência documental sem base — cada item candidato deve estar amparado por uma NR/artigo (mesmo que a ementa exata só seja resolvida depois, na `/aft-NAD`).

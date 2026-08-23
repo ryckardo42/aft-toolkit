@@ -109,6 +109,14 @@ def g(d: dict, *chaves, padrao=""):
     return padrao
 
 
+def _porte_me_epp(d: dict) -> bool:
+    """Porte cadastral e ME (01) ou EPP (03)? (declarado pela empresa, pode estar velho)."""
+    if g(d, "codigo_porte") in (1, 3, "1", "01", "3", "03"):
+        return True
+    p = str(g(d, "porte")).upper()
+    return "MICRO" in p or "PEQUENO PORTE" in p or p in ("ME", "EPP")
+
+
 def exibir(d: dict, origem: str, mostrar_socios=False):
     cnpj = re.sub(r"\D", "", str(g(d, "cnpj", "estabelecimento", padrao="")))
     situacao = str(g(d, "descricao_situacao_cadastral", "situacao_cadastral")).upper()
@@ -140,11 +148,20 @@ def exibir(d: dict, origem: str, mostrar_socios=False):
 
     reg = []
     if simples is True:
-        reg.append("Simples Nacional")
+        desde = _data_br(g(d, "data_opcao_pelo_simples"))
+        reg.append("Simples Nacional" + (f" (optante desde {desde})" if desde else ""))
     if mei is True:
         reg.append("MEI")
     if reg:
         print(f"  Regime.............: {', '.join(reg)}")
+    elif _porte_me_epp(d):
+        if simples is False:
+            exc = _data_br(g(d, "data_exclusao_do_simples"))
+            base = "nao optante do Simples" + (f" (excluida em {exc})" if exc else "")
+        else:  # None: o dado aberto nao traz registro de opcao
+            base = "sem registro de opcao pelo Simples"
+        print(f"  Regime.............: {base}"
+              "   <<< porte ME/EPP sem Simples - cadastro pode estar desatualizado")
 
     cnae = g(d, "cnae_fiscal")
     cnae_ds = g(d, "cnae_fiscal_descricao")
@@ -250,7 +267,11 @@ def modo_os(d: dict):
         ("cnaes_secundarios",  sec),
         ("natureza_juridica",  g(d, "natureza_juridica")),
         ("porte",              str(g(d, "porte")).upper()),
-        ("simples",            "sim" if g(d, "opcao_pelo_simples") is True else ""),
+        ("simples",            {True: "sim", False: "nao"}.get(g(d, "opcao_pelo_simples"), "")),
+        ("simples_desde",      _data_br(g(d, "data_opcao_pelo_simples"))
+                               if g(d, "opcao_pelo_simples") is True else ""),
+        ("simples_exclusao",   _data_br(g(d, "data_exclusao_do_simples"))
+                               if g(d, "opcao_pelo_simples") is False else ""),
         ("mei",                "sim" if g(d, "opcao_pelo_mei") is True else ""),
         ("endereco",           end),
         ("telefone",           tels[0] if tels else ""),
