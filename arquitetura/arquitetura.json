@@ -231,6 +231,11 @@
      "tech": "handoff p/ gera-ai · model: opus 1M"
     },
     {
+     "nome": "/aft-PGRTR-analise",
+     "role": "Auditoria sistemática do PGRTR (NR-31, rural) na base fixa de 33 ementas com gradação validada no ementário, com confronto campo × documento, extração delegada e citação de páginas. Consulta complementar ao ementário (key nr-31) para o que a base não cobre.",
+     "tech": "handoff p/ gera-ai · model: opus"
+    },
+    {
      "nome": "/aft-aet-auditoria",
      "role": "Auditoria da Análise Ergonômica do Trabalho (AET) sob a NR-17 nas 5 ementas (17.3.3, 17.3.8, 17.4.1, 17.4.2, 17.4.3), com citação de página/folha e a AET anexada a cada auto.",
      "tech": "handoff p/ gera-ai · model: opus 1M"
@@ -738,7 +743,7 @@
   },
   {
    "topico": "Empacotamento único",
-   "txt": "Todo TXT é gerado no /aft-gera-ai; /aft-informalidade, /aft-PGR-analise, /aft-aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
+   "txt": "Todo TXT é gerado no /aft-gera-ai; /aft-informalidade, /aft-PGR-analise, /aft-PGRTR-analise, /aft-aet-auditoria e a jornada só redigem e fazem handoff (diferente das versões pessoais)."
   },
   {
    "topico": "Latin-1 sem iconv",

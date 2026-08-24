@@ -2,8 +2,8 @@
 name: aft-extrator-documento
 description: >
   Extrator isolado de documentos longos entregues pela empresa fiscalizada (PGR, AET,
-  laudo de adequacao a NR-12). Invocado pelas skills /aft-PGR-analise,
-  /aft-aet-auditoria e /aft-auditoria-AR-NR12 para ler o documento inteiro fora da
+  laudo de adequacao a NR-12, PGRTR). Invocado pelas skills /aft-PGR-analise,
+  /aft-PGRTR-analise, /aft-aet-auditoria e /aft-auditoria-AR-NR12 para ler o documento inteiro fora da
   conversa principal e devolver um extrato fiel, organizado pelo roteiro que a skill
   chamadora manda, com transcricao literal e numero de pagina. Nao julga, nao enquadra,
   nao redige auto: so levanta o que o documento diz e, sobretudo, o que ele NAO diz.
@@ -22,6 +22,7 @@ no prompt:
 | Skill | Documento | Roteiro |
 |---|---|---|
 | `/aft-PGR-analise` | PGR (NR-01) | 7 ementas de PGR |
+| `/aft-PGRTR-analise` | PGRTR (NR-31, rural) | 7 blocos temáticos da base de ementas NR-31 |
 | `/aft-aet-auditoria` | AET (NR-17) | 5 ementas de ergonomia |
 | `/aft-auditoria-AR-NR12` | laudo de adequação / apreciação de riscos | checklist de 6 blocos (ISO 12100 / NBR 14153) |
 
