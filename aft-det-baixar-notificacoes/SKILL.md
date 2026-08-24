@@ -77,8 +77,11 @@ python ~/.claude/skills/_scripts/det_baixar.py --so-notificacao --via-painel "<p
 ```
 
 Leia o JSON: `baixados`, `ja_existiam`, `pacote`. Cada PDF vai para
-`NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/notificacao-<CODIGO>.pdf`, o mesmo pacote que
-a `/aft-det-baixar` usa — se depois o AFT quiser o conteúdo completo daquela
+`NOTIFICACOES/<NN> - <CODIGO> <dd-mm-aaaa>/notificacao-<CODIGO>.pdf` — `NN` é a
+ordem de lavratura entre as notificações da OS (01 é a primeira emitida; os
+pacotes são renumerados sozinhos se uma antiga chegar depois) e a data é a de
+**lavratura** da notificação, não a do download. É o mesmo pacote que a
+`/aft-det-baixar` usa — se depois o AFT quiser o conteúdo completo daquela
 notificação, tudo se acumula na mesma pasta, sem duplicar.
 
 - `token_expirado: true` → renove conforme o `canal-token-det.md` e repita.

@@ -12,9 +12,9 @@ description: >
   (14 dígitos) ou nome do empregador. Baixa pela API do DET, via servidor do
   painel (token de sessão emprestado pelo navegador do assistente ou pela
   extensão Sync DET): o PDF da notificação, o Relatório de Atendimento e os
-  arquivos entregues pelo empregador, tudo organizado por item no pacote
-  NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/ da OS — em segundos, sem navegador
-  automatizado. NÃO cadastra OS (/aft-nova-auditoria) nem julga os documentos
+  arquivos entregues pelo empregador, organizados por item e por dia de
+  download no pacote NOTIFICACOES/<NN> - <CODIGO> <dd-mm-aaaa>/ da OS — em
+  segundos, sem navegador automatizado. NÃO cadastra OS (/aft-nova-auditoria) nem julga os documentos
   (/aft-auditoria-geral).
 ---
 
@@ -46,30 +46,38 @@ download pelo servidor — o token nunca passa por esta conversa.
 > nunca justifica inventar caminho novo nem dizer ao AFT que o toolkit quebrou.
 
 O que chega vai todo para o pacote da notificação, dentro de `NOTIFICACOES/`
-(a raiz da OS fica limpa):
+(a raiz da OS fica limpa). O nome do pacote começa pelo **número de ordem de
+lavratura** (01 é a primeira notificação emitida na fiscalização) e a data é a
+de **lavratura** da notificação — não a do download. Dentro dele, cada dia de
+download tem a sua subpasta `baixada em <data>`, para o AFT saber o que a
+empresa apresentou em cada data (entrega parcelada tem prazos diversos):
 
 ```
-<OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/   ← data do primeiro download
-├── notificacao-<CODIGO>.pdf              ← o PDF da notificação
-├── relatorio-atendimento-<CODIGO>.pdf    ← SEMPRE refrescado (entrega nova o muda)
-│                                            emitido com TODOS os itens: o que veio
-│                                            (com MD5/SHA1) e o que faltou — a prova
-│                                            de omissão do art. 630, §4º, da CLT
-├── historico-itens.md                    ← prorrogações, justificativas e status
-│                                            de cada item (derivado; regravado)
-├── canal-comunicacao/                    ← só quando há mensagens na notificação
+<OS>/NOTIFICACOES/<NN> - <CODIGO> <dd-mm-aaaa>/  ← NN = ordem; data = LAVRATURA
+├── notificacao-<CODIGO>.pdf              ← o PDF da notificação (estático)
+├── canal-comunicacao/                    ← só quando há mensagens (cumulativo)
 │   ├── mensagens.md                      ← a conversa, legível (derivado)
 │   ├── <anexos das mensagens>
 │   └── historico-canal.pdf               ← o histórico oficial do DET
-└── item<N>_<descrição oficial>/          ← um por item solicitado
-    ├── <arquivos entregues>
-    └── invalidados/                      ← o que o AFT rejeitou/dispensou no DET
+└── baixada em <dd-mm-aaaa>/              ← uma por dia de download
+    ├── relatorio-atendimento-<CODIGO>.pdf ← a fotografia DAQUELE dia, com TODOS
+    │                                        os itens: o que veio (com MD5/SHA1)
+    │                                        e o que faltou — a prova de omissão
+    │                                        do art. 630, §4º, da CLT
+    ├── historico-itens.md                ← prorrogações, justificativas e status
+    │                                        de cada item (derivado)
+    └── item<N>_<descrição oficial>/      ← só o que chegou NAQUELE dia
+        ├── <arquivos entregues>
+        └── invalidados/                  ← o que o AFT rejeitou/dispensou no DET
 ```
 
-É idempotente: arquivo existente não é baixado de novo, e download repetido
-(entrega parcelada, prorrogação aceita) acumula no MESMO pacote. Legados
-migram sozinhos: pacote `notificacao-<COD>` (na raiz ou em NOTIFICACOES/) é
-renomeado ao padrão e PDF solto é movido para dentro. Cada download entra
+É idempotente: arquivo já baixado em qualquer dia anterior não é baixado de
+novo — a pasta do dia só recebe o que chegou nela. Se uma notificação mais
+antiga for baixada depois, os pacotes são **renumerados** sozinhos para manter
+a ordem de lavratura. Legados migram sozinhos: pacote `notificacao-<COD>` ou
+`<COD> <data>` (na raiz ou em NOTIFICACOES/) é renomeado ao padrão, PDF solto
+é movido para dentro, e o conteúdo que morava na raiz do pacote desce para a
+subpasta do dia em que foi baixado. Cada download entra
 sozinho no Registro de atividades do memory.md. O download também REGISTRA A
 VISUALIZAÇÃO no DET (as mesmas leituras que o site faz ao abrir a notificação
 e cada item), então o triângulo amarelo "Existe atualização pendente" se apaga
@@ -109,7 +117,8 @@ python ~/.claude/skills/_scripts/det_baixar.py --via-painel "<pasta da OS>" <COD
 
 Leia o JSON devolvido:
 
-- `ok: true` → anote `pacote` (a pasta onde tudo ficou), `baixados`,
+- `ok: true` → anote `pacote` (a pasta da notificação), `dia` (a subpasta
+  `baixada em <data>` deste download), `baixados`,
   `ja_existiam`, `movidos`, `itens`, `sem_arquivo`, `invalidados`, `eventos`
   (prorrogações/justificativas no historico-itens.md), `mensagens_canal`,
   `anexos_canal` e `erros`. Notificação sem nenhum arquivo mas com `eventos` >

@@ -85,7 +85,13 @@ for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
    na raiz: `notificacao-*.pdf`, `relatorio-atendimento-*.pdf`, `notificacao-*/`,
    `tn-nco-*.docx`, `nad-*.docx`, `Autos *</`, `Relacao de autos/` ou
    `relacao-autos*.docx`. A migração é só `mkdir` + `mv` para `NOTIFICACOES/` e
-   `AUTOS/` — **nada é renomeado nem apagado**, e os `.md` da raiz não se movem.
+   `AUTOS/` — **nada é apagado**, e os `.md` da raiz não se movem.
+
+   **Pacotes de notificação fora do padrão de 24/08/2026 → reorganização.** O padrão
+   atual é `NOTIFICACOES/<NN> - <CODIGO> <data de lavratura>/` com o conteúdo de cada
+   download na subpasta `baixada em <data>` (ver FASE 4). Pacote sem o número de ordem,
+   ou com relatório de atendimento e pastas `item<N>_...` na raiz do pacote, também
+   qualifica a pasta como "atualização".
 3. **Vazia** → apenas relate no resumo final ("pastas vazias: X, Y — nada a organizar")
    e siga. Não pergunte nada sobre elas.
 
@@ -196,10 +202,11 @@ só com as fichas e os relatórios `.md`**:
 ├── tn-nco-*.md · nad-*.md        ← RAIZ OBRIGATÓRIA (texto que o AFT recola no DET)
 ├── NOTIFICACOES/
 │   ├── tn-nco-*.docx · nad-*.docx  ← versão fechada da notificação emitida
-│   └── <CODIGO> <dd-mm-aaaa>/    ← TUDO daquela notificação (data do download
-│       ├── notificacao-<CODIGO>.pdf                    ou dos arquivos)
-│       ├── relatorio-atendimento-<CODIGO>.pdf
-│       └── item1/ item2/ ...     ← resposta do empregador
+│   └── <NN> - <CODIGO> <dd-mm-aaaa>/  ← TUDO daquela notificação (NN = ordem de
+│       ├── notificacao-<CODIGO>.pdf      lavratura; data = data de LAVRATURA)
+│       └── baixada em <dd-mm-aaaa>/   ← o que chegou em cada dia de download
+│           ├── relatorio-atendimento-<CODIGO>.pdf
+│           └── item1/ item2/ ...      ← resposta do empregador
 ├── AUTOS/
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
 │   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
@@ -240,14 +247,17 @@ Regras do plano:
   toolkit). Sem identificador encontrado → só o nome, e avise que o CNPJ/CPF será exigido
   no `/aft-gera-ai`.
 - **Notificações** → tudo em `NOTIFICACOES/`, e cada notificação inteira dentro do
-  SEU pacote `<CODIGO> <dd-mm-aaaa>` (regra de 21/08/2026 — sem o prefixo
-  `notificacao-` no nome da pasta; a data é a do download ou, na importação, a data
-  mais recente dos arquivos da resposta): o PDF como
-  `NOTIFICACOES/<CODIGO> <data>/notificacao-<CODIGO>.pdf`, o relatório de atendimento
-  ao lado, e a resposta do empregador na mesma subpasta (mantendo `item1/`,
-  `item2/`... ou `01 - .../`). Pacote legado `notificacao-<CODIGO>/` é renomeado ao
-  padrão; sufixo descritivo que o AFT tenha dado é **preservado** (`<CODIGO> jornada/`
-  fica como está) — o que identifica é o código.
+  SEU pacote `<NN> - <CODIGO> <dd-mm-aaaa>` (regra de 24/08/2026 — sem o prefixo
+  `notificacao-` no nome da pasta): `NN` é a **ordem de lavratura** entre as
+  notificações da OS (01 é a primeira emitida) e a data é a de **lavratura** — leia-a
+  na 1ª página do `notificacao-<CODIGO>.pdf` (linha de local e data, ou "lavrada em");
+  sem o PDF, use a data mais antiga dos arquivos da resposta e relate a incerteza. O
+  PDF fica como `NOTIFICACOES/<NN> - <CODIGO> <data>/notificacao-<CODIGO>.pdf` e a
+  resposta do empregador desce para a subpasta `baixada em <data do download>` —
+  quem faz essa descida e a numeração é o `det_baixar.py --reorganizar` (FASE 4);
+  no plano, você só corrige a data de lavratura no nome do pacote. Pacote legado
+  `notificacao-<CODIGO>/` é renomeado ao padrão; sufixo descritivo que o AFT tenha
+  dado é **preservado** (`<CODIGO> <data> jornada/`) — o que identifica é o código.
 - **Notificação também é o que o AFT emitiu**, não só o que voltou do DET: os `.docx`
   de Termo de Notificação para Correção (`tn-nco-*.docx`) e de Notificação para
   Apresentação de Documentos (`nad-*.docx`) vão para `NOTIFICACOES/` junto com os PDFs.
@@ -286,6 +296,18 @@ Regras do plano:
 ## FASE 4 — Executar e registrar
 
 1. Para cada pasta do plano: renomeie a pasta (`mv`), depois mova/renomeie os arquivos.
+   Em seguida, aplique o padrão de 24/08/2026 aos pacotes de `NOTIFICACOES/` — primeiro
+   corrija no nome de cada pacote a data para a de **lavratura** (lida do PDF da
+   notificação, conforme a regra da FASE 3), depois rode, por OS do plano:
+
+```bash
+python ~/.claude/skills/_scripts/det_baixar.py --reorganizar "<pasta da OS>"
+```
+
+   O script desce o conteúdo da raiz de cada pacote para as subpastas
+   `baixada em <data>` (pela data de modificação de cada arquivo — no layout antigo é a
+   data do download) e numera os pacotes pela ordem das datas nos nomes. É idempotente
+   e não apaga nada; rode-o de novo sempre que corrigir uma data.
 2. Crie (ou atualize, com backup antes) o `memory.md` no esquema padrão do toolkit (o
    mesmo do `/aft-nova-auditoria`):
 

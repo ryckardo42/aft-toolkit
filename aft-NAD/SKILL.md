@@ -267,7 +267,7 @@ Com o painel local no ar e o **RI** no `memory.md`, ofereça criar o rascunho da
 
 ### O PDF para levar impresso (só na NAD preliminar)
 
-Quando a notificação vai ser **entregue em mãos na empresa** — o caso da NAD preliminar, gerada na preparação, antes da visita —, acrescente `"pdf": true` à chamada de criação. O PDF do **rascunho** é baixado para o pacote da OS, em `NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/notificacao-<CODIGO>-rascunho.pdf`.
+Quando a notificação vai ser **entregue em mãos na empresa** — o caso da NAD preliminar, gerada na preparação, antes da visita —, acrescente `"pdf": true` à chamada de criação. O PDF do **rascunho** é baixado para o pacote da OS, em `NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/notificacao-<CODIGO>-rascunho.pdf` (o pacote ganha o prefixo de ordem `NN - ` e a data de lavratura quando a notificação for lavrada e baixada).
 
 - **5 linhas em branco** ao final, o padrão do próprio DET (`pdf_linhas`, de 0 a 100): são para o AFT completar itens à mão, no local.
 - O PDF sai **sem número de notificação** ("NOTIFICAÇÃO Nº." em branco) — é rascunho, o número só existe depois da lavratura. **É o esperado neste fluxo**: o AFT entrega o papel na empresa e colhe a assinatura durante a inspeção física.
