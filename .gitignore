@@ -35,6 +35,8 @@ __pycache__/
 !/arquitetura/
 !/config/
 !/novidades/
+# Site publico do GitHub Pages (so a politica de privacidade da extensao).
+!/docs/
 # Atalho .agents/skills -> .claude/skills. E da maquina, nao do projeto: cada
 # pessoa cria o seu (link simbolico no Mac/Linux, junction no Windows). Versionar
 # um atalho quebraria na maquina dos outros.
