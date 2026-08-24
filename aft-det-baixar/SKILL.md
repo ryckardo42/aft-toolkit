@@ -10,11 +10,12 @@ description: >
   "traz os documentos que a empresa entregou no DET". Aceita como argumento:
   código de notificação (alfanumérico maiúsculo, ex.: ABCDE12345FGHIJ), CNPJ
   (14 dígitos) ou nome do empregador. Baixa pela API do DET, via servidor do
-  painel (token emprestado pela extensão Sync DET): o PDF da notificação, o
-  Relatório de Atendimento e os arquivos entregues pelo empregador, tudo
-  organizado por item dentro de notificacao-<CODIGO>/ na pasta da OS — em
-  segundos, sem navegador. NÃO cadastra OS (/aft-nova-auditoria) nem julga os
-  documentos (/aft-auditoria-geral).
+  painel (token de sessão emprestado pelo navegador do assistente ou pela
+  extensão Sync DET): o PDF da notificação, o Relatório de Atendimento e os
+  arquivos entregues pelo empregador, tudo organizado por item no pacote
+  NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/ da OS — em segundos, sem navegador
+  automatizado. NÃO cadastra OS (/aft-nova-auditoria) nem julga os documentos
+  (/aft-auditoria-geral).
 ---
 
 # aft-det-baixar — Baixar os arquivos de uma notificação DET
