@@ -201,16 +201,30 @@ def main():
                        ["--checar-arquitetura" if conferir
                         else "--sincronizar-arquitetura"], False)
           .replace("nota_historico.py: ", "  arquitetura: "))
+    MONTADOS = ["NOVIDADES.md", "arquitetura/arquitetura.html",
+                "_scripts/skills_oficiais.txt"]
     if not conferir:
-        mudou = git(["status", "--porcelain", "--",
-                     "NOVIDADES.md", "arquitetura/arquitetura.html"], raiz)
+        # A lista do que o toolkit instala e MONTADA como os outros dois: sai de
+        # `git ls-files`, e por isso muda sozinha sempre que nasce uma skill ou
+        # uma pasta nova. Ela era regravada mais adiante e NUNCA commitada — o
+        # publicar sujava a copia principal e, na vez seguinte, o proprio
+        # guarda-corpo do passo 1 recusava publicar por causa da sujeira que ele
+        # mesmo tinha feito (constatado em 24/08/2026, duas vezes no mesmo dia).
+        # E ela que diz o que NAO e nosso e, portanto, nao pode ser apagado da
+        # pasta do AFT; deduzir por prefixo falha, porque 'aft-grant' e skill
+        # pessoal de um AFT e parece oficial.
+        oficiais = sorted({l.split("/")[0] for l in
+                           git(["ls-files"], raiz).splitlines() if "/" in l})
+        (raiz / "_scripts" / "skills_oficiais.txt").write_text(
+            "\n".join(oficiais) + "\n", encoding="utf-8")
+        mudou = git(["status", "--porcelain", "--"] + MONTADOS, raiz)
         if mudou:
             gerados = [l.strip() for l in mudou.splitlines()]
-            git(["add", "NOVIDADES.md", "arquitetura/arquitetura.html"], raiz)
+            git(["add"] + MONTADOS, raiz)
             git(["commit", "-m",
-                 "chore: remonta NOVIDADES.md e o bloco ARCH da arquitetura\n\n"
+                 "chore: remonta NOVIDADES.md, a arquitetura e o manifesto\n\n"
                  "Gerado por _scripts/publicar.py na copia principal - um lugar\n"
-                 "so, para duas sessoes nunca colidirem nestes dois arquivos."],
+                 "so, para duas sessoes nunca colidirem nestes arquivos."],
                 raiz)
             git(["push", "origin", "main"], raiz)
             print(f"  regerados e publicados: {', '.join(gerados)}")
@@ -225,13 +239,8 @@ def main():
     # perdeu as skills pessoais dele numa atualizacao; retrato antes, confere
     # depois, e o prejuizo vira um comando de reposicao.
     if not conferir:
-        # Regrava a lista do que o toolkit instala: e ela que diz o que NAO e
-        # nosso e, portanto, nao pode ser apagado. Deduzir por prefixo falha —
-        # 'aft-grant' e skill pessoal de um AFT e parece oficial.
-        oficiais = sorted({l.split("/")[0] for l in
-                           git(["ls-files"], raiz).splitlines() if "/" in l})
-        (raiz / "_scripts" / "skills_oficiais.txt").write_text(
-            "\n".join(oficiais) + "\n", encoding="utf-8")
+        # (o manifesto que este retrato consulta ja foi regravado e commitado
+        # no passo 3, junto com os outros arquivos montados)
         print("  " + rodar_script(raiz, "skills_pessoais.py", ["--backup"], False))
     cmd = ["rsync", "-a", "--itemize-changes"]
     if conferir:
