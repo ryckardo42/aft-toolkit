@@ -37,8 +37,16 @@ sessão do DET. Ele chega por uma de duas vias — **1) o navegador do próprio
 assistente** (principal) ou **2) a extensão Chrome "Sync DET"** (alternativa) —
 descritas em `~/.claude/skills/config/canal-token-det.md`. **Leia esse arquivo
 quando faltar token**; não repita o procedimento aqui. Esta skill só dispara o
-download pelo servidor — o token nunca passa por esta conversa. O que chega vai todo para o pacote da notificação, dentro de
-`NOTIFICACOES/` (a raiz da OS fica limpa):
+download pelo servidor — o token nunca passa por esta conversa.
+
+> **Faltou token do DET? Não improvise.** O `canal-token-det.md` diz como obtê-lo
+> **nesta sessão** (com ou sem navegador do assistente) e, sobretudo, o que NÃO
+> tentar: a página do DET **não** consegue falar com o painel local, e quem tenta
+> esse caminho conclui, errado, que a via principal não funciona. Falta de token
+> nunca justifica inventar caminho novo nem dizer ao AFT que o toolkit quebrou.
+
+O que chega vai todo para o pacote da notificação, dentro de `NOTIFICACOES/`
+(a raiz da OS fica limpa):
 
 ```
 <OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/   ← data do primeiro download
@@ -138,3 +146,7 @@ e, depois, `/aft-auditoria-geral`.
 - Pasta da OS sempre via `pasta_aft.py` — nunca presuma o caminho.
 - Um código com erro não interrompe os demais.
 - Esta skill não julga documento nenhum: baixar é o fim dela.
+- **Só os documentos das notificações**, sem os arquivos que o empregador
+  entregou (para ler o que foi notificado sem puxar os anexos): é a
+  `/aft-det-baixar-notificacoes`. Ofereça-a quando o AFT disser que não quer as
+  entregas, ou quando o lote for grande e ele só quiser o histórico.

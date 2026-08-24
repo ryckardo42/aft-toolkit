@@ -111,7 +111,7 @@ Pergunte em uma única mensagem (deixe claro o que é opcional):
 
 > Trabalhadores/CNAE/grau de risco quase nunca são conhecidos ao abrir a OS — são **opcionais** aqui. Se o AFT não informar, deixe vazios: as skills `/aft-auditoria-geral` e `/aft-inspecao-fisica` os coletam depois (dos documentos ou perguntando uma vez).
 >
-> **Sem RI, avise o AFT** (uma frase, sem bloquear o cadastro): *"Sem o RI, o sync automático do DET (extensão Chrome) não vai importar as notificações desta auditoria — você pode informar agora ou completar depois no memory.md."* Se o AFT não souber o RI ainda (comum ao abrir a OS antes da 1ª notificação), siga sem — o `det_sync.py` adota sozinho o RI da primeira notificação confirmada e grava no front-matter, então o aviso é só para quem já tem o RI em mãos e esqueceria de informar.
+> **Sem RI, avise o AFT** (uma frase, sem bloquear o cadastro): *"Sem o RI, a sincronização com o DET não vai importar as notificações desta auditoria — você pode informar agora ou completar depois no memory.md."* Se o AFT não souber o RI ainda (comum ao abrir a OS antes da 1ª notificação), siga sem — o `det_sync.py` adota sozinho o RI da primeira notificação confirmada e grava no front-matter, então o aviso é só para quem já tem o RI em mãos e esqueceria de informar.
 
 > Se o AFT ainda não notificou nada pelo DET, deixe a seção de DET vazia — dá para
 > acrescentar depois (basta editar o `memory.md` ou rodar `/aft-det-630`/`/aft-nova-auditoria` de novo).
