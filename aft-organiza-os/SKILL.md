@@ -13,9 +13,10 @@ description: >
   "baixa o que falta do DET em todas as auditorias": a FASE 6 (opcional, sempre
   perguntada) varre o DET e baixa, para todas as OS, as notificações que ainda
   não estão nas pastas e os documentos entregues com o relatório de
-  atendimento — exceto as com alerta amarelo pendente, que ficam listadas para
-  baixa individual. Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
-  nada. NÃO cadastra OS do zero (/aft-nova-auditoria).
+  atendimento — só de notificação com prazo já vencido (no prazo corrente,
+  apenas o PDF da notificação) e nunca das com alerta amarelo pendente, que
+  ficam listadas para baixa individual. Varre TODA a OS ATIVAS e pede UMA
+  aprovação. Nunca apaga nada. NÃO cadastra OS do zero (/aft-nova-auditoria).
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
@@ -463,16 +464,25 @@ python ~/.claude/skills/_scripts/det_baixar.py --varredura "<OS_ATIVAS>"
 
    O script primeiro sincroniza as fichas (notificação nova entra no memory.md de
    cada OS) e depois baixa o pacote completo — PDF, relatório de atendimento e
-   arquivos entregues — de toda notificação **sem pacote local**. Regra dura
-   (decisão do AFT, 24/08/2026): notificação com o **triângulo amarelo**
-   ("atualização pendente" na ficha) **nunca entra no lote**, mesmo sem pacote
-   local — o download completo apagaria o alerta em silêncio, e o triângulo é o
-   aviso de que há entrega que o auditor ainda não viu. Elas voltam no campo
-   `pendentes` do JSON. O resto fica quieto. `token_expirado` no meio: renove o
-   token e rode de novo — é idempotente, nada baixa em dobro.
+   arquivos entregues — de toda notificação **sem pacote local**. Duas regras
+   duras (decisão do AFT, 24/08/2026):
+
+   - Notificação com o **triângulo amarelo** ("atualização pendente" na ficha)
+     **nunca entra no lote**, mesmo sem pacote local — o download completo
+     apagaria o alerta em silêncio, e o triângulo é o aviso de que há entrega que
+     o auditor ainda não viu. Voltam no campo `pendentes` do JSON.
+   - Notificação com **prazo ainda não vencido** (ou sem prazo escrito na linha —
+     na dúvida, poupa) **não tem documentos baixados**: não há entrega a buscar.
+     O lote traz no máximo o **PDF da notificação** (modo só-notificação, que não
+     registra visualização), quando o pacote ainda não existe. Voltam no campo
+     `no_prazo`, com o prazo. Documentos e relatório, só com o prazo vencido.
+
+   O resto fica quieto. `token_expirado` no meio: renove o token e rode de novo —
+   é idempotente, nada baixa em dobro.
 
 4. **Relate em uma mensagem**: notificações novas importadas por OS (do bloco
-   `sync`), pacotes baixados (código, quantos arquivos), `sem_novidade`, os
+   `sync`), pacotes baixados (código, quantos arquivos), as `no_prazo` (com a data
+   do prazo — "documentos ficam para depois do vencimento"), `sem_novidade`, os
    `pendentes` e erros em linguagem simples. Regenere o painel ao final (mesmo
    comando da FASE 5).
 

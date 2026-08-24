@@ -799,11 +799,16 @@ def _registrar_no_memory(pasta_os: Path, r: dict) -> None:
 RE_CHECKBOX_DET = re.compile(r"^\s*-\s*\[[ xX]\]\s*\**\s*([A-Z0-9]{8,})")
 
 
+RE_DATA_LINHA = re.compile(r"(\d{2})/(\d{2})/(\d{4})|(\d{4})-(\d{2})-(\d{2})")
+
+
 def codigos_da_ficha(texto: str) -> list[dict]:
     """As notificações da seção `## Notificações DET` de um memory.md:
-    [{codigo, pendente, cancelada}]. `pendente` vem da sub-linha de detalhes
-    do sync ("atualização pendente" = entrega nova no DET); `cancelada` idem
-    ("CANCELADA no DET"). Função pura, testável sem rede."""
+    [{codigo, prazos, pendente, cancelada}]. `prazos` são as datas escritas
+    na própria linha checkbox (o "— prazo dd/mm/aaaa" do sync; aceita também
+    aaaa-mm-dd de linha legada), como datetime.date; `pendente` vem da
+    sub-linha de detalhes do sync ("atualização pendente" = entrega nova no
+    DET); `cancelada` idem ("CANCELADA no DET"). Função pura, sem rede."""
     linhas = texto.splitlines()
     ini = next((i + 1 for i, l in enumerate(linhas)
                 if l.strip() == "## Notificações DET"), -1)
@@ -815,8 +820,17 @@ def codigos_da_ficha(texto: str) -> list[dict]:
     for l in linhas[ini:fim]:
         m = RE_CHECKBOX_DET.match(l)
         if m:
-            out.append({"codigo": m.group(1), "pendente": False,
-                        "cancelada": False})
+            prazos = []
+            for dm in RE_DATA_LINHA.finditer(l):
+                try:
+                    prazos.append(datetime.date(
+                        int(dm.group(3) or dm.group(4)),
+                        int(dm.group(2) or dm.group(5)),
+                        int(dm.group(1) or dm.group(6))))
+                except ValueError:
+                    pass  # data impossível escrita à mão: ignora
+            out.append({"codigo": m.group(1), "prazos": prazos,
+                        "pendente": False, "cancelada": False})
         elif out and l.strip().startswith("-"):
             if "atualização pendente" in l:
                 out[-1]["pendente"] = True
@@ -833,19 +847,27 @@ def varredura(base: Path, porta: int = 8347) -> dict:
        o token que a via 1 ou a extensão deixou na RAM): notificação nova
        entra na seção `## Notificações DET` de cada memory.md;
     2. baixa o pacote COMPLETO (PDF + relatório + arquivos entregues) das
-       notificações SEM pacote local em NOTIFICACOES/ e SEM alerta pendente.
-       Notificação com o triângulo amarelo ("atualização pendente" na ficha)
-       NUNCA entra no lote — regra do AFT (24/08/2026): o download completo
-       apagaria o alerta em silêncio, e o triângulo é o aviso de que há
-       entrega que o auditor ainda não viu. Elas voltam em `pendentes`, para
-       baixa INDIVIDUAL (/aft-det-baixar <código>), que aí sim apaga o
-       alerta como ato consciente. As já em dia ficam quietas.
+       notificações SEM pacote local em NOTIFICACOES/, SEM alerta pendente e
+       com o PRAZO JÁ VENCIDO. Duas regras do AFT (24/08/2026):
+       - triângulo amarelo ("atualização pendente" na ficha) NUNCA entra no
+         lote — o download completo apagaria o alerta em silêncio, e o
+         triângulo é o aviso de que há entrega que o auditor ainda não viu.
+         Voltam em `pendentes`, para baixa INDIVIDUAL (/aft-det-baixar
+         <código>), que aí sim apaga o alerta como ato consciente;
+       - prazo AINDA NÃO VENCIDO (alguma data da linha >= hoje, ou linha sem
+         data — na dúvida, poupa): não há entrega a buscar, então o lote
+         traz no máximo o PDF da notificação (modo só-notificação, que nem
+         registra visualização), se o pacote ainda não existir. Documentos e
+         relatório, só com o prazo vencido — quando o relatório inclusive
+         prova a omissão (art. 630, §4º, da CLT). Voltam em `no_prazo`.
+       As já em dia ficam quietas. A baixa individual continua livre: é
+       escolha do AFT.
 
     Token vencido no meio devolve token_expirado com o parcial — renovar e
     rodar de novo é seguro (tudo idempotente). Notificação de empresa SEM
     OS não entra: criar OS é papel da /aft-nova-auditoria."""
-    r = {"ok": True, "sync": None, "os": [], "baixadas": 0,
-         "sem_novidade": 0, "pendentes": 0, "canceladas": 0, "erros": []}
+    r = {"ok": True, "sync": None, "os": [], "baixadas": 0, "sem_novidade": 0,
+         "pendentes": 0, "no_prazo": 0, "canceladas": 0, "erros": []}
 
     # O painel roda sob um vigia (launchd/Agendador de Tarefas) que o reergue
     # sozinho em ~10 s quando cai. Queda no meio do lote vira PAUSA, não
@@ -887,8 +909,10 @@ def varredura(base: Path, porta: int = 8347) -> dict:
         except OSError as e:
             r["erros"].append(f"{pasta.name}: memory.md ilegível: {e}")
             continue
-        ros = {"os": pasta.name, "baixadas": [], "pendentes": [], "erros": []}
+        ros = {"os": pasta.name, "baixadas": [], "pendentes": [],
+               "no_prazo": [], "erros": []}
         notifs = pasta / "NOTIFICACOES"
+        hoje = datetime.date.today()
         for nf in codigos_da_ficha(texto):
             codigo = nf["codigo"]
             if nf["cancelada"]:
@@ -903,6 +927,37 @@ def varredura(base: Path, porta: int = 8347) -> dict:
             tem_pacote = notifs.is_dir() and any(
                 codigo in q.name.upper()
                 for q in notifs.iterdir() if q.is_dir())
+            so_pdf = (not nf["prazos"]) or any(d >= hoje for d in nf["prazos"])
+            if so_pdf:
+                # Prazo ainda corrente (ou desconhecido — na dúvida, poupa):
+                # nada de documentos; no máximo o PDF da notificação, e só se
+                # o pacote ainda não existe. Não registra visualização.
+                r["no_prazo"] += 1
+                item = {"codigo": codigo,
+                        "prazo": (max(nf["prazos"]).strftime("%d/%m/%Y")
+                                  if nf["prazos"] else None),
+                        "pdf_baixado": False}
+                if not tem_pacote:
+                    res = via_painel(pasta.name, codigo, porta,
+                                     so_notificacao=True)
+                    if res.get("painel_fora"):
+                        time.sleep(ESPERA_VIGIA)
+                        res = via_painel(pasta.name, codigo, porta,
+                                         so_notificacao=True)
+                    if res.get("token_expirado"):
+                        r.update(ok=False, token_expirado=True,
+                                 erro="token venceu no meio da varredura — "
+                                      "renove e rode de novo (o que já veio "
+                                      "não baixa de novo)")
+                        ros["no_prazo"].append(item)
+                        r["os"].append(ros)
+                        return r
+                    if res.get("ok"):
+                        item["pdf_baixado"] = res.get("baixados", 0) > 0
+                    else:
+                        ros["erros"].append(f"{codigo}: {res.get('erro') or res}")
+                ros["no_prazo"].append(item)
+                continue
             if tem_pacote:
                 r["sem_novidade"] += 1
                 continue
@@ -914,7 +969,8 @@ def varredura(base: Path, porta: int = 8347) -> dict:
                 r.update(ok=False, token_expirado=True,
                          erro="token venceu no meio da varredura — renove e "
                               "rode de novo (o que já veio não baixa de novo)")
-                if ros["baixadas"] or ros["pendentes"] or ros["erros"]:
+                if any((ros["baixadas"], ros["pendentes"], ros["no_prazo"],
+                        ros["erros"])):
                     r["os"].append(ros)
                 return r
             if res.get("ok"):
@@ -925,7 +981,8 @@ def varredura(base: Path, porta: int = 8347) -> dict:
                 r["baixadas"] += 1
             else:
                 ros["erros"].append(f"{codigo}: {res.get('erro') or res}")
-        if ros["baixadas"] or ros["pendentes"] or ros["erros"]:
+        if any((ros["baixadas"], ros["pendentes"], ros["no_prazo"],
+                ros["erros"])):
             r["os"].append(ros)
         r["erros"] += [f"{pasta.name} · {e}" for e in ros["erros"]]
     return r
