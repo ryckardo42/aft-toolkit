@@ -55,4 +55,5 @@ aft-tn-nco
 agents
 arquitetura
 config
+docs
 novidades
