@@ -18,17 +18,32 @@ Vale quando o assistente tem navegador próprio (é o caso do Claude Code no app
 de desktop). **É a via preferida**: não depende de extensão aprovada em loja
 nenhuma, não exige instalação e a entrega é instantânea.
 
+> **Antes de começar, confira se você tem ferramenta de navegador** (algo como
+> `javascript_tool`/`navigate` na sua lista de ferramentas). **Não tendo, vá
+> direto para a Via 2** e diga ao AFT, em uma frase, que nesta sessão o token
+> vem pelo Sincronizar da extensão. Não anuncie falha nem tente contornar: é
+> diferença de ambiente, não defeito. Idem se a execução de JavaScript no
+> navegador estiver bloqueada por permissão — uma tentativa, e siga para a Via 2.
+
 1. Abra (ou peça ao AFT que abra) `https://auditor-det.sit.trabalho.gov.br` no
    navegador do assistente e confirme que ele está **logado**. O login é sempre
    do AFT: o assistente não digita senha nem preenche credencial.
 2. Leia o token do armazenamento da própria página:
    `sessionStorage.getItem('token')` — é onde o site do DET o guarda (não é
    `localStorage`).
-3. Entregue ao painel **pela entrada padrão**, nunca como argumento de comando:
+3. Entregue ao painel **pelo terminal**, com o token na entrada padrão e nunca
+   como argumento de comando:
 
    ```bash
    printf '%s' "<token>" | python ~/.claude/skills/_scripts/det_token.py --gravar
    ```
+
+   > **Nunca tente fazer a PÁGINA do DET chamar o painel.** Uma página servida em
+   > `https://` não alcança `http://127.0.0.1` — o navegador barra, e nem um
+   > `GET /api/ping` passa (política de rede privada). É por isso que a extensão
+   > da Via 2 precisa de um *service worker*: aquele contexto não sofre a
+   > restrição, a página sofre. Quem tenta esse caminho conclui, errado, que a
+   > Via 1 não funciona — **a entrega é feita pelo terminal, e funciona**.
 
 4. Confira quanto tempo resta, quando precisar:
 

@@ -181,6 +181,8 @@ python ~/.claude/skills/_scripts/servir_painel.py "<OS_ATIVAS>" --abrir
   **a extensão Chrome "Sync DET"** (alternativa, com o botão flutuante **Sincronizar** no
   site) —, descritas em `~/.claude/skills/config/canal-token-det.md`.
 
+> **Faltou token do DET? Não improvise.** Siga o `~/.claude/skills/config/canal-token-det.md`: ele diz como obter o token **nesta sessão** (com ou sem navegador do assistente) e, sobretudo, o que NÃO tentar. Em particular, a página do DET **não** consegue falar com o painel local — quem tenta esse caminho conclui, errado, que a via principal não funciona. Falta de token nunca justifica inventar caminho novo nem dizer ao AFT que o toolkit está quebrado.
+
 ## Passo 4 — (Opcional) Publicar na aba Artefatos
 
 Este passo é **opt-in**: só execute se o AFT pedir ("publica o painel", "atualiza o

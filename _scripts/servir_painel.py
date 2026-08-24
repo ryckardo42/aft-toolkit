@@ -1107,7 +1107,11 @@ class Handler(BaseHTTPRequestHandler):
                                         "erro": "sem token do DET — abra a aba do DET "
                                                 "e clique em Sincronizar; depois tente "
                                                 "de novo (vale 25 min)"})
-            r = det_baixar.baixar_notificacao(alvo, token, p.get("codigo") or "")
+            # so_notificacao: só o PDF do documento, sem os anexos do
+            # empregador e sem registrar a visualização (ver det_baixar)
+            motor = (det_baixar.baixar_so_notificacao if p.get("so_notificacao")
+                     else det_baixar.baixar_notificacao)
+            r = motor(alvo, token, p.get("codigo") or "")
             self._json(200, r)
         except det_baixar.TokenExpirado as e:
             _DET_TOKEN["token"] = None

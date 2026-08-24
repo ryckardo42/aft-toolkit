@@ -325,6 +325,50 @@ def _salvar(destino: Path, conteudo: bytes) -> bool:
     return True
 
 
+def baixar_so_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
+    """Baixa SÓ o documento da notificação (o PDF), sem os arquivos que o
+    empregador entregou, sem o Relatório de Atendimento e sem o canal.
+
+    Serve para ler o que foi notificado sem puxar megabytes de anexos — o caso
+    de quem quer o histórico de notificações de uma empresa, não o conteúdo das
+    entregas.
+
+    **Não registra a visualização no DET, de propósito.** O download completo
+    faz as mesmas leituras que o site faz ao abrir a notificação, e com isso
+    apaga o triângulo amarelo de "atualização pendente". Aqui não: o AFT não
+    olhou o que a empresa entregou, então o alerta tem de continuar na tela
+    dele. Apagar o aviso sem ter visto o conteúdo seria mentir para o próprio
+    auditor."""
+    codigo = (codigo or "").strip().upper()
+    if not re.fullmatch(r"[A-Z0-9]{6,}", codigo):
+        raise ValueError(f"código de notificação inválido: {codigo!r}")
+    r = {"ok": True, "codigo": codigo, "pasta": pasta_os.name,
+         "so_notificacao": True, "baixados": 0, "ja_existiam": 0, "erros": []}
+    n = pesquisar_por_codigo(token, codigo)
+    if not n:
+        raise RuntimeError(f"notificação {codigo} não encontrada no DET "
+                           "(confira o código)")
+    uid = n.get("uid")
+    if not uid:
+        raise RuntimeError(f"notificação {codigo} veio sem uid na pesquisa")
+    raiz = pasta_do_pacote(pasta_os, codigo)
+    destino = raiz / f"notificacao-{codigo}.pdf"
+    r["pacote"] = str(raiz)
+    if destino.exists() and destino.stat().st_size > 0:
+        r["ja_existiam"] = 1
+        return r
+    raiz.mkdir(parents=True, exist_ok=True)
+    # numeroDeLinhas=0 é o que o próprio site passa no download direto
+    bruto = _requisicao(token, f"/notificacoes/{uid}/pdf",
+                        params={"numeroDeLinhas": 0}, timeout=TIMEOUT_BLOB)
+    if not bruto:
+        raise RuntimeError("o DET devolveu um PDF vazio")
+    destino.write_bytes(bruto)
+    r["baixados"] = 1
+    r["arquivo"] = str(destino)
+    return r
+
+
 def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     """Baixa os 2 PDFs e os arquivos de todos os itens para a pasta da OS.
     Um arquivo com erro não derruba os demais; token vencido derruba tudo
@@ -605,13 +649,14 @@ def _registrar_no_memory(pasta_os: Path, r: dict) -> None:
         r["erros"].append(f"registro no memory.md: {e}")
 
 
-def via_painel(pasta: str, codigo: str, porta: int = 8347) -> dict:
+def via_painel(pasta: str, codigo: str, porta: int = 8347,
+               so_notificacao: bool = False) -> dict:
     """POST /api/det-baixar no servidor local do painel (o token mora lá).
     `pasta` pode ser o caminho completo ou só o nome da pasta da OS.
     Devolve o JSON da resposta — inclusive o 409 de token vencido, para o
     chamador orientar o Sincronizar sem tratar exceção."""
-    corpo = json.dumps({"pasta": Path(pasta).name,
-                        "codigo": codigo}).encode("utf-8")
+    corpo = json.dumps({"pasta": Path(pasta).name, "codigo": codigo,
+                        "so_notificacao": bool(so_notificacao)}).encode("utf-8")
     req = urllib.request.Request(
         f"http://127.0.0.1:{porta}/api/det-baixar", data=corpo,
         headers={"Content-Type": "application/json"}, method="POST")
@@ -632,15 +677,21 @@ def via_painel(pasta: str, codigo: str, porta: int = 8347) -> dict:
 if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):  # console Windows é cp1252
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    if len(sys.argv) == 4 and sys.argv[1] == "--via-painel":
-        print(json.dumps(via_painel(sys.argv[2], sys.argv[3]),
+    argv = [a for a in sys.argv[1:] if a != "--so-notificacao"]
+    so_notif = "--so-notificacao" in sys.argv
+    if len(argv) == 3 and argv[0] == "--via-painel":
+        print(json.dumps(via_painel(argv[1], argv[2], so_notificacao=so_notif),
                          ensure_ascii=False, indent=2))
-    elif len(sys.argv) == 4:
-        print(json.dumps(baixar_notificacao(Path(sys.argv[1]), sys.argv[3],
-                                            sys.argv[2]),
+    elif len(argv) == 3:
+        motor = baixar_so_notificacao if so_notif else baixar_notificacao
+        print(json.dumps(motor(Path(argv[0]), argv[2], argv[1]),
                          ensure_ascii=False, indent=2))
     else:
-        print("uso: python det_baixar.py --via-painel \"<pasta da OS>\" <CODIGO>\n"
-              "     python det_baixar.py \"<pasta da OS>\" <CODIGO> <token>",
+        print("uso: python det_baixar.py [--so-notificacao] --via-painel "
+              "\"<pasta da OS>\" <CODIGO>\n"
+              "     python det_baixar.py [--so-notificacao] \"<pasta da OS>\" "
+              "<CODIGO> <token>\n\n"
+              "  --so-notificacao: baixa só o PDF do documento — sem os arquivos\n"
+              "  entregues pelo empregador, e sem apagar o alerta amarelo do DET",
               file=sys.stderr)
         sys.exit(1)

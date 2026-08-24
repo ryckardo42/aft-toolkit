@@ -395,6 +395,8 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - Sem o painel, o AFT cola os blocos manualmente no DET.
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 
+> **Faltou token do DET? Não improvise.** Siga o `~/.claude/skills/config/canal-token-det.md`: ele diz como obter o token **nesta sessão** (com ou sem navegador do assistente) e, sobretudo, o que NÃO tentar. Em particular, a página do DET **não** consegue falar com o painel local — quem tenta esse caminho conclui, errado, que a via principal não funciona. Falta de token nunca justifica inventar caminho novo nem dizer ao AFT que o toolkit está quebrado.
+
 ---
 
 ## Regras

@@ -134,10 +134,10 @@
 const ARCH = {
  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code e Codex (Windows)",
  "repo": "github.com/ryckardo42/aft-toolkit",
- "data": "2026-08-23",
+ "data": "2026-08-24",
  "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 51,
+  "skills": 52,
   "scripts": 42,
   "dados": 6,
   "commit": "ver `git log -1` — atualizado em 23/08/2026"
@@ -295,6 +295,11 @@ const ARCH = {
      "nome": "/aft-det-baixar",
      "role": "Baixa da API do DET, em segundos e sem navegador, os arquivos de uma notificação: o PDF, o Relatório de Atendimento e os itens entregues pelo empregador, tudo no pacote NOTIFICACOES/<COD> <dd-mm-aaaa>/ da OS. Usa o servidor do painel (POST /api/det-baixar) com o token que o Sincronizar da extensão abastece por 25 min — o mesmo motor do botão '⬇ baixar arquivos' do cartão. Aceita código, CNPJ ou nome do empregador; idempotente; registra o download na ficha.",
      "tech": "det_baixar.py --via-painel · servir_painel.py · model: sonnet"
+    },
+    {
+     "nome": "/aft-det-baixar-notificacoes",
+     "role": "Baixa SÓ o documento (PDF) de cada notificação de uma empresa — sem os arquivos entregues pelo empregador, sem o Relatório de Atendimento e sem o canal. Serve para ler o que foi notificado ou montar o histórico da empresa sem puxar anexos de centenas de MB. Grava no MESMO pacote NOTIFICACOES/<COD> <dd-mm-aaaa>/ da /aft-det-baixar, então o download completo depois se acumula sem duplicar. NÃO registra a visualização no DET: o alerta amarelo continua na tela, porque o AFT não olhou o que a empresa entregou.",
+     "tech": "det_baixar.py --so-notificacao (baixar_so_notificacao) · GET /notificacoes/{uid}/pdf?numeroDeLinhas=0 · model: sonnet"
     },
     {
      "nome": "/aft-nova-skill",

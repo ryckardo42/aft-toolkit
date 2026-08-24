@@ -59,12 +59,15 @@ Quase todo AFT tem, no DET, um **modelo de notificação** com a lista de docume
    - se ele disser que não quer modelo nenhum, siga sem — a skill funciona igual.
 
 > **Modelo de outro auditor funciona, e não precisa ser "público".** A busca usa o filtro "todos os modelos cadastrados"; basta a identificação e a CIF do dono. Nunca peça ao colega para marcar o modelo como público.
-2. **Puxe os itens** (precisa do painel no ar e do token — `~/.claude/skills/config/canal-token-det.md`):
-   ```bash
-   python ~/.claude/skills/_scripts/det_criar.py   # itens_do_modelo(token, id_modelo, cif)
-   ```
-   Na prática, quem chama é o painel; sem token, ofereça abrir o DET no seu navegador para o AFT logar.
+
+2. **Puxe os itens** (precisa do painel no ar e do token — `~/.claude/skills/config/canal-token-det.md`). Na prática quem chama é o painel; sem token, ofereça abrir o DET no seu navegador para o AFT logar.
 3. **Mostre os itens do modelo ao AFT** e deixe-o riscar o que não quer. Eles entram como estão — texto do modelo é do AFT, não se reescreve.
+
+> **Faltou token do DET? Não improvise.** O `canal-token-det.md` diz como obtê-lo
+> **nesta sessão** (com ou sem navegador do assistente) e, sobretudo, o que NÃO
+> tentar: a página do DET **não** consegue falar com o painel local, e quem tenta
+> esse caminho conclui, errado, que a via principal não funciona. Falta de token
+> nunca justifica inventar caminho novo nem dizer ao AFT que o toolkit quebrou.
 
 > **Sem token ou sem modelo, não trave.** Diga em uma linha que a lista virá só da FASE 1 e siga.
 
