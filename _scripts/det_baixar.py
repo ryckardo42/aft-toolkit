@@ -87,6 +87,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -843,25 +844,38 @@ def varredura(base: Path, porta: int = 8347) -> dict:
     r = {"ok": True, "sync": None, "os": [],
          "baixadas": 0, "sem_novidade": 0, "canceladas": 0, "erros": []}
 
-    req = urllib.request.Request(
-        f"http://127.0.0.1:{porta}/api/det-sync", data=b"{}",
-        headers={"Content-Type": "application/json"}, method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=600) as resp:
-            r["sync"] = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
+    # O painel roda sob um vigia (launchd/Agendador de Tarefas) que o reergue
+    # sozinho em ~10 s quando cai. Queda no meio do lote vira PAUSA, não
+    # falha: toda conexão recusada ganha uma segunda chance após 15 s (caso
+    # real de 24/08/2026: o servidor caiu entre dois downloads da primeira
+    # varredura e os 9 códigos seguintes falharam à toa).
+    ESPERA_VIGIA = 15
+
+    for tentativa in (1, 2):
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{porta}/api/det-sync", data=b"{}",
+            headers={"Content-Type": "application/json"}, method="POST")
         try:
-            corpo = json.loads(e.read().decode("utf-8"))
-        except Exception:
-            corpo = {}
-        if corpo.get("token_expirado"):
-            return {"ok": False, "token_expirado": True,
-                    "erro": corpo.get("erro") or "token do DET ausente/vencido"}
-        r["erros"].append(f"sync das fichas: {corpo.get('erro') or e.code}")
-    except Exception as e:
-        return {"ok": False, "painel_fora": True,
-                "erro": f"servidor do painel não respondeu ({e}) — "
-                        "suba com instalar_servidor_painel.py reiniciar"}
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                r["sync"] = json.loads(resp.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as e:
+            try:
+                corpo = json.loads(e.read().decode("utf-8"))
+            except Exception:
+                corpo = {}
+            if corpo.get("token_expirado"):
+                return {"ok": False, "token_expirado": True,
+                        "erro": corpo.get("erro") or "token do DET ausente/vencido"}
+            r["erros"].append(f"sync das fichas: {corpo.get('erro') or e.code}")
+            break
+        except Exception as e:
+            if tentativa == 1:
+                time.sleep(ESPERA_VIGIA)
+                continue
+            return {"ok": False, "painel_fora": True,
+                    "erro": f"servidor do painel não respondeu ({e}) — "
+                            "suba com instalar_servidor_painel.py reiniciar"}
 
     for pasta in sorted(p for p in base.iterdir()
                         if p.is_dir() and (p / "memory.md").is_file()):
@@ -884,6 +898,9 @@ def varredura(base: Path, porta: int = 8347) -> dict:
                 r["sem_novidade"] += 1
                 continue
             res = via_painel(pasta.name, codigo, porta)
+            if res.get("painel_fora"):  # painel caiu: o vigia o reergue
+                time.sleep(ESPERA_VIGIA)
+                res = via_painel(pasta.name, codigo, porta)
             if res.get("token_expirado"):
                 r.update(ok=False, token_expirado=True,
                          erro="token venceu no meio da varredura — renove e "
