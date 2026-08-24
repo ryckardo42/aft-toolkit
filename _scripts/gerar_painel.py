@@ -120,6 +120,10 @@ RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
 # captura o texto (opcional, sub-linhas antigas não o têm).
 RE_DET_MENSAGEM = re.compile(
     r'mensagem\s+no\s+canal[^:"]*(?::\s*"([^"]*)")?', re.IGNORECASE)
+# Resumo do status dos itens (o que o triângulo amarelo esconde), escrito pelo
+# det_sync com o marcador 📋: "📋 itens: 5 aguardando avaliação de prazo". O
+# grupo 1 captura o texto até o próximo separador " · " (ou o <!-- visto -->).
+RE_DET_ITENS = re.compile(r"📋\s*(itens:[^·<]+)", re.IGNORECASE)
 # Notificação cancelada pelo auditor no DET (status 2): sem efeito legal.
 # Aceita também o `status 2` cru — é como as sincronizações antigas gravaram a
 # sub-linha, antes de o sync conhecer o nome do status. Só casa dentro da
@@ -320,6 +324,7 @@ def parse_memory(path: Path) -> dict:
         lavrada = ciencia = ultima = None
         pendente = aguarda = mensagem = cancelada = False
         mensagem_txt = ""
+        itens_status = ""
         if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
             det = linhas_sec[idx + 1]
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
@@ -333,13 +338,16 @@ def parse_memory(path: Path) -> dict:
             mensagem = bool(m_msg)
             mensagem_txt = (m_msg.group(1) or "").strip() if m_msg else ""
             cancelada = bool(RE_DET_CANCELADA.search(det))
+            m_it = RE_DET_ITENS.search(det)
+            itens_status = m_it.group(1).strip() if m_it else ""
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
                      "linha": resto, "rotulo": rotulo, "notas": notas,
                      "lavrada": lavrada, "ciencia": ciencia,
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente,
                      "aguardando_ciencia": aguarda, "mensagem_canal": mensagem,
-                     "mensagem_txt": mensagem_txt, "cancelada": cancelada})
+                     "mensagem_txt": mensagem_txt, "cancelada": cancelada,
+                     "itens_status": itens_status})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -1016,6 +1024,9 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 .det-item .det-campo .val{color:var(--t1);font-weight:600}
 .det-item .campos .sep{color:var(--t3);opacity:.55}
 .det-item .notas{color:var(--t2);margin-top:2px}
+/* Resumo do status dos itens (o que o triângulo amarelo esconde): coral suave,
+   para diferenciar do texto do AFT e chamar o olho ao que aguarda decisão. */
+.det-item .itens-status{color:var(--coral-deep);margin-top:2px}
 .det-item .selo{margin:3px 0 0}
 /* Envelope laranja do DET: mensagem do empregador aguardando resposta do AFT */
 .det-item .cod .msg{font:700 11px var(--sans);background:#FCEBD8;color:#9A5B12;
@@ -1373,6 +1384,7 @@ function cartaoDets(o,i){
    (d.aguarda&&!d.cancelada?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
+   (d.itens_status&&!d.cancelada?'<div class="info itens-status" title="status de cada item na tela do DET — o que o triângulo amarelo esconde">📋 '+esc(d.itens_status)+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
    (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?'<button class="mini acao" '+
     'title="baixa da API do DET o PDF da notificação, o Relatório de Atendimento e os arquivos entregues, organizados por item na pasta da OS (precisa de um Sincronizar na aba do DET nos últimos 25 min)" '+
@@ -2016,6 +2028,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "mensagem_txt": d.get("mensagem_txt") or "",
                       "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
+                      "itens_status": d.get("itens_status") or "",
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
             "novas": o.get("novas") or [],
