@@ -36,6 +36,7 @@ e sai — pode chamar quantas vezes quiser.
 """
 from __future__ import annotations
 
+_erro_ticket = None
 try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
     import sys as _sys
     from pathlib import Path as _Path
@@ -43,11 +44,11 @@ try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-er
     for _p in (_aqui.parent, *(_a / "_scripts" for _a in _aqui.parents)):
         if (_p / "erro_ticket.py").is_file():
             _sys.path.insert(0, str(_p))
-            from erro_ticket import ativar as _ativar_ticket
-            _ativar_ticket(__file__)
+            import erro_ticket as _erro_ticket
+            _erro_ticket.ativar(__file__)
             break
 except Exception:
-    pass
+    _erro_ticket = None
 
 import datetime
 import html
@@ -58,6 +59,7 @@ import socket
 import subprocess
 import sys
 import threading
+import traceback
 import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -743,6 +745,41 @@ def garantir_painel(base: Path, painel: Path) -> None:
 
 # ── Servidor ─────────────────────────────────────────────────────────────────
 
+# Erro inesperado numa rota do painel NÃO passa pelo gancho do erro_ticket: cada
+# rota captura a própria exceção para responder JSON ao navegador, e por isso o
+# sys.excepthook instalado no topo deste arquivo nunca é chamado. Sem o que vem
+# abaixo, o AFT lia na tela "KeyError: 'ordem'" e ficava sem ticket nenhum — foi
+# exatamente o que aconteceu em 24/08/2026, e quem escreveu o ticket, à mão, foi
+# ele. O perfil promete o contrário: se o toolkit quebra, ele mesmo grava.
+_TICKETS_DA_SESSAO: set[tuple[str, str]] = set()
+
+
+def _ticket_do_painel(rota: str, e: Exception, o_que: str) -> str:
+    """Grava o ticket de correção deste erro e devolve o caminho (ou "").
+
+    O MESMO defeito na MESMA rota rende UM ticket por execução do servidor: o
+    painel é clicado muitas vezes, e uma pilha de tickets iguais só atrapalha
+    quem for ler. O servidor reinicia a cada publicação, então defeito que
+    persiste volta a render ticket."""
+    if _erro_ticket is None:
+        return ""
+    chave = (rota, f"{type(e).__name__}: {e}"[:120])
+    if chave in _TICKETS_DA_SESSAO:
+        return ""
+    _TICKETS_DA_SESSAO.add(chave)
+    try:
+        return str(_erro_ticket.registrar(
+            f"{type(e).__name__} ao {o_que} (painel do AFT Toolkit)",
+            mensagem=(f"O AFT pediu ao painel para {o_que} e recebeu um erro na "
+                      f"tela. A rota `{rota}` levantou uma exceção inesperada, "
+                      "que o servidor converteu em resposta 500 — nada foi "
+                      "gravado por ela."),
+            script="servir_painel.py", erro=traceback.format_exc(),
+            automatico=True))
+    except Exception:
+        return ""
+
+
 class Handler(BaseHTTPRequestHandler):
     base: Path  # definido em servir()
 
@@ -762,6 +799,18 @@ class Handler(BaseHTTPRequestHandler):
     def _json(self, code: int, obj: dict, extra: dict | None = None):
         self._responde(code, json.dumps(obj, ensure_ascii=False).encode("utf-8"),
                        "application/json; charset=utf-8", extra)
+
+    def _falha(self, e: Exception, o_que: str, extra: dict | None = None):
+        """Resposta 500 de um erro INESPERADO: em português, dizendo o que o
+        painel não conseguiu fazer, e com o ticket de correção já gravado.
+        `o_que` completa a frase "não consegui ..." — é o que o AFT tentou."""
+        caminho = _ticket_do_painel(self.path, e, o_que)
+        msg = f"não consegui {o_que} ({type(e).__name__}: {e})"
+        if caminho:
+            msg += (f". O toolkit gravou um ticket com o defeito em {caminho} — "
+                    "a /aft-erro completa o ticket antes de você enviá-lo.")
+        self._json(500, {"ok": False, "erro": msg, "ticket": caminho or None},
+                   extra)
 
     def _host_ok(self) -> bool:
         host = (self.headers.get("Host") or "").split(":")[0]
@@ -951,7 +1000,7 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._json(400, {"ok": False, "erro": str(e)})
         except Exception as e:
-            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+            self._falha(e, "criar o rascunho da notificação no DET")
 
     def _det_molde(self):
         """GET /api/det-molde?codigo=XXX — JSON cru de uma notificação real,
@@ -971,7 +1020,7 @@ class Handler(BaseHTTPRequestHandler):
             _DET_TOKEN["token"] = None
             self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
         except Exception as e:
-            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+            self._falha(e, "ler no DET a notificação que serve de molde")
 
     def _serve_doc(self):
         """GET /doc/<pasta-da-OS>/<arquivo>.md — renderiza o relatório em HTML.
@@ -1000,7 +1049,11 @@ class Handler(BaseHTTPRequestHandler):
             self._responde(404, html.escape(str(e)).encode("utf-8"),
                            "text/plain; charset=utf-8")
         except Exception as e:
-            self._responde(500, f"{type(e).__name__}: {e}".encode("utf-8"),
+            caminho = _ticket_do_painel(self.path, e, "abrir este documento da OS")
+            aviso = f"não consegui abrir o documento ({type(e).__name__}: {e})"
+            if caminho:
+                aviso += f"\n\nO toolkit gravou um ticket do defeito em {caminho}."
+            self._responde(500, aviso.encode("utf-8"),
                            "text/plain; charset=utf-8")
 
     def do_OPTIONS(self):
@@ -1048,7 +1101,7 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._json(400, {"ok": False, "erro": str(e)})
         except Exception as e:
-            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+            self._falha(e, "aplicar no memory.md a ação escolhida no painel")
 
     def _det_sync(self):
         """POST /api/det-sync — corpo {det_access_token}; chamado pela
@@ -1065,8 +1118,7 @@ class Handler(BaseHTTPRequestHandler):
             resultado = det_sync.sincronizar_todas(self.base, token)
             self._json(200, resultado, CORS_DET)
         except Exception as e:
-            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"},
-                       CORS_DET)
+            self._falha(e, "sincronizar as notificações do DET", CORS_DET)
 
     def _det_token(self):
         """POST /api/det-token — corpo {det_access_token}; chamado sozinho pela
@@ -1087,8 +1139,7 @@ class Handler(BaseHTTPRequestHandler):
                              "validade_s": max(0, int(_DET_TOKEN["exp"] - time.time()))},
                        CORS_DET)
         except Exception as e:
-            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"},
-                       CORS_DET)
+            self._falha(e, "guardar o token do DET", CORS_DET)
 
     def _det_baixar(self):
         """POST /api/det-baixar — corpo {pasta, codigo}; chamado pelo botão
@@ -1122,7 +1173,7 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._json(400, {"ok": False, "erro": str(e)})
         except Exception as e:
-            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+            self._falha(e, "baixar do DET os arquivos da notificação")
 
 
 def porta_ocupada(porta: int) -> bool:
