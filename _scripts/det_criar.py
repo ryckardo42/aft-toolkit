@@ -1026,6 +1026,31 @@ def _put_rascunho(token: str, uid: str, corpo: dict) -> dict:
     return json.loads(bruto.decode("utf-8")) if bruto else {}
 
 
+def corrigir_codigo_rascunho(token: str, uid: str) -> dict:
+    """CONSERTO pontual para rascunhos criados ANTES da correção de
+    24/08/2026 em `criar_rascunho`: relê o rascunho salvo (GET), copia o
+    código real (que já existe por fora, atribuído na criação da casca) para
+    dentro do próprio blob do rascunho, e regrava (PUT) — sem tocar em mais
+    nenhum campo (itens, endereços, observações ficam exatamente como estão).
+
+    NUNCA cria notificação nova: opera sobre o `uid` já existente. Devolve
+    {uid, codigo, corrigido: bool} — `corrigido=False` quando o rascunho já
+    estava com o código certo (idempotente, seguro de rodar de novo)."""
+    bruto = json.loads(det_baixar._requisicao(
+        token, f"/notificacoes/{uid}").decode("utf-8"))
+    codigo_real = bruto.get("codigo")
+    if not codigo_real:
+        raise RuntimeError(f"notificação {uid} ainda não tem código atribuído "
+                           "pelo DET — nada para corrigir")
+    corpo = json.loads(bruto.get("rascunho") or "{}")
+    if corpo.get("codigo") == codigo_real:
+        return {"uid": uid, "codigo": codigo_real, "corrigido": False}
+    corpo["codigo"] = codigo_real
+    salvo = _put_rascunho(token, uid, corpo)
+    return {"uid": uid, "codigo": (salvo or {}).get("codigo") or codigo_real,
+            "corrigido": True}
+
+
 def criar_rascunho(token: str, corpo: dict) -> dict:
     """ESCREVE: cria a casca (POST /notificacoes) e salva o rascunho
     (PUT /rascunho). NUNCA lavra. Devolve {uid, codigo?, url}. `corpo` é o que
@@ -1044,6 +1069,14 @@ def criar_rascunho(token: str, corpo: dict) -> dict:
     uid = criada.get("uid")
     if not uid:
         raise RuntimeError(f"casca criada sem uid: {str(criada)[:200]}")
+    # A casca já nasce com um código real (o DET o atribui no POST). Sem
+    # gravá-lo de volta no corpo do rascunho, o PUT seguinte grava
+    # `codigo:""` dentro do próprio blob que a tela de edição lê — daí a
+    # tela mostrar o campo Código em branco e o Lavrar falhar com NA-W048
+    # ("não é permitido alterar o código"), porque o site tenta trocar o
+    # código real por "" na lavratura. Constatado em produção em 24/08/2026.
+    if criada.get("codigo"):
+        corpo["codigo"] = criada["codigo"]
     salvo = _put_rascunho(token, uid, corpo)
     return {"uid": uid, "codigo": (salvo or criada).get("codigo"),
             "url": "https://auditor-det.sit.trabalho.gov.br/notificacao/"

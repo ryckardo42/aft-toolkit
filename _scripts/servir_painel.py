@@ -953,6 +953,32 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
 
+    def _det_corrigir_codigo(self):
+        """POST /api/det-corrigir-codigo — Corpo {uid}. Conserto pontual para
+        rascunhos criados antes da correção de 24/08/2026 em det_criar.py:
+        copia o código real (já atribuído pelo DET na casca) para dentro do
+        próprio blob do rascunho salvo, sem tocar em mais nenhum campo.
+        Idempotente. NUNCA cria notificação nova."""
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
+            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            uid = (p.get("uid") or "").strip()
+            if not uid:
+                raise ValueError("informe uid")
+            token = _token_atual()
+            if not token:
+                return self._json(409, {"ok": False, "token_expirado": True,
+                                        "erro": "sem token — sincronize no DET e tente de novo"})
+            res = det_criar.corrigir_codigo_rascunho(token, uid)
+            self._json(200, {"ok": True, **res})
+        except det_baixar.TokenExpirado as e:
+            _DET_TOKEN["token"] = None
+            self._json(409, {"ok": False, "token_expirado": True, "erro": str(e)})
+        except ValueError as e:
+            self._json(400, {"ok": False, "erro": str(e)})
+        except Exception as e:
+            self._json(500, {"ok": False, "erro": f"{type(e).__name__}: {e}"})
+
     def _det_molde(self):
         """GET /api/det-molde?codigo=XXX — JSON cru de uma notificação real,
         para servir de molde à construção do rascunho (subsistema det-criar,
@@ -1021,6 +1047,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._det_baixar()
         if self.path == "/api/det-criar":
             return self._det_criar()
+        if self.path == "/api/det-corrigir-codigo":
+            return self._det_corrigir_codigo()
         if self.path == "/api/recarregar":
             return self._recarregar()
         if self.path != "/api/acao":
