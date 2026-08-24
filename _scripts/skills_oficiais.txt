@@ -21,6 +21,7 @@ aft-cnpjs-endereco
 aft-consulta
 aft-det-630
 aft-det-baixar
+aft-det-baixar-notificacoes
 aft-diario
 aft-dimensionamento-sesmt-nr04
 aft-doctor
