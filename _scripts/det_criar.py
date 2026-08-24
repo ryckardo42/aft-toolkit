@@ -629,14 +629,40 @@ def _prazo_iso(dias: int, hoje: datetime.date | None = None) -> str:
     return (hoje + datetime.timedelta(days=dias)).strftime("%Y-%m-%d")
 
 
-def ids_do_memory(texto: str) -> tuple[str, str]:
-    """(ri, cnpj) do front-matter do memory.md. Só dígitos."""
+def _campo_do_memory(corpo: str, chave: str) -> str:
+    m = re.search(rf'^{chave}\s*:\s*"?([^"\n]+)"?', corpo, re.MULTILINE)
+    return m.group(1) if m else ""
+
+
+def _corpo_do_memory(texto: str) -> str:
     fm = re.match(r"^---\s*\n(.*?)\n---", texto, re.DOTALL)
-    corpo = fm.group(1) if fm else texto[:800]
+    return fm.group(1) if fm else texto[:800]
+
+
+def ris_do_memory(texto: str) -> list[str]:
+    r"""TODOS os RIs declarados no front-matter do memory.md.
+
+    Uma OS de GRUPO ECONOMICO tem uma pasta so e MAIS DE UM RI -- uma empresa
+    por RI --, e a ficha os declara na mesma linha: ri: "320479889, 320496481".
+    Enquanto o campo era lido com re.sub(r"\D", "", ...), os separadores sumiam
+    e os numeros se emendavam num RI de 18 digitos, que nao existe. Sem excecao
+    e sem aviso: a notificacao seguiria para um RI invalido, e so se descobriria
+    depois de gravada.
+    """
+    return re.findall(r"\d+", _campo_do_memory(_corpo_do_memory(texto), "ri"))
+
+
+def ids_do_memory(texto: str) -> tuple[str, str]:
+    """(ri, cnpj) do front-matter do memory.md. So digitos.
+
+    Havendo mais de um RI na ficha, devolve o PRIMEIRO: quem recusa a
+    ambiguidade e `preparar_de_os`, que exige o RI explicito em vez de
+    presumir por qual das empresas do grupo a notificacao deve sair."""
+    corpo = _corpo_do_memory(texto)
+    ris = ris_do_memory(texto)
     def campo(ch):
-        m = re.search(rf'^{ch}\s*:\s*"?([^"\n]+)"?', corpo, re.MULTILINE)
-        return re.sub(r"\D", "", m.group(1)) if m else ""
-    return campo("ri"), (campo("cnpj") or campo("cpf") or campo("caepf"))
+        return re.sub(r"\D", "", _campo_do_memory(corpo, ch))
+    return (ris[0] if ris else ""), (campo("cnpj") or campo("cpf") or campo("caepf"))
 
 
 def enriquecer(payload: dict, token: str, ri: str,
@@ -723,6 +749,7 @@ def _prazo_para_iso(prazo) -> str | None:
 def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
                    prazo_dias=None, token: str = "", id_modelo=None, cif=None,
                    prazo=None, tipo=None, retorno=None, preassinalado=None,
+                   ri=None,
                    overrides=None) -> tuple[dict, list[dict]]:
     """Lê a TN-NCO e o memory.md da OS e devolve (payload, itens) prontos —
     sem escrever nada.
@@ -742,7 +769,23 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
             f"nenhum item reconhecido em {arquivo_tn} — esperado uma seção "
             "'## Itens' (um parágrafo por item) ou linhas no formato "
             "'*Título* - norma: texto [ementa]'")
-    ri, cnpj = ids_do_memory((pasta_os / "memory.md").read_text(encoding="utf-8"))
+    _mem = (pasta_os / "memory.md").read_text(encoding="utf-8")
+    _ris = ris_do_memory(_mem)
+    _, cnpj = ids_do_memory(_mem)
+    if ri:
+        ri = re.sub(r"\D", "", str(ri))
+        if _ris and ri not in _ris:
+            raise RuntimeError(
+                "RI %s não está na ficha da OS (declarados: %s)"
+                % (ri, ", ".join(_ris)))
+    elif len(_ris) > 1:
+        # OS de grupo economico: uma pasta, um RI por empresa. Escolher
+        # sozinho seria presumir contra qual delas a notificacao sai.
+        raise RuntimeError(
+            "a ficha da OS declara %d RIs (%s) — informe qual usar no "
+            "campo 'ri' da chamada" % (len(_ris), ", ".join(_ris)))
+    else:
+        ri = _ris[0] if _ris else ""
     if not ri:
         raise RuntimeError("RI não encontrado no memory.md da OS")
 
