@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-checar_rt_autos.py - coerencia entre as irregularidades do RT (.docx) e os autos
+checar_rt_autos.py - coerencia entre as irregularidades do RT (.docx ou .pdf) e os autos
 (autos.md). Cobre o RT nos dois formatos do montar_rt.py: "topico" (secao 4
 unica) e "objeto" (um bloco de irregularidades por objeto interditado).
 
@@ -18,7 +18,7 @@ NAO faz casamento por subitem (33.3.1 x 33.3.2 etc.) porque a relacao item-de-NR
 ementa e muitos-para-muitos e geraria ruido. Lista os dois lados para conferencia manual.
 
 Uso:
-    python checar_rt_autos.py "<RT.docx>" "<autos.md>"
+    python checar_rt_autos.py "<RT.docx|RT.pdf>" "<autos.md>"
 Exit 0 = sem divergencia detectada; 1 = ha divergencia (revisar).
 """
 
@@ -69,10 +69,92 @@ def eh_legenda(texto):
     return bool(RE_LEGENDA.match(texto))
 
 
+# No RT os rotulos vem com o "(S)"/"(ES)" do template ("IRREGULARIDADE(S):",
+# "FATOR(ES) DE RISCO E/OU RISCO(S) RELACIONADO(S):") e, impressos em PDF, com a
+# numeracao automatica do Word ja resolvida na frente ("4. IRREGULARIDADE(S):").
+RE_IRREG_PDF = re.compile(
+    r"^(?:\d+(?:\.\d+)*\.?\s*)?IRREGULARIDADE(?:\(S\)|S)?\s*:?\s*$", re.IGNORECASE)
+RE_FATOR_PDF = re.compile(
+    r"^(?:\d+(?:\.\d+)*\.?\s*)?FATOR(?:\(ES\)|ES)?\s+DE\s+RISCO", re.IGNORECASE)
+RE_RODAPE_PDF = re.compile(r"^T\.\s*(Interdi|Embargo)", re.IGNORECASE)
+# no PDF a ementa vem precedida do marcador da lista, que cada gerador imprime de
+# um jeito ("-", a bala, ou lixo como "(cid:127)"): em vez de tentar reconhecer o
+# marcador, aceita o codigo da ementa se ele estiver no comeco da linha
+PREFIXO_MAX_PDF = 12
+
+
+def ler_secao4_rt_pdf(rt_path):
+    """Mesma leitura, para RT em PDF.
+
+    No Modo B da skill (Termo ja lavrado, so faltam os autos) o RT quase nunca e
+    o .docx que o montar_rt.py gerou: e o PDF impresso pelo Sistema Auditor, que
+    e o que o AFT tem em maos. Antes desta funcao o script chamava
+    docx.Document() direto no PDF e morria com PackageNotFoundError -- traceback
+    cru, ticket automatico, e a conferencia RT x autos simplesmente nao rodava
+    justamente no caso mais comum.
+
+    Sem camada de texto (PDF escaneado), devolve (None, None): quem chama ja
+    trata isso como "nao encontrei o bloco de irregularidades".
+    """
+    try:
+        import pdfplumber
+    except ImportError:
+        print("AVISO: RT em PDF exige a biblioteca pdfplumber "
+              "(pip install pdfplumber). Conferencia nao realizada.",
+              file=sys.stderr)
+        return None, None
+
+    with pdfplumber.open(rt_path) as pdf:
+        linhas = []
+        for pagina in pdf.pages:
+            for linha in (pagina.extract_text() or "").splitlines():
+                linha = linha.strip()
+                # o rodape se repete em toda pagina e traz o numero do termo,
+                # que o CODE_RE confundiria com codigo de ementa
+                if linha and not RE_RODAPE_PDF.match(linha):
+                    linhas.append(linha)
+
+    inicios = [i for i, t in enumerate(linhas) if RE_IRREG_PDF.match(t)]
+    if not inicios:
+        return None, None
+
+    itens, textos = [], []
+    for ini in inicios:
+        buffer = ""
+        for t in linhas[ini + 1:]:
+            if RE_FATOR_PDF.match(t):
+                break
+            textos.append(t)
+            # no PDF a ementa quebra em varias linhas; um item novo comeca
+            # sempre por um codigo XXXXXX-X no comeco da linha
+            m = CODE_RE.search(t)
+            if m and m.start() <= PREFIXO_MAX_PDF:
+                if buffer:
+                    itens.append(buffer.strip())
+                buffer = t[m.start():]        # descarta o marcador da lista
+            elif buffer:
+                buffer += " " + t
+        if buffer:
+            itens.append(buffer.strip())
+
+    itens = [t for t in itens if t and not eh_legenda(t)]
+    # ementa repetida entre objetos rende UM auto so (regra 7.1 da skill)
+    vistos, unicos = set(), []
+    for t in itens:
+        m = CODE_RE.search(t)
+        chave = m.group(0) if m else t
+        if chave not in vistos:
+            vistos.add(chave)
+            unicos.append(t)
+    return unicos, "\n".join(textos)
+
+
 def ler_secao4_rt(rt_path):
     """Retorna (itens_de_irregularidade, texto_dos_blocos_de_irregularidade).
 
-    Aceita os tres layouts de RT:
+    Aceita RT em .docx e em .pdf (ver ler_secao4_rt_pdf).
+
+    Nos .docx, aceita os tres layouts de RT:
       - topico atual: os titulos usam numeracao AUTOMATICA do Word, entao o
         texto e so "IRREGULARIDADE(S):" (sem o "4.") e as irregularidades sao
         paragrafos de prosa ANTES do bloco fixo da metodologia da NR-3;
@@ -85,8 +167,19 @@ def ler_secao4_rt(rt_path):
     Em todos, as tabelas 3.1/3.2/3.3 ficam de fora: doc.paragraphs nao inclui o
     conteudo de tabelas.
     """
+    if os.path.splitext(rt_path)[1].lower() == ".pdf":
+        return ler_secao4_rt_pdf(rt_path)
+
     import docx
-    doc = docx.Document(rt_path)
+    try:
+        doc = docx.Document(rt_path)
+    except Exception as e:
+        # arquivo que nao e um .docx valido (RT salvo com outro formato, arquivo
+        # truncado): mensagem util em vez de traceback do python-docx
+        print(f"ERRO: nao consegui abrir o RT como .docx: {e}", file=sys.stderr)
+        print("Formatos aceitos: .docx (gerado pelo montar_rt.py) e .pdf "
+              "(impresso pelo Sistema Auditor).", file=sys.stderr)
+        return None, None
     paras = doc.paragraphs
 
     def eh_titulo_irregularidade(t):
@@ -163,7 +256,7 @@ def ler_autos(autos_path):
 
 def main():
     if len(sys.argv) != 3:
-        print("uso: python checar_rt_autos.py <RT.docx> <autos.md>", file=sys.stderr)
+        print("uso: python checar_rt_autos.py <RT.docx|RT.pdf> <autos.md>", file=sys.stderr)
         sys.exit(2)
     rt_path, autos_path = sys.argv[1], sys.argv[2]
     for p in (rt_path, autos_path):

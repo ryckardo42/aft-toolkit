@@ -6,6 +6,361 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 23/08/2026
+<!-- commit: lre-esocial-skill -->
+
+**O Livro de Registro de Empregados do eSocial virou painel dentro da pasta da OS.** Se
+você já baixou os dados de uma empresa no SISFGTS, a nova `/aft-lre-esocial` lê aquele
+arquivo do LRE e monta, na pasta da auditoria, uma subpasta `eSocial/` com:
+
+- **`LRE_painel.html`** — painel para abrir com duplo clique: busca por nome, CPF,
+  matrícula ou cargo, filtros (ativos, desligados, indício, PCD), colunas ordenáveis e
+  detalhe de cada trabalhador;
+- **`LRE_vinculos.csv`** — a planilha dos vínculos, que abre em colunas no Excel;
+- **`lre-esocial.md`** — resumo **sem nome e sem CPF**, que aparece em "Relatórios da OS"
+  no `/aft-painel`.
+
+Dispare com `/aft-lre-esocial`, "puxa o LRE dessa empresa", "quem está registrado no
+eSocial" ou "quadro de empregados". Sem argumento, a habilidade oferece as OS que já têm
+dados baixados. Ela **só lê** o SISFGTS — nunca escreve nele nem no banco de dados dele.
+
+**No `/aft-painel`**, a OS ganha um cartão do eSocial com dois números — *ativos* e
+*indício de registro tardio* — e o link para abrir o painel do LRE.
+
+**Sobre o indício de registro tardio**, três cuidados que evitam perseguir vínculo à toa:
+
+1. **Só conta admissão a partir de 02/01/2026**, quando o registro eletrônico passou a ser
+   obrigatório para todas as empresas. Ao relatar, o número vem sempre com a data — "12
+   indícios entre as admissões desde 02/01/2026" —, nunca solto, porque sem o recorte a
+   informação engana.
+2. **Só admissão nova.** Trabalhador cedido, transferido de empresa do mesmo grupo ou
+   vindo de sucessão carrega a data de admissão original, e o registro aparece muito
+   depois sem que haja atraso nenhum. Num caso real, 26 de 38 "indícios" eram
+   exatamente isso.
+3. É **indício**, não constatação: o que o painel aponta você confirma nos documentos.
+
+**Na `/aft-preparacao-acao-fiscal`**, isso entrou sozinho: se houver dados baixados
+daquele CNPJ, o efetivo do LRE passa a valer sobre a Relação de Vínculos, e o perfil
+ocupacional é confrontado com o CNAE antes da visita. Se não houver, a preparação segue
+sem avisar nada — nem toda ação fiscal usa o SISFGTS.
+
+---
+
+## 23/08/2026
+<!-- commit: consulta-cnpj-rfb -->
+
+**A OS agora nasce sabendo quem é a empresa.** Quando você informa o CNPJ, o toolkit
+consulta sozinho o cadastro da Receita Federal e preenche o que antes você digitava à
+mão: razão social, município, endereço, telefones, CNAE principal (e daí o grau de risco
+da NR-04), natureza jurídica, porte e Simples Nacional. É a mesma consulta do cartão CNPJ
+que você já faz no site da Receita — dado público de empresa, sem login nem senha.
+
+Vale em duas habilidades:
+
+- **`/aft-nova-auditoria`** — ao cadastrar a auditoria, a ficha `memory.md` já sai
+  preenchida. O que **você** informou sempre prevalece: se o cadastro divergir, o toolkit
+  mantém o seu dado e avisa a diferença em uma linha — pode ser filial, endereço
+  desatualizado na Receita, ou engano de digitação. Quem decide é você.
+- **`/aft-preparacao-acao-fiscal`** — a consulta acontece **antes** da busca na internet,
+  para a pesquisa já partir da razão social exata. E alimenta o resto do planejamento: o
+  CNAE vai para o dimensionamento de SESMT e CIPA, o endereço vai para o acesso no mapa e
+  para a checagem de outros CNPJs no mesmo local.
+
+**Dois avisos que a preparação passa a te dar antes de você sair de casa:**
+
+1. **Empresa que não está ATIVA** (baixada, inapta, suspensa), com a data. Pode não haver
+   empresa no endereço, ou haver sucessão.
+2. **Atividade de risco escondida nos CNAEs secundários.** Acontece muito: o CNAE
+   principal é de escritório, e nos secundários aparecem imunização de pragas, instalação
+   hidráulica, limpeza. Muda o EPI, a NR aplicável e o que procurar no local. É indício
+   para orientar o olhar — a atividade real se confirma na inspeção.
+
+**O que a consulta não traz:** o e-mail do empregador. A Receita não distribui esse campo
+nos dados abertos (ele aparece no cartão CNPJ como "ENDEREÇO ELETRÔNICO"). E o pacote não
+diz de quando é o retrato — para ato com efeito legal, confirme na fonte oficial. Empregador
+pessoa física (CPF/CAEPF) não é consultado.
+
+Se faltar internet ou o CNPJ não for encontrado, nada trava: o toolkit avisa em uma linha e
+segue o fluxo normal.
+
+Para consultar avulso, fora das habilidades:
+
+```
+python ~/.claude/skills/_scripts/consulta_cnpj.py 00000000000191
+```
+
+---
+
+## 23/08/2026
+<!-- commit: lre-ferias-folha -->
+
+**A `/aft-lre-esocial` agora audita férias e remuneração, não só o registro.** Quando o
+download do eSocial no SISFGTS é feito com a opção **"LRE e demais registros"**, vêm
+junto os afastamentos e as bases de FGTS da folha — e a habilidade passou a usar os dois
+para responder duas perguntas que antes exigiam pedir documento à empresa:
+
+**1. Quem está com férias atrasadas?** A análise de férias reconstitui os períodos
+aquisitivos de cada trabalhador desde a admissão e casa cada um com as férias que o
+eSocial registra. O painel `Ferias_painel.html` (mais planilha e resumo) aponta, por
+trabalhador:
+
+- **férias vencidas** — período concessivo estourado sem gozo suficiente: indício da
+  dobra do art. 137 da CLT;
+- **férias gozadas fora do prazo** — o trabalhador até gozou, mas depois do prazo
+  concessivo: a dobra é devida mesmo assim (Súmula 81 do TST);
+- **prazo vencendo** nos próximos 60 dias — bom para notificar antes de virar infração;
+- **conferir abono** — gozo de 20 a 29 dias pode ser regular se houve venda de até 10
+  dias (art. 143), que o eSocial não mostra; por isso a habilidade só aponta dobra firme
+  com gozo abaixo de 20 dias, e o resto vem como "conferir".
+
+Quatro proteções evitam acusação injusta: só entram períodos iniciados depois que a
+empresa (e cada trabalhador, no caso de sucessão ou cessão) chegou ao eSocial — férias
+anteriores podem ter sido gozadas sem deixar rastro no arquivo; as faltas que reduzem o
+direito (art. 130) não constam, então tudo é **indício** a confirmar nos recibos;
+afastamento previdenciário longo zera o período, como manda o art. 133; e o abono é
+sempre presumido a favor da empresa. Num teste com empresa real, ignorar a primeira
+regra multiplicava os indícios por dez — todos falsos.
+
+**2. A folha declarada fecha com os vínculos?** A análise da remuneração monta a grade
+mês a mês de cada trabalhador (`Folha_painel.html`, mais planilha e resumo) e aponta:
+
+- **buraco na folha** — mês dentro do vínculo sem nenhuma base declarada e sem
+  afastamento que o justifique;
+- **ano sem base de 13º**;
+- **últimos 3 meses abaixo de 90% do salário contratual** do LRE — possível pagamento
+  "por fora" (a comparação é só com meses recentes: mês antigo abaixo do salário atual é
+  normal para quem teve aumento);
+- **dispensado pelo empregador sem base rescisória** de FGTS declarada.
+
+Um limite importante, dito com todas as letras no painel: o arquivo traz a base
+**declarada**, não o recolhimento — FGTS em atraso quem aponta é o próprio SISFGTS.
+
+**A leitura já vem pronta.** O painel de férias abre com a seção **"Leitura da
+auditoria"**: os indícios caso a caso, em frases prontas — quem tem férias vencidas e de
+qual período, quem está com o prazo vencendo (avisando quando o trabalhador está de
+férias neste momento), quem provavelmente vendeu 10 dias. E uma proteção a mais de
+privacidade: **os painéis e planilhas de férias e folha mostram o CPF mascarado**
+(`***.***.NNN-NN`) — matrícula e nome bastam para o trabalho; o CPF completo fica só no
+painel do LRE, que é o livro de registro propriamente.
+
+Dispare com "férias vencidas", "quem está sem gozar férias", "buraco na folha" ou rode a
+`/aft-lre-esocial` normalmente: ela oferece as duas análises quando os dados existem, e
+avisa qual opção marcar no SISFGTS quando faltam. Tudo local, como o resto da habilidade:
+os painéis abrem sem internet e não fazem requisição nenhuma — nada sai da sua máquina.
+
+---
+
+## 23/08/2026
+<!-- commit: cnpjs-endereco-filtro-cep -->
+
+**Correção importante na busca de CNPJs por endereço: a lista podia vir errada sem
+avisar.** Na descoberta por CEP da `/aft-cnpjs-endereco`, o assistente preenchia o
+campo de CEP do site de consulta de um jeito que o site não reconhecia: o CEP
+aparecia escrito na tela, mas a busca saía **sem filtro nenhum** e devolvia a base
+inteira do país. O resultado era uma lista de vinte CNPJs e razões sociais reais, com
+toda a cara de resposta legítima, mas de empresas sem nenhuma relação com o endereço
+fiscalizado — e nada na tela indicava o erro. Agora o CEP é digitado com teclado de
+verdade, que o site aceita, e a habilidade passou a **conferir o resultado antes de
+usá-lo**: contagem na casa dos milhões significa filtro não aplicado, e a lista é
+descartada e a busca refeita, nunca repassada ao AFT. Descoberto pelo colega Diego
+rodando a habilidade numa fiscalização real, no dia seguinte ao lançamento.
+
+**E uma lição que ficou escrita na habilidade: CEP não é lote.** Em prédio ou
+condomínio com CEP exclusivo, a busca por CEP isola o imóvel e funciona muito bem. Em
+distrito industrial, bairro ou via longa, um único CEP cobre centenas de empresas —
+no caso real foram 645 CNPJs no mesmo CEP, dos quais 170 ativos, e a listagem
+gratuita mostra só 20 por página: nem a empresa da Ordem de Serviço nem a que se
+procurava apareciam. Nesse cenário a habilidade agora diz com todas as letras que a
+descoberta por CEP foi inconclusiva e parte para o cruzamento cadastral com os CNPJs
+que o AFT já conhece — que, nesse mesmo caso, encontrou sócio em comum entre as duas
+empresas, indício mais forte do que a simples proximidade física.
+
+---
+
+## 23/08/2026
+<!-- commit: simples-nacional-dupla-visita -->
+
+**A preparação agora lê o Simples Nacional para avisar sobre a dupla visita.** O porte
+que aparece no cadastro da Receita (ME/EPP) é declarado pela própria empresa e costuma
+ficar desatualizado: empresa que cresceu segue constando como pequena por anos. Já a
+opção pelo Simples Nacional é confiável na direção que importa: **quem é optante é,
+necessariamente, ME ou EPP** — e portanto candidata ao critério de dupla visita do
+art. 627-A da CLT.
+
+Na `/aft-preparacao-acao-fiscal`, a consulta do CNPJ passa a concluir isso para você,
+antes de você sair de casa:
+
+- **Empresa optante do Simples** → entra nos pontos de atenção da visita: "optante desde
+  dd/mm/aaaa, empresa ME/EPP, candidata à dupla visita". A decisão de aplicar o critério
+  continua sendo sua, na autuação — e as exceções (falta de registro, grave e iminente,
+  reincidência, fraude, embaraço) continuam valendo.
+- **Porte ME/EPP no cadastro, mas sem opção pelo Simples** → o toolkit avisa que o porte
+  sozinho não basta para presumir dupla visita, cruzando com a atividade real ("um
+  frigorífico com atacado de carnes e transporte próprio dificilmente ainda é ME"). Se a
+  empresa já foi optante e saiu, ele mostra a data da exclusão — indício de que cresceu
+  além do porte. **E o checklist de documentos ganha um item obrigatório**: a notificação
+  (NAD) passa a pedir a Escrituração Contábil Fiscal (ECF) dos dois últimos
+  anos-calendário, com os recibos de transmissão — não apresentada, a ação fiscal
+  prossegue considerando o porte como não comprovado. É a empresa quem comprova o porte
+  que declara; você pode riscar o item, como qualquer outro.
+
+O dado vem dos dados abertos da Receita, atualizados todo mês (bem mais frescos que o
+porte cadastral). Para a certeza do dia, a consulta atualizada é o portal do Simples
+Nacional ("Consulta Optantes") — ele exige resolver um captcha, então essa confirmação é
+manual, sua; a preparação te entrega o link pronto.
+
+Na consulta avulsa (`consulta_cnpj.py`), a linha "Regime" agora mostra desde quando a
+empresa é optante e alerta quando o porte cadastral é ME/EPP sem Simples.
+
+---
+
+## 23/08/2026
+<!-- commit: cartao-esocial-painel -->
+
+**O cartão do eSocial no painel da OS agora mostra férias e folha.** O cartão que se
+chamava "LRE eSocial" virou **"eSocial"** e, além dos ativos e do indício de registro
+tardio, ganhou duas linhas de números quando as análises novas já rodaram: férias
+(vencidas, gozo fora do prazo, prazo vencendo) e folha (buracos, ano sem 13º, sem base
+rescisória) — em vermelho o que merece atenção. E em vez de um link, até três: **abrir o
+painel do LRE**, **painel de férias** e **painel da folha**, cada um em outra aba.
+
+Como antes, o cartão só mostra números agregados, sem nome e sem CPF; os painéis
+completos continuam abrindo só no modo interativo, servidos localmente de dentro da
+pasta da OS. Quem ainda não rodou as análises de férias e folha vê o cartão como sempre
+foi, só com o LRE.
+
+---
+
+## 23/08/2026
+<!-- commit: checar-rt-autos-pdf -->
+
+**Interdição: a conferência entre o Relatório Técnico e os autos agora aceita o RT em
+PDF.** Quando o Termo de Interdição já está lavrado e o que falta são os autos, o
+relatório que o AFT tem em mãos é o PDF impresso, não o Word que o toolkit gerou. Nessa
+situação a conferência automática (a que avisa quando o RT e os autos não batem) quebrava
+com erro de programa e abria ticket, e a checagem simplesmente não acontecia — justo no
+caso mais comum. Agora ela lê o RT tanto em Word quanto em PDF, nos dois formatos de
+relatório (por tópico e por objeto), contando uma ementa repetida em vários objetos uma
+vez só, como manda a regra de um auto por ementa. Correção do colega Diego.
+
+**Na revisão, um segundo defeito foi corrigido antes de ir para a sua máquina.** A
+primeira versão procurava no PDF um título escrito "IRREGULARIDADES", mas o relatório
+escreve "4. IRREGULARIDADE(S):" — com os parênteses e com o número da seção. O resultado
+seria uma conferência que nunca encontrava nada e avisava "não encontrei o bloco de
+irregularidades" em todo RT de verdade: sem quebrar, mas sem conferir. Agora os títulos
+são reconhecidos como aparecem no documento, e as ementas são localizadas pelo próprio
+código (formato 000000-0), sem depender do marcador de lista que cada impressora de PDF
+desenha de um jeito. Testado com relatório fictício nos dois formatos e nas duas mídias.
+
+**Limite que vale conhecer:** RT escaneado (foto do papel, sem texto de verdade dentro do
+PDF) não dá para conferir — a habilidade avisa. E, no PDF, o relatório precisa citar as
+ementas pelo código; se ele citar só itens de NR, a conferência acusa divergência de
+contagem para chamar a sua atenção, em vez de dizer que está tudo certo.
+
+---
+
+## 23/08/2026
+<!-- commit: relatorio-atendimento-completo -->
+
+**O Relatório de Atendimento que o `/aft-det-baixar` traz agora vem completo — com o que
+a empresa entregou e o que deixou de entregar.** Até aqui o toolkit pedia ao DET a versão
+"Somente Não Entregues" desse relatório, que é o que o site oferece marcado por padrão.
+Ela é um relatório de exceção: lista apenas as omissões. Numa empresa que atendeu tudo, o
+PDF saía dizendo "não consta item para o critério selecionado", com zero itens e zero
+arquivos — com cara de download vazio ou defeituoso. Pior: quem abrisse o arquivo
+esperando o inventário do que a empresa mandou leria exatamente o contrário do que ele
+diz.
+
+O DET emite esse relatório em três versões (é o rádio "Itens da notificação" do próprio
+site): somente não entregues, somente entregues e **todos os itens**. O toolkit passou a
+pedir sempre a terceira, que contém as outras duas. O PDF que vai para a pasta da
+notificação agora traz, item por item: o status, o histórico de eventos (prorrogações e
+justificativas) e, para cada arquivo enviado, nome, data, tamanho e os códigos MD5 e SHA1
+— a identificação oficial que prova que o arquivo analisado é o mesmo que a empresa
+transmitiu. E continua trazendo o que ficou sem entrega, que é a prova documental do
+art. 630, § 4º, da CLT.
+
+Nada muda no seu uso: é o mesmo botão e o mesmo comando de sempre, e o arquivo continua
+sendo regravado a cada download (entrega nova deixa o relatório velho). Notificações
+baixadas antes desta mudança ficam com a versão antiga no disco até o próximo download,
+que já traz a completa.
+
+---
+
+## 23/08/2026
+<!-- commit: nco-so-sem-auto-e-docx -->
+
+**A NCO deixou de repetir o que já virou auto de infração.** A regra da `/aft-tn-nco`
+mudou de lógica: antes ela puxava os autos lavrados para notificar tudo o que foi
+autuado; agora ela puxa os autos lavrados justamente para **excluir** esses itens da
+notificação. O raciocínio, vindo de fiscalização real: o auto de infração já é, por si,
+meio de coerção — a multa e o risco de agravamento pressionam a correção — e notificar
+de novo o mesmo fato confunde a empresa sobre o que ainda precisa corrigir e o que já
+foi punido. A NCO passa a servir ao que não tem auto: itens que você decidiu não autuar
+e, principalmente, a dupla visita, em que a autuação fica diferida para a segunda
+visita. Se você pedir o comportamento antigo ("notifica tudo o que foi autuado"), a
+skill avisa que a convenção mudou e pergunta antes de incluir. De quebra, além do texto
+para colar no DET, a skill agora grava também um `.docx` da notificação em
+`NOTIFICACOES/`, no padrão visual do toolkit — para leitura confortável e arquivo; quem
+vai ao DET continua sendo o texto puro do chat.
+
+---
+
+## 23/08/2026
+<!-- commit: autos-padronizados-e-validador -->
+
+**Autos de uma mesma leva saem padronizados, e o validador pega defeito de forma que o
+Sistema Auditor aceitava calado.** Melhorias colhidas numa fiscalização real de agosto:
+
+- A `/aft-auditoria-geral` agora fixa a frase de abertura do bloco de irregularidade —
+  uma fórmula para achado de campo, outra para achado documental, idêntica em todos os
+  autos da mesma fonte — e um fechamento padronizado de enquadramento. Também passa a
+  exigir que cada auto nomeie explicitamente a máquina ou equipamento envolvido (conferido
+  na fonte primária, nunca de memória) e a impedir que duas ementas da mesma NR, uma geral
+  e uma específica, autuem o mesmo ponto físico da máquina (princípio da especialidade).
+  Antes de apresentar, a skill relê a leva inteira lado a lado e corrige divergências.
+- Nos autos de AET (`/aft-aet-auditoria`), as evidências saem em parágrafos corridos, sem
+  lista numerada — no Sistema Auditor a lista virava um bloco ilegível.
+- O `/aft-gera-ai` ganhou avisos duros contra dois erros silenciosos que aconteceram de
+  verdade: subtítulo escrito sem acento ("FISCALIZACAO") e o passo do recuo de parágrafo
+  esquecido ao regenerar o TXT. E o validador (`validar_txt.py`) agora confere as três
+  coisas no arquivo final: subtítulos I/II/III presentes, acentuação correta e recuo
+  aplicado — defeitos que o Sistema Auditor importa sem reclamar e só apareciam quando
+  você conferia o auto já dentro do sistema.
+- Para quem usa Windows: o login do NotebookLM voltou a encontrar o Python certo na
+  instalação mais nova do pipx.
+
+---
+
+## 23/08/2026
+<!-- commit: porte-do-auto-lavrado -->
+
+**O porte da empresa e o número de trabalhadores vêm de graça do primeiro auto lavrado.**
+Várias skills perguntam o porte (regra de dupla visita, pares de ementa ME/EPP) e o
+número de trabalhadores (CIPA, SESMT, NR-24) — dados que, assim que existe um auto
+efetivamente lavrado, já estão impressos no próprio PDF do Sistema Auditor. A
+`/aft-autos-lavrados` agora extrai os dois campos na varredura e completa a ficha
+(`memory.md`) da OS com eles. Duas cautelas embutidas: auto ainda em rascunho não tem
+esses campos preenchidos (saem em branco no PDF) e é ignorado; e o que você já escreveu
+na ficha à mão nunca é sobrescrito — o dado do PDF só entra onde estiver faltando.
+
+---
+
+## 23/08/2026
+<!-- commit: organiza-os-ordem-servico -->
+
+**O `/aft-organiza-os` aprendeu a ler a Ordem de Serviço e a arrumar os relatórios.**
+Ao organizar uma pasta, a skill agora reconhece o PDF da Ordem de Serviço do SFIT,
+extrai o número da OS, o vencimento e a tabela inteira de ementas a fiscalizar (código e
+descrição literais, nunca resumidos) e grava tudo na ficha da OS — a mesma seção
+`## Ementas da OS` que o `/aft-nova-auditoria` cria quando você anexa a OS no cadastro.
+Pasta antiga que tem a Ordem de Serviço mas não tem essa seção na ficha passa a ser
+detectada e completada automaticamente. E os relatórios de fiscalização (relatório
+final, dossiê de autos e anexos, relatórios avulsos) ganharam morada oficial: a subpasta
+`Relatórios de Fiscalização/`, a mesma que o `/aft-relatorio` já usava.
+
+---
+
 ## 22/08/2026
 <!-- commit: tn-nco-parametros-e-revisor -->
 
@@ -192,6 +547,63 @@ DET** e os textos de ajuda do próprio sistema (por exemplo: "Sem Retorno — o
 item notificado será inspecionado em fiscalização futura"). É de lá que a skill
 tira o que oferecer a você, e é de lá que a conferência tira o que barrar. Se um
 dia o DET mudar essa tela, é um arquivo só para atualizar.
+
+---
+
+## 22/08/2026
+<!-- commit: nad-preliminar-modelo-e-pdf -->
+
+**A notificação que você leva em mãos agora sai pronta da preparação da ação
+fiscal — com PDF para imprimir.** Ao final da `/aft-preparacao-acao-fiscal`, o
+toolkit passa a oferecer a **NAD preliminar**: aquela que você entrega na empresa
+e tem assinada durante a inspeção física. A oferta é no fim, e não no começo, de
+propósito — só depois de levantar CNAE, grau de risco, acidentes e os temas da
+denúncia dá para saber se aquela OS pede algum documento além do padrão.
+
+Aceitando, o caminho é curto: se faltar acesso ao DET, o assistente **abre o site
+no navegador dele e pede o seu login** (a senha continua sendo só sua, e nunca é
+guardada). Em seguida ele monta a notificação, mostra a prévia com o parecer do
+revisor, e só cria depois do seu "sim". No fim, grava na pasta da OS o **PDF do
+rascunho, com 5 linhas em branco** ao final — as mesmas que o DET oferece, para
+você completar itens à mão no local. Como é rascunho, o papel sai sem número de
+notificação: é o esperado quando a entrega é presencial, e a lavratura continua
+sendo o seu clique, depois da visita.
+
+**A lista de documentos já vem pronta do seu modelo do DET.** O toolkit passou a
+ler os itens do modelo de notificação — coisa que ele nunca tinha conseguido
+fazer —, então a sua "primeira notificação" de sempre aparece inteira, e o
+checklist da preparação só acrescenta o que for específico daquela fiscalização.
+De fábrica vem o modelo 11301 (contato dos prepostos, relação de prestadores de
+serviço, PGR com inventário e plano de ação, relação de máquinas da NR-12); para
+usar o seu, basta gravar `modelo_nad_det` e `cif_modelo_nad` no `aft-config.md`.
+
+**Modelo de colega funciona — e não precisa ser "público".** A busca por modelos
+estava limitada a "somente meus modelos", herança de um filtro padrão do site: o
+modelo de outro auditor simplesmente não era encontrado, sem explicação. Agora a
+busca é em "todos os modelos cadastrados". Basta a identificação do modelo e a
+CIF de quem o criou; nada precisa ser marcado como público.
+
+---
+
+## 22/08/2026
+<!-- commit: metas-regularizacao-preparacao -->
+
+**A preparação da ação fiscal agora destaca as ementas que contam para a meta do
+projeto.** Nos projetos de SST, a fiscalização só conta para a meta quando o AFT
+consegue a regularização de pelo menos 2 ementas de gradação I3 ou I4 (na construção
+civil: 3, e somente das NR-10, NR-18 e NR-35). A `/aft-preparacao-acao-fiscal` ganhou
+uma fase nova: logo depois de registrar as ementas da OS, um script cruza cada código
+com a base de gradação do ementário SST (5.434 ementas, embutida na skill) e mostra,
+em destaque, quais ementas da OS são I3/I4 — e, entre elas, quais são de fácil
+regularização pelo empregador (lista curada com nota de 8 a 10 e a justificativa:
+relação de máquinas, procedimentos escritos, revisão de PGR, treinamentos de mercado,
+comunicação prévia de obra). O quadro entra no chat, numa seção própria do
+`preparacao.md` e nos pontos de atenção da visita, com os lembretes de praxe: ementa
+alvo de embargo/interdição conta mesmo sem regularização, e empresa sob dupla visita
+não é autuada de imediato, mas a regularização conta. A gradação nunca é dita de
+cabeça: vem sempre da base local, e código fora dela é apontado para conferência.
+A lista de fáceis é tática de meta, não limite: nenhuma ementa da OS deixa de ser
+fiscalizada por causa dela — quem decide a estratégia é o AFT.
 
 ---
 
@@ -504,6 +916,24 @@ partes, coisa que acontece ao colar o nome de outro sistema). O sintoma era a
 sincronização do Google Agenda (/aft-agenda-det) ou o /aft-painel pararem no
 meio com um ticket de erro. Agora o script se protege sozinho, como os demais
 scripts do toolkit já faziam, e imprime o resumo completo em qualquer console.
+
+---
+
+## 20/08/2026
+<!-- commit: extrato-ja-existe -->
+
+**PGR, AET e laudo da NR-12 não são mais extraídos duas vezes.** As três skills de análise
+de documento longo (`/aft-PGR-analise`, `/aft-aet-auditoria`, `/aft-auditoria-AR-NR12`)
+mandam o documento para o agente extrator antes de analisar, justamente para não gastar a
+sua conversa lendo cem páginas. Só que elas não conferiam se aquele documento **já tinha
+sido extraído antes** — e, no silêncio, mandavam extrair de novo. Quem sentia isso era
+quem extraiu o PGR numa etapa anterior (numa triagem de vários documentos entregues pela
+empresa, por exemplo) e depois acionou a skill: o mesmo documento ia para o extrator pela
+segunda vez, dobrando a parte mais cara do trabalho, sem nenhum aviso na tela. Agora cada
+uma das três olha primeiro se o extrato correspondente (`pgr-extrato.md`, `aet-extrato.md`
+ou `laudo-extrato.md`) já está na pasta da OS: se estiver, confere se ele cobre o roteiro
+esperado e vai direto para a análise. Se o extrato estiver vazio, truncado ou fora do
+roteiro, ela refaz a extração e diz a você por quê.
 
 ---
 

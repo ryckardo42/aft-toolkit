@@ -1,13 +1,13 @@
 {
  "projeto": "AFT Toolkit — skills de fiscalização para Claude Code e Codex (Windows)",
  "repo": "github.com/ryckardo42/aft-toolkit",
- "data": "2026-08-22",
+ "data": "2026-08-23",
  "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
  "stats": {
-  "skills": 50,
-  "scripts": 51,
+  "skills": 51,
+  "scripts": 42,
   "dados": 6,
-  "commit": "ver `git log -1` — atualizado em 22/08/2026"
+  "commit": "ver `git log -1` — atualizado em 23/08/2026"
  },
  "atores": [
   {
@@ -39,7 +39,7 @@
  "fluxo": [
   {
    "who": "/aft-preparacao-acao-fiscal",
-   "act": "Opcional, antes da visita: resolve/cria a OS (chama /aft-nova-auditoria), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, estuda os temas no NotebookLM e monta o checklist de documentos — encadeia /aft-NAD ao final. Salva preparacao.md."
+   "act": "Opcional, antes da visita: resolve/cria a OS (chama /aft-nova-auditoria), coleta denúncia e dados prévios, tokeniza a lista de trabalhadores se houver, destaca as ementas I3/I4 da OS que contam para a meta de regularização do projeto (com as de fácil regularização pelo empregador) e monta o checklist de documentos — encadeia /aft-NAD ao final. Salva preparacao.md."
   },
   {
    "who": "/aft-nova-auditoria",
@@ -176,18 +176,23 @@
    "skills": [
     {
      "nome": "/aft-preparacao-acao-fiscal",
-     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, estuda os temas nos NotebookLMs (sem nome de empresa/trabalhador, com fontes) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Consulta os outros CNPJs do endereço (FASE 4.6, via /aft-cnpjs-endereco). Salva preparacao.md na pasta da OS.",
+     "role": "Planeja a fiscalização ANTES de ir a campo: resolve/cria a OS (via /aft-nova-auditoria), coleta denúncia e dados prévios (texto colado, PDF anexado ou salvo na pasta), tokeniza qualquer lista nominal de trabalhadores antes de processá-la, classifica as ementas da OS pela gradação (FASE 1.16, scripts/metas_regularizacao.py + base local do ementário SST) destacando as I3/I4 que contam para a meta de regularização e as de fácil regularização pelo empregador (dúvida técnica é da /aft-consulta, não desta) e monta o checklist de documentos a solicitar para aprovação do AFT — encadeia /aft-NAD ao final. Consulta os outros CNPJs do endereço (FASE 4.6, via /aft-cnpjs-endereco). Salva preparacao.md na pasta da OS.",
      "tech": "chama /aft-nova-auditoria · .depara_[CNPJ].json na raiz da OS · model: opus"
     },
     {
      "nome": "/aft-cnpjs-endereco",
-     "role": "Descobre os outros CNPJs registrados no endereço da fiscalização (cenário da terceirização ampla: várias pessoas jurídicas no mesmo lote) e cruza os cadastros públicos em busca de indícios de grupo econômico: mesmo lote com endereço normalizado (QUADRA027 = QD 27), CNAE de apoio administrativo em série, telefone/e-mail/sócios compartilhados entre raízes de CNPJ distintas, aberturas escalonadas. Descoberta por CEP na Casa dos Dados via navegador embutido (só o CEP é enviado); aceita também consulta de sistema interno colada (--parse). Tudo indício, a confirmar em campo. Chamada pela /aft-preparacao-acao-fiscal (FASE 4.6).",
-     "tech": "cnpjs_endereco.py (urllib puro; APIs abertas minhareceita.org/BrasilAPI, só o CNPJ é enviado) · navegador embutido com extração via JavaScript (nunca página crua) · grava ## CNPJs no mesmo endereço no memory.md · model: sonnet"
+     "role": "Descobre os outros CNPJs registrados no endereço da fiscalização (cenário da terceirização ampla: várias pessoas jurídicas no mesmo lote) e cruza os cadastros públicos em busca de indícios de grupo econômico: mesmo lote com endereço normalizado (QUADRA027 = QD 27), CNAE de apoio administrativo em série, telefone/e-mail/sócios compartilhados entre raízes de CNPJ distintas, aberturas escalonadas. Descoberta por CEP na Casa dos Dados via navegador embutido (só o CEP é enviado); aceita também consulta de sistema interno colada (--parse). CEP não é lote: em CEP de distrito industrial ou via longa a descoberta é inconclusiva (centenas de CNPJs, 20 por página) e o caminho é o cruzamento cadastral com os CNPJs já conhecidos. Tudo indício, a confirmar em campo. Chamada pela /aft-preparacao-acao-fiscal (FASE 4.6).",
+     "tech": "cnpjs_endereco.py (urllib puro; APIs abertas minhareceita.org/BrasilAPI, só o CNPJ é enviado) · navegador embutido com extração via JavaScript (nunca página crua) · CEP digitado por teclado real (form_input não sensibiliza o formulário Vue e a busca sai sem filtro) + conferência de sanidade da contagem antes de usar qualquer linha · grava ## CNPJs no mesmo endereço no memory.md · model: sonnet"
     },
     {
      "nome": "/aft-NAD",
      "role": "Notificação para Apresentação de Documentos — documentos que se presume existir (verbo central: Apresentar). Introdução fixa (art. 630 §§3º/4º CLT c/c art. 23 Lei 8.036/90 c/c art. 18, IV/V, Dec. 4.552/02) + um item por documento (NR ou artigo de lei) + ementa via NotebookLM só quando existir, bloco a bloco para colar no DET. Origem natural: /aft-preparacao-acao-fiscal; também standalone.",
      "tech": "espelha /aft-tn-nco · model: sonnet"
+    },
+    {
+     "nome": "/aft-lre-esocial",
+     "role": "Transforma o LRE do eSocial baixado no SISFGTS em painel navegavel dentro da pasta da OS: busca por nome/CPF/matricula/cargo, filtros (ativos, desligados, indicio, PCD), CSV dos vinculos e resumo desidentificado que aparece em Relatorios da OS no /aft-painel. Aponta indicio de registro tardio com tres salvaguardas: recorte a partir de 02/01/2026 (quando o registro eletronico passou a ser obrigatorio para todas as empresas), campo dhrecepcao em vez de processamento_datahora, e so admissao nova (cedido/transferido/sucessao carregam a data de admissao original e nao sao atraso). Indicio, nunca constatacao. Read-only sobre o SISFGTS. Com o download 'LRE e demais registros' do SISFGTS, oferece duas analises derivadas: auditoria de FERIAS (periodos aquisitivos reconstituidos da admissao; aponta ferias vencidas - dobra do art. 137 -, gozo fora do prazo - Sumula 81 do TST -, prazo vencendo, conferir abono e fracionamento; so audita periodos iniciados na janela de dados da empresa e, em sucessao/cessao, do vinculo) e auditoria da FOLHA declarada (grade mensal da base de FGTS por vinculo; aponta buraco sem afastamento que justifique, ano sem 13o, ultimos 3 meses abaixo do contratual e dispensado sem base rescisoria; base declarada nao e recolhimento - debito e com o SISFGTS). Nos derivados (ferias e folha) o CPF sai mascarado (***.***.NNN-NN) e o painel de ferias abre com a secao Leitura da auditoria: os indicios caso a caso em frases prontas, com aviso de 'em gozo neste momento' quando ha ferias em aberto.",
+     "tech": "lre_esocial.py + lre_ferias.py + lre_folha.py + cbo.json · cartao eSocial no /aft-painel (rotas /lre, /ferias e /folha no modo interativo) · model: sonnet"
     }
    ]
   },
@@ -237,7 +242,7 @@
     },
     {
      "nome": "/aft-tn-nco",
-     "role": "Redige a Notificação para Correção de Irregularidades e GRAVA OS PARÂMETROS DELA no front-matter do .md (prazo, tipo do item, retorno, pré-assinalado, tipos de arquivo, exceções item a item) — antes o texto saía perfeito e mudo, e prazo/retorno morriam com a conversa. Padrão: obrigação · digital · 16 dias · pré-assinalado. Todo item com retorno digital/impresso leva FECHO DE COMPROVAÇÃO (máquina da NR-12: laudo com ART e registro fotográfico; demais 'adequar': documento com registro fotográfico). Continua entregando bloco a bloco para colar no DET; com o painel no ar, o rascunho pode ser montado pela API (det_criar.py), sempre revisado pelo aft-revisor-notificacao antes e lavrado só pelo AFT, no site.",
+     "role": "Redige a Notificação para Correção de Irregularidades — SÓ para o que NÃO tem auto de infração lavrado (o auto já coage sozinho; a FASE 0.5 consulta o Sistema Auditor para EXCLUIR o já autuado, caso típico: dupla visita) — e GRAVA OS PARÂMETROS DELA no front-matter do .md (prazo, tipo do item, retorno, pré-assinalado, tipos de arquivo, exceções item a item) — antes o texto saía perfeito e mudo, e prazo/retorno morriam com a conversa. Padrão: obrigação · digital · 16 dias · pré-assinalado. Todo item com retorno digital/impresso leva FECHO DE COMPROVAÇÃO (máquina da NR-12: laudo com ART e registro fotográfico; demais 'adequar': documento com registro fotográfico). Continua entregando bloco a bloco para colar no DET; com o painel no ar, o rascunho pode ser montado pela API (det_criar.py), sempre revisado pelo aft-revisor-notificacao antes e lavrado só pelo AFT, no site. Gera também um .docx da notificação em NOTIFICACOES/ (leitura e arquivo; ao DET vai o texto puro).",
      "tech": "front-matter det: · det_criar.py · agents/aft-revisor-notificacao · limite 1000 char/campo · model: sonnet"
     },
     {
@@ -432,8 +437,8 @@
   {
    "nome": "checar_rt_autos.py",
    "caminho": "_scripts/checar_rt_autos.py",
-   "papel": "Confere a coerência entre a Seção 4 do RT (.docx) e os autos (autos.md) — pega divergência quando um é editado e o outro não acompanha.",
-   "runtime": "Python stdlib"
+   "papel": "Confere a coerência entre a Seção 4 do RT (.docx ou .pdf) e os autos (autos.md) — pega divergência quando um é editado e o outro não acompanha.",
+   "runtime": "Python stdlib + pdfplumber (só para RT em PDF)"
   },
   {
    "nome": "gerar_painel.py",
@@ -606,6 +611,36 @@
    "caminho": "_scripts/notebooklm_consulta.py",
    "papel": "Consulta um notebook pela CHAVE: resolve o ID da cohort (notebook_id.py), roda o notebooklm ask e TRADUZ a falha em vez de deixar tudo virar 'NotebookLM indisponivel'. Codigo 5 = primeiro acesso pendente (devolve titulo e link para o AFT dar o 'oi' e a skill repetir a consulta); 6 = sessao caida; 3 = nao existe para a cohort. Substituiu os onze pontos de chamada do ask espalhados pelas skills.",
    "runtime": "python (stdlib) + CLI notebooklm"
+  },
+  {
+   "nome": "lre_esocial.py",
+   "caminho": "_scripts/lre_esocial.py",
+   "papel": "Le o Livro de Registro de Empregados que o SISFGTS baixou do eSocial (JSON em latin-1, apesar da extensao .txt) e gera, na subpasta eSocial/ da OS, o painel navegavel LRE_painel.html, o CSV dos vinculos, o resumo lre-esocial.md (sem nome e sem CPF) e o resumo.json que o /aft-painel le. Apura indicio de registro tardio por dhrecepcao (nunca por processamento_datahora, que produz falso positivo grosseiro), so para admissao nova (tpadmissao=1) e so a partir do marco de 02/01/2026. Read-only sobre o SISFGTS.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "lre_ferias.py",
+   "caminho": "_scripts/lre_ferias.py",
+   "papel": "Auditoria de ferias da /aft-lre-esocial: cruza o LRE (idA) com os afastamentos (idK) do SISFGTS, reconstitui os periodos aquisitivos de cada vinculo e grava Ferias_painel.html, Ferias_analise.csv, ferias.md e ferias_resumo.json na eSocial/ da OS. Classifica cada periodo: vencida (dobra art. 137), fora-prazo (S. 81 TST), vencendo, abono (art. 143), zerado (art. 133 IV). Quatro protecoes contra falso positivo: janela de dados da empresa, janela propria do vinculo transferido (sucessaovinc_dttransf), abono presumido a favor da empresa (dobra firme so com gozo < 20 dias, bloco tardio so completa o periodo ate 20) e alocacao FIFO que exclui periodos anteriores a janela.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "lre_folha.py",
+   "caminho": "_scripts/lre_folha.py",
+   "papel": "Auditoria da remuneracao declarada da /aft-lre-esocial: cruza o LRE (idA) com as bases de FGTS da folha (idM) e os afastamentos (idK) e grava Folha_painel.html, Folha_analise.csv, folha.md e folha_resumo.json na eSocial/ da OS. Grade mensal por vinculo (tpValor 11); aponta buraco (mes sem base e sem afastamento >= 20 dias), ano sem 13o (tpValor 12), ultimos 3 meses < 90% do salario contratual (compara presente com presente: mes antigo abaixo do salario atual e normal em quem teve aumento) e dispensa pelo empregador (mtv 02/03) sem base rescisoria (tpValor 21/22). Vinculo transferido conta a partir do sucessaovinc_dttransf.",
+   "runtime": "Python stdlib"
+  },
+  {
+   "nome": "cbo.json",
+   "caminho": "_scripts/cbo.json",
+   "papel": "Tabela de ocupacoes CBO usada pelo lre_esocial.py para nomear o cargo de cada vinculo no painel do LRE.",
+   "runtime": "dado (JSON)"
+  },
+  {
+   "nome": "consulta_cnpj.py",
+   "caminho": "_scripts/consulta_cnpj.py",
+   "papel": "Consulta o cadastro da empresa na Receita Federal por CNPJ, pelos dados abertos (sem credencial). Valida o digito verificador antes de ir a rede, guarda cache local por CNPJ e alterna entre duas fontes publicas. Modo --os imprime chave=valor ja formatado para o memory.md (CNAE XXXX-X/XX, CEP e telefone pontuados, datas dd/mm/aaaa), incluindo simples/simples_desde/simples_exclusao — e a opcao pelo Simples Nacional e o que sustenta a leitura de ME/EPP (dupla visita, art. 627-A da CLT) na FASE 1.15 da /aft-preparacao-acao-fiscal, ja que o porte cadastral e autodeclarado e vive desatualizado. Usado tambem pelo Passo 1.5 da /aft-nova-auditoria.",
+   "runtime": "Python stdlib"
   }
  ],
  "dados": [
@@ -835,6 +870,22 @@
   {
    "topico": "NAD preliminar: a notificação que se leva em mãos (22/08/2026)",
    "txt": "A /aft-preparacao-acao-fiscal passou a oferecer, NO FIM, a NAD preliminar — a notificação que o AFT entrega na empresa e tem assinada durante a inspeção. No fim, e não no começo, porque só depois de levantar CNAE, grau de risco, acidentes e temas da denúncia se sabe se aquela OS pede documento além do padrão. O fluxo abre o DET no navegador do assistente para o AFT logar, puxa os itens do MODELO de notificação do DET (o toolkit passou a ler `modelositem`, que nunca tinha lido), passa pela prévia e pelo revisor, cria o rascunho e baixa o PDF DO RASCUNHO com 5 linhas em branco para impressão. Modelo canônico de fábrica: 11301/358070, trocável no aft-config.md. Corrigido junto o filtro de busca de modelos, que estava em 'somente meus modelos' e nunca achava modelo de colega."
+  },
+  {
+   "topico": "LRE do eSocial: painel na pasta da OS e o indicio de registro tardio (23/08/2026)",
+   "txt": "Nova /aft-lre-esocial le o arquivo que o SISFGTS grava ao baixar o eSocial (eSocial_idA_LRE_*.txt - JSON em latin-1, apesar da extensao .txt) e monta um painel navegavel na subpasta eSocial/ da OS, com cartao no /aft-painel. O indicio de registro tardio tem tres salvaguardas, todas nascidas de falso positivo real: (1) so admissoes a partir de 02/01/2026, quando o registro eletronico passou a valer para todas as empresas - antes a obrigatoriedade era escalonada por grupo, e apontar atraso ali faria o AFT perseguir vinculo talvez nao obrigado; (2) o campo e dhrecepcao (quando o eSocial recebeu o evento), nunca processamento_datahora, que e processamento interno e chegou a acusar 792 dias de atraso onde o real foram 4; (3) so admissao nova (tpadmissao=1), porque cedido, transferido de mesmo grupo, sucessao e mudanca de CPF carregam a data de admissao ORIGINAL - num caso real, 26 de 38 indicios eram cessao. O numero nunca e relatado sem o recorte temporal: '12 indicios entre as admissoes desde 02/01/2026', jamais '12 indicios'."
+  },
+  {
+   "topico": "Cadastro da Receita por CNPJ: via publica, nao a API do SIT (23/08/2026)",
+   "txt": "A /aft-nova-auditoria (Passo 1.5) e a /aft-preparacao-acao-fiscal (FASE 1.15) passaram a puxar sozinhas o cadastro da empresa na RFB quando ha CNPJ: razao social, situacao cadastral, CNAE principal e secundarios, endereco, telefones, natureza juridica, porte e Simples. O SISFGTS faz essa consulta pela API interna do SIT (apicpfcnpj.sit.trabalho.gov.br/api/v1.2/Empresas), mas ela exige token OAuth2 emitido com o client_id do aplicativo oficial - um script do toolkit usando esse client_id estaria se identificando ao SSO federal como se fosse o SISFGTS. Descartado por legitimidade, nao por dificuldade tecnica. A via publica (dados abertos da RFB, mesmo conteudo do cartao CNPJ) dispensa credencial e ainda traz QSA e CNAEs secundarios, que a rota do SIT nao retorna. Nao traz o e-mail do empregador (a RFB nao distribui esse campo no dado aberto: o mesmo dado aparece como ENDERECO ELETRONICO no cartao CNPJ) nem a data do lote - por isso as duas skills mandam confirmar na fonte oficial para ato com efeito legal. O dado do cadastro nunca sobrescreve o que o AFT informou: em divergencia prevalece o dele, com aviso de uma linha."
+  },
+  {
+   "topico": "Ferias e folha do eSocial: as duas analises derivadas do LRE (23/08/2026)",
+   "txt": "O download 'LRE e demais registros' do SISFGTS traz tambem afastamentos (idK) e bases de FGTS da folha (idM). Dois scripts novos os cruzam com o LRE: lre_ferias.py audita ferias (vencidas/dobra, gozo fora do prazo, vencendo, abono, fracionamento) e lre_folha.py audita a remuneracao declarada (buracos, 13o, contratual, bases rescisorias). A licao do teste com empresa real: a conta ingenua de ferias produzia 105 indicios, dos quais so 2 sobreviveram as protecoes (janela de dados, janela do vinculo transferido, abono presumido, minimo certo) - em dado de sucessao, quase tudo que parece dobra e ferias gozada no empregador anterior, fora do arquivo. tpValor 21/22 = bases rescisorias foi conferido empiricamente (so desligados; 61 de 62 dispensas sem justa causa); tpValor 13/14 seguem sem rotulo por falta de leiaute confirmado. Nota tecnica: lre-esocial-skill.md."
+  },
+  {
+   "topico": "Lições de uma fiscalização real: NCO exclui o autuado, autos padronizados, validador de forma (23/08/2026)",
+   "txt": "O PR 37 (Diego Negrão) trouxe um pacote de correções colhidas em fiscalização de verdade. A /aft-tn-nco inverteu a relação com os autos lavrados: a consulta ao Sistema Auditor (FASE 0.5) deixou de alimentar o checklist e passou a EXCLUIR dele o que já tem auto válido — o auto já é meio de coerção indireto, e notificar de novo o mesmo fato confunde a empresa; o caso típico da NCO vira a dupla visita, com autuação diferida. A /aft-auditoria-geral padronizou a leva: frase de abertura fixa por fonte (campo vs. documental), fechamento de enquadramento uniforme, máquina nomeada em cada auto (conferida na fonte primária) e trava de bis in idem entre ementa geral e específica da mesma NR. O validar_txt.py ganhou três checagens de forma que o Sistema Auditor importa sem reclamar (subtítulos I/II/III presentes, acentuação FISCALIZAÇÃO/OBSERVAÇÕES, recuo do indenta_quebras.py aplicado) — defeitos reais de 17/08/2026 que só apareciam conferindo o auto importado. O scan_autos.py passou a extrair porte econômico e nº de trabalhadores do primeiro auto lavrado e a completar o memory.md sem sobrescrever o que o AFT escreveu. E as três skills de documento longo (PGR/AET/AR-NR12) não reextraem documento cujo extrato já está na pasta da OS."
   }
  ],
  "diferencas": [
