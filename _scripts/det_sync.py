@@ -77,7 +77,18 @@ BACKUP = AQUI / "backup_arquivo.py"
 
 DET_API = ("https://auditor-det.sit.trabalho.gov.br"
            "/services/auditor/v1/notificacoes/pesquisa")
+DET_ITENS = ("https://auditor-det.sit.trabalho.gov.br"
+             "/services/auditor/v1/itens-notificacao")
 DET_TIMEOUT = 12  # segundos por OS (igual ao SisOS)
+
+# Tradução do nº de status de cada item (coluna "Status" da tela do DET) para
+# texto legível. É o MESMO enum do det_baixar (uma fonte só — regra "uma
+# informação, um lugar" do AGENTS.md); importado de lá. Sem ele, o resumo por
+# item é simplesmente omitido (best-effort).
+try:
+    from det_baixar import STATUS_ITEM
+except Exception:  # standalone sem o sibling no path, ou falha de import
+    STATUS_ITEM = {}
 
 RE_FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 RE_CHECKBOX = re.compile(r"^\s*-\s*\[[ xX]?\]\s*(.*)$")
@@ -159,6 +170,53 @@ def snippet_canal(token: str, uid: str) -> str:
             texto = texto.rsplit(" ", 1)[0]
         texto += "…"
     return texto
+
+
+def resumo_itens(token: str, uid: str) -> str:
+    """Resumo do status de cada item de uma notificação, para a sub-linha da
+    ficha — o que está por trás do triângulo amarelo (quantos itens aguardam a
+    avaliação do AFT, quantos foram entregues, etc.).
+
+    UMA requisição a /itens-notificacao: cada item já traz o campo `status`
+    (o mesmo número da coluna "Status" da tela do DET — verificado na API em
+    24/08/2026, notificação da BUENO 28: item com status 4 == "Prazo
+    Solicitado" na tela). Não é preciso varrer /eventos-item por item.
+
+    Best-effort: qualquer falha (ou o enum ausente) devolve '' — a sub-linha
+    continua aparecendo sem o resumo. Devolve algo como
+    'itens: 5 aguardando avaliação de prazo' ou
+    'itens: 3 aguardando avaliação de prazo, 1 recebido, 1 enviado'."""
+    if not STATUS_ITEM:
+        return ""
+    req = urllib.request.Request(
+        f"{DET_ITENS}?uidNotificacao={uid}",
+        headers={"Authorization": f"Bearer {token}",
+                 "Accept": "application/json, text/plain, */*"})
+    try:
+        with urllib.request.urlopen(req, timeout=DET_TIMEOUT) as resp:
+            itens = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return ""
+    if not isinstance(itens, list) or not itens:
+        return ""
+    # Conta por status, na ordem em que os status aparecem (saída estável).
+    contagem: dict[int, int] = {}
+    for it in itens:
+        st = it.get("status")
+        contagem[st] = contagem.get(st, 0) + 1
+    partes = []
+    for st, qtd in sorted(contagem.items(),
+                          key=lambda kv: (kv[0] is None, kv[0])):
+        # Rótulo sem "status N" cru: um número solto poderia colidir com a
+        # deteção de "status 2" (cancelada) do gerar_painel. Status conhecido
+        # nunca cai no fallback; desconhecido vira "outros". Tira o prefixo
+        # "Item " ("Item enviado" → "enviado") para o resumo não ficar clunky.
+        rot = re.sub(r"^item\s+", "", (STATUS_ITEM.get(st) or "outros"),
+                     flags=re.IGNORECASE).lower()
+        partes.append(f"{qtd} {rot}")
+    total = sum(contagem.values())
+    # Vírgula entre os grupos (nunca ' · ': esse é o separador da sub-linha).
+    return f"itens: {', '.join(partes)}" if partes else ""
 
 
 # Status da notificação no DET. Os três valores são os do enum do próprio
@@ -272,7 +330,8 @@ def _fingerprint(n: dict) -> str:
     return (n.get("itemDataUltimaEntrega") or "")[:10] or "sem-entrega"
 
 
-def _linha_detalhe(n: dict, visto: str = "", msg: str = "") -> str:
+def _linha_detalhe(n: dict, visto: str = "", msg: str = "",
+                   itens_resumo: str = "") -> str:
     """Sub-linha de detalhes de uma notificação (dados vindos do DET).
     Campos vazios são omitidos; status 1 = Confirmada (único elegível).
 
@@ -303,6 +362,11 @@ def _linha_detalhe(n: dict, visto: str = "", msg: str = "") -> str:
         partes.append(f"status {n.get('status')}")
     if _flag(n.get("itemAtualizado")) and _fingerprint(n) != visto:
         partes.append("⚠️ atualização pendente")
+    # Resumo do status dos itens (o que o triângulo amarelo esconde): buscado
+    # pelo sync só nas notificações com atualização pendente. Fica na sub-linha
+    # com o marcador 📋; o gerar_painel o lê e mostra no cartão. Ver resumo_itens.
+    if itens_resumo:
+        partes.append(f"📋 {itens_resumo}")
     # Envelope laranja da tela do DET: o componente app-pendencia-comunicacao
     # do site só aparece quando `isPendenciaComunicacaoAuditor` é verdadeiro
     # (lido do código do front em 19/08/2026) — é a coluna ao lado do triângulo
@@ -321,7 +385,8 @@ def _linha_detalhe(n: dict, visto: str = "", msg: str = "") -> str:
 
 
 def aplicar_notificacoes(texto: str, notifs: list[dict],
-                         msgs: dict[str, str] | None = None
+                         msgs: dict[str, str] | None = None,
+                         resumos: dict[str, str] | None = None
                          ) -> tuple[str, int, int, int, list[str]]:
     """Aplica as notificações elegíveis na seção ## Notificações DET.
     Devolve (novo_texto, inseridas, prazos_atualizados, detalhes_atualizados,
@@ -364,6 +429,7 @@ def aplicar_notificacoes(texto: str, notifs: list[dict],
     novas: list[str] = []
     inserir_detalhe: list[tuple[int, str]] = []  # (posição, linha) — aplicados no fim
     msgs = msgs or {}
+    resumos = resumos or {}
     for n in notifs:
         codigo = (n.get("codigo") or "").strip()
         if not codigo:
@@ -378,7 +444,8 @@ def aplicar_notificacoes(texto: str, notifs: list[dict],
                 continue  # nunca entra na ficha; volta no relatório
             prazo = _data_br(prazo_iso)
             novas.append(f"- [ ] {codigo}" + (f" — prazo {prazo}\n" if prazo else "\n"))
-            novas.append(_linha_detalhe(n, msg=msgs.get(codigo, "")))
+            novas.append(_linha_detalhe(n, msg=msgs.get(codigo, ""),
+                                        itens_resumo=resumos.get(codigo, "")))
             inseridas += 1
             continue
         # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou),
@@ -387,7 +454,8 @@ def aplicar_notificacoes(texto: str, notifs: list[dict],
         if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
             mv = RE_VISTO.search(linhas[i + 1])
             visto = mv.group(1) if mv else ""
-        det = _linha_detalhe(n, visto, msgs.get(codigo, ""))
+        det = _linha_detalhe(n, visto, msgs.get(codigo, ""),
+                             resumos.get(codigo, ""))
         if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
             if linhas[i + 1] != det:
                 linhas[i + 1] = det
@@ -513,8 +581,10 @@ def identificadores(texto: str, pasta: str) -> tuple[str, str]:
 
 
 def sincronizar_os(pasta_os: Path, token: str,
-                   consultar=consultar_det, canal=snippet_canal) -> dict:
-    """Sincroniza uma OS. `consultar` e `canal` são injetáveis para testes."""
+                   consultar=consultar_det, canal=snippet_canal,
+                   resumo=resumo_itens) -> dict:
+    """Sincroniza uma OS. `consultar`, `canal` e `resumo` são injetáveis
+    para testes."""
     r = {"os": pasta_os.name, "recebidas": 0, "inseridas": 0,
          "prazos_atualizados": 0, "detalhes_atualizados": 0,
          "ri_preenchido": False, "ignoradas": [], "canceladas": [],
@@ -575,9 +645,19 @@ def sincronizar_os(pasta_os: Path, token: str,
             if trecho:
                 msgs[(n.get("codigo") or "").strip()] = trecho
 
+    # Triângulo amarelo aceso: busca o status de cada item para a sub-linha
+    # (uma requisição extra só nas notificações com atualização pendente — é
+    # exatamente quando há algo aguardando o AFT, e o custo fica limitado).
+    resumos = {}
+    for n in minhas:
+        if _flag(n.get("itemAtualizado")) and n.get("uid"):
+            res = resumo(token, n["uid"])
+            if res:
+                resumos[(n.get("codigo") or "").strip()] = res
+
     (novo, r["inseridas"], r["prazos_atualizados"],
      r["detalhes_atualizados"], r["canceladas"]) = aplicar_notificacoes(
-        texto, minhas, msgs)
+        texto, minhas, msgs, resumos)
     novo, r["ri_preenchido"] = preencher_ri(novo, ri_novo)
     if novo == texto:
         return r
@@ -616,7 +696,7 @@ SYNC_PARALELO = 5
 
 
 def sincronizar_todas(base: Path, token: str, consultar=consultar_det,
-                      canal=snippet_canal) -> dict:
+                      canal=snippet_canal, resumo=resumo_itens) -> dict:
     """Sincroniza todas as OS de OS ATIVAS/. Uma OS com erro não derruba as
     demais. Devolve métricas agregadas (mesmo espírito do SisOS).
 
@@ -627,11 +707,12 @@ def sincronizar_todas(base: Path, token: str, consultar=consultar_det,
     if not pastas:
         resultados = []
     elif len(pastas) == 1:
-        resultados = [sincronizar_os(pastas[0], token, consultar, canal)]
+        resultados = [sincronizar_os(pastas[0], token, consultar, canal, resumo)]
     else:
         with ThreadPoolExecutor(max_workers=min(SYNC_PARALELO, len(pastas))) as ex:
             resultados = list(ex.map(
-                lambda p: sincronizar_os(p, token, consultar, canal), pastas))
+                lambda p: sincronizar_os(p, token, consultar, canal, resumo),
+                pastas))
     erros = [{"os": r["os"], "erro": r["erro"]} for r in resultados if r["erro"]]
     ignoradas = [{"os": r["os"], **ig} for r in resultados for ig in r["ignoradas"]]
     canceladas = [{"os": r["os"], "codigo": c}
