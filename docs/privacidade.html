@@ -128,21 +128,29 @@
     <section>
       <h2>Dados coletados</h2>
       <p>
-        A extensão captura e armazena temporariamente o <strong>token de sessão JWT</strong>
-        emitido pelo portal do DET (Domicílio Eletrônico Trabalhista) quando o usuário está
-        autenticado. Esse token é obtido a partir dos cabeçalhos das requisições feitas pelo
-        próprio navegador ao domínio <code>auditor-det.sit.trabalho.gov.br</code>.
+        A extensão lê o <strong>token de sessão JWT</strong> que o próprio portal do DET
+        (Domicílio Eletrônico Trabalhista) guarda no navegador quando o usuário está
+        autenticado. A leitura é feita por um script que roda somente nas páginas do domínio
+        <code>auditor-det.sit.trabalho.gov.br</code>, sobre a área de armazenamento
+        (<code>sessionStorage</code>) daquele mesmo site — o mesmo dado que já está no
+        navegador do usuário, na mesma origem. Nenhum outro site é lido.
       </p>
       <p>
         Esse token é opaco (não é lido nem exibido pela extensão) mas, como todo JWT, carrega
         internamente identificadores do próprio Auditor-Fiscal autenticado (como
-        matrícula/CIF). A extensão usa apenas a existência desses campos para validar o
-        formato do token — nunca extrai, exibe ou registra esses dados separadamente.
+        matrícula/CIF). A extensão verifica apenas se o token tem formato válido e se ainda
+        não expirou — nunca extrai, exibe ou registra esses dados separadamente.
       </p>
       <p>
-        Além disso, o usuário informa voluntariamente o endereço do painel local do AFT
-        Toolkit (por padrão <code>http://127.0.0.1:8347</code>), guardado nas preferências da
-        própria extensão.
+        A extensão <strong>não guarda o token</strong>: ele é lido no momento do envio e
+        mantido apenas na memória da aba, para evitar reenviar o mesmo token. Fechada a aba
+        do DET, nada resta. O token também expira sozinho, no prazo definido pelo próprio
+        DET.
+      </p>
+      <p>
+        A única informação salva pela extensão é a preferência do usuário: se a sincronização
+        local está ativada e o endereço do painel do AFT Toolkit (por padrão
+        <code>http://127.0.0.1:8347</code>).
       </p>
       <p>
         Nenhum outro dado é coletado. A extensão não acessa e-mail, localização, histórico de
@@ -153,21 +161,41 @@
     <section>
       <h2>Como os dados são usados</h2>
       <p>
-        O token JWT do DET é enviado exclusivamente ao painel local do AFT Toolkit, rodando no
+        O token do DET é enviado exclusivamente ao painel local do AFT Toolkit, rodando no
         próprio computador do usuário (<code>127.0.0.1</code>). O painel usa esse token para
         consultar a API do DET em nome do próprio usuário e gravar, em pastas locais do
         computador, as notificações e os documentos a elas vinculados. Esse tráfego não sai
         da máquina.
       </p>
       <p>
-        O token é armazenado localmente no navegador (<code>chrome.storage.local</code>) e
-        descartado automaticamente após aproximadamente 25 minutos, respeitando o tempo de
-        expiração do próprio token emitido pelo DET.
+        O envio acontece de duas formas, ambas apenas enquanto uma página do DET está aberta
+        e a sincronização local está ativada: <strong>automaticamente</strong>, no máximo uma
+        vez a cada dois minutos e só quando o token muda, e <strong>sob demanda</strong>,
+        quando o usuário clica no botão "Sincronizar" que a extensão exibe na página do DET.
       </p>
       <p>
         Os dados baixados do DET ficam sob a guarda do usuário, no sistema de arquivos do seu
         próprio computador, sujeitos ao sigilo funcional que rege a atividade de inspeção do
         trabalho.
+      </p>
+    </section>
+
+    <section>
+      <h2>Permissões solicitadas</h2>
+      <p>
+        <code>storage</code> — guardar as preferências acima (endereço do painel local).
+        <br />
+        <code>tabs</code> — abrir ou trazer para frente a aba do DET quando o usuário clica
+        no botão da extensão.
+        <br />
+        <code>auditor-det.sit.trabalho.gov.br</code> — ler o token na própria página do DET e
+        exibir ali o botão "Sincronizar".
+        <br />
+        <code>127.0.0.1</code> e <code>localhost</code> — falar com o painel do AFT Toolkit
+        na própria máquina.
+      </p>
+      <p>
+        A extensão não pede permissão para nenhum outro site.
       </p>
     </section>
 
@@ -196,8 +224,9 @@
       <p>
         Versões anteriores da extensão ofereciam, como alternativa ao painel local, o envio do
         token para uma instância própria do SisOS na nuvem. Esse modo foi
-        <strong>descontinuado</strong> na versão 2.1.0: o código de envio para a nuvem foi
-        removido e a operação passou a ser exclusivamente local.
+        <strong>descontinuado</strong>: na versão 4.0.0 o código de envio para a nuvem foi
+        removido, junto com a permissão de acesso àquele domínio, e a operação passou a ser
+        exclusivamente local.
       </p>
     </section>
 
@@ -209,7 +238,7 @@
       </p>
     </section>
 
-    <footer>Última atualização: agosto de 2026 — extensão versão 2.1.0</footer>
+    <footer>Última atualização: agosto de 2026 — extensão versão 4.0.0</footer>
 
   </main>
 
