@@ -9,8 +9,12 @@ description: >
   toolkit. Acione com "/aft-organiza-os", "organiza essa pasta", "joguei uma
   pasta na OS ATIVAS", "importar uma auditoria antiga", "arruma a pasta da
   empresa X", "padroniza essa OS", "acabei de copiar os arquivos da
-  fiscalização". Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
-  nada. NÃO cadastra OS do zero (/aft-nova-auditoria) nem baixa do DET.
+  fiscalização". Acione TAMBÉM com "sincroniza minhas pastas com o DET" /
+  "baixa o que falta do DET em todas as auditorias": a FASE 6 (opcional, sempre
+  perguntada) varre o DET e baixa, para todas as OS, as notificações que ainda
+  não estão nas pastas e os documentos entregues com o relatório de
+  atendimento. Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
+  nada. NÃO cadastra OS do zero (/aft-nova-auditoria).
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
@@ -435,6 +439,46 @@ Depois de organizar tudo:
 Próximos passos sugeridos: /analise-preliminar (respostas de DET) · /aft-det-630 (omissões) ·
 /aft-analise-acidente (OS de acidente)
 ```
+
+## FASE 6 — Sincronizar com o DET (opcional; pergunte UMA vez)
+
+Logo depois do resumo da FASE 5, **pergunte ao AFT, em uma frase**: *"Quer que eu
+sincronize as pastas com o DET? Busco as notificações que ainda não estão nas
+auditorias e baixo os documentos entregues e os relatórios de atendimento."* Se ele
+recusar ou não responder, encerre normalmente — nunca rode sem o sim.
+
+Com o sim:
+
+1. **Servidor do painel no ar:** `curl -s http://127.0.0.1:8347/api/ping`. Sem
+   resposta, suba com `python ~/.claude/skills/_scripts/instalar_servidor_painel.py reiniciar`.
+2. **Token do DET:** siga `~/.claude/skills/config/canal-token-det.md` — via 1 (o
+   navegador do assistente, preferida) ou via 2 (o AFT clica em Sincronizar na aba do
+   DET). Não repita o procedimento aqui; falta de token nunca justifica improviso.
+3. **Varredura** (uma chamada só, cobre todas as OS):
+
+```bash
+python ~/.claude/skills/_scripts/det_baixar.py --varredura "<OS_ATIVAS>"
+```
+
+   O script primeiro sincroniza as fichas (notificação nova entra no memory.md de
+   cada OS) e depois baixa o pacote completo — PDF, relatório de atendimento e
+   arquivos entregues — de toda notificação **sem pacote local** ou **com entrega
+   nova** ("atualização pendente" na ficha). O resto fica quieto. `token_expirado`
+   no meio: renove o token e rode de novo — é idempotente, nada baixa em dobro.
+
+4. **Relate em uma mensagem**: notificações novas importadas por OS (do bloco
+   `sync`), pacotes baixados (código, motivo, quantos arquivos), `sem_novidade` e
+   erros em linguagem simples. Regenere o painel ao final (mesmo comando da FASE 5).
+
+Avisos que o AFT precisa ouvir (uma linha cada, quando se aplicarem):
+- O download completo **registra a visualização no DET** — o triângulo amarelo se
+  apaga nas notificações baixadas, como se o AFT as tivesse aberto no site.
+- Notificação de empresa **sem OS em OS ATIVAS não entra** na varredura: cadastre
+  antes com `/aft-nova-auditoria`.
+
+Esta fase também atende quem chega pedindo direto "sincroniza minhas pastas com o
+DET" / "baixa o que falta do DET em todas as auditorias" — pode executá-la sozinha,
+sem as FASES 1 a 5, desde que o AFT confirme o disparo.
 
 ## Encadeamento
 

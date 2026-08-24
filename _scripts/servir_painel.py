@@ -1133,16 +1133,30 @@ class Handler(BaseHTTPRequestHandler):
 
     def _det_sync(self):
         """POST /api/det-sync — corpo {det_access_token}; chamado pela
-        extensão Chrome. O token vive só nesta requisição (nunca em disco)."""
+        extensão Chrome. O token vive só nesta requisição (nunca em disco).
+        Corpo SEM token (ou vazio): usa o token que já está na RAM — é como a
+        varredura da /aft-organiza-os dispara o sync das fichas depois que a
+        via 1 (det_token.py --gravar) abasteceu o painel; sem token na RAM,
+        409 token_expirado, igual ao /api/det-baixar."""
         try:
             n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
-            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            bruto = self.rfile.read(n).decode("utf-8") if n else ""
+            p = json.loads(bruto) if bruto.strip() else {}
             token = p.get("det_access_token")
-            if not token or not isinstance(token, str) or token.count(".") != 2:
-                return self._json(400, {"ok": False,
-                                        "erro": "det_access_token ausente ou inválido"},
-                                  CORS_DET)
-            _token_guardar(token)  # abastece o "baixar arquivos"
+            if token:
+                if not isinstance(token, str) or token.count(".") != 2:
+                    return self._json(400, {"ok": False,
+                                            "erro": "det_access_token inválido"},
+                                      CORS_DET)
+                _token_guardar(token)  # abastece o "baixar arquivos"
+            else:
+                token = _token_atual()
+                if not token:
+                    return self._json(409, {"ok": False, "token_expirado": True,
+                                            "erro": "sem token do DET — abasteça "
+                                                    "pela via 1 ou pelo Sincronizar "
+                                                    "e tente de novo"},
+                                      CORS_DET)
             resultado = det_sync.sincronizar_todas(self.base, token)
             self._json(200, resultado, CORS_DET)
         except Exception as e:
