@@ -258,6 +258,7 @@ Com o painel local no ar e o **RI** no `memory.md`, ofereça criar o rascunho da
 
 1. **Token:** siga `~/.claude/skills/config/canal-token-det.md`. Sem token, **ofereça abrir o DET no navegador do assistente** para o AFT logar (via principal) ou peça o Sincronizar da extensão.
 2. **Prévia primeiro:** `POST /api/det-criar` sem `confirmar` — devolve o que seria gravado, com a conferência automática já aplicada.
+   > **Diga de onde veio cada texto.** O modelo do DET completa o que o `.md` não trouxe: a introdução, se o arquivo não tem introdução; as observações, se não tem observações. Os campos `introducao_do_modelo` e `observacoes_do_modelo` do `enriquecimento` dizem quantos blocos entraram por essa via — mostre esses textos ao AFT, porque não são os que ele escreveu.
 3. **Revisor:** chame a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` e o JSON da prévia. Mostre o parecer.
 4. **Só com o "sim" do AFT**, repita com `confirmar: true`.
 5. **Sem RI no `memory.md`**, diga isso em uma linha e não ofereça — OS recém-criada pode ainda não ter o número.

@@ -607,6 +607,12 @@ def _normalizar_observacoes(blocos: list[dict]) -> list[dict]:
     return saida
 
 
+def _grupo(blocos: list[dict], tipo_texto: int) -> list[dict]:
+    """Os blocos de um dos dois grupos da lista `observacoes` do DET:
+    0 = introdução (antes dos itens) · 1 = observações (depois deles)."""
+    return [b for b in blocos if (b.get("tipoTexto") or 0) == tipo_texto]
+
+
 def _observacoes_payload(introducao: list[str],
                          observacoes: list[dict]) -> list[dict]:
     """Monta a lista `observacoes` do DET a partir do que veio do .md."""
@@ -646,11 +652,23 @@ def enriquecer(payload: dict, token: str, ri: str,
             modelo = recuperar_modelo(token, id_modelo, cif=cif)
             obs = _secao_do_modelo(modelo, "observacoes")
             txt = _secao_do_modelo(modelo, "textosInformativosPadraoAtivos")
-            # o .md manda: só uso o modelo se o arquivo não trouxe nada
-            # os blocos do modelo vêm SEM ordem, uid nem textoInformativoPadrao:
-            # entram pela mesma normalização do .md, nunca crus
-            if obs and not payload.get("observacoes"):
-                payload["observacoes"] = _normalizar_observacoes(obs)
+            # O .md manda, GRUPO A GRUPO: o modelo entra na introdução se o
+            # arquivo não trouxe introdução, e nas observações se não trouxe
+            # observações. Tudo-ou-nada era pior do que parecia — como
+            # introdução e observações moram na MESMA lista, a introdução fixa
+            # que a /aft-NAD manda escrever descartava, em silêncio, todas as
+            # observações do modelo (achado de 24/08/2026).
+            # Os blocos do modelo vêm SEM ordem, uid nem textoInformativoPadrao:
+            # entram pela mesma normalização do .md, nunca crus.
+            if obs:
+                do_md = payload.get("observacoes") or []
+                escolhidos = (_grupo(do_md, 0) or _grupo(obs, 0)) + \
+                             (_grupo(do_md, 1) or _grupo(obs, 1))
+                payload["observacoes"] = _normalizar_observacoes(escolhidos)
+                relato["introducao_do_modelo"] = len(
+                    _grupo(obs, 0)) if not _grupo(do_md, 0) else 0
+                relato["observacoes_do_modelo"] = len(
+                    _grupo(obs, 1)) if not _grupo(do_md, 1) else 0
             if txt:
                 payload["textosInformativosPadraoAtivos"] = txt
             if modelo.get("tipoAbrangencia") is not None:
@@ -1084,6 +1102,35 @@ def _autoteste() -> int:
         "## Itens\n\n*PGR* - item 1.5.3.1 da NR-01: apresentar o PGR.\n")
     confere("NAD canônica: introdução do .md reconhecida",
             len(secoes["introducao"]) == 1 and not secoes["observacoes"])
+
+    # 5. adoção do modelo, GRUPO A GRUPO (o modelo é simulado; nada de rede)
+    global recuperar_modelo, recuperar_detalhe_ri
+    real_modelo, real_ri = recuperar_modelo, recuperar_detalhe_ri
+    recuperar_modelo = lambda *a, **k: {"observacoes": [
+        {"tipoTexto": 0, "titulo": None, "descricao": "intro do modelo"},
+        {"tipoTexto": 1, "titulo": "Prazo", "descricao": "obs do modelo"}]}
+    recuperar_detalhe_ri = lambda *a, **k: {}
+    try:
+        def adotado(do_md):
+            p = {"observacoes": do_md}
+            enriquecer(p, "tok", "1", id_modelo=1, cif="1")
+            return [o["descricao"] for o in p["observacoes"]]
+
+        confere("grupo: .md com introdução ganha as observações do modelo",
+                adotado(_observacoes_payload(["intro do AFT"], []))
+                == ["intro do AFT", "obs do modelo"])
+        confere("grupo: .md só com observações ganha a introdução do modelo",
+                adotado(_observacoes_payload(
+                    [], [{"titulo": None, "descricao": "obs do AFT"}]))
+                == ["intro do modelo", "obs do AFT"])
+        confere("grupo: .md completo não recebe nada do modelo",
+                adotado(_observacoes_payload(
+                    ["intro do AFT"], [{"titulo": None, "descricao": "obs do AFT"}]))
+                == ["intro do AFT", "obs do AFT"])
+        confere("grupo: .md sem texto nenhum recebe os dois grupos do modelo",
+                adotado([]) == ["intro do modelo", "obs do modelo"])
+    finally:
+        recuperar_modelo, recuperar_detalhe_ri = real_modelo, real_ri
 
     print("\n".join(casos))
     print(f"\n{len(casos) - falhas}/{len(casos)} casos passaram")
