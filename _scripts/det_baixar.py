@@ -833,16 +833,19 @@ def varredura(base: Path, porta: int = 8347) -> dict:
        o token que a via 1 ou a extensão deixou na RAM): notificação nova
        entra na seção `## Notificações DET` de cada memory.md;
     2. baixa o pacote COMPLETO (PDF + relatório + arquivos entregues) das
-       notificações que precisam: sem pacote local em NOTIFICACOES/, ou com
-       "atualização pendente" na ficha (entrega nova). As demais ficam
-       quietas — sem download não nasce pasta de dia nova, e o alerta
-       amarelo do DET só se apaga nas notificações efetivamente baixadas.
+       notificações SEM pacote local em NOTIFICACOES/ e SEM alerta pendente.
+       Notificação com o triângulo amarelo ("atualização pendente" na ficha)
+       NUNCA entra no lote — regra do AFT (24/08/2026): o download completo
+       apagaria o alerta em silêncio, e o triângulo é o aviso de que há
+       entrega que o auditor ainda não viu. Elas voltam em `pendentes`, para
+       baixa INDIVIDUAL (/aft-det-baixar <código>), que aí sim apaga o
+       alerta como ato consciente. As já em dia ficam quietas.
 
     Token vencido no meio devolve token_expirado com o parcial — renovar e
     rodar de novo é seguro (tudo idempotente). Notificação de empresa SEM
     OS não entra: criar OS é papel da /aft-nova-auditoria."""
-    r = {"ok": True, "sync": None, "os": [],
-         "baixadas": 0, "sem_novidade": 0, "canceladas": 0, "erros": []}
+    r = {"ok": True, "sync": None, "os": [], "baixadas": 0,
+         "sem_novidade": 0, "pendentes": 0, "canceladas": 0, "erros": []}
 
     # O painel roda sob um vigia (launchd/Agendador de Tarefas) que o reergue
     # sozinho em ~10 s quando cai. Queda no meio do lote vira PAUSA, não
@@ -884,17 +887,23 @@ def varredura(base: Path, porta: int = 8347) -> dict:
         except OSError as e:
             r["erros"].append(f"{pasta.name}: memory.md ilegível: {e}")
             continue
-        ros = {"os": pasta.name, "baixadas": [], "erros": []}
+        ros = {"os": pasta.name, "baixadas": [], "pendentes": [], "erros": []}
         notifs = pasta / "NOTIFICACOES"
         for nf in codigos_da_ficha(texto):
             codigo = nf["codigo"]
             if nf["cancelada"]:
                 r["canceladas"] += 1
                 continue
+            if nf["pendente"]:
+                # Triângulo amarelo: fora do lote, SEMPRE (mesmo sem pacote
+                # local) — baixa individual preserva o alerta como aviso.
+                ros["pendentes"].append(codigo)
+                r["pendentes"] += 1
+                continue
             tem_pacote = notifs.is_dir() and any(
                 codigo in q.name.upper()
                 for q in notifs.iterdir() if q.is_dir())
-            if tem_pacote and not nf["pendente"]:
+            if tem_pacote:
                 r["sem_novidade"] += 1
                 continue
             res = via_painel(pasta.name, codigo, porta)
@@ -905,20 +914,18 @@ def varredura(base: Path, porta: int = 8347) -> dict:
                 r.update(ok=False, token_expirado=True,
                          erro="token venceu no meio da varredura — renove e "
                               "rode de novo (o que já veio não baixa de novo)")
-                if ros["baixadas"] or ros["erros"]:
+                if ros["baixadas"] or ros["pendentes"] or ros["erros"]:
                     r["os"].append(ros)
                 return r
             if res.get("ok"):
                 ros["baixadas"].append({
                     "codigo": codigo, "pacote": res.get("pacote"),
                     "baixados": res.get("baixados", 0),
-                    "ja_existiam": res.get("ja_existiam", 0),
-                    "motivo": "sem pacote local" if not tem_pacote
-                              else "atualização pendente"})
+                    "ja_existiam": res.get("ja_existiam", 0)})
                 r["baixadas"] += 1
             else:
                 ros["erros"].append(f"{codigo}: {res.get('erro') or res}")
-        if ros["baixadas"] or ros["erros"]:
+        if ros["baixadas"] or ros["pendentes"] or ros["erros"]:
             r["os"].append(ros)
         r["erros"] += [f"{pasta.name} · {e}" for e in ros["erros"]]
     return r

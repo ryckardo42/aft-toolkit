@@ -13,7 +13,8 @@ description: >
   "baixa o que falta do DET em todas as auditorias": a FASE 6 (opcional, sempre
   perguntada) varre o DET e baixa, para todas as OS, as notificações que ainda
   não estão nas pastas e os documentos entregues com o relatório de
-  atendimento. Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
+  atendimento — exceto as com alerta amarelo pendente, que ficam listadas para
+  baixa individual. Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
   nada. NÃO cadastra OS do zero (/aft-nova-auditoria).
 ---
 
@@ -462,17 +463,29 @@ python ~/.claude/skills/_scripts/det_baixar.py --varredura "<OS_ATIVAS>"
 
    O script primeiro sincroniza as fichas (notificação nova entra no memory.md de
    cada OS) e depois baixa o pacote completo — PDF, relatório de atendimento e
-   arquivos entregues — de toda notificação **sem pacote local** ou **com entrega
-   nova** ("atualização pendente" na ficha). O resto fica quieto. `token_expirado`
-   no meio: renove o token e rode de novo — é idempotente, nada baixa em dobro.
+   arquivos entregues — de toda notificação **sem pacote local**. Regra dura
+   (decisão do AFT, 24/08/2026): notificação com o **triângulo amarelo**
+   ("atualização pendente" na ficha) **nunca entra no lote**, mesmo sem pacote
+   local — o download completo apagaria o alerta em silêncio, e o triângulo é o
+   aviso de que há entrega que o auditor ainda não viu. Elas voltam no campo
+   `pendentes` do JSON. O resto fica quieto. `token_expirado` no meio: renove o
+   token e rode de novo — é idempotente, nada baixa em dobro.
 
 4. **Relate em uma mensagem**: notificações novas importadas por OS (do bloco
-   `sync`), pacotes baixados (código, motivo, quantos arquivos), `sem_novidade` e
-   erros em linguagem simples. Regenere o painel ao final (mesmo comando da FASE 5).
+   `sync`), pacotes baixados (código, quantos arquivos), `sem_novidade`, os
+   `pendentes` e erros em linguagem simples. Regenere o painel ao final (mesmo
+   comando da FASE 5).
+
+5. **Pendentes são baixa INDIVIDUAL.** Liste os códigos com triângulo amarelo em
+   destaque no relatório e ofereça: *"quer que eu baixe alguma delas agora?"*.
+   Cada uma que o AFT autorizar é uma chamada da `/aft-det-baixar` para aquele
+   código — aí sim o alerta se apaga, como ato consciente dele. Nunca baixe as
+   pendentes em lote, nem com autorização genérica: uma a uma.
 
 Avisos que o AFT precisa ouvir (uma linha cada, quando se aplicarem):
-- O download completo **registra a visualização no DET** — o triângulo amarelo se
-  apaga nas notificações baixadas, como se o AFT as tivesse aberto no site.
+- O download completo **registra a visualização no DET** — nas notificações que a
+  varredura baixou (sem alerta pendente) e nas pendentes que ele mandar baixar
+  individualmente, o triângulo se apaga como se ele as tivesse aberto no site.
 - Notificação de empresa **sem OS em OS ATIVAS não entra** na varredura: cadastre
   antes com `/aft-nova-auditoria`.
 
