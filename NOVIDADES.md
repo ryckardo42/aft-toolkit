@@ -96,7 +96,9 @@ numerada, subpasta por dia).
 
 A varredura é esperta: notificação que já está em dia na pasta fica quieta — só
 baixa o que não existe localmente ou o que tem entrega nova no DET. Se a chave de
-sessão vencer no meio, é só renovar e rodar de novo: nada baixa em dobro. O download
+sessão vencer no meio, é só renovar e rodar de novo: nada baixa em dobro — e se o
+servidor do painel engasgar durante o lote, a varredura espera ele voltar e segue
+sozinha. O download
 completo registra a visualização no DET (o triângulo amarelo se apaga nas
 notificações baixadas), e empresa sem auditoria cadastrada não entra — para essas, o
 caminho continua sendo o /aft-nova-auditoria.
