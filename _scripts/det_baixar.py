@@ -793,6 +793,120 @@ def _registrar_no_memory(pasta_os: Path, r: dict) -> None:
         r["erros"].append(f"registro no memory.md: {e}")
 
 
+# ── Varredura do DET (passo opcional da /aft-organiza-os) ────────────────────
+
+RE_CHECKBOX_DET = re.compile(r"^\s*-\s*\[[ xX]\]\s*\**\s*([A-Z0-9]{8,})")
+
+
+def codigos_da_ficha(texto: str) -> list[dict]:
+    """As notificações da seção `## Notificações DET` de um memory.md:
+    [{codigo, pendente, cancelada}]. `pendente` vem da sub-linha de detalhes
+    do sync ("atualização pendente" = entrega nova no DET); `cancelada` idem
+    ("CANCELADA no DET"). Função pura, testável sem rede."""
+    linhas = texto.splitlines()
+    ini = next((i + 1 for i, l in enumerate(linhas)
+                if l.strip() == "## Notificações DET"), -1)
+    if ini < 0:
+        return []
+    fim = next((i for i in range(ini, len(linhas))
+                if linhas[i].strip().startswith("## ")), len(linhas))
+    out: list[dict] = []
+    for l in linhas[ini:fim]:
+        m = RE_CHECKBOX_DET.match(l)
+        if m:
+            out.append({"codigo": m.group(1), "pendente": False,
+                        "cancelada": False})
+        elif out and l.strip().startswith("-"):
+            if "atualização pendente" in l:
+                out[-1]["pendente"] = True
+            if "CANCELADA no DET" in l:
+                out[-1]["cancelada"] = True
+    return out
+
+
+def varredura(base: Path, porta: int = 8347) -> dict:
+    """Varre o DET para TODAS as OS de OS ATIVAS (pedido do AFT em
+    24/08/2026 — o passo opcional da /aft-organiza-os):
+
+    1. pede ao painel um sync das fichas (POST /api/det-sync sem corpo — usa
+       o token que a via 1 ou a extensão deixou na RAM): notificação nova
+       entra na seção `## Notificações DET` de cada memory.md;
+    2. baixa o pacote COMPLETO (PDF + relatório + arquivos entregues) das
+       notificações que precisam: sem pacote local em NOTIFICACOES/, ou com
+       "atualização pendente" na ficha (entrega nova). As demais ficam
+       quietas — sem download não nasce pasta de dia nova, e o alerta
+       amarelo do DET só se apaga nas notificações efetivamente baixadas.
+
+    Token vencido no meio devolve token_expirado com o parcial — renovar e
+    rodar de novo é seguro (tudo idempotente). Notificação de empresa SEM
+    OS não entra: criar OS é papel da /aft-nova-auditoria."""
+    r = {"ok": True, "sync": None, "os": [],
+         "baixadas": 0, "sem_novidade": 0, "canceladas": 0, "erros": []}
+
+    req = urllib.request.Request(
+        f"http://127.0.0.1:{porta}/api/det-sync", data=b"{}",
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            r["sync"] = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        try:
+            corpo = json.loads(e.read().decode("utf-8"))
+        except Exception:
+            corpo = {}
+        if corpo.get("token_expirado"):
+            return {"ok": False, "token_expirado": True,
+                    "erro": corpo.get("erro") or "token do DET ausente/vencido"}
+        r["erros"].append(f"sync das fichas: {corpo.get('erro') or e.code}")
+    except Exception as e:
+        return {"ok": False, "painel_fora": True,
+                "erro": f"servidor do painel não respondeu ({e}) — "
+                        "suba com instalar_servidor_painel.py reiniciar"}
+
+    for pasta in sorted(p for p in base.iterdir()
+                        if p.is_dir() and (p / "memory.md").is_file()):
+        try:
+            texto = (pasta / "memory.md").read_text(encoding="utf-8")
+        except OSError as e:
+            r["erros"].append(f"{pasta.name}: memory.md ilegível: {e}")
+            continue
+        ros = {"os": pasta.name, "baixadas": [], "erros": []}
+        notifs = pasta / "NOTIFICACOES"
+        for nf in codigos_da_ficha(texto):
+            codigo = nf["codigo"]
+            if nf["cancelada"]:
+                r["canceladas"] += 1
+                continue
+            tem_pacote = notifs.is_dir() and any(
+                codigo in q.name.upper()
+                for q in notifs.iterdir() if q.is_dir())
+            if tem_pacote and not nf["pendente"]:
+                r["sem_novidade"] += 1
+                continue
+            res = via_painel(pasta.name, codigo, porta)
+            if res.get("token_expirado"):
+                r.update(ok=False, token_expirado=True,
+                         erro="token venceu no meio da varredura — renove e "
+                              "rode de novo (o que já veio não baixa de novo)")
+                if ros["baixadas"] or ros["erros"]:
+                    r["os"].append(ros)
+                return r
+            if res.get("ok"):
+                ros["baixadas"].append({
+                    "codigo": codigo, "pacote": res.get("pacote"),
+                    "baixados": res.get("baixados", 0),
+                    "ja_existiam": res.get("ja_existiam", 0),
+                    "motivo": "sem pacote local" if not tem_pacote
+                              else "atualização pendente"})
+                r["baixadas"] += 1
+            else:
+                ros["erros"].append(f"{codigo}: {res.get('erro') or res}")
+        if ros["baixadas"] or ros["erros"]:
+            r["os"].append(ros)
+        r["erros"] += [f"{pasta.name} · {e}" for e in ros["erros"]]
+    return r
+
+
 def via_painel(pasta: str, codigo: str, porta: int = 8347,
                so_notificacao: bool = False) -> dict:
     """POST /api/det-baixar no servidor local do painel (o token mora lá).
@@ -823,11 +937,20 @@ if __name__ == "__main__":
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     argv = [a for a in sys.argv[1:] if a != "--so-notificacao"]
     so_notif = "--so-notificacao" in sys.argv
+    porta = 8347
+    if "--porta" in argv:  # instância de teste do painel (debug)
+        i = argv.index("--porta")
+        porta = int(argv[i + 1])
+        del argv[i:i + 2]
     if len(argv) == 3 and argv[0] == "--via-painel":
-        print(json.dumps(via_painel(argv[1], argv[2], so_notificacao=so_notif),
+        print(json.dumps(via_painel(argv[1], argv[2], porta,
+                                    so_notificacao=so_notif),
                          ensure_ascii=False, indent=2))
     elif len(argv) == 2 and argv[0] == "--reorganizar":
         print(json.dumps(reorganizar(Path(argv[1])),
+                         ensure_ascii=False, indent=2))
+    elif len(argv) == 2 and argv[0] == "--varredura":
+        print(json.dumps(varredura(Path(argv[1]), porta),
                          ensure_ascii=False, indent=2))
     elif len(argv) == 3:
         motor = baixar_so_notificacao if so_notif else baixar_notificacao
@@ -838,10 +961,13 @@ if __name__ == "__main__":
               "\"<pasta da OS>\" <CODIGO>\n"
               "     python det_baixar.py [--so-notificacao] \"<pasta da OS>\" "
               "<CODIGO> <token>\n"
-              "     python det_baixar.py --reorganizar \"<pasta da OS>\"\n\n"
+              "     python det_baixar.py --reorganizar \"<pasta da OS>\"\n"
+              "     python det_baixar.py --varredura \"<pasta OS ATIVAS>\"\n\n"
               "  --so-notificacao: baixa só o PDF do documento — sem os arquivos\n"
               "  entregues pelo empregador, e sem apagar o alerta amarelo do DET\n"
               "  --reorganizar: sem rede — aplica às pastas de NOTIFICACOES/ a\n"
-              "  convenção de 24/08/2026 (numeração e subpastas por dia)",
+              "  convenção de 24/08/2026 (numeração e subpastas por dia)\n"
+              "  --varredura: sync das fichas + download do que falta em todas\n"
+              "  as OS (token já no painel; passo opcional da /aft-organiza-os)",
               file=sys.stderr)
         sys.exit(1)
