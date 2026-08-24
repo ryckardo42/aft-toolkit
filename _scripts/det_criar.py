@@ -569,27 +569,53 @@ def _blocos_rotulados(linhas: list[str]) -> list[dict]:
     return blocos
 
 
+def _stub_texto_padrao() -> dict:
+    """O `textoInformativoPadrao` vazio que o site sempre põe em cada bloco —
+    a lição dos itens vale aqui: campo ausente quebra o formulário reativo."""
+    return {"tipoTexto": 0, "ordem": 0, "titulo": None, "descricao": "",
+            "editavel": False, "dataDesativacao": None, "uid": ""}
+
+
+def _normalizar_observacoes(blocos: list[dict]) -> list[dict]:
+    """Põe QUALQUER lista de textos no formato que a tela do DET espera.
+
+    Passagem obrigatória de tudo que entra em `payload["observacoes"]`, venha
+    do .md ou do modelo do DET — e é do modelo que vem a razão de existir: o
+    detalhe de um modelo devolve os blocos só com {tipoTexto, titulo,
+    descricao}, sem `ordem`, sem `uid` e sem `textoInformativoPadrao`. Adotados
+    crus, quebravam a prévia do painel (KeyError: 'ordem', 24/08/2026) e, pior,
+    iriam ao DET sem posição definida.
+
+    `ordem` é uma sequência única sobre os dois grupos (é assim no molde), com
+    a introdução (tipoTexto 0) antes das observações (tipoTexto 1); dentro de
+    cada grupo, a ordem de chegada é preservada. O `uid` sai sempre vazio: o
+    texto está sendo gravado num registro NOVO."""
+    intro = [b for b in blocos if not b.get("tipoTexto")]
+    resto = [b for b in blocos if b.get("tipoTexto")]
+    saida = []
+    for ordem, b in enumerate(intro + resto, start=1):
+        saida.append({"ordem": ordem,
+                      "titulo": b.get("titulo") or None,
+                      "descricao": b.get("descricao") or "",
+                      "tipoTexto": b.get("tipoTexto") or 0,
+                      "uid": "",
+                      # o stub completa o que faltar, sem descartar o texto
+                      # informativo que o bloco por acaso já traga
+                      "textoInformativoPadrao": {
+                          **_stub_texto_padrao(),
+                          **(b.get("textoInformativoPadrao") or {})}})
+    return saida
+
+
 def _observacoes_payload(introducao: list[str],
                          observacoes: list[dict]) -> list[dict]:
-    """Monta a lista `observacoes` do DET a partir do que veio do .md.
-    `ordem` é uma sequência única sobre os dois grupos (é assim no molde), e
-    cada entrada leva o `textoInformativoPadrao` vazio que o site sempre põe —
-    a lição dos itens vale aqui: campo ausente quebra o formulário reativo."""
-    def stub():
-        return {"tipoTexto": 0, "ordem": 0, "titulo": None, "descricao": "",
-                "editavel": False, "dataDesativacao": None, "uid": ""}
-
-    saida, ordem = [], 0
-    for txt in introducao:
-        ordem += 1
-        saida.append({"ordem": ordem, "titulo": None, "descricao": txt,
-                      "tipoTexto": 0, "uid": "", "textoInformativoPadrao": stub()})
-    for ob in observacoes:
-        ordem += 1
-        saida.append({"ordem": ordem, "titulo": ob.get("titulo") or None,
-                      "descricao": ob.get("descricao") or "",
-                      "tipoTexto": 1, "uid": "", "textoInformativoPadrao": stub()})
-    return saida
+    """Monta a lista `observacoes` do DET a partir do que veio do .md."""
+    blocos = [{"tipoTexto": 0, "titulo": None, "descricao": txt}
+              for txt in introducao]
+    blocos += [{"tipoTexto": 1, "titulo": ob.get("titulo") or None,
+                "descricao": ob.get("descricao") or ""}
+               for ob in observacoes]
+    return _normalizar_observacoes(blocos)
 
 
 def _prazo_iso(dias: int, hoje: datetime.date | None = None) -> str:
@@ -621,8 +647,10 @@ def enriquecer(payload: dict, token: str, ri: str,
             obs = _secao_do_modelo(modelo, "observacoes")
             txt = _secao_do_modelo(modelo, "textosInformativosPadraoAtivos")
             # o .md manda: só uso o modelo se o arquivo não trouxe nada
+            # os blocos do modelo vêm SEM ordem, uid nem textoInformativoPadrao:
+            # entram pela mesma normalização do .md, nunca crus
             if obs and not payload.get("observacoes"):
-                payload["observacoes"] = obs
+                payload["observacoes"] = _normalizar_observacoes(obs)
             if txt:
                 payload["textosInformativosPadraoAtivos"] = txt
             if modelo.get("tipoAbrangencia") is not None:
@@ -916,6 +944,15 @@ def revisar_payload(payload: dict) -> list[dict]:
                   f"{'introdução' if o.get('tipoTexto') == 0 else 'observação'} "
                   f"{o.get('ordem')}",
                   f"{len(o['descricao'])} caracteres — acima de {LIMITE_CAMPO}")
+    # Todo texto passa por _normalizar_observacoes antes de entrar no payload.
+    # Se chegou aqui fora da sequência 1..N, alguma via nova escapou dela — foi
+    # o que aconteceu com o texto vindo de modelo do DET (24/08/2026) — e a
+    # empresa leria a notificação fora de ordem.
+    ordens = sorted(o.get("ordem") for o in obs if isinstance(o.get("ordem"), int))
+    if obs and ordens != list(range(1, len(obs) + 1)):
+        anota("impede", "introdução/observações",
+              "os textos iriam sem posição definida, ou com posição repetida — "
+              "a empresa leria a notificação fora da ordem escrita")
 
     ends = payload.get("enderecos") or []
     if not ends:
@@ -995,13 +1032,74 @@ def criar_rascunho(token: str, corpo: dict) -> dict:
                    "auditor/criar-notificacao"}
 
 
+def _autoteste() -> int:
+    """`python det_criar.py --autoteste` — confere, sem rede e sem tocar em
+    pasta nenhuma, o que já quebrou uma vez: texto de notificação que entra no
+    payload sem passar pela normalização. Imprime uma linha por caso."""
+    casos, falhas = [], 0
+
+    def confere(nome, condicao):
+        nonlocal falhas
+        falhas += 0 if condicao else 1
+        casos.append(("ok   " if condicao else "FALHOU") + "  " + nome)
+
+    # 1. blocos como o DETALHE DE UM MODELO os devolve: sem ordem, sem uid,
+    #    sem textoInformativoPadrao (o defeito do ticket de 24/08/2026)
+    do_modelo = [{"tipoTexto": 1, "titulo": "Observação", "descricao": "obs 1"},
+                 {"tipoTexto": 0, "titulo": None, "descricao": "intro 1"},
+                 {"tipoTexto": 0, "titulo": None, "descricao": "intro 2"}]
+    norm = _normalizar_observacoes(do_modelo)
+    confere("modelo: ordem vira sequência 1..N",
+            [o["ordem"] for o in norm] == [1, 2, 3])
+    confere("modelo: introdução antes das observações",
+            [o["tipoTexto"] for o in norm] == [0, 0, 1])
+    confere("modelo: introdução preserva a ordem de chegada",
+            [o["descricao"] for o in norm][:2] == ["intro 1", "intro 2"])
+    confere("modelo: uid vazio e textoInformativoPadrao completo",
+            all(o["uid"] == "" and o["textoInformativoPadrao"]["uid"] == ""
+                for o in norm))
+
+    # 2. o caminho do .md continua com a sequência única sobre os dois grupos
+    do_md = _observacoes_payload(["intro"], [{"titulo": "R", "descricao": "obs"}])
+    confere(".md: sequência única sobre introdução + observações",
+            [(o["ordem"], o["tipoTexto"]) for o in do_md] == [(1, 0), (2, 1)])
+
+    # 3. a revisão barra o payload cujo texto não passou pela normalização
+    def desordem(observacoes):
+        base = {"ri": "1", "ni": "1" * 14, "titulo": "t", "itens": [],
+                "observacoes": observacoes}
+        return [a for a in revisar_payload(base)
+                if a["onde"] == "introdução/observações"]
+
+    confere("revisão: barra texto sem ordem", bool(desordem(do_modelo)))
+    confere("revisão: barra ordem repetida",
+            bool(desordem([dict(o, ordem=1) for o in norm])))
+    confere("revisão: aceita o payload normalizado", not desordem(norm))
+
+    # 4. a NAD canônica (introdução fixa + "## Itens", sem "## Observações")
+    #    tem introdução reconhecida — é o formato que a FASE 3 da skill manda
+    secoes = secoes_da_tn_nco(
+        "---\ndet:\n  modelo: 11301\n---\n\n# Notificação\n\n"
+        "Nos termos do art. 630 da CLT, fica a empresa NOTIFICADA:\n\n"
+        "## Itens\n\n*PGR* - item 1.5.3.1 da NR-01: apresentar o PGR.\n")
+    confere("NAD canônica: introdução do .md reconhecida",
+            len(secoes["introducao"]) == 1 and not secoes["observacoes"])
+
+    print("\n".join(casos))
+    print(f"\n{len(casos) - falhas}/{len(casos)} casos passaram")
+    return 1 if falhas else 0
+
+
 if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if "--autoteste" in sys.argv[1:]:
+        sys.exit(_autoteste())
     if len(sys.argv) == 3:  # descoberta do molde
         print(json.dumps(recuperar_crua(sys.argv[2], sys.argv[1]),
                          ensure_ascii=False, indent=2))
     else:
-        print("uso: python det_criar.py <CODIGO> <token>  (leitura do molde)",
+        print("uso: python det_criar.py <CODIGO> <token>  (leitura do molde)\n"
+              "     python det_criar.py --autoteste       (conferência local)",
               file=sys.stderr)
         sys.exit(1)

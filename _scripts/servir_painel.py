@@ -922,8 +922,11 @@ class Handler(BaseHTTPRequestHandler):
                       # introdução (tipoTexto 0) e observações (tipoTexto 1) —
                       # o AFT precisa VER esses textos na prévia, senão só
                       # descobre o que foi gravado abrindo o DET.
-                      "observacoes": [{"ordem": o["ordem"],
-                                       "tipoTexto": o["tipoTexto"],
+                      # .get, e não o[...]: o resumo é só a VISTA da prévia —
+                      # um campo que o DET deixe de mandar tira uma coluna da
+                      # tela, nunca a prévia inteira (KeyError, 24/08/2026)
+                      "observacoes": [{"ordem": o.get("ordem"),
+                                       "tipoTexto": o.get("tipoTexto"),
                                        "titulo": o.get("titulo"),
                                        "caracteres": len(o.get("descricao") or ""),
                                        "descricao": o.get("descricao") or ""}
