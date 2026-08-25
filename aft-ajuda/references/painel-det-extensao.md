@@ -60,17 +60,41 @@ O **servidor do painel precisa estar ligado**. Quem instalou pelo `/aft-setup` j
 
 ### Instalando (uma vez só)
 
-1. Abrir a página da extensão na loja do Chrome e clicar em **Usar no Chrome**:
-   `https://chromewebstore.google.com/detail/sync-det-%E2%80%94-sisos-aft-tool/khmecjbidgcndmgmkbpfncjgmmfehiem`
-   No **Microsoft Edge** o caminho é o mesmo link — a loja pede só uma confirmação a mais ("Permitir extensões de outras lojas") e o botão vira **Instalar**.
-2. **Fixar na barra do navegador**: clicar no ícone de quebra-cabeça (🧩) e depois no alfinete ao lado de "Sync DET". Assim ela fica sempre à vista.
-3. Clicar no ícone da extensão. Na primeira abertura aparece a tela de configuração: **marcar a caixa PAINEL LOCAL (AFT TOOLKIT)** e clicar em **Salvar**. É a única configuração necessária.
-4. Os campos **URL do SisOS** e **Token de acesso** ficam **em branco** — pertencem a outro modo de uso (o SisOS, um sistema na nuvem), desnecessário com o painel local. O endereço `http://127.0.0.1:8347` que já aparece no campo do painel é o padrão: não mexer.
+São quatro passos, e **nenhuma configuração**: desde a versão 4.0 a extensão já
+chega pronta, porque o painel do computador é o único destino que ela conhece.
+
+**Passo 1 — abrir a página da extensão na loja:**
+
+```
+https://chromewebstore.google.com/detail/sync-det-%E2%80%94-aft-toolkit/khmecjbidgcndmgmkbpfncjgmmfehiem?authuser=0&hl=pt-BR
+```
+
+**Passo 2 — clicar em "Usar no Chrome"** e confirmar em **Adicionar extensão**.
+No **Microsoft Edge** é o mesmo link: a loja pede uma confirmação a mais
+("Permitir extensões de outras lojas") e o botão passa a ser **Instalar**.
+
+**Passo 3 — conferir se ela ficou ativada.** Abrir `chrome://extensions` (no
+Edge, `edge://extensions`) e procurar **Sync DET — AFT Toolkit**: a chavinha do
+canto do cartão tem de estar **azul/ligada**. Vale também fixá-la na barra:
+clicar no ícone de quebra-cabeça (🧩) e depois no alfinete ao lado do nome.
+
+**Passo 4 — testar no DET.** Entrar no DET (`auditor-det.sit.trabalho.gov.br`)
+com o login **gov.br** e olhar o **canto inferior direito** da tela: tem de
+aparecer um botão flutuante escrito **Sincronizar**. Apareceu, está funcionando.
+
+Se o botão não aparecer, é quase sempre uma destas três coisas: a extensão não
+está ativada (passo 3), a página do DET foi aberta **antes** de a extensão ser
+instalada (basta apertar F5) ou o login do gov.br ainda não foi concluído.
 
 ### Usando no dia a dia
 
 1. Entrar no DET normalmente (`auditor-det.sit.trabalho.gov.br`), com o login **gov.br**. Só de navegar logado, a extensão captura sozinha a **chave de sessão** que o próprio site já usa — pense nela como o crachá que o DET entrega na entrada. O AFT não copia, não cola e **não digita senha nenhuma na extensão**.
-2. Clicar no botão flutuante **Sincronizar**, no canto direito, no final da página do DET.
+2. Na maior parte do tempo **não é preciso clicar em nada**: enquanto o DET
+   estiver aberto, a extensão entrega a chave ao painel sozinha, e o painel
+   mantém as fichas em dia. O botão flutuante **Sincronizar**, no **canto
+   inferior direito** da página do DET, força a varredura completa de todas as
+   OS na hora — útil quando o AFT acabou de lavrar uma notificação e quer vê-la
+   no painel imediatamente.
 
 ### O que acontece e o que aparece
 
@@ -151,6 +175,7 @@ Espelha no Google Calendar do AFT os prazos das notificações DET de todas as O
 | **"Token DET não capturado"** | A extensão ainda não viu o AFT navegar logado. | Abrir qualquer página interna do DET (a lista de notificações, por exemplo) e clicar em **Sincronizar** de novo. |
 | **Sincronizou, mas a notificação não apareceu** | A OS não tem como ser ligada ao empregador, ou a notificação é de outro RI. | Conferir se a ficha (`memory.md`) da OS tem o **CNPJ ou CPF**: sem ele o painel não sabe qual empregador consultar no DET. Se o aviso disse que houve notificações **ignoradas**, é o caso de RI de outra fiscalização — conferir o campo `ri:` da ficha. |
 | **Botões do painel não respondem** | O painel foi aberto por duplo clique no arquivo, e não pelo endereço do servidor — nesse modo ele é somente leitura. | Abrir pelo endereço `http://127.0.0.1:8347`, com o servidor ligado. |
+| **O botão flutuante sumiu, ou parou de responder, depois de uma atualização** | O Chrome atualiza extensões sozinho, em segundo plano. Se isso acontecer com a página do DET já aberta, a parte da extensão que vive dentro daquela página fica desligada. | **Apertar F5 na página do DET.** É só isso. A extensão avisa isso na própria tela quando o AFT clica em Sincronizar. |
 | **`/aft-det-baixar` diz que o token expirou** | A chave de sessão vale ~25 minutos. | Voltar à aba do DET, logado, e clicar em **Sincronizar**; depois repetir o download. |
 
 ---
