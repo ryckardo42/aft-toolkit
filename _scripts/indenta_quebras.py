@@ -49,6 +49,13 @@ def indentar_campo(campo: str) -> str:
 
 
 def main():
+    # -h/--help responde com o proprio docstring. Antes, "--help" era tratado
+    # como caminho de arquivo: o script levantava FileNotFoundError e o
+    # mecanismo de ticket registrava isso como DEFEITO DO TOOLKIT -- um relato
+    # de bug gerado por alguem perguntando como usar a ferramenta.
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print(__doc__ or "uso: python indenta_quebras.py <arquivo>")
+        return 0
     if len(sys.argv) < 2:
         print("uso: python indenta_quebras.py <arquivo.txt>", file=sys.stderr)
         return 2
