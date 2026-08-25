@@ -101,6 +101,51 @@ Agora a ementa é opcional na leitura, como sempre foi na redação.
 
 ---
 
+## 25/08/2026
+<!-- commit: det-criar-ri-do-grupo -->
+
+**Auditoria de grupo econômico: os RIs pararam de se emendar num número que não existe.** Uma auditoria de grupo tem uma pasta só e mais de um Relatório de Inspeção — um por empresa —, e a ficha os declara na mesma linha. O programa que monta o rascunho no DET lia esse campo apagando tudo o que não fosse dígito: os dois números se colavam num RI de dezoito dígitos, e a notificação seguiria para um RI inválido, sem exceção e sem aviso, só se descobrindo depois de gravada.
+
+Agora os RIs são lidos separadamente. E havendo mais de um, o programa **não escolhe sozinho**: ele para e pergunta qual usar, porque decidir por qual empresa do grupo a notificação sai não é escolha de programa.
+
+---
+
+## 25/08/2026
+<!-- commit: det-criar-ni-conferido -->
+
+**O sujeito passivo da notificação passou a ser informado e conferido, nunca adivinhado.** Numa auditoria de grupo econômico a mesma pasta serve a duas empresas, e a ficha guarda um CNPJ só. Ao montar a notificação para a segunda empresa, o programa repetia o CNPJ da primeira: notificação no Relatório de Inspeção de uma, com o sujeito passivo da outra.
+
+Agora quem monta informa o CNPJ (ou CPF), e o programa o confere contra a ficha da auditoria antes de aceitar — recusando o que não estiver lá, e recusando também número com quantidade errada de dígitos. Sujeito passivo é campo em que adivinhar é pior do que falhar: não se corrige depois da lavratura.
+
+---
+
+## 25/08/2026
+<!-- commit: det-endereco-completo -->
+
+**Endereço incompleto na notificação deixou de ser descoberto só na hora de lavrar.** O DET confere logradouro, número, município e UF no momento da lavratura e recusa o ato quando falta algum. Enquanto isso era apenas um "aviso" na conferência, o rascunho nascia sem reclamação e você só encontrava o problema ao tentar lavrar, com a notificação inteira já pronta. Agora falta de qualquer um desses quatro campos **impede** o rascunho, e a conferência diz exatamente quais faltam.
+
+Junto disso, as lacunas passam a se preencher sozinhas pela base aberta de CNPJ da Receita Federal — com uma trava: só quando o CEP que já está na notificação coincide com o CEP cadastral do CNPJ. Se forem diferentes (o caso do estabelecimento inspecionado num endereço e a matriz noutro), o programa não mexe e mantém o impedimento, para você decidir. Completar, aqui, nunca substitui: o que veio do Relatório de Inspeção prevalece, e a Receita só entra onde havia branco.
+
+---
+
+## 25/08/2026
+<!-- commit: relacao-autos-grupo -->
+
+**A Relação de autos de uma auditoria de grupo econômico passou a trazer os CNPJs de todas as autuadas.** O documento tirava a inscrição do nome da pasta da auditoria, que guarda um CNPJ só. Em grupo econômico duas empresas dividem a mesma pasta, cada uma com seu CNPJ, seu Relatório de Inspeção e seus autos — e a relação atribuía os autos da segunda empresa ao sujeito passivo da primeira, num documento que vai ao processo.
+
+Agora os CNPJs saem dos cabeçalhos de empresa do detalhamento, na ordem em que aparecem. O CNPJ citado dentro do histórico de um auto (ao caracterizar o grupo) continua de fora, como deve: mencionar não é ser autuado.
+
+---
+
+## 25/08/2026
+<!-- commit: autos-reunidos-grupo -->
+
+**Auditoria de grupo econômico: os autos das duas empresas cabem num anexo só.** O Sistema Auditor guarda uma pasta por CNPJ, mas o relatório final é um e leva um anexo. Até agora só havia como reunir os autos de uma empresa por vez, e a auditoria de grupo terminava com dois PDFs para um anexo que é único.
+
+Agora o dossiê sai inteiro: cada empresa abre o seu marcador no índice, com os autos e anexos dela por baixo — quem folheia sabe de quem é o auto que está lendo. E o laudo que instrui autos das duas entra uma vez só: a regra de não repetir anexo passou a valer para o PDF inteiro, não por empresa. Empresa cuja pasta não for encontrada no Sistema Auditor é informada antes de você anexar o documento, em vez de sumir calada.
+
+---
+
 ## 24/08/2026
 <!-- commit: baixar-so-notificacoes -->
 
@@ -299,6 +344,50 @@ confunda: PGR urbano (NR-01) continua na `/aft-PGR-analise`; a nova cuida só do
 <!-- commit: status-item-det-painel -->
 
 **O painel agora mostra o que o triângulo amarelo do DET esconde.** Até aqui, quando uma notificação tinha o alerta de "atualização pendente" (o triângulo amarelo), o painel só dizia que havia algo a resolver, mas não o quê. Agora, nessas notificações, o cartão mostra também o status de cada item: por exemplo, "itens: 5 aguardando avaliação de prazo". Assim você vê de relance se a pendência é decisão sua (o empregador pediu prorrogação de prazo e está aguardando você aceitar ou recusar), item entregue a conferir, ou outra coisa — sem precisar abrir o site do DET. A informação chega junto com o Sincronizar, como o resto das notificações, e só é buscada nas notificações que estão com o triângulo aceso.
+
+---
+
+## 24/08/2026
+
+<!-- commit: extensao-sync-det-v4 -->
+
+**A extensão do navegador ficou mais simples: agora é só instalar.** A Sync DET
+— a extensão que traz as notificações do DET para o painel — foi republicada na
+Chrome Web Store na **versão 4.0**, e a instalação deixou de ter configuração
+nenhuma.
+
+Antes, depois de instalar, você ainda precisava clicar no ícone da extensão e
+marcar uma caixa chamada "Painel local" para ela começar a funcionar. Quem não
+marcasse ficava com uma extensão instalada que não fazia nada, sem nenhum aviso
+do porquê. Essa caixa existia porque a extensão podia mandar os dados para dois
+lugares: o seu computador ou um sistema na nuvem. **O modo nuvem foi removido**
+— agora o único destino é o painel na sua máquina, então não havia mais nada a
+escolher. A caixa saiu.
+
+São quatro passos, e o último é só conferir que deu certo:
+
+1. abrir a página da extensão na loja;
+2. clicar em "Usar no Chrome" e confirmar;
+3. conferir em `chrome://extensions` que ela está ativada;
+4. entrar no DET e ver se aparece o botão flutuante **Sincronizar**, no canto
+   inferior direito da tela.
+
+O passo a passo completo, com o link e o que fazer se o botão não aparecer, está
+no `/aft-ajuda` — é só perguntar "como instalo a extensão".
+
+**Duas melhorias que vêm junto**, e que você não precisa fazer nada para ter:
+
+- A extensão passou a **enviar sozinha**, enquanto você navega no DET. O botão
+  Sincronizar continua lá, para forçar a atualização de todas as fichas na hora,
+  mas no dia a dia não é mais preciso clicar em nada.
+- Quando o Chrome atualiza a extensão em segundo plano e você está com o DET
+  aberto, a parte dela que vive dentro daquela página fica desligada. Antes isso
+  fazia a sincronização parar **em silêncio**. Agora a extensão percebe e avisa
+  na própria tela: recarregue a página (F5) e pronto.
+
+Ela continua sendo 100% local: nada é enviado para a internet, e a política de
+privacidade agora mora no próprio toolkit
+(https://ryckardo42.github.io/aft-toolkit/privacidade.html).
 
 ---
 
