@@ -64,8 +64,16 @@ def tipos_arquivo_todos() -> str:
     return opcoes()["tipos_de_arquivo"]["todos"]
 
 # Uma linha da TN-NCO: "*Título* - norma: texto [123456-7]"
+#
+# A ementa é OPCIONAL, e precisa ser: a própria SKILL.md da /aft-tn-nco diz que
+# "o [<EMENTA>] final só aparece quando existe ementa" -- item de orientação, ou
+# irregularidade sem ementa correspondente, termina no ponto final da exigência.
+# Enquanto o grupo foi obrigatório, esses itens simplesmente não casavam: o
+# arquivo ia para o DET com ZERO itens, sem erro e sem aviso, e só se percebia
+# ao abrir o rascunho no site.
 RE_ITEM_TN = re.compile(
-    r'^\*(?P<titulo>.+?)\*\s*-\s*(?P<resto>.+?)\s*\[(?P<ementa>\d{6}-\d)\]\.?\s*$')
+    r'^\*(?P<titulo>.+?)\*\s*-\s*(?P<resto>.+?)'
+    r'(?:\s*\[(?P<ementa>\d{6}-\d)\])?\.?\s*$')
 
 
 def recuperar_crua(token: str, codigo: str) -> dict:
