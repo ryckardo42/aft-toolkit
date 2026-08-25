@@ -7,7 +7,9 @@ description: >
   Use quando o AFT tiver duvida sobre como o proprio AFT Toolkit funciona, ou
   quando estiver perdido nele. Acione com "/aft-ajuda", "como funciona isso",
   "por onde eu comeco", "o que eu faco agora", "nao sei usar", "me explica o
-  painel", "como funciona a extensao do navegador", "o que e o DET aqui",
+  painel", "como funciona a extensao do navegador", "como instalo a extensao",
+  "instalar a extensao do chrome", "o botao sincronizar nao aparece",
+  "o que e o DET aqui",
   "o que e esse NotebookLM", "de onde vem a ementa", "onde ficam meus
   arquivos", "o que e o memory.md", "meus dados vao para a internet?", "que
   programas rodam na minha maquina", "qual habilidade faz tal coisa", "que
