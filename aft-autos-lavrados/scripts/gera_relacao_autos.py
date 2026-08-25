@@ -64,27 +64,69 @@ TNR_SZ = 24  # 12pt em vigésimos de ponto
 TEMPLATE = Path(__file__).parent / "template-relacao-autos.docx"
 
 
+RE_INSC = re.compile(r"\b(\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2})\b")
+
+
+def _so_digitos(s):
+    return re.sub(r"\D", "", s)
+
+
+def _formata_inscricao(insc):
+    d = _so_digitos(insc)
+    if len(d) == 14:
+        return "CNPJ %s.%s.%s/%s-%s" % (d[:2], d[2:5], d[5:8], d[8:12], d[12:])
+    if len(d) == 11:
+        return "CPF %s.%s.%s-%s" % (d[:3], d[3:6], d[6:9], d[9:])
+    return insc
+
+
+def _inscricoes_do_detalhamento(text):
+    """CNPJ/CPF declarados nos cabecalhos de empresa do Detalhamento, na ordem
+    em que aparecem e sem repetir.
+
+    So olha as linhas '### <RAZAO SOCIAL> - CNPJ ... - RI ...' que a skill manda
+    escrever quando a OS tem mais de um autuado. Nao varre o corpo dos autos: o
+    historico de um auto de grupo economico cita o CNPJ da OUTRA empresa ao
+    caracterizar o grupo, e varrer tudo traria esse CNPJ como se fosse autuado.
+    """
+    m = re.search(r"##\s*Detalhamento[^\n]*\n(.*?)(?=\n##\s|\Z)", text, re.S)
+    if not m:
+        return []
+    achadas = []
+    for linha in m.group(1).splitlines():
+        if not linha.startswith("### "):
+            continue
+        # o cabecalho de AUTO e '### Nº <numero>'; o de EMPRESA traz inscricao
+        for insc in RE_INSC.findall(linha):
+            d = _so_digitos(insc)
+            if d not in achadas:
+                achadas.append(d)
+    return achadas
+
+
 def parse_md(md_path: Path):
     text = md_path.read_text(encoding="utf-8")
 
     m = re.search(r"^#\s*Autos lavrados\s*[—-]\s*(.+)$", text, re.M)
     empresa = m.group(1).strip() if m else md_path.parent.name
 
-    # inscrição: dígitos no fim do nome da pasta da OS (CNPJ 14 ou CPF 11)
-    md_folder = md_path.parent.name
-    m = re.search(r"(\d{11,14})\s*$", md_folder)
-    if m:
-        insc = m.group(1)
-    else:
-        m = re.search(r"\b(\d{14})\b", text)
-        insc = m.group(1) if m else ""
-
-    if len(insc) == 14:
-        insc_fmt = f"CNPJ {insc[:2]}.{insc[2:5]}.{insc[5:8]}/{insc[8:12]}-{insc[12:]}"
-    elif len(insc) == 11:
-        insc_fmt = f"CPF {insc[:3]}.{insc[3:6]}.{insc[6:9]}-{insc[9:]}"
-    else:
-        insc_fmt = insc
+    # Inscrição. O caso simples é uma OS = um autuado, e o CNPJ/CPF sai dos
+    # dígitos finais do nome da pasta. Mas em GRUPO ECONÔMICO duas empresas
+    # dividem uma única pasta de OS, cada uma com seu CNPJ, seu RI e seus autos:
+    # emitir só o CNPJ da pasta atribuiria os autos da segunda empresa ao sujeito
+    # passivo da primeira -- erro de identificação num documento que vai ao
+    # processo, e bem pior do que deixar o campo vazio. Por isso o Detalhamento
+    # é varrido antes: se ele declarar mais de um CNPJ/CPF, todos são impressos.
+    inscricoes = _inscricoes_do_detalhamento(text)
+    if not inscricoes:
+        md_folder = md_path.parent.name
+        m = re.search(r"(\d{11,14})\s*$", md_folder)
+        if m:
+            inscricoes = [m.group(1)]
+        else:
+            m = re.search(r"\b(\d{14})\b", text)
+            inscricoes = [m.group(1)] if m else []
+    insc_fmt = " e ".join(_formata_inscricao(i) for i in inscricoes)
 
     # só a seção de detalhamento (ignora substituídos/pendentes/sem rascunho)
     m = re.search(r"##\s*Detalhamento[^\n]*\n(.*?)(?=\n##\s|\Z)", text, re.S)

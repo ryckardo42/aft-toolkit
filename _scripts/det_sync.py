@@ -34,9 +34,11 @@ Filtros, nesta ordem:
      Notificação de RI alheio nunca é importada nem descartada em silêncio:
      volta em `ignoradas_detalhe`. Ver "Vínculo notificação × OS".
 
-Alerta "⚠️ atualização pendente" (campo itemAtualizado da API): é dispensável —
-o AFT clica no alerta no painel ("já vi"), o servir_painel grava
-`<!-- visto: ... -->` na sub-linha e o alerta só volta se houver entrega nova.
+Alerta "⚠️ atualização pendente" (campo itemAtualizado da API): ESPELHA o DET —
+aparece enquanto a API disser true e some quando ela disser false. Não há
+dispensa por clique (havia até 25/08/2026; o AFT a vetou depois de apagar sem
+querer o alerta de uma pendência viva). Quem apaga o triângulo é o próprio DET,
+quando a notificação é aberta lá — o /aft-det-baixar faz isso ao baixar.
 
 O estado do checkbox ([ ]/[x]) NUNCA é alterado — respondida é decisão do AFT.
 Cada memory.md alterado recebe backup prévio (backup_arquivo.py) e uma linha
@@ -170,6 +172,36 @@ def snippet_canal(token: str, uid: str) -> str:
             texto = texto.rsplit(" ", 1)[0]
         texto += "…"
     return texto
+
+
+def codigos_abertos(texto: str) -> set[str]:
+    """Códigos das notificações ainda EM ABERTO (`- [ ]`) na seção
+    `## Notificações DET` da ficha.
+
+    É o gate do resumo de itens: enquanto o AFT não marcar a notificação como
+    respondida, o status dos itens interessa — independentemente do triângulo
+    amarelo, que ele pode ter dispensado no painel ou apagado ao abrir a
+    notificação no DET (ver resumo_itens). Só a seção do DET é varrida: a de
+    Pendências também tem checkboxes, e um texto em maiúsculas ali poderia
+    passar por código de notificação."""
+    linhas = texto.splitlines()
+    ini = next((i + 1 for i, l in enumerate(linhas)
+                if l.strip().startswith("## ")
+                and l.strip()[3:].strip() in ("Notificações DET",
+                                              "Notificacoes DET")), -1)
+    if ini < 0:
+        return set()
+    fim = next((i for i in range(ini, len(linhas))
+                if linhas[i].strip().startswith("## ")), len(linhas))
+    abertos = set()
+    for l in linhas[ini:fim]:
+        m = re.match(r"^\s*-\s*\[([ xX]?)\]\s*(.*)$", l)
+        if not m or m.group(1).lower() == "x":
+            continue
+        cod = RE_CODIGO.match(m.group(2).strip())
+        if cod:
+            abertos.add(cod.group(1))
+    return abertos
 
 
 def resumo_itens(token: str, uid: str) -> str:
@@ -321,30 +353,24 @@ def _mesma_data(txt: str, iso: str | None) -> bool:
     return norm == iso[:10]
 
 
-RE_VISTO = re.compile(r"<!--\s*visto:\s*([^\s>]+)\s*-->")
-
-
-def _fingerprint(n: dict) -> str:
-    """Estado da notificação que interessa ao alerta: a última entrega da
-    empresa. Se mudar (entrega nova), é novidade de verdade."""
-    return (n.get("itemDataUltimaEntrega") or "")[:10] or "sem-entrega"
-
-
-def _linha_detalhe(n: dict, visto: str = "", msg: str = "",
-                   itens_resumo: str = "") -> str:
+def _linha_detalhe(n: dict, msg: str = "", itens_resumo: str = "") -> str:
     """Sub-linha de detalhes de uma notificação (dados vindos do DET).
     Campos vazios são omitidos; status 1 = Confirmada (único elegível).
 
     `itemAtualizado` é o campo da API por trás do triângulo amarelo do DET
-    ("Existe atualização pendente"). Constatado em produção (19-22/07/2026,
-    casos SPE CAMETA e CONSORCIO SQ): a API pode CONTINUAR devolvendo true
-    mesmo depois de o triângulo sumir na tela (o triângulo apaga quando o
-    AFT abre a notificação na interface; o campo, não necessariamente).
-    Por isso o alerta é DISPENSÁVEL: quando o AFT clica "já vi" no painel,
-    o servir_painel grava `<!-- visto: <última entrega> -->` na sub-linha,
-    e o sync só volta a exibir o alerta se a última entrega MUDAR (entrega
-    nova da empresa = novidade real). O marcador é preservado a cada
-    regravação."""
+    ("Existe atualização pendente"). O alerta ESPELHA o DET: aparece enquanto
+    a API disser true e some quando ela disser false — nada mais.
+
+    Até 25/08/2026 ele era "dispensável": um clique no painel gravava
+    `<!-- visto: X -->` na sub-linha e o alerta sumia localmente até haver
+    entrega nova. Isso nasceu de um susto de julho/2026 (casos SPE CAMETA e
+    CONSORCIO SQ), quando o campo parecia ficar preso em true. O AFT vetou a
+    dispensa em 25/08/2026, com razão: ele havia clicado SEM QUERER e perdeu
+    de vista uma pendência que continuava viva no DET (BUENO 28, cinco itens
+    com pedido de prazo). Um alerta que some por engano é pior que um alerta
+    teimoso — e a saída legítima existe: o triângulo apaga de verdade quando
+    o AFT abre a notificação no DET, o que o /aft-det-baixar já faz ao
+    registrar a visualização (confirmado em produção em 21/08/2026)."""
     partes = []
     if n.get("dataEnvio"):
         partes.append(f"lavrada {_data_br(n['dataEnvio'])}")
@@ -360,11 +386,12 @@ def _linha_detalhe(n: dict, visto: str = "", msg: str = "",
         partes.append(f"aguardando ciência (status {n.get('status')})")
     else:
         partes.append(f"status {n.get('status')}")
-    if _flag(n.get("itemAtualizado")) and _fingerprint(n) != visto:
+    if _flag(n.get("itemAtualizado")):
         partes.append("⚠️ atualização pendente")
-    # Resumo do status dos itens (o que o triângulo amarelo esconde): buscado
-    # pelo sync só nas notificações com atualização pendente. Fica na sub-linha
-    # com o marcador 📋; o gerar_painel o lê e mostra no cartão. Ver resumo_itens.
+    # Resumo do status dos itens: buscado para toda notificação em aberto (ver
+    # codigos_abertos). Fica na sub-linha com o marcador 📋; o gerar_painel o
+    # lê, mostra no dossiê e conta os "aguardando avaliação" num selo do card,
+    # que ACUMULA com o ⚠️ — o triângulo diz que há novidade, o 📋 diz o quê.
     if itens_resumo:
         partes.append(f"📋 {itens_resumo}")
     # Envelope laranja da tela do DET: o componente app-pendencia-comunicacao
@@ -378,10 +405,7 @@ def _linha_detalhe(n: dict, visto: str = "", msg: str = "",
         # buscá-lo) vai na própria sub-linha — o painel o mostra no cartão.
         partes.append("✉️ mensagem no canal de comunicação"
                       + (f': "{msg}"' if msg else ""))
-    linha = "  - " + " · ".join(partes)
-    if visto:
-        linha += f" <!-- visto: {visto} -->"
-    return linha + "\n"
+    return "  - " + " · ".join(partes) + "\n"
 
 
 def aplicar_notificacoes(texto: str, notifs: list[dict],
@@ -444,18 +468,14 @@ def aplicar_notificacoes(texto: str, notifs: list[dict],
                 continue  # nunca entra na ficha; volta no relatório
             prazo = _data_br(prazo_iso)
             novas.append(f"- [ ] {codigo}" + (f" — prazo {prazo}\n" if prazo else "\n"))
-            novas.append(_linha_detalhe(n, msg=msgs.get(codigo, ""),
-                                        itens_resumo=resumos.get(codigo, "")))
+            novas.append(_linha_detalhe(n, msgs.get(codigo, ""),
+                                        resumos.get(codigo, "")))
             inseridas += 1
             continue
-        # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou),
-        # preservando o marcador `visto:` que o AFT tenha gravado pelo painel.
-        visto = ""
-        if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
-            mv = RE_VISTO.search(linhas[i + 1])
-            visto = mv.group(1) if mv else ""
-        det = _linha_detalhe(n, visto, msgs.get(codigo, ""),
-                             resumos.get(codigo, ""))
+        # Já registrada: mantém a sub-linha de detalhes (cria/regrava se mudou).
+        # A linha é remontada do zero, então o marcador `<!-- visto: -->` da
+        # antiga dispensa por clique (removida em 25/08/2026) sai sozinho.
+        det = _linha_detalhe(n, msgs.get(codigo, ""), resumos.get(codigo, ""))
         if i + 1 < fim and RE_DETALHE.match(linhas[i + 1]):
             if linhas[i + 1] != det:
                 linhas[i + 1] = det
@@ -645,15 +665,27 @@ def sincronizar_os(pasta_os: Path, token: str,
             if trecho:
                 msgs[(n.get("codigo") or "").strip()] = trecho
 
-    # Triângulo amarelo aceso: busca o status de cada item para a sub-linha
-    # (uma requisição extra só nas notificações com atualização pendente — é
-    # exatamente quando há algo aguardando o AFT, e o custo fica limitado).
+    # Status dos itens para a sub-linha: uma requisição extra por notificação
+    # ainda EM ABERTO na ficha (checkbox `- [ ]`), não por triângulo aceso.
+    # O triângulo é péssimo gate: some quando o AFT o dispensa no painel ou
+    # abre a notificação no DET, e o resumo sumia junto — informação de ESTADO
+    # (o que cada item aguarda) desaparecendo por causa de um alerta de
+    # NOVIDADE. Constatado com o AFT em 25/08/2026, caso BUENO 28. Notificação
+    # já marcada como respondida não é consultada: o custo fica no que importa.
+    # ...OU com o triângulo aceso, mesmo já marcada como respondida: o AFT
+    # pode ter dado a notificação por tratada e o DET continuar acusando
+    # novidade (caso real BUENO 28, 25/08/2026 — checkbox [x], ⚠️ aceso e
+    # cinco itens ainda esperando a decisão dele). Sem esta segunda porta, o
+    # card mostrava o ⚠️ sozinho, sem dizer o quê — o defeito que o AFT
+    # mandou corrigir. Os dois selos têm de andar juntos.
+    abertos = codigos_abertos(texto)
     resumos = {}
     for n in minhas:
-        if _flag(n.get("itemAtualizado")) and n.get("uid"):
+        cod = (n.get("codigo") or "").strip()
+        if (cod in abertos or _flag(n.get("itemAtualizado"))) and n.get("uid"):
             res = resumo(token, n["uid"])
             if res:
-                resumos[(n.get("codigo") or "").strip()] = res
+                resumos[cod] = res
 
     (novo, r["inseridas"], r["prazos_atualizados"],
      r["detalhes_atualizados"], r["canceladas"]) = aplicar_notificacoes(

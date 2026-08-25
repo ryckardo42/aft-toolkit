@@ -375,8 +375,23 @@ def main():
         partes.append("===== PAGINA %d =====\n%s" % (i, corpo))
 
     if not so_resumo:
+        # RODAPE DE FECHAMENTO. Sem ele, uma leitura TRUNCADA do extrato e
+        # indistinguivel de uma leitura completa -- e nada no texto denuncia a
+        # diferenca. O caso que motivou: um requerimento de fiscalizacao foi
+        # lido ate o meio da segunda pagina, teve a lista de pedidos dada por
+        # encerrada em cinco itens, e tinha oito. O erro so apareceu quando
+        # alguem releu o documento inteiro por outra razao.
+        #
+        # Quem le o extrato passa a ter como verificar que chegou ao fim: se
+        # este rodape nao apareceu, faltou documento.
+        corpo_final = "\n\n".join(partes)
+        corpo_final += (
+            "\n\n===== FIM DO DOCUMENTO | %s | %d pagina(s) | %d caracteres =====\n"
+            "Se esta linha nao aparece no que voce leu, a leitura foi TRUNCADA:\n"
+            "leia o restante antes de concluir qualquer coisa sobre o documento.\n"
+            % (os.path.basename(pdf_path), n, len(corpo_final)))
         with io.open(saida, "w", encoding="utf-8") as f:
-            f.write("\n\n".join(partes))
+            f.write(corpo_final)
 
     print("PDF: %s" % os.path.basename(pdf_path))
     print("Paginas: %d" % n)
