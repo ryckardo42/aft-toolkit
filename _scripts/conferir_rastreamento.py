@@ -62,6 +62,15 @@ import re
 import sys
 from pathlib import Path
 
+# O console do Windows abre em cp1252 e o nome da pasta da OS (razao social) tem
+# acento: sem esta reconfiguracao, "FUNDICAO" sai "FUNDI??O" no cabecalho do
+# relatorio. errors=replace garante que um caractere fora do alcance nunca
+# derrube a conferencia.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # Numero de auto de infracao como o Sistema Auditor o escreve: 23.402.518-2.
 RE_AI = re.compile(r"\b\d{2}\.\d{3}\.\d{3}-\d\b")
 RE_EMENTA = re.compile(r"\b(\d{6}-\d)\b")
