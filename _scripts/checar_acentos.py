@@ -75,7 +75,14 @@ MARCADORES = [
     "tolerancia", "vigilancia", "importancia", "distancia_ignore",
     "circunstancia", "circunstancias", "instancia", "relevancia",
     # substantivos/adjetivos com acento gráfico
-    "analise", "analises", "maquina", "maquinas", "pagina", "paginas",
+    #
+    # "analise" saiu da lista: é forma verbal legítima ("a análise que ele
+    # analise depois"), e reprovava texto correto. Mesmo motivo de "calculo"
+    # (eu calculo), "numero" (eu numero) e "vinculo" (eu vinculo), que também
+    # não entram. É o critério que o cabeçalho já declara — só entra a forma
+    # cuja versão sem acento NÃO é, ela mesma, palavra portuguesa válida.
+    "analise_ignore", "analises_ignore",
+    "maquina", "maquinas", "pagina", "paginas",
     "area", "areas", "nivel", "niveis", "criterio", "criterios", "periodo",
     "periodos", "seguranca", "amonia", "quimico", "quimicos", "quimica",
     "fisico", "fisicos", "fisica", "mecanico", "mecanicos", "mecanica",
@@ -87,6 +94,18 @@ MARCADORES = [
     "eletrico", "eletrica", "eletricos", "explosao", "corrosao", "reducao",
     "distancia", "vitima", "vitimas", "obitos", "obito", "saude", "tambem",
     "porem", "alem", "atraves", "apos", "ja_ignore",
+    # Vocabulario de SST e de inspecao colhido em fiscalizacao real
+    # (25/08/2026). Ficaram de fora as formas ja cobertas pela rede por
+    # terminacao acima, para nao repetir, e as que tem homografo verbal:
+    # "ultima" (ele ultima), "medica" e "medico" (eu medico).
+    "admissao", "automatica", "automatico", "biologica", "carcaca",
+    "carcacas", "codigo", "eletricas", "hidraulica", "hidraulico",
+    "higienica", "higienico", "indicio", "indicios", "maxima", "maximo",
+    "minima", "minimo", "moveis", "movel", "necessaria", "necessario",
+    "orgao", "orgaos", "periodica", "periodico", "pneumatica", "pneumatico",
+    "residuo", "residuos", "ruido", "ruidos", "sanitaria", "sanitario",
+    "sanitarios", "servico", "servicos", "ultimo", "uteis", "util", "veiculo",
+    "veiculos",
 ]
 # remove sentinelas ambíguas
 MARCADORES = [m for m in MARCADORES if not m.endswith("_ignore")]
