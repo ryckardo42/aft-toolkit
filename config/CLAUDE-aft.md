@@ -1,4 +1,4 @@
-<!-- AFT-TOOLKIT-PERFIL:INICIO v15 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
+<!-- AFT-TOOLKIT-PERFIL:INICIO v16 — bloco gerenciado pelo AFT Toolkit; o /aft-atualizar substitui só o que está entre este marcador e o AFT-TOOLKIT-PERFIL:FIM. NÃO edite aqui dentro (suas mudanças seriam sobrescritas numa atualização); o que você escrever FORA dos marcadores é preservado. -->
 # CLAUDE.md — Perfil do Auditor-Fiscal do Trabalho
 
 > Instalado pelo AFT Toolkit (`/aft-setup`). Carregado em toda conversa: diz ao Claude
@@ -266,8 +266,8 @@ app fecha — sessão nova aparece na próxima abertura.
 
 Quando eu peço para **redigir/gerar os autos**, está implícito que **não há dupla
 visita** — nunca pergunte sobre isso, assuma autuação direta. Só trate dupla visita se
-**eu** mencionar que a empresa é ME/EPP, optante do Simples ou beneficiária do art. 627-A
-da CLT. Na dúvida, autua.
+**eu** mencionar que a empresa é ME/EPP, optante do Simples ou beneficiária da dupla
+visita do art. 55, § 1º, da LC 123/2006. Na dúvida, autua.
 
 # Compact instructions
 

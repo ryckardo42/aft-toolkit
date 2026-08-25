@@ -136,8 +136,8 @@ Antes de redigir, tenha na mão (perguntando o que faltar, em **uma** rodada):
   contador, preposto? É isso que calibra as duas versões da FASE 3.
 - **Base normativa** — item de NR, artigo da CLT, decreto. Só cite o que está no ato ou o
   que o AFT confirmou. **Nunca invente item de NR, artigo ou ementa.**
-- **Dupla visita** — só se o AFT disser que se aplica (ME/EPP, Simples, art. 627-A da
-  CLT). Nunca presuma.
+- **Dupla visita** — só se o AFT disser que se aplica (ME/EPP, Simples, art. 55, § 1º,
+  da LC 123/2006). Nunca presuma.
 
 **Não pergunte** — nem aqui, nem em nenhuma fase:
 

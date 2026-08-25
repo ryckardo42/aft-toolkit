@@ -11,7 +11,7 @@ I3 ou I4:
 
 Exceções que a skill explica ao AFT (o script apenas lembra):
   - ementas alvo de embargo/interdição contam mesmo sem regularização;
-  - empresa sob dupla visita (ME/EPP, art. 627-A da CLT): não se autua,
+  - empresa sob dupla visita (ME/EPP, art. 55, § 1º, da LC 123/2006): não se autua,
     mas a regularização das ementas conta normalmente.
 
 Este script NÃO decide nada: cruza os códigos de ementa da OS com a base

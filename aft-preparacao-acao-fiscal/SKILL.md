@@ -153,13 +153,13 @@ O que cada campo destrava na preparação:
    **indício** — a atividade real se confirma na inspeção.
 3. **Endereço do cadastro divergente** do que o AFT tem (da denúncia, da OS).
    Pode ser filial, mudança não atualizada, ou endereço só contábil.
-4. **Leitura de porte para a dupla visita (art. 627-A da CLT).** O `porte`
+4. **Leitura de porte para a dupla visita (art. 55, § 1º, da LC 123/2006).** O `porte`
    cadastral é declaração da própria empresa e vive desatualizado — quem dá a
    leitura confiável é a opção pelo Simples Nacional, que exige ser ME/EPP
    (LC 123/2006) e cai sozinha quando a receita estoura o limite:
    - **`simples=sim`** → a empresa é **necessariamente ME ou EPP**. Registre nos
      pontos de atenção: "Optante do Simples Nacional desde `simples_desde` —
-     empresa ME/EPP, candidata ao critério de dupla visita (art. 627-A da CLT)".
+     empresa ME/EPP, candidata ao critério de dupla visita (art. 55, § 1º, da LC 123/2006)".
      **Invocar a dupla visita é decisão do AFT na autuação**, e as quebras
      continuam valendo (falta de registro, grave e iminente, reincidência,
      fraude, embaraço). **Não grave `**Dupla visita:**` no memory.md** — essa
@@ -203,7 +203,7 @@ quando o AFT obtém a **regularização de um mínimo de ementas de gradação I
 na regra geral, **2 ementas**; em **projeto de construção civil**, **3 ementas, e
 somente das NR-10, NR-18 e NR-35**. Duas exceções: ementa **alvo de embargo ou
 interdição** conta mesmo sem regularização pelo empregador; e empresa sob **dupla
-visita** (ME/EPP, art. 627-A da CLT) não pode ser autuada de imediato, mas a
+visita** (ME/EPP, art. 55, § 1º, da LC 123/2006) não pode ser autuada de imediato, mas a
 regularização das ementas conta normalmente — nesse cenário, as ementas documentais
 de PGR da NR-01 costumam ser o caminho mais curto.
 

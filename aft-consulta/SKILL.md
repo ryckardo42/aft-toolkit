@@ -78,7 +78,7 @@ do AFT, é o script da Fase 3. Nunca fixe ID no código nem leia o `notebooks.js
   | terceirização | `terceirizacao` · informalidade/vínculo → `informalidade` |
   | assédio, fatores psicossociais | `riscos-psicossociais` |
   | trabalho infantil | `trabalho-infantil` · aprendizagem → `aprendizagem` |
-  | dupla visita (ME/EPP, art. 627-A) | `dupla-visita` |
+  | dupla visita (ME/EPP, art. 55 da LC 123/2006) | `dupla-visita` |
   | regulamento/competência da inspeção | `rit` |
   | proteção de dados, LGPD na fiscalização | `lgpd` |
   | norma técnica ABNT/ISO citada em laudo | `normas-abnt-iso` |

@@ -6,7 +6,7 @@ que aparece no cadastro da Receita (ME/EPP) é declarado pela própria empresa e
 ficar desatualizado: empresa que cresceu segue constando como pequena por anos. Já a
 opção pelo Simples Nacional é confiável na direção que importa: **quem é optante é,
 necessariamente, ME ou EPP** — e portanto candidata ao critério de dupla visita do
-art. 627-A da CLT.
+art. 55, § 1º, da LC 123/2006.
 
 Na `/aft-preparacao-acao-fiscal`, a consulta do CNPJ passa a concluir isso para você,
 antes de você sair de casa:
