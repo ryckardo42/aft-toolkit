@@ -84,6 +84,11 @@ CNPJ/CPF do autuado (nome da pasta ou `memory.md`).
 - **Sem argumento:** se a conversa já é de uma OS, use-a; senão pergunte qual.
 - **OS sem CNPJ/CPF:** pergunte os **8 primeiros dígitos** do CNPJ/CPF (é o
   sufixo da pasta no Sistema Auditor).
+- **OS de grupo econômico** (a ficha declara mais de um RI, ou o `memory.md`
+  descreve mais de uma autuada): o Sistema Auditor guarda **uma pasta por CNPJ**,
+  e o relatório final é UM e leva UM anexo. Levante o nome e o CNPJ de **cada**
+  autuada e passe as demais em `--tambem` no Passo 3 — não rode a skill duas
+  vezes, ou o AFT fica com dois PDFs para um anexo só.
 
 ### Passo 2 — Definir onde salvar
 
@@ -122,6 +127,20 @@ Modo **Completo** → sem `--paginas-anexo`. Modo **Econômico** →
 `--paginas-anexo 10` (ou o limite que o AFT escolheu). Instalação fora do
 padrão → `--pasta-pro "<PRO alternativa>"`.
 
+**Grupo econômico** → acrescente uma `--tambem "<EMPRESA>=<CNPJ>"` para cada
+autuada além da primeira (a opção pode repetir):
+
+```bash
+python ~/.claude/skills/aft-autos-pdf-reunidos/scripts/reune_autos_pdf.py "<EMPRESA 1>" "<CNPJ 1>" "<SAIDA.pdf>" --tambem "<EMPRESA 2>=<CNPJ 2>"
+```
+
+Os autos das duas entram no mesmo PDF, cada empresa com o seu marcador no índice,
+e o laudo que instrui autos das duas entra **uma vez só** — a deduplicação de
+anexo vale para o PDF inteiro, não por empresa. Confira `empresas[]` no JSON: ele
+traz, por autuada, a pasta encontrada, quantos autos e quantas páginas. Empresa
+cuja pasta não foi achada aparece em `errors` e o PDF sai sem ela — reporte ao AFT
+antes de anexar.
+
 Capture o JSON do stdout. Campos que importam:
 
 - `pasta_auditor` + `match_estrategia` — como a pasta foi achada. Se vier
@@ -135,6 +154,8 @@ Capture o JSON do stdout. Campos que importam:
 - `autos_jornada_no_fim` — os AIs de jornada deslocados para o fim.
 - `anexos_repetidos_omitidos` — anexos que entraram só na primeira menção.
 - `anexos_orfaos` — pastas `AX_` sem auto correspondente (não entram no PDF).
+- `empresas[]` — uma entrada por autuada (nome, CNPJ, `pasta_auditor`,
+  `match_estrategia`, `autos`, `paginas`). Com uma autuada só, traz uma entrada.
 - `total_autos`, `total_paginas`, `tamanho_mb`, `compressao`.
 - `errors` — reporte e pare.
 
