@@ -6,6 +6,101 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 25/08/2026
+<!-- commit: itens-aguardando-no-card -->
+
+**O card da auditoria avisa quando itens do DET esperam a sua decisão.** Quando o empregador pede prorrogação de prazo (ou dispensa) de um item, aquilo fica parado esperando você aceitar ou recusar no DET. Agora isso aparece direto no card da auditoria, no painel: "5 itens aguardam sua decisão". Antes, o card só trazia o aviso genérico de "atualização pendente" — e esse aviso some assim que você clica nele, deixando o card sem nenhum sinal de que havia itens parados. O novo selo não some por clique: ele só sai quando o DET disser que os itens saíram desse estado. O detalhamento completo (quantos itens em cada situação) continua no dossiê da auditoria, ao abrir o card.
+
+Junto com isso, o resumo dos itens deixou de depender do triângulo amarelo: agora ele é buscado para toda notificação ainda em aberto na ficha. Antes, quem dispensasse o triângulo (ou abrisse a notificação no site do DET) perdia o resumo na sincronização seguinte.
+
+---
+
+## 25/08/2026
+<!-- commit: conferencias-antes-de-encerrar -->
+
+**Duas conferências novas, para nada passar batido no fim de uma fiscalização.** A primeira compara os registros de auto do `memory.md` entre si e mostra onde eles se contradizem: caixa marcada com o texto ao lado dizendo "pendente de importação", caixa marcada sem número de auto, caixa vazia com o número já escrito. Numa fiscalização real dois desses registros discordaram, e a contradição só apareceu tarde. A conferência não decide nada nem escreve no seu arquivo: ela aponta, e quem corrige é você.
+
+A segunda faz o cotejo do que entrou na auditoria: lista o documento e a foto que a empresa entregou e que nunca foram mencionados em análise nenhuma. É o caso do anexo que chega junto com quinze outros e some do radar. Antes de encerrar, ou o documento é confrontado, ou fica registrado por que não foi.
+
+Peça "confere o rastreamento dos autos dessa OS" ou "o que entrou nessa auditoria e nunca foi analisado".
+
+---
+
+## 25/08/2026
+<!-- commit: alerta-det-nao-some-com-clique -->
+
+**O aviso de "atualização pendente" não some mais quando você clica nele.** Antes, um clique no aviso o apagava do painel — a ideia era marcar "já vi". Na prática, dava para apagar sem querer o aviso de uma notificação que continuava pendente no DET, e ficar sem nenhum sinal disso. Agora o aviso espelha o DET: ele aparece enquanto o DET mostrar o triângulo amarelo e só sai quando sair de lá. Para apagá-lo de verdade, basta abrir a notificação no DET — o botão "baixar arquivos" do painel também faz isso sozinho.
+
+Clicar no aviso, agora, não faz nada de propósito: assim um clique acidental também não marca a notificação como respondida.
+
+E os dois avisos passam a conviver no card da auditoria: "atualização pendente" (há novidade no DET) junto com "N itens aguardam sua decisão" (o que é a novidade).
+
+---
+
+## 25/08/2026
+<!-- commit: tokenizar-nomes -->
+
+**A troca do nome do trabalhador pelo apelido `[[TRAB_01]]` deixou de ser feita à mão.** O caminho de volta já era automático: na hora de gerar o arquivo do Sistema Auditor, um programa troca o apelido pelo nome verdadeiro, letra por letra, sem o assistente participar — porque um nome errado num auto é inaceitável. O caminho de ida, porém, dependia de o assistente digitar o nome no arquivo de correspondência. Agora ele também é feito por programa: você informa o nome, o programa cria o apelido, substitui no texto e depois confere se sobrou algum nome verdadeiro ou algum CPF perdido no arquivo.
+
+A conferência responde APROVADO ou REPROVADO antes de o texto virar auto. Ela recusa CPF de trabalhador no arquivo de correspondência (o Sistema Auditor não usa esse campo) e nunca renumera um apelido já usado num auto.
+
+---
+
+## 25/08/2026
+<!-- commit: proximo-passo-considera-entrega -->
+
+**O "próximo passo sugerido" parou de dizer que não houve entrega quando houve.** Quando um prazo do DET vencia, o painel afirmava sempre "vencido sem entrega — cabe auto por omissão", mesmo que a empresa tivesse enviado documentos. A frase vinha da primeira versão do painel, que só enxergava a data do prazo; hoje o painel sabe o que foi entregue item a item.
+
+Agora a sugestão descreve o que de fato aconteceu:
+
+- **entrega parcial** — "5 itens entregues e 2 não enviados: avaliar auto por omissão quanto ao que faltou";
+- **nada entregue** — "2 itens não enviados: cabe auto por omissão (art. 630 §4º da CLT)";
+- **tudo entregue** — "a empresa entregou os itens: analisar o que foi apresentado", sem falar em autuação;
+- **pedido de prazo pendente** — "N itens aguardam a sua avaliação de prazo: decidir o pedido antes de cogitar autuação";
+- **ficha ainda não sincronizada** — pede para conferir no DET antes de decidir, sem afirmar entrega nem omissão.
+
+Na entrega parcial o painel diz "avaliar", não "cabe": se o que faltou justifica o auto é decisão do auditor-fiscal, não do painel. Situações que não afirmam entrega nem omissão (prazo prorrogado, item dispensado) ficam de fora de qualquer sugestão de autuação.
+
+---
+
+## 25/08/2026
+<!-- commit: extrato-pdf-fim-do-documento -->
+
+**O extrato de um PDF agora termina dizendo que terminou.** Quando um documento longo é preparado para leitura, o texto extraído passa a se encerrar com uma linha de fecho que traz o nome do arquivo, o número de páginas e o tamanho. Sem ela, uma leitura interrompida no meio era indistinguível de uma leitura completa — e nada no texto denunciava a diferença. Foi o que aconteceu com um requerimento de fiscalização lido até o meio da segunda página: a lista de pedidos foi dada por encerrada com cinco itens, e tinha oito.
+
+Se essa linha de fecho não aparecer, faltou documento.
+
+---
+
+## 25/08/2026
+<!-- commit: acentos-na-tela-e-ajuda -->
+
+**Três incômodos pequenos do dia a dia, resolvidos.** A consulta de CNPJ mostrava a razão social e a descrição da atividade com os acentos corrompidos na tela do Windows ("Fabricação" virava "Fabrica??ão"). O dado sempre chegou correto: estragava só na hora de aparecer — o problema é que quem copiava da tela para um documento levava a corrupção junto. Agora a tela mostra o texto certo.
+
+O detector de palavras sem acento nas minutas ficou mais fino: passou a ignorar a razão social da empresa (que é escrita como está no cartão do CNPJ, não como o português pediria), reconhece mais 42 palavras de segurança e saúde, e parou de acusar "analise", que tanto pode ser o verbo quanto o substantivo.
+
+E as ferramentas internas passaram a responder à pergunta "como se usa isto?" com a ajuda, em vez de registrarem um defeito do toolkit. Antes, perguntar como usar gerava um relato de erro.
+
+---
+
+## 25/08/2026
+<!-- commit: tn-nco-ordem-e-revisao -->
+
+**A notificação para correção sai organizada por norma, e revisada antes de chegar até você.** Os itens agora vêm agrupados em ordem crescente de NR, da NR-01 à NR-38. Numa fiscalização real a notificação saiu com as normas embaralhadas e foi devolvida como "muito confusa"; agrupada, o empregador enxerga de uma vez o que resolve com cada consultoria — o PGR num bloco, o PCMSO noutro, as máquinas noutro. Item que só tem CLT ou Portaria na base legal vai para o fim, e você é avisado: nunca se inventa uma NR só para o item caber na ordem.
+
+A revisão da notificação também mudou de lugar. Ela rodava depois de você já ter lido e aprovado o texto — o que transformava o Auditor-Fiscal em revisor de primeira linha. Agora roda antes, e o parecer chega junto com o teor. Numa fiscalização real isso teria apanhado um item cujo cumprimento dependia do produto de outro item, com os dois correndo o mesmo prazo em paralelo.
+
+---
+
+## 25/08/2026
+<!-- commit: det-criar-item-sem-ementa -->
+
+**Item de notificação sem ementa deixou de sumir na hora de criar o rascunho no DET.** A notificação para correção admite item sem ementa — orientação, ou irregularidade que não tem ementa correspondente. Só que o programa que monta o rascunho no DET não reconhecia esses itens: exigia o código da ementa no fim da linha e descartava calado o que não tivesse. Uma notificação inteira feita só de itens assim ia para o DET com zero itens, sem erro e sem aviso, e o problema só aparecia ao abrir o rascunho no site.
+
+Agora a ementa é opcional na leitura, como sempre foi na redação.
+
+---
+
 ## 24/08/2026
 <!-- commit: baixar-so-notificacoes -->
 
