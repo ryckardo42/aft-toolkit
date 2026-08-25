@@ -120,6 +120,48 @@ RE_DET_PENDENTE = re.compile(r"atualiza[çc][ãa]o\s+pendente", re.IGNORECASE)
 # captura o texto (opcional, sub-linhas antigas não o têm).
 RE_DET_MENSAGEM = re.compile(
     r'mensagem\s+no\s+canal[^:"]*(?::\s*"([^"]*)")?', re.IGNORECASE)
+# Resumo do status dos itens (o que o triângulo amarelo esconde), escrito pelo
+# det_sync com o marcador 📋: "📋 itens: 5 aguardando avaliação de prazo". O
+# grupo 1 captura o texto até o próximo separador " · " (ou o <!-- visto -->).
+RE_DET_ITENS = re.compile(r"📋\s*(itens:[^·<]+)", re.IGNORECASE)
+# Cada grupo do resumo ("5 enviado, 2 não enviado") — o número e o rótulo, que
+# vem do enum STATUS_ITEM do DET (fonte única, no det_baixar).
+RE_DET_ITENS_GRUPO = re.compile(r"(\d+)\s+([^,]+)")
+
+
+def classificar_itens(resumo: str) -> dict:
+    """Contagens por natureza a partir do resumo escrito pelo det_sync.
+
+    Existe porque "o prazo venceu" não diz, sozinho, o que houve: a empresa
+    pode não ter entregue nada, ter entregue tudo, ou ter entregue parte. O
+    painel usava só a data e afirmava "sem entrega" em todo DET vencido —
+    errado e grave, porque a frase seguinte fala em auto por omissão (caso
+    URBAN TECNOLOGIA, 25/08/2026: 5 itens enviados e 2 não enviados, e o painel
+    dizia "sem entrega"). Quem decide o enquadramento é o AFT; o painel só
+    pode oferecer o fato certo.
+
+    - entregues .... enviado/recebido (inclusive as variantes "pendente de
+                     avaliação"), ou seja, há o que analisar;
+    - nao_enviados . o empregador não apresentou — é a omissão;
+    - aguardando ... pedido de prazo/dispensa esperando decisão DO AFT;
+    - outros ....... prazo aceito/prorrogado, dispensado, rejeitado etc.:
+                     não afirmam nem entrega nem omissão, então ficam de fora
+                     de qualquer sugestão de autuação."""
+    c = {"entregues": 0, "nao_enviados": 0, "aguardando": 0, "outros": 0,
+         "total": 0}
+    corpo = resumo.split(":", 1)[1] if ":" in resumo else resumo
+    for m in RE_DET_ITENS_GRUPO.finditer(corpo):
+        n, rot = int(m.group(1)), m.group(2).strip().lower()
+        c["total"] += n
+        if rot.startswith(("não enviado", "nao enviado")):
+            c["nao_enviados"] += n
+        elif rot.startswith(("enviado", "recebido")):
+            c["entregues"] += n
+        elif "aguardando avalia" in rot:
+            c["aguardando"] += n
+        else:
+            c["outros"] += n
+    return c
 # Notificação cancelada pelo auditor no DET (status 2): sem efeito legal.
 # Aceita também o `status 2` cru — é como as sincronizações antigas gravaram a
 # sub-linha, antes de o sync conhecer o nome do status. Só casa dentro da
@@ -320,6 +362,9 @@ def parse_memory(path: Path) -> dict:
         lavrada = ciencia = ultima = None
         pendente = aguarda = mensagem = cancelada = False
         mensagem_txt = ""
+        itens_status = ""
+        itens_aguardando = 0
+        itens_cont = {}
         if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
             det = linhas_sec[idx + 1]
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
@@ -333,13 +378,20 @@ def parse_memory(path: Path) -> dict:
             mensagem = bool(m_msg)
             mensagem_txt = (m_msg.group(1) or "").strip() if m_msg else ""
             cancelada = bool(RE_DET_CANCELADA.search(det))
+            m_it = RE_DET_ITENS.search(det)
+            itens_status = m_it.group(1).strip() if m_it else ""
+            itens_cont = classificar_itens(itens_status)
+            itens_aguardando = itens_cont["aguardando"]
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
                      "linha": resto, "rotulo": rotulo, "notas": notas,
                      "lavrada": lavrada, "ciencia": ciencia,
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente,
                      "aguardando_ciencia": aguarda, "mensagem_canal": mensagem,
-                     "mensagem_txt": mensagem_txt, "cancelada": cancelada})
+                     "mensagem_txt": mensagem_txt, "cancelada": cancelada,
+                     "itens_status": itens_status,
+                     "itens_aguardando": itens_aguardando,
+                     "itens_cont": itens_cont})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -685,8 +737,8 @@ def varrer_notificacoes_novas(pasta: Path, memoria: str) -> list[dict]:
                                if p.is_file() and p.suffix.lower() == ".pdf")
                 if e.name.upper() == "NOTIFICACOES":
                     # Os PDFs da notificação moram um nível abaixo, dentro do
-                    # pacote "<CODIGO> <dd-mm-aaaa>/" (ou "notificacao-*/" nos
-                    # legados) — convenção de 21/08/2026.
+                    # pacote "<NN> - <CODIGO> <dd-mm-aaaa>/" (ou "notificacao-*/"
+                    # nos legados) — convenção de 24/08/2026.
                     for sub in sorted(p for p in e.iterdir() if p.is_dir()):
                         pdfs += sorted(p for p in sub.iterdir()
                                        if p.is_file() and p.suffix.lower() == ".pdf")
@@ -816,10 +868,13 @@ border-radius:6px;padding:1px 7px;margin:0 4px 4px 0}
 .rodape-card{display:flex;justify-content:space-between;gap:8px;margin-top:10px;
 font-size:12px;color:var(--t3)}
 .pend-card{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
-color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px}
+color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
 /* Mensagem do empregador no canal de comunicacao do DET, no mesmo molde */
 .msg-card{display:inline-block;font:700 11px var(--sans);background:#FCEBD8;
 color:#9A5B12;border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
+/* Itens do DET parados esperando decisao do AFT (prazo/dispensa a avaliar) */
+.itens-card{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
+color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
 .aviso-vazio{background:var(--paper);border:1px dashed var(--bd);border-radius:10px;
 padding:26px;text-align:center;color:var(--t3)}
 /* Detalhe — modal central amplo */
@@ -944,6 +999,7 @@ font-size:13px;z-index:20;display:none}
 .badge.vencido,.badge.urgente{background:#3D2521}
 .det-item .cod .pend,.pend-card{background:#3D2521;color:#E9A891}
 .det-item .cod .msg,.msg-card{background:#3B2E1B;color:#E8BE85}
+.itens-card{background:#3D2521;color:#E9A891}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
 .mini.acao{background:#3A2C22;border-color:#4A382B;color:#E9A891}
 .mini.acao:hover{background:#C8694A;border-color:#C8694A;color:#191917}
@@ -1016,6 +1072,9 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 .det-item .det-campo .val{color:var(--t1);font-weight:600}
 .det-item .campos .sep{color:var(--t3);opacity:.55}
 .det-item .notas{color:var(--t2);margin-top:2px}
+/* Resumo do status dos itens (o que o triângulo amarelo esconde): coral suave,
+   para diferenciar do texto do AFT e chamar o olho ao que aguarda decisão. */
+.det-item .itens-status{color:var(--coral-deep);margin-top:2px}
 .det-item .selo{margin:3px 0 0}
 /* Envelope laranja do DET: mensagem do empregador aguardando resposta do AFT */
 .det-item .cod .msg{font:700 11px var(--sans);background:#FCEBD8;color:#9A5B12;
@@ -1245,7 +1304,6 @@ function agCal(j){const v=DATA.venc[j];
   encodeURIComponent(v.titulo)+'&dates='+ini+'/'+fim+'&details='+
   encodeURIComponent('Notificação DET '+v.codigo+' — '+v.empregador+' (AFT Toolkit)'),'_blank')}
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
-function agDetVisto(i,k){const o=DATA.os[i];api({acao:'det_visto',pasta:o.pasta,codigo:o.dets[k].codigo})}
 // "baixar arquivos": o servidor busca na API do DET (com o token do último
 // Sincronizar) o PDF da notificação, o Relatório de Atendimento e os arquivos
 // entregues, direto na pasta da OS. Pode levar alguns segundos.
@@ -1321,8 +1379,28 @@ function grupoAuto(a){
 // Próximo passo sugerido — primeira regra que casar; null = sem hero.
 function proximoPasso(o){
  const venc=(o.dets||[]).find(d=>!d.feito&&d.urg==='vencido');
- if(venc)return{html:'O DET <b>'+esc(venc.codigo||'?')+'</b> está <b>'+esc(venc.selo||'vencido')+
-  '</b> sem entrega — cabe auto por omissão (art. 630 §4º CLT).',cmds:['/aft-det-630','/aft-tn-nco']};
+ // O que dizer de um DET vencido depende do que a empresa FEZ, não só da data.
+ // Antes o painel afirmava "sem entrega" em todo DET vencido e emendava a
+ // sugestão de auto por omissão — afirmação de fato errada quando houve
+ // entrega (caso URBAN TECNOLOGIA, 25/08/2026: 5 enviados, 2 não enviados).
+ // As contagens vêm do resumo de itens do DET (ver classificar_itens).
+ if(venc){
+  const cab='O DET <b>'+esc(venc.codigo||'?')+'</b> está <b>'+esc(venc.selo||'vencido')+'</b>';
+  const t=venc.itens_total||0,env=venc.itens_entregues||0,
+        nao=venc.itens_nao_env||0,ag=venc.itens_aguardando||0;
+  const AUTO=['/aft-det-630','/aft-tn-nco'];
+  // Pedido de prazo pendente vem primeiro: enquanto o AFT não decidir, o
+  // próprio vencimento está em disputa — falar em omissão seria prematuro.
+  if(ag)return{html:cab+', e <b>'+ag+'</b> item(ns) aguardam a sua avaliação de prazo no DET — decidir o pedido antes de cogitar autuação.',cmds:AUTO};
+  if(nao&&env)return{html:cab+' com entrega parcial: <b>'+env+'</b> item(ns) entregue(s) e <b>'+nao+
+   '</b> não enviado(s) — avaliar auto por omissão quanto ao que faltou.',cmds:AUTO};
+  if(nao)return{html:cab+' e <b>'+nao+'</b> item(ns) não enviado(s) — cabe auto por omissão (art. 630 §4º CLT).',cmds:AUTO};
+  if(env)return{html:cab+', mas a empresa entregou os itens (<b>'+env+'</b> de '+t+
+   ') — analisar o que foi apresentado.',cmds:['/aft-det-baixar','/aft-auditoria-geral']};
+  // Sem resumo de itens (ficha ainda não sincronizada pela versão nova): não
+  // afirma entrega nem omissão — manda conferir.
+  return{html:cab+' — conferir no DET o que foi entregue antes de decidir sobre auto por omissão (art. 630 §4º CLT).',cmds:AUTO};
+ }
  if((o.pendencias||[]).length)return{html:'Pendência aberta: '+esc(o.pendencias[0]),cmds:[]};
  if(!(o.autos||[]).length&&o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)
   return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/aft-auditoria-geral']};
@@ -1366,13 +1444,11 @@ function cartaoDets(o,i){
    '<span class="cx">'+(d.cancelada?'✕':d.feito?'✓':'')+'</span><div><div class="cod">'+
    (d.mensagem?'<span class="msg" title="o empregador mandou mensagem no canal de comunicação desta notificação e ela aguarda resposta sua — responda no DET">✉️ mensagem no DET'+
     (d.mensagem_txt?': “'+esc(d.mensagem_txt)+'”':'')+'</span> ':'')+
-   (d.pendente&&!d.cancelada?'<span class="pend"'+(ATIVO&&o.pasta&&d.codigo?
-    ' style="cursor:pointer" title="clique se já viu esta atualização no DET — o alerta some e só volta se houver entrega nova"'+
-    ' onclick="event.stopPropagation();agDetVisto('+i+','+k+')"':'')+
-    '>⚠️ atualização pendente</span> ':'')+
+   (d.pendente&&!d.cancelada?'<span class="pend" onclick="event.stopPropagation()" title="o DET marca esta notificação com o triângulo amarelo. Só some quando sumir no DET — abra a notificação lá, ou use o botão baixar arquivos, que registra a visualização. Clicar aqui não faz nada, de propósito">⚠️ atualização pendente</span> ':'')+
    (d.aguarda&&!d.cancelada?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
+   (d.itens_status&&!d.cancelada?'<div class="info itens-status" title="status de cada item na tela do DET — o que o triângulo amarelo esconde">📋 '+esc(d.itens_status)+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
    (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?'<button class="mini acao" '+
     'title="baixa da API do DET o PDF da notificação, o Relatório de Atendimento e os arquivos entregues, organizados por item na pasta da OS (precisa de um Sincronizar na aba do DET nos últimos 25 min)" '+
@@ -2016,6 +2092,11 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "mensagem_txt": d.get("mensagem_txt") or "",
                       "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
+                      "itens_status": d.get("itens_status") or "",
+                      "itens_aguardando": d.get("itens_aguardando") or 0,
+                      "itens_entregues": (d.get("itens_cont") or {}).get("entregues", 0),
+                      "itens_nao_env": (d.get("itens_cont") or {}).get("nao_enviados", 0),
+                      "itens_total": (d.get("itens_cont") or {}).get("total", 0),
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
             "novas": o.get("novas") or [],
@@ -2110,8 +2191,23 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
                     'de comunicacao do DET, aguardando resposta sua">✉️ mensagem no DET'
                     + (f' · {n_msg}' if n_msg > 1 else '') + '</div>') if n_msg else ""
         pend = any(d.get("atualizacao_pendente") for d in vivas)
-        pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
-                     if pend else "")
+        pend_selo = ('\n  <div class="pend-card" title="o DET marca esta '
+                     'notificação com o triângulo amarelo; só some quando sumir '
+                     'no DET">⚠️ atualização pendente</div>' if pend else "")
+        # Itens parados à espera de DECISÃO do AFT (o empregador pediu prazo ou
+        # dispensa). Vem ao card da grade porque o triângulo ⚠️ é dispensável e
+        # some com um clique — e o AFT ficava sem nenhum sinal de que cinco
+        # itens aguardavam a decisão dele (caso BUENO 28, 25/08/2026). Este
+        # selo NÃO é dispensável: só sai quando o DET disser que saiu.
+        # Mesmo conjunto que acende o ⚠️ (todas as vivas, inclusive as que o
+        # AFT já marcou como respondidas): os dois selos andam juntos, senão o
+        # card volta a dizer "há novidade" sem dizer qual.
+        n_ag = sum(d.get("itens_aguardando") or 0 for d in vivas)
+        itens_selo = ('\n  <div class="itens-card" title="itens desta auditoria '
+                      'com pedido de prazo ou dispensa do empregador aguardando '
+                      'a sua avaliação no DET">📋 '
+                      + (f'{n_ag} itens aguardam sua decisão' if n_ag > 1
+                         else '1 item aguarda sua decisão') + '</div>') if n_ag else ""
         # Endereço da auditoria. Sem pasta (Artifact publicado), cai no índice —
         # o link continua funcionando dentro daquela versão publicada.
         chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
@@ -2124,7 +2220,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
   <div class="rodape-card">
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
-  </div>{msg_selo}{pend_selo}
+  </div>{msg_selo}{pend_selo}{itens_selo}
 </a>""")
 
     grade = ("".join(cards) if cards else

@@ -6,6 +6,101 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 25/08/2026
+<!-- commit: itens-aguardando-no-card -->
+
+**O card da auditoria avisa quando itens do DET esperam a sua decisão.** Quando o empregador pede prorrogação de prazo (ou dispensa) de um item, aquilo fica parado esperando você aceitar ou recusar no DET. Agora isso aparece direto no card da auditoria, no painel: "5 itens aguardam sua decisão". Antes, o card só trazia o aviso genérico de "atualização pendente" — e esse aviso some assim que você clica nele, deixando o card sem nenhum sinal de que havia itens parados. O novo selo não some por clique: ele só sai quando o DET disser que os itens saíram desse estado. O detalhamento completo (quantos itens em cada situação) continua no dossiê da auditoria, ao abrir o card.
+
+Junto com isso, o resumo dos itens deixou de depender do triângulo amarelo: agora ele é buscado para toda notificação ainda em aberto na ficha. Antes, quem dispensasse o triângulo (ou abrisse a notificação no site do DET) perdia o resumo na sincronização seguinte.
+
+---
+
+## 25/08/2026
+<!-- commit: conferencias-antes-de-encerrar -->
+
+**Duas conferências novas, para nada passar batido no fim de uma fiscalização.** A primeira compara os registros de auto do `memory.md` entre si e mostra onde eles se contradizem: caixa marcada com o texto ao lado dizendo "pendente de importação", caixa marcada sem número de auto, caixa vazia com o número já escrito. Numa fiscalização real dois desses registros discordaram, e a contradição só apareceu tarde. A conferência não decide nada nem escreve no seu arquivo: ela aponta, e quem corrige é você.
+
+A segunda faz o cotejo do que entrou na auditoria: lista o documento e a foto que a empresa entregou e que nunca foram mencionados em análise nenhuma. É o caso do anexo que chega junto com quinze outros e some do radar. Antes de encerrar, ou o documento é confrontado, ou fica registrado por que não foi.
+
+Peça "confere o rastreamento dos autos dessa OS" ou "o que entrou nessa auditoria e nunca foi analisado".
+
+---
+
+## 25/08/2026
+<!-- commit: alerta-det-nao-some-com-clique -->
+
+**O aviso de "atualização pendente" não some mais quando você clica nele.** Antes, um clique no aviso o apagava do painel — a ideia era marcar "já vi". Na prática, dava para apagar sem querer o aviso de uma notificação que continuava pendente no DET, e ficar sem nenhum sinal disso. Agora o aviso espelha o DET: ele aparece enquanto o DET mostrar o triângulo amarelo e só sai quando sair de lá. Para apagá-lo de verdade, basta abrir a notificação no DET — o botão "baixar arquivos" do painel também faz isso sozinho.
+
+Clicar no aviso, agora, não faz nada de propósito: assim um clique acidental também não marca a notificação como respondida.
+
+E os dois avisos passam a conviver no card da auditoria: "atualização pendente" (há novidade no DET) junto com "N itens aguardam sua decisão" (o que é a novidade).
+
+---
+
+## 25/08/2026
+<!-- commit: tokenizar-nomes -->
+
+**A troca do nome do trabalhador pelo apelido `[[TRAB_01]]` deixou de ser feita à mão.** O caminho de volta já era automático: na hora de gerar o arquivo do Sistema Auditor, um programa troca o apelido pelo nome verdadeiro, letra por letra, sem o assistente participar — porque um nome errado num auto é inaceitável. O caminho de ida, porém, dependia de o assistente digitar o nome no arquivo de correspondência. Agora ele também é feito por programa: você informa o nome, o programa cria o apelido, substitui no texto e depois confere se sobrou algum nome verdadeiro ou algum CPF perdido no arquivo.
+
+A conferência responde APROVADO ou REPROVADO antes de o texto virar auto. Ela recusa CPF de trabalhador no arquivo de correspondência (o Sistema Auditor não usa esse campo) e nunca renumera um apelido já usado num auto.
+
+---
+
+## 25/08/2026
+<!-- commit: proximo-passo-considera-entrega -->
+
+**O "próximo passo sugerido" parou de dizer que não houve entrega quando houve.** Quando um prazo do DET vencia, o painel afirmava sempre "vencido sem entrega — cabe auto por omissão", mesmo que a empresa tivesse enviado documentos. A frase vinha da primeira versão do painel, que só enxergava a data do prazo; hoje o painel sabe o que foi entregue item a item.
+
+Agora a sugestão descreve o que de fato aconteceu:
+
+- **entrega parcial** — "5 itens entregues e 2 não enviados: avaliar auto por omissão quanto ao que faltou";
+- **nada entregue** — "2 itens não enviados: cabe auto por omissão (art. 630 §4º da CLT)";
+- **tudo entregue** — "a empresa entregou os itens: analisar o que foi apresentado", sem falar em autuação;
+- **pedido de prazo pendente** — "N itens aguardam a sua avaliação de prazo: decidir o pedido antes de cogitar autuação";
+- **ficha ainda não sincronizada** — pede para conferir no DET antes de decidir, sem afirmar entrega nem omissão.
+
+Na entrega parcial o painel diz "avaliar", não "cabe": se o que faltou justifica o auto é decisão do auditor-fiscal, não do painel. Situações que não afirmam entrega nem omissão (prazo prorrogado, item dispensado) ficam de fora de qualquer sugestão de autuação.
+
+---
+
+## 25/08/2026
+<!-- commit: extrato-pdf-fim-do-documento -->
+
+**O extrato de um PDF agora termina dizendo que terminou.** Quando um documento longo é preparado para leitura, o texto extraído passa a se encerrar com uma linha de fecho que traz o nome do arquivo, o número de páginas e o tamanho. Sem ela, uma leitura interrompida no meio era indistinguível de uma leitura completa — e nada no texto denunciava a diferença. Foi o que aconteceu com um requerimento de fiscalização lido até o meio da segunda página: a lista de pedidos foi dada por encerrada com cinco itens, e tinha oito.
+
+Se essa linha de fecho não aparecer, faltou documento.
+
+---
+
+## 25/08/2026
+<!-- commit: acentos-na-tela-e-ajuda -->
+
+**Três incômodos pequenos do dia a dia, resolvidos.** A consulta de CNPJ mostrava a razão social e a descrição da atividade com os acentos corrompidos na tela do Windows ("Fabricação" virava "Fabrica??ão"). O dado sempre chegou correto: estragava só na hora de aparecer — o problema é que quem copiava da tela para um documento levava a corrupção junto. Agora a tela mostra o texto certo.
+
+O detector de palavras sem acento nas minutas ficou mais fino: passou a ignorar a razão social da empresa (que é escrita como está no cartão do CNPJ, não como o português pediria), reconhece mais 42 palavras de segurança e saúde, e parou de acusar "analise", que tanto pode ser o verbo quanto o substantivo.
+
+E as ferramentas internas passaram a responder à pergunta "como se usa isto?" com a ajuda, em vez de registrarem um defeito do toolkit. Antes, perguntar como usar gerava um relato de erro.
+
+---
+
+## 25/08/2026
+<!-- commit: tn-nco-ordem-e-revisao -->
+
+**A notificação para correção sai organizada por norma, e revisada antes de chegar até você.** Os itens agora vêm agrupados em ordem crescente de NR, da NR-01 à NR-38. Numa fiscalização real a notificação saiu com as normas embaralhadas e foi devolvida como "muito confusa"; agrupada, o empregador enxerga de uma vez o que resolve com cada consultoria — o PGR num bloco, o PCMSO noutro, as máquinas noutro. Item que só tem CLT ou Portaria na base legal vai para o fim, e você é avisado: nunca se inventa uma NR só para o item caber na ordem.
+
+A revisão da notificação também mudou de lugar. Ela rodava depois de você já ter lido e aprovado o texto — o que transformava o Auditor-Fiscal em revisor de primeira linha. Agora roda antes, e o parecer chega junto com o teor. Numa fiscalização real isso teria apanhado um item cujo cumprimento dependia do produto de outro item, com os dois correndo o mesmo prazo em paralelo.
+
+---
+
+## 25/08/2026
+<!-- commit: det-criar-item-sem-ementa -->
+
+**Item de notificação sem ementa deixou de sumir na hora de criar o rascunho no DET.** A notificação para correção admite item sem ementa — orientação, ou irregularidade que não tem ementa correspondente. Só que o programa que monta o rascunho no DET não reconhecia esses itens: exigia o código da ementa no fim da linha e descartava calado o que não tivesse. Uma notificação inteira feita só de itens assim ia para o DET com zero itens, sem erro e sem aviso, e o problema só aparecia ao abrir o rascunho no site.
+
+Agora a ementa é opcional na leitura, como sempre foi na redação.
+
+---
+
 ## 24/08/2026
 <!-- commit: baixar-so-notificacoes -->
 
@@ -57,6 +152,55 @@ relato dele que mostrou onde estava o problema.
 ---
 
 ## 24/08/2026
+<!-- commit: notificacoes-por-ordem-e-por-dia -->
+
+**As pastas de NOTIFICACOES agora contam a história da notificação.** Três mudanças
+pedidas pelo AFT, valendo para o botão do painel e para as skills de download do DET:
+
+- **Ordem de lavratura no nome.** Cada pasta de notificação agora começa por um
+  número: `01 - CODIGO 20-08-2026`, `02 - ...`. Ao abrir a pasta NOTIFICACOES, dá para
+  ver de relance qual foi a primeira notificação da fiscalização, qual foi a segunda, e
+  assim por diante. Se uma notificação antiga for baixada depois, as pastas se
+  renumeram sozinhas para manter a ordem verdadeira.
+- **A data no nome é a da lavratura**, não a do dia em que você baixou. Antes, uma
+  notificação lavrada dia 20 e baixada dia 24 ficava com 24 no nome da pasta — agora
+  fica com 20, que é a data que importa.
+- **Uma subpasta por dia de download.** Tudo o que chega num download — os arquivos
+  entregues pela empresa, o relatório de atendimento e o histórico dos itens — vai para
+  uma subpasta `baixada em 24-08-2026` dentro da pasta da notificação. Como a mesma
+  notificação pode ter prazos diferentes por item, cada dia de entrega fica separado, e
+  o auditor sabe exatamente o que a empresa apresentou em cada data. O que já foi
+  baixado num dia anterior não baixa de novo.
+
+As pastas antigas se arrumam sozinhas no próximo download daquela notificação. Para
+arrumar uma auditoria inteira de uma vez (ou todas), o `/aft-organiza-os` ganhou esse
+passo — pode pedir "organiza as pastas de notificações" que ele aplica o padrão novo.
+
+---
+
+## 24/08/2026
+<!-- commit: organiza-os-varredura-det -->
+
+**O /aft-organiza-os agora oferece sincronizar as pastas com o DET.** Ao final da
+organização (ou quando você pedir direto "sincroniza minhas pastas com o DET"), a
+skill pergunta se você quer uma varredura completa: ela consulta o DET, importa para
+as fichas as notificações que ainda não estavam registradas e baixa, em todas as
+auditorias de uma vez, o que falta nas pastas — o PDF da notificação, os documentos
+entregues pela empresa e o relatório de atendimento, já no padrão novo (pasta
+numerada, subpasta por dia).
+
+A varredura é esperta: notificação que já está em dia na pasta fica quieta — só
+baixa o que não existe localmente ou o que tem entrega nova no DET. Se a chave de
+sessão vencer no meio, é só renovar e rodar de novo: nada baixa em dobro — e se o
+servidor do painel engasgar durante o lote, a varredura espera ele voltar e segue
+sozinha. O download
+completo registra a visualização no DET (o triângulo amarelo se apaga nas
+notificações baixadas), e empresa sem auditoria cadastrada não entra — para essas, o
+caminho continua sendo o /aft-nova-auditoria.
+
+---
+
+## 24/08/2026
 <!-- commit: observacoes-do-modelo -->
 
 **As observações do seu modelo do DET voltam a aparecer na notificação — antes
@@ -81,6 +225,24 @@ prevalece.
 ---
 
 ## 24/08/2026
+<!-- commit: varredura-poupa-pendentes -->
+
+**A varredura do DET agora respeita o triângulo amarelo.** Regra nova na
+sincronização em lote do /aft-organiza-os: notificação com alerta de atualização
+pendente (o triângulo amarelo do DET) **nunca entra na varredura** — nem mesmo quando
+a pasta dela ainda não existe. Motivo: o download completo registra a visualização no
+DET e apagaria o alerta em silêncio, sendo que o triângulo é justamente o aviso de
+que há entrega que você ainda não viu.
+
+Essas notificações voltam listadas no relatório da varredura, e a skill pergunta se
+você quer baixar alguma — cada uma que você autorizar é baixada individualmente (o
+mesmo /aft-det-baixar de sempre), e aí sim o alerta se apaga, como decisão sua, uma a
+uma. O lote continua baixando normalmente tudo o que falta nas pastas e não tem
+alerta aceso.
+
+---
+
+## 24/08/2026
 <!-- commit: erro-do-painel-vira-ticket -->
 
 **Quando o painel falha, ele agora explica em português e grava o ticket
@@ -98,6 +260,45 @@ das suas pastas aparecem como `<EMPRESA>`, `<INSCRICAO>` e `<PASTA AFT>`.
 
 Um mesmo defeito, na mesma ação, gera **um** ticket por vez que o painel está no
 ar — clicar de novo no botão que falhou não enche a sua pasta de tickets iguais.
+
+---
+
+## 24/08/2026
+<!-- commit: varredura-respeita-prazo -->
+
+**A varredura do DET agora respeita o prazo de entrega.** Notificação cujo prazo
+ainda não venceu não tem documentos baixados em lote — não há entrega a buscar, e o
+download só criava pasta com relatório vazio. Nessas, a varredura traz no máximo o
+PDF da própria notificação (sem registrar visualização no DET), quando a pasta ainda
+não existe; os documentos entregues e o relatório de atendimento ficam para depois do
+vencimento, quando o relatório inclusive serve de prova do que veio e do que faltou.
+Sem prazo escrito na ficha, a varredura fica no seguro e também não baixa documentos.
+A baixa individual de uma notificação continua livre, a qualquer momento: é escolha
+sua.
+
+---
+
+## 24/08/2026
+<!-- commit: pgrtr-analise-skill -->
+
+**Nova skill: análise de PGRTR (trabalho rural).** A `/aft-PGRTR-analise` audita o
+Programa de Gerenciamento de Riscos do Trabalho Rural exigido pela NR-31 — o "PGR das
+fazendas". Ela varre uma base de 33 ementas de NR-31 (das instruções aos trabalhadores
+aos exames médicos, passando por trabalho com animais, clima extremo e trânsito interno),
+cada uma com código, capitulação e grau de infração conferidos no ementário oficial,
+confronta o documento com o que você viu na inspeção física, cita a página de cada
+evidência e, ao final, oferece a redação dos autos (prontos para o `/aft-gera-ai`) e uma
+carta de recomendação ao produtor rural. Documento grande é lido em segundo plano, fora
+da conversa, para não estourar o seu limite de uso — igual à análise de PGR urbano. A
+base de ementas nasceu de uma contribuição de um colega AFT usuário do toolkit. Não
+confunda: PGR urbano (NR-01) continua na `/aft-PGR-analise`; a nova cuida só do rural.
+
+---
+
+## 24/08/2026
+<!-- commit: status-item-det-painel -->
+
+**O painel agora mostra o que o triângulo amarelo do DET esconde.** Até aqui, quando uma notificação tinha o alerta de "atualização pendente" (o triângulo amarelo), o painel só dizia que havia algo a resolver, mas não o quê. Agora, nessas notificações, o cartão mostra também o status de cada item: por exemplo, "itens: 5 aguardando avaliação de prazo". Assim você vê de relance se a pendência é decisão sua (o empregador pediu prorrogação de prazo e está aguardando você aceitar ou recusar), item entregue a conferir, ou outra coisa — sem precisar abrir o site do DET. A informação chega junto com o Sincronizar, como o resto das notificações, e só é buscada nas notificações que estão com o triângulo aceso.
 
 ---
 

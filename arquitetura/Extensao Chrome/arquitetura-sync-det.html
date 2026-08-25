@@ -371,11 +371,24 @@ não é referenciado pelo <code>manifest.json</code> e não é executado nem emp
       As de outras fiscalizações voltam como "ignoradas" no relatório — nunca em silêncio.</li>
   <li><strong>Escrita no memory.md</strong> (com backup antes): notificação nova vira
       <code>- [ ] CÓDIGO — prazo dd/mm/aaaa</code> + uma sub-linha de detalhes
-      (<code>lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente]</code>);
+      (<code>lavrada · ciência · última entrega · Confirmada [· ⚠️ atualização pendente]
+      [· 📋 itens: N ...] [· ✉️ mensagem no canal]</code>);
       prazo que mudou é atualizado na linha existente; o checkbox <code>[ ]/[x]</code> nunca é
-      alterado — respondida é decisão do AFT. O alerta "atualização pendente" é
-      <em>dispensável</em> no painel (um clique grava <code>&lt;!-- visto: --&gt;</code>) e só
-      volta se a empresa fizer entrega nova.</li>
+      alterado — respondida é decisão do AFT. O alerta "atualização pendente"
+      <strong>espelha o DET</strong>: não há dispensa por clique (existiu entre julho e
+      25/08/2026, quando o AFT a vetou após apagar sem querer o aviso de uma pendência viva). Para toda notificação ainda <strong>em aberto</strong>
+      (<code>- [ ]</code>) o sync também busca o <strong>status de cada item</strong> (uma
+      requisição <code>GET /itens-notificacao</code>, desde 24/08/2026) e resume na sub-linha
+      com o marcador <code>📋</code> (<code>itens: 5 aguardando avaliação de prazo</code>).
+      O painel mostra o resumo no dossiê e leva ao card da grade um selo com os que dependem
+      de ato do AFT (<em>"📋 5 itens aguardam sua decisão"</em>).
+      <strong>O gate são duas portas</strong>: notificação em aberto <em>ou</em> triângulo aceso
+      (25/08/2026, caso BUENO 28). Só o triângulo não servia — ele é alerta de <em>novidade</em>,
+      apagado ao abrir a notificação no DET, e levava junto o <em>estado</em> dos itens; só o
+      "em aberto" também não, porque uma notificação já marcada <code>[x]</code> pode ter
+      novidade e itens esperando decisão. As contagens ainda alimentam o
+      <strong>"próximo passo sugerido"</strong> do dossiê, que antes afirmava "sem entrega" em
+      todo DET vencido — errado, e logo antes de sugerir auto por omissão.</li>
   <li><strong>O resultado volta pelo mesmo caminho</strong> e aparece como toast na página do
       DET. O painel (<code>painel.html</code>) passa a mostrar os novos vencimentos.</li>
 </ol>
@@ -407,13 +420,16 @@ Content-Type: application/json</code></pre>
     <tr><td><code>itemDataUltimaEntrega</code></td><td>última entrega do empregador</td><td>sub-linha + fingerprint do alerta dispensável</td></tr>
     <tr><td><code>itemAtualizado</code></td><td>triângulo "Existe atualização pendente"</td><td>alerta "⚠️" da sub-linha (dispensável)</td></tr>
     <tr><td><code>isPendenciaComunicacaoAuditor</code></td><td>envelope laranja: mensagem do empregador no canal de comunicação, aguardando você</td><td>chip "✉️ mensagem no DET" no cartão</td></tr>
+    <tr><td><code>status</code> (por item, em <code>GET /itens-notificacao</code>)</td><td>estado de cada item — mesmo número da coluna "Status" da tela (ex.: 4 = "Prazo Solicitado")</td><td>resumo "📋 itens: N ..." na sub-linha + selo "N itens aguardam sua decisão" no card, que acumula com o ⚠️ (gate: notificação em aberto na ficha OU ⚠️ aceso; uma requisição). Também alimenta o "próximo passo sugerido" (entrega total, parcial ou nenhuma)</td></tr>
   </table>
   <p class="sub" style="margin:0"><strong>Constatado em produção (19–22/07/2026):</strong> a API
   pode continuar devolvendo <code>itemAtualizado=true</code> mesmo depois de o triângulo sumir da
   tela do DET (a tela apaga quando o AFT abre a notificação; o campo, não necessariamente). Por
-  isso o alerta local é <em>dispensável</em>: um clique no painel grava
-  <code>&lt;!-- visto: última entrega --&gt;</code> na sub-linha, e o alerta só reaparece se
-  <code>itemDataUltimaEntrega</code> mudar (entrega nova = novidade real).</p>
+  isso o alerta local foi <em>dispensável</em> por clique entre julho e <strong>25/08/2026</strong>,
+  quando o AFT mandou remover a dispensa: ele havia clicado sem querer e perdido de vista uma
+  pendência viva. O remédio certo para o campo teimoso é apagar o triângulo <strong>no próprio
+  DET</strong> — abrir a notificação lá, o que o <code>det_baixar</code> já faz ao registrar a
+  visualização (confirmado em produção em 21/08/2026).</p>
   <p class="sub" style="margin:10px 0 0"><strong>O envelope é diferente do triângulo:</strong> ele
   some sozinho quando o AFT responde no DET, então não precisa (nem tem) dispensa por clique —
   se ainda aparece, ainda há mensagem esperando.</p>
@@ -496,7 +512,7 @@ Content-Type: application/json</code></pre>
   <table>
     <tr><th>Ação</th><th>O que faz</th></tr>
     <tr><td><code>det</code></td><td>alterna [ ]/[x] da notificação DET (respondida/reaberta)</td></tr>
-    <tr><td><code>det_visto</code></td><td>dispensa o alerta "⚠️ atualização pendente" (volta se houver entrega nova)</td></tr>
+    <tr><td><del><code>det_visto</code></del></td><td><del>dispensa o alerta "⚠️ atualização pendente"</del> — ação REMOVIDA em 25/08/2026 (o alerta passou a espelhar o DET)</td></tr>
     <tr><td><code>pendencia</code></td><td>marca pendência como resolvida ([x] + carimbo de data)</td></tr>
     <tr><td><code>pendencia_add</code></td><td>registra pendência (<code>- [ ] texto</code>; cria a seção se faltar)</td></tr>
     <tr><td><code>anotacao_add</code></td><td>registra constatação da auditoria de documentos (<code>- dd/mm/aaaa — texto</code>)</td></tr>

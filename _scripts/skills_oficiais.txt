@@ -5,6 +5,7 @@ aft-NR01
 aft-NR12
 aft-NR18
 aft-PGR-analise
+aft-PGRTR-analise
 aft-aet-auditoria
 aft-agenda-det
 aft-ajuda

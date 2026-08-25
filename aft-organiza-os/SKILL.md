@@ -9,8 +9,14 @@ description: >
   toolkit. Acione com "/aft-organiza-os", "organiza essa pasta", "joguei uma
   pasta na OS ATIVAS", "importar uma auditoria antiga", "arruma a pasta da
   empresa X", "padroniza essa OS", "acabei de copiar os arquivos da
-  fiscalização". Varre TODA a OS ATIVAS e pede UMA aprovação. Nunca apaga
-  nada. NÃO cadastra OS do zero (/aft-nova-auditoria) nem baixa do DET.
+  fiscalização". Acione TAMBÉM com "sincroniza minhas pastas com o DET" /
+  "baixa o que falta do DET em todas as auditorias": a FASE 6 (opcional, sempre
+  perguntada) varre o DET e baixa, para todas as OS, as notificações que ainda
+  não estão nas pastas e os documentos entregues com o relatório de
+  atendimento — só de notificação com prazo já vencido (no prazo corrente,
+  apenas o PDF da notificação) e nunca das com alerta amarelo pendente, que
+  ficam listadas para baixa individual. Varre TODA a OS ATIVAS e pede UMA
+  aprovação. Nunca apaga nada. NÃO cadastra OS do zero (/aft-nova-auditoria).
 ---
 
 # organiza-os — Importar/organizar as pastas de fiscalização de OS ATIVAS
@@ -85,7 +91,13 @@ for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
    na raiz: `notificacao-*.pdf`, `relatorio-atendimento-*.pdf`, `notificacao-*/`,
    `tn-nco-*.docx`, `nad-*.docx`, `Autos *</`, `Relacao de autos/` ou
    `relacao-autos*.docx`. A migração é só `mkdir` + `mv` para `NOTIFICACOES/` e
-   `AUTOS/` — **nada é renomeado nem apagado**, e os `.md` da raiz não se movem.
+   `AUTOS/` — **nada é apagado**, e os `.md` da raiz não se movem.
+
+   **Pacotes de notificação fora do padrão de 24/08/2026 → reorganização.** O padrão
+   atual é `NOTIFICACOES/<NN> - <CODIGO> <data de lavratura>/` com o conteúdo de cada
+   download na subpasta `baixada em <data>` (ver FASE 4). Pacote sem o número de ordem,
+   ou com relatório de atendimento e pastas `item<N>_...` na raiz do pacote, também
+   qualifica a pasta como "atualização".
 3. **Vazia** → apenas relate no resumo final ("pastas vazias: X, Y — nada a organizar")
    e siga. Não pergunte nada sobre elas.
 
@@ -196,10 +208,11 @@ só com as fichas e os relatórios `.md`**:
 ├── tn-nco-*.md · nad-*.md        ← RAIZ OBRIGATÓRIA (texto que o AFT recola no DET)
 ├── NOTIFICACOES/
 │   ├── tn-nco-*.docx · nad-*.docx  ← versão fechada da notificação emitida
-│   └── <CODIGO> <dd-mm-aaaa>/    ← TUDO daquela notificação (data do download
-│       ├── notificacao-<CODIGO>.pdf                    ou dos arquivos)
-│       ├── relatorio-atendimento-<CODIGO>.pdf
-│       └── item1/ item2/ ...     ← resposta do empregador
+│   └── <NN> - <CODIGO> <dd-mm-aaaa>/  ← TUDO daquela notificação (NN = ordem de
+│       ├── notificacao-<CODIGO>.pdf      lavratura; data = data de LAVRATURA)
+│       └── baixada em <dd-mm-aaaa>/   ← o que chegou em cada dia de download
+│           ├── relatorio-atendimento-<CODIGO>.pdf
+│           └── item1/ item2/ ...      ← resposta do empregador
 ├── AUTOS/
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
 │   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
@@ -240,14 +253,17 @@ Regras do plano:
   toolkit). Sem identificador encontrado → só o nome, e avise que o CNPJ/CPF será exigido
   no `/aft-gera-ai`.
 - **Notificações** → tudo em `NOTIFICACOES/`, e cada notificação inteira dentro do
-  SEU pacote `<CODIGO> <dd-mm-aaaa>` (regra de 21/08/2026 — sem o prefixo
-  `notificacao-` no nome da pasta; a data é a do download ou, na importação, a data
-  mais recente dos arquivos da resposta): o PDF como
-  `NOTIFICACOES/<CODIGO> <data>/notificacao-<CODIGO>.pdf`, o relatório de atendimento
-  ao lado, e a resposta do empregador na mesma subpasta (mantendo `item1/`,
-  `item2/`... ou `01 - .../`). Pacote legado `notificacao-<CODIGO>/` é renomeado ao
-  padrão; sufixo descritivo que o AFT tenha dado é **preservado** (`<CODIGO> jornada/`
-  fica como está) — o que identifica é o código.
+  SEU pacote `<NN> - <CODIGO> <dd-mm-aaaa>` (regra de 24/08/2026 — sem o prefixo
+  `notificacao-` no nome da pasta): `NN` é a **ordem de lavratura** entre as
+  notificações da OS (01 é a primeira emitida) e a data é a de **lavratura** — leia-a
+  na 1ª página do `notificacao-<CODIGO>.pdf` (linha de local e data, ou "lavrada em");
+  sem o PDF, use a data mais antiga dos arquivos da resposta e relate a incerteza. O
+  PDF fica como `NOTIFICACOES/<NN> - <CODIGO> <data>/notificacao-<CODIGO>.pdf` e a
+  resposta do empregador desce para a subpasta `baixada em <data do download>` —
+  quem faz essa descida e a numeração é o `det_baixar.py --reorganizar` (FASE 4);
+  no plano, você só corrige a data de lavratura no nome do pacote. Pacote legado
+  `notificacao-<CODIGO>/` é renomeado ao padrão; sufixo descritivo que o AFT tenha
+  dado é **preservado** (`<CODIGO> <data> jornada/`) — o que identifica é o código.
 - **Notificação também é o que o AFT emitiu**, não só o que voltou do DET: os `.docx`
   de Termo de Notificação para Correção (`tn-nco-*.docx`) e de Notificação para
   Apresentação de Documentos (`nad-*.docx`) vão para `NOTIFICACOES/` junto com os PDFs.
@@ -286,6 +302,18 @@ Regras do plano:
 ## FASE 4 — Executar e registrar
 
 1. Para cada pasta do plano: renomeie a pasta (`mv`), depois mova/renomeie os arquivos.
+   Em seguida, aplique o padrão de 24/08/2026 aos pacotes de `NOTIFICACOES/` — primeiro
+   corrija no nome de cada pacote a data para a de **lavratura** (lida do PDF da
+   notificação, conforme a regra da FASE 3), depois rode, por OS do plano:
+
+```bash
+python ~/.claude/skills/_scripts/det_baixar.py --reorganizar "<pasta da OS>"
+```
+
+   O script desce o conteúdo da raiz de cada pacote para as subpastas
+   `baixada em <data>` (pela data de modificação de cada arquivo — no layout antigo é a
+   data do download) e numera os pacotes pela ordem das datas nos nomes. É idempotente
+   e não apaga nada; rode-o de novo sempre que corrigir uma data.
 2. Crie (ou atualize, com backup antes) o `memory.md` no esquema padrão do toolkit (o
    mesmo do `/aft-nova-auditoria`):
 
@@ -413,6 +441,67 @@ Depois de organizar tudo:
 Próximos passos sugeridos: /analise-preliminar (respostas de DET) · /aft-det-630 (omissões) ·
 /aft-analise-acidente (OS de acidente)
 ```
+
+## FASE 6 — Sincronizar com o DET (opcional; pergunte UMA vez)
+
+Logo depois do resumo da FASE 5, **pergunte ao AFT, em uma frase**: *"Quer que eu
+sincronize as pastas com o DET? Busco as notificações que ainda não estão nas
+auditorias e baixo os documentos entregues e os relatórios de atendimento."* Se ele
+recusar ou não responder, encerre normalmente — nunca rode sem o sim.
+
+Com o sim:
+
+1. **Servidor do painel no ar:** `curl -s http://127.0.0.1:8347/api/ping`. Sem
+   resposta, suba com `python ~/.claude/skills/_scripts/instalar_servidor_painel.py reiniciar`.
+2. **Token do DET:** siga `~/.claude/skills/config/canal-token-det.md` — via 1 (o
+   navegador do assistente, preferida) ou via 2 (o AFT clica em Sincronizar na aba do
+   DET). Não repita o procedimento aqui; falta de token nunca justifica improviso.
+3. **Varredura** (uma chamada só, cobre todas as OS):
+
+```bash
+python ~/.claude/skills/_scripts/det_baixar.py --varredura "<OS_ATIVAS>"
+```
+
+   O script primeiro sincroniza as fichas (notificação nova entra no memory.md de
+   cada OS) e depois baixa o pacote completo — PDF, relatório de atendimento e
+   arquivos entregues — de toda notificação **sem pacote local**. Duas regras
+   duras (decisão do AFT, 24/08/2026):
+
+   - Notificação com o **triângulo amarelo** ("atualização pendente" na ficha)
+     **nunca entra no lote**, mesmo sem pacote local — o download completo
+     apagaria o alerta em silêncio, e o triângulo é o aviso de que há entrega que
+     o auditor ainda não viu. Voltam no campo `pendentes` do JSON.
+   - Notificação com **prazo ainda não vencido** (ou sem prazo escrito na linha —
+     na dúvida, poupa) **não tem documentos baixados**: não há entrega a buscar.
+     O lote traz no máximo o **PDF da notificação** (modo só-notificação, que não
+     registra visualização), quando o pacote ainda não existe. Voltam no campo
+     `no_prazo`, com o prazo. Documentos e relatório, só com o prazo vencido.
+
+   O resto fica quieto. `token_expirado` no meio: renove o token e rode de novo —
+   é idempotente, nada baixa em dobro.
+
+4. **Relate em uma mensagem**: notificações novas importadas por OS (do bloco
+   `sync`), pacotes baixados (código, quantos arquivos), as `no_prazo` (com a data
+   do prazo — "documentos ficam para depois do vencimento"), `sem_novidade`, os
+   `pendentes` e erros em linguagem simples. Regenere o painel ao final (mesmo
+   comando da FASE 5).
+
+5. **Pendentes são baixa INDIVIDUAL.** Liste os códigos com triângulo amarelo em
+   destaque no relatório e ofereça: *"quer que eu baixe alguma delas agora?"*.
+   Cada uma que o AFT autorizar é uma chamada da `/aft-det-baixar` para aquele
+   código — aí sim o alerta se apaga, como ato consciente dele. Nunca baixe as
+   pendentes em lote, nem com autorização genérica: uma a uma.
+
+Avisos que o AFT precisa ouvir (uma linha cada, quando se aplicarem):
+- O download completo **registra a visualização no DET** — nas notificações que a
+  varredura baixou (sem alerta pendente) e nas pendentes que ele mandar baixar
+  individualmente, o triângulo se apaga como se ele as tivesse aberto no site.
+- Notificação de empresa **sem OS em OS ATIVAS não entra** na varredura: cadastre
+  antes com `/aft-nova-auditoria`.
+
+Esta fase também atende quem chega pedindo direto "sincroniza minhas pastas com o
+DET" / "baixa o que falta do DET em todas as auditorias" — pode executá-la sozinha,
+sem as FASES 1 a 5, desde que o AFT confirme o disparo.
 
 ## Encadeamento
 

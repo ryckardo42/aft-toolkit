@@ -31,7 +31,6 @@ Além da lista de próximos vencimentos em ordem de data.
 Sem internet, sem servidor na nuvem, sem conta. Junto com o painel roda um **pequeno programa só na máquina do AFT** (o "servidor local"), que escuta no endereço `127.0.0.1:8347` — `127.0.0.1` é o nome técnico da própria máquina, não sai dela. É esse programa que transforma os cards em botões para o trabalho mecânico:
 
 - marcar notificação DET como respondida / reabrir;
-- dispensar o alerta ⚠️ de atualização pendente;
 - registrar e resolver pendências;
 - registrar constatação da auditoria de documentos;
 - registrar o dia trabalhado;
@@ -109,22 +108,23 @@ Pode ser disparada de dois jeitos, que fazem exatamente a mesma coisa:
 - o botão **⬇ baixar arquivos** no cartão de notificações do painel;
 - a skill `/aft-det-baixar` no chat, aceitando código da notificação, CNPJ ou nome do empregador.
 
-**O que baixa e para onde** — tudo vai para o pacote da notificação, dentro de `NOTIFICACOES/` na pasta da OS (a raiz da OS fica limpa):
+**O que baixa e para onde** — tudo vai para o pacote da notificação, dentro de `NOTIFICACOES/` na pasta da OS (a raiz da OS fica limpa). O nome do pacote começa pelo número de ordem de lavratura (01 é a primeira notificação emitida na fiscalização) e a data é a de **lavratura**; cada dia de download tem a sua subpasta `baixada em <data>`:
 
 ```
-<OS>/NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/
+<OS>/NOTIFICACOES/<NN> - <CODIGO> <dd-mm-aaaa>/
 ├── notificacao-<CODIGO>.pdf              o PDF da notificação
-├── relatorio-atendimento-<CODIGO>.pdf    sempre atualizado a cada download
-├── historico-itens.md                    prorrogações, justificativas e status de cada item
-├── canal-comunicacao/                    só quando há mensagens
+├── canal-comunicacao/                    só quando há mensagens (cumulativo)
 │   ├── mensagens.md, anexos, historico-canal.pdf
-└── item<N>_<descrição oficial>/          um por item solicitado
-    ├── <arquivos entregues pela empresa>
-    └── invalidados/                      o que o AFT rejeitou ou dispensou no DET
+└── baixada em <dd-mm-aaaa>/              uma por dia de download
+    ├── relatorio-atendimento-<CODIGO>.pdf  a fotografia daquele dia
+    ├── historico-itens.md                prorrogações, justificativas e status de cada item
+    └── item<N>_<descrição oficial>/      só o que chegou naquele dia
+        ├── <arquivos entregues pela empresa>
+        └── invalidados/                  o que o AFT rejeitou ou dispensou no DET
 ```
 
 Detalhes úteis:
-- **Não baixa duas vezes** o mesmo arquivo; entrega parcelada ou prorrogação acumula no mesmo pacote.
+- **Não baixa duas vezes** o mesmo arquivo; entrega parcelada ou prorrogação acumula no mesmo pacote, cada dia na sua subpasta — assim o auditor sabe o que a empresa apresentou em cada data.
 - Cada download entra sozinho no **Registro de atividades** do `memory.md`.
 - O download **registra a visualização no DET**: o triângulo amarelo "Existe atualização pendente" se apaga na tela do site, como se o AFT tivesse aberto a notificação pelo navegador.
 - Encadeia naturalmente com a análise dos documentos entregues — que é outra skill.

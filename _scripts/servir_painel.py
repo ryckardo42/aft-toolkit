@@ -238,11 +238,6 @@ def acao_pendencia(texto: str, alvo: str) -> tuple[str, str]:
     raise ValueError("pendência não encontrada (ou já resolvida)")
 
 
-RE_DETALHE_DET = re.compile(r"^\s+-\s+lavrada\s", re.IGNORECASE)
-RE_ULT_ENTREGA = re.compile(r"última entrega\s+(\d{2})/(\d{2})/(\d{4})",
-                            re.IGNORECASE)
-
-
 def acao_pendencia_add(texto: str, descricao: str) -> tuple[str, str]:
     """Acrescenta '- [ ] texto' em '## Pendências'. Sem data: pendência é
     tarefa, não registro datado — o carimbo entra quando ela é resolvida.
@@ -273,31 +268,6 @@ def acao_pendencia_add(texto: str, descricao: str) -> tuple[str, str]:
             break
     linhas.insert(ini, nova)
     return "".join(linhas), "pendência registrada"
-
-
-def acao_det_visto(texto: str, codigo: str) -> tuple[str, str]:
-    """Dispensa o alerta '⚠️ atualização pendente' de uma notificação DET:
-    remove o alerta da sub-linha de detalhes e grava `<!-- visto: X -->`
-    (X = última entrega, ou 'sem-entrega'). O det_sync respeita o marcador
-    e só reexibe o alerta se a empresa fizer entrega NOVA."""
-    linhas = texto.splitlines(keepends=True)
-    ini, fim = limites_secao(linhas, ("Notificações DET", "Notificacoes DET"))
-    if ini < 0:
-        raise ValueError("seção 'Notificações DET' não encontrada")
-    for i in range(ini, fim):
-        m = RE_CHECKBOX.match(linhas[i].rstrip("\n"))
-        if not (m and codigo in m.group(4)):
-            continue
-        if i + 1 >= fim or not RE_DETALHE_DET.match(linhas[i + 1]):
-            raise ValueError(f"notificação {codigo} sem sub-linha de detalhes")
-        det = linhas[i + 1].rstrip("\n")
-        me = RE_ULT_ENTREGA.search(det)
-        visto = f"{me.group(3)}-{me.group(2)}-{me.group(1)}" if me else "sem-entrega"
-        det = det.replace(" · ⚠️ atualização pendente", "")
-        det = re.sub(r"\s*<!--\s*visto:[^>]*-->", "", det)
-        linhas[i + 1] = f"{det} <!-- visto: {visto} -->\n"
-        return "".join(linhas), f"alerta da {codigo} dispensado (volta se houver entrega nova)"
-    raise ValueError(f"notificação {codigo} não encontrada no memory.md")
 
 
 def migra_secao_documentos(linhas: list[str]) -> None:
@@ -473,7 +443,6 @@ def acao_embargo(texto: str, estado: str) -> tuple[str, str]:
 
 ACOES = {
     "det": lambda t, p: acao_det(t, p.get("codigo", "")),
-    "det_visto": lambda t, p: acao_det_visto(t, p.get("codigo", "")),
     "pendencia": lambda t, p: acao_pendencia(t, p.get("texto", "")),
     "pendencia_add": lambda t, p: acao_pendencia_add(t, p.get("texto", "")),
     "constatacao_edit": lambda t, p: acao_constatacao_edit(
@@ -951,6 +920,8 @@ class Handler(BaseHTTPRequestHandler):
                 tipo=int(p["tipo"]) if p.get("tipo") is not None else None,
                 retorno=int(p["retorno"]) if p.get("retorno") is not None else None,
                 preassinalado=p.get("preassinalado"),
+                ri=p.get("ri"),
+                ni=p.get("ni"),
                 overrides=ov)
             revisao = det_criar.revisar_payload(payload)
             resumo = {"ri": payload["ri"], "ni": payload["ni"],
@@ -1133,16 +1104,30 @@ class Handler(BaseHTTPRequestHandler):
 
     def _det_sync(self):
         """POST /api/det-sync — corpo {det_access_token}; chamado pela
-        extensão Chrome. O token vive só nesta requisição (nunca em disco)."""
+        extensão Chrome. O token vive só nesta requisição (nunca em disco).
+        Corpo SEM token (ou vazio): usa o token que já está na RAM — é como a
+        varredura da /aft-organiza-os dispara o sync das fichas depois que a
+        via 1 (det_token.py --gravar) abasteceu o painel; sem token na RAM,
+        409 token_expirado, igual ao /api/det-baixar."""
         try:
             n = min(int(self.headers.get("Content-Length") or 0), MAX_BODY)
-            p = json.loads(self.rfile.read(n).decode("utf-8"))
+            bruto = self.rfile.read(n).decode("utf-8") if n else ""
+            p = json.loads(bruto) if bruto.strip() else {}
             token = p.get("det_access_token")
-            if not token or not isinstance(token, str) or token.count(".") != 2:
-                return self._json(400, {"ok": False,
-                                        "erro": "det_access_token ausente ou inválido"},
-                                  CORS_DET)
-            _token_guardar(token)  # abastece o "baixar arquivos"
+            if token:
+                if not isinstance(token, str) or token.count(".") != 2:
+                    return self._json(400, {"ok": False,
+                                            "erro": "det_access_token inválido"},
+                                      CORS_DET)
+                _token_guardar(token)  # abastece o "baixar arquivos"
+            else:
+                token = _token_atual()
+                if not token:
+                    return self._json(409, {"ok": False, "token_expirado": True,
+                                            "erro": "sem token do DET — abasteça "
+                                                    "pela via 1 ou pelo Sincronizar "
+                                                    "e tente de novo"},
+                                      CORS_DET)
             resultado = det_sync.sincronizar_todas(self.base, token)
             self._json(200, resultado, CORS_DET)
         except Exception as e:

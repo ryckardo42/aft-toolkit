@@ -94,8 +94,8 @@
   <a href="../Extensao%20Chrome/arquitetura-sync-det.html">Sync DET</a> já empresta
   ao painel (o token de sessão do próprio site), o motor <code>det_baixar.py</code>
   busca na API oficial o PDF da notificação, o Relatório de Atendimento e os
-  arquivos entregues pelo empregador — organizados por item no pacote
-  <code>NOTIFICACOES/&lt;CODIGO&gt; &lt;dd-mm-aaaa&gt;/</code> da OS — e ainda
+  arquivos entregues pelo empregador — organizados por item e por dia no pacote
+  <code>NOTIFICACOES/&lt;NN&gt; - &lt;CODIGO&gt; &lt;data de lavratura&gt;/</code> da OS — e ainda
   registra a visualização no DET, apagando o alerta amarelo da tela. O token nunca
   passa pela conversa do assistente.
 </div>
@@ -159,7 +159,7 @@
 
   <!-- Pacote -->
   <rect x="330" y="290" width="550" height="150" rx="12" fill="none" stroke="#14b8a6" stroke-width="2" stroke-dasharray="6 3"/>
-  <text x="605" y="318" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">Pasta da OS · NOTIFICACOES/&lt;CODIGO&gt; &lt;dd-mm-aaaa&gt;/</text>
+  <text x="605" y="318" text-anchor="middle" font-size="13" font-weight="700" fill="#0f766e">Pasta da OS · NOTIFICACOES/&lt;NN&gt; - &lt;CODIGO&gt; &lt;data lavratura&gt;/</text>
   <text x="605" y="342" text-anchor="middle" font-size="12" fill="#64748b">notificacao-&lt;COD&gt;.pdf · relatorio-atendimento-&lt;COD&gt;.pdf</text>
   <text x="605" y="362" text-anchor="middle" font-size="12" fill="#64748b">item1_&lt;descrição oficial&gt;/ … itemN_…/ (invalidados/ à parte)</text>
   <text x="605" y="386" text-anchor="middle" font-size="12" fill="#64748b">idempotente · migra legados · registra na ficha (memory.md)</text>
@@ -206,19 +206,21 @@ com o token de sessão do próprio AFT.</p>
 </div>
 
 <h2>4. O pacote na pasta da OS</h2>
-<pre><code>NOTIFICACOES/&lt;CODIGO&gt; &lt;dd-mm-aaaa&gt;/     ← data do PRIMEIRO download
-├── notificacao-&lt;CODIGO&gt;.pdf
-├── relatorio-atendimento-&lt;CODIGO&gt;.pdf    ← SEMPRE refrescado
-├── historico-itens.md                     ← prorrogações/justificativas/status
-├── canal-comunicacao/                     ← só quando há mensagens
+<pre><code>NOTIFICACOES/&lt;NN&gt; - &lt;CODIGO&gt; &lt;dd-mm-aaaa&gt;/   ← NN = ordem de lavratura · data = LAVRATURA
+├── notificacao-&lt;CODIGO&gt;.pdf               ← estático (baixa uma vez)
+├── canal-comunicacao/                     ← só quando há mensagens (cumulativo)
 │   ├── mensagens.md · &lt;anexos&gt; · historico-canal.pdf
-└── item&lt;N&gt;_&lt;descrição oficial&gt;/
-    ├── &lt;arquivos entregues&gt;
-    └── invalidados/                       ← rejeitados/dispensados no DET</code></pre>
+└── baixada em &lt;dd-mm-aaaa&gt;/               ← UMA por dia de download
+    ├── relatorio-atendimento-&lt;CODIGO&gt;.pdf ← a fotografia daquele dia
+    ├── historico-itens.md                 ← prorrogações/justificativas/status
+    └── item&lt;N&gt;_&lt;descrição oficial&gt;/       ← só o que chegou naquele dia
+        ├── &lt;arquivos entregues&gt;
+        └── invalidados/                   ← rejeitados/dispensados no DET</code></pre>
 <ul>
-  <li>Downloads repetidos (entrega parcelada, prorrogação aceita) <strong>acumulam no mesmo pacote</strong>, sem duplicar.</li>
-  <li>Legados migram sozinhos: <code>notificacao-&lt;COD&gt;</code> (raiz ou NOTIFICACOES/) é renomeado ao padrão; PDF solto é movido para dentro.</li>
-  <li>Apelido do AFT (<code>&lt;COD&gt; jornada</code>) é respeitado; pacotes nunca são mesclados automaticamente.</li>
+  <li>Downloads repetidos (entrega parcelada, prorrogação aceita) <strong>acumulam no mesmo pacote</strong>, cada dia na sua subpasta — o AFT sabe o que a empresa apresentou em cada data. Arquivo já baixado em dia anterior não baixa de novo.</li>
+  <li>Notificação antiga baixada depois entra no lugar certo: os pacotes <strong>se renumeram sozinhos</strong> pela ordem das datas de lavratura.</li>
+  <li>Legados migram sozinhos: <code>notificacao-&lt;COD&gt;</code> ou <code>&lt;COD&gt; &lt;data&gt;</code> é renomeado ao padrão; PDF solto é movido para dentro; o conteúdo da raiz do pacote desce para a subpasta do dia em que foi baixado (data de modificação). O modo <code>--reorganizar</code> faz o mesmo sem rede (usado pela /aft-organiza-os).</li>
+  <li>Apelido do AFT (<code>&lt;COD&gt; &lt;data&gt; jornada</code>) é preservado; pacotes nunca são mesclados automaticamente.</li>
   <li>Nomes saneados para valerem também no Windows; colisão ganha sufixo <code>-2</code>, <code>-3</code>…</li>
 </ul>
 
