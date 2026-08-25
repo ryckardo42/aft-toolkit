@@ -27,6 +27,18 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+# O console do Windows abre em cp1252, e a base da RFB devolve razao social,
+# natureza juridica e descricao de CNAE com acento. Sem esta reconfiguracao a
+# tela mostra "Fabricacao" como "Fabrica??ao" e "Empresaria" como "Empres?ria":
+# o dado chega certo (a resposta e decodificada como UTF-8 mais abaixo) e se
+# corrompe so na impressao -- de modo que quem copia da tela para um documento
+# leva a corrupcao junto. errors="replace" garante que um caractere fora do
+# alcance jamais derrube a consulta.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:                                   # Python < 3.7 ou stdout redirecionado
+    pass
+
 CACHE_DIR = Path.home() / "Documents" / "AFT" / "cache" / "cnpj"
 TIMEOUT = 30
 
