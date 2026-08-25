@@ -124,6 +124,11 @@ RE_DET_MENSAGEM = re.compile(
 # det_sync com o marcador 📋: "📋 itens: 5 aguardando avaliação de prazo". O
 # grupo 1 captura o texto até o próximo separador " · " (ou o <!-- visto -->).
 RE_DET_ITENS = re.compile(r"📋\s*(itens:[^·<]+)", re.IGNORECASE)
+# Dentro do resumo, os itens que dependem de DECISÃO do AFT (avaliar o prazo ou
+# a dispensa que o empregador pediu) — é o que merece selo no card da grade,
+# porque o AFT é o gargalo. Item entregue/recebido é trabalho de análise, não
+# decisão parada: fica só no dossiê.
+RE_DET_ITENS_AGUARDA = re.compile(r"(\d+)\s+aguardando\s+avalia", re.IGNORECASE)
 # Notificação cancelada pelo auditor no DET (status 2): sem efeito legal.
 # Aceita também o `status 2` cru — é como as sincronizações antigas gravaram a
 # sub-linha, antes de o sync conhecer o nome do status. Só casa dentro da
@@ -325,6 +330,7 @@ def parse_memory(path: Path) -> dict:
         pendente = aguarda = mensagem = cancelada = False
         mensagem_txt = ""
         itens_status = ""
+        itens_aguardando = 0
         if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
             det = linhas_sec[idx + 1]
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
@@ -340,6 +346,8 @@ def parse_memory(path: Path) -> dict:
             cancelada = bool(RE_DET_CANCELADA.search(det))
             m_it = RE_DET_ITENS.search(det)
             itens_status = m_it.group(1).strip() if m_it else ""
+            itens_aguardando = sum(int(n) for n in
+                                   RE_DET_ITENS_AGUARDA.findall(itens_status))
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
                      "linha": resto, "rotulo": rotulo, "notas": notas,
@@ -347,7 +355,8 @@ def parse_memory(path: Path) -> dict:
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente,
                      "aguardando_ciencia": aguarda, "mensagem_canal": mensagem,
                      "mensagem_txt": mensagem_txt, "cancelada": cancelada,
-                     "itens_status": itens_status})
+                     "itens_status": itens_status,
+                     "itens_aguardando": itens_aguardando})
 
     # Pendências (checkbox) — só as em aberto interessam ao painel.
     pendencias = []
@@ -828,6 +837,9 @@ color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px}
 /* Mensagem do empregador no canal de comunicacao do DET, no mesmo molde */
 .msg-card{display:inline-block;font:700 11px var(--sans);background:#FCEBD8;
 color:#9A5B12;border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
+/* Itens do DET parados esperando decisao do AFT (prazo/dispensa a avaliar) */
+.itens-card{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
+color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
 .aviso-vazio{background:var(--paper);border:1px dashed var(--bd);border-radius:10px;
 padding:26px;text-align:center;color:var(--t3)}
 /* Detalhe — modal central amplo */
@@ -952,6 +964,7 @@ font-size:13px;z-index:20;display:none}
 .badge.vencido,.badge.urgente{background:#3D2521}
 .det-item .cod .pend,.pend-card{background:#3D2521;color:#E9A891}
 .det-item .cod .msg,.msg-card{background:#3B2E1B;color:#E8BE85}
+.itens-card{background:#3D2521;color:#E9A891}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
 .mini.acao{background:#3A2C22;border-color:#4A382B;color:#E9A891}
 .mini.acao:hover{background:#C8694A;border-color:#C8694A;color:#191917}
@@ -2029,6 +2042,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
                       "itens_status": d.get("itens_status") or "",
+                      "itens_aguardando": d.get("itens_aguardando") or 0,
                       "urg": selo_det(d, hoje)[0], "selo": selo_det(d, hoje)[1]}
                      for d in o["dets"]],
             "novas": o.get("novas") or [],
@@ -2125,6 +2139,18 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
         pend = any(d.get("atualizacao_pendente") for d in vivas)
         pend_selo = ('\n  <div class="pend-card">⚠️ atualização pendente</div>'
                      if pend else "")
+        # Itens parados à espera de DECISÃO do AFT (o empregador pediu prazo ou
+        # dispensa). Vem ao card da grade porque o triângulo ⚠️ é dispensável e
+        # some com um clique — e o AFT ficava sem nenhum sinal de que cinco
+        # itens aguardavam a decisão dele (caso BUENO 28, 25/08/2026). Este
+        # selo NÃO é dispensável: só sai quando o DET disser que saiu.
+        n_ag = sum(d.get("itens_aguardando") or 0 for d in vivas
+                   if det_cobra_acao(d))
+        itens_selo = ('\n  <div class="itens-card" title="itens desta auditoria '
+                      'com pedido de prazo ou dispensa do empregador aguardando '
+                      'a sua avaliação no DET">📋 '
+                      + (f'{n_ag} itens aguardam sua decisão' if n_ag > 1
+                         else '1 item aguarda sua decisão') + '</div>') if n_ag else ""
         # Endereço da auditoria. Sem pasta (Artifact publicado), cai no índice —
         # o link continua funcionando dentro daquela versão publicada.
         chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
@@ -2137,7 +2163,7 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
   <div class="rodape-card">
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
-  </div>{msg_selo}{pend_selo}
+  </div>{msg_selo}{itens_selo}{pend_selo}
 </a>""")
 
     grade = ("".join(cards) if cards else
