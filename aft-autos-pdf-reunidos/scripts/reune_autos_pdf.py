@@ -276,20 +276,39 @@ def main() -> int:
     ap.add_argument("saida")
     ap.add_argument("--pasta-pro", default=None)
     ap.add_argument("--paginas-anexo", type=int, default=0)
+    # OS de GRUPO ECONOMICO: uma pasta so, e uma empresa por CNPJ no
+    # Sistema Auditor. O relatorio final e UM e leva UM anexo, entao os
+    # autos das duas (ou mais) empresas precisam caber no mesmo PDF.
+    ap.add_argument("--tambem", action="append", default=[],
+                    metavar="NOME=IDENTIFICADOR",
+                    help="outra empresa do mesmo grupo economico, no "
+                         "formato NOME=CNPJ. Pode repetir.")
     try:
         args = ap.parse_args()
     except SystemExit:
         print("Uso: reune_autos_pdf.py <NOME_EMPRESA> <CNPJ_OU_8DIGITOS> <SAIDA.pdf> "
-              "[--pasta-pro PASTA] [--paginas-anexo N]", file=sys.stderr)
+              "[--pasta-pro PASTA] [--paginas-anexo N] "
+              "[--tambem OUTRA_EMPRESA=CNPJ]", file=sys.stderr)
         return 2
 
     cnpj14 = re.sub(r"\D", "", args.identificador)
+    empresas = [(args.empresa, cnpj14)]
+    for extra in args.tambem:
+        if "=" not in extra:
+            print("--tambem exige o formato NOME=IDENTIFICADOR; recebido: "
+                  + repr(extra), file=sys.stderr)
+            return 2
+        nome, ident = extra.split("=", 1)
+        empresas.append((nome.strip(), re.sub(r"\D", "", ident)))
     base = base_pro(args.pasta_pro)
     saida = Path(args.saida).expanduser()
 
     result: dict = {
         "empresa": args.empresa,
         "cnpj": cnpj14,
+        "empresas": [{"empresa": n, "cnpj": c, "pasta_auditor": None,
+                      "match_estrategia": "nao_encontrado", "autos": 0,
+                      "paginas": 0} for n, c in empresas],
         "pasta_pro": str(base),
         "pasta_auditor": None,
         "match_estrategia": "nao_encontrado",
@@ -327,115 +346,138 @@ def main() -> int:
         return falha(f"Pasta do Sistema Auditor nao encontrada em {base}. "
                      "Confirme a instalacao ou informe --pasta-pro.")
 
-    pasta, estrategia, alternativos = find_pasta_auditor(base, args.empresa, cnpj14)
-    result["match_estrategia"] = estrategia
-    result["candidatos_alternativos"] = alternativos
-    if pasta is None:
-        print(json.dumps(result, ensure_ascii=False, indent=2))
-        return 0
-    result["pasta_auditor"] = str(pasta)
-
-    pdfs = list_pdf_autos(pasta)
-    if not pdfs:
-        return falha(f"Nenhum AI_*.PDF encontrado em {pasta}")
-
     from pypdf import PdfWriter
     writer = PdfWriter()
     pagina_atual = 0
-    numeros_ai = set()
+    # Anexo ja incluido nao entra de novo, e a deduplicacao vale para o PDF
+    # INTEIRO: num grupo economico o mesmo laudo costuma instruir os autos das
+    # duas empresas, e repeti-lo dobraria o arquivo sem acrescentar nada.
+    anexos_vistos: dict = {}
+    grupo = len(empresas) > 1
 
-    # 1º passe: abre cada auto, lê a ementa e separa os de jornada (anexos
-    # volumosos), que vão para o fim — cronológicos entre si.
-    comuns, jornada = [], []
-    for pdf in pdfs:
-        m = RE_AI_NOME.search(pdf.name)
-        digitos = m.group(1) if m else None
-        reader, erro = abrir_pdf(pdf)
-        ementa = extrair_ementa(reader) if reader is not None else None
-        item = (pdf, digitos, reader, erro, ementa)
-        if ementa in EMENTAS_JORNADA:
-            jornada.append(item)
-        else:
-            comuns.append(item)
-
-    result["autos_jornada_no_fim"] = [
-        numero_ai_formatado(d) if d else p.name for p, d, *_ in jornada]
-
-    # 2º passe: monta o PDF na ordem final. Anexo com o mesmo conteúdo (hash)
-    # já incluído em auto anterior não entra de novo.
-    anexos_vistos: dict = {}  # sha256 do arquivo -> "AI <nº> (arquivo)"
-    for pdf, digitos, reader, erro, ementa in comuns + jornada:
-        info: dict = {
-            "arquivo": pdf.name,
-            "numero_ai": numero_ai_formatado(digitos) if digitos else None,
-            "ementa_num": ementa,
-            "jornada": ementa in EMENTAS_JORNADA,
-            "paginas_auto": 0,
-            "anexos": [],
-            "anexo_cortado": False,
-            "warnings": [],
-        }
-        result["autos"].append(info)
-
-        if reader is None:
-            info["warnings"].append(f"auto pulado: {erro}")
+    for indice_emp, (nome_emp, cnpj_emp) in enumerate(empresas):
+        resumo_emp = result["empresas"][indice_emp]
+        numeros_ai = set()
+        pasta, estrategia, alternativos = find_pasta_auditor(base, nome_emp, cnpj_emp)
+        resumo_emp["match_estrategia"] = estrategia
+        if indice_emp == 0:
+            result["match_estrategia"] = estrategia
+            result["candidatos_alternativos"] = alternativos
+        if pasta is None:
+            result["errors"].append(
+                f"pasta do Sistema Auditor nao encontrada para {nome_emp} ({cnpj_emp})")
             continue
-        inicio = pagina_atual
-        writer.append(reader, import_outline=False)
-        info["paginas_auto"] = len(reader.pages)
-        pagina_atual += len(reader.pages)
-        marcador = writer.add_outline_item(
-            f"AI {info['numero_ai'] or pdf.name}", inicio)
+        resumo_emp["pasta_auditor"] = str(pasta)
+        if indice_emp == 0:
+            result["pasta_auditor"] = str(pasta)
 
-        if not digitos:
+        pdfs = list_pdf_autos(pasta)
+        if not pdfs:
+            result["errors"].append(f"Nenhum AI_*.PDF encontrado em {pasta}")
             continue
-        numeros_ai.add(digitos)
-        pasta_ax = pasta / f"AX_{digitos}"
-        if not pasta_ax.is_dir():
-            continue
-        limite = args.paginas_anexo
-        for anexo in list_pdf_anexos(pasta_ax):
-            ax_info = {"arquivo": anexo.name, "paginas_total": None,
-                       "paginas_incluidas": 0}
-            info["anexos"].append(ax_info)
-            try:
-                h = hashlib.sha256(anexo.read_bytes()).hexdigest()
-            except OSError as e:
-                info["warnings"].append(f"anexo {anexo.name} pulado: "
-                                        f"leitura falhou ({type(e).__name__})")
-                continue
-            if h in anexos_vistos:
-                visto = anexos_vistos[h]
-                ax_info["repetido_de"] = visto["rotulo"]
-                ax_info["paginas_total"] = visto["paginas"]
-                result["anexos_repetidos_omitidos"].append(
-                    f"AI {info['numero_ai']} — {anexo.name} "
-                    f"(já incluído em {visto['rotulo']})")
-                continue
-            r2, erro2 = abrir_pdf(anexo)
-            if r2 is None:
-                info["warnings"].append(f"anexo {anexo.name} pulado: {erro2}")
-                continue
-            ax_info["paginas_total"] = len(r2.pages)
-            incluir = len(r2.pages) if limite <= 0 else min(len(r2.pages), limite)
-            writer.append(r2, pages=(0, incluir), import_outline=False)
-            writer.add_outline_item(f"Anexo: {anexo.name}", pagina_atual,
-                                    parent=marcador)
-            ax_info["paginas_incluidas"] = incluir
-            pagina_atual += incluir
-            if incluir < len(r2.pages):
-                info["anexo_cortado"] = True
-            anexos_vistos[h] = {"rotulo": f"AI {info['numero_ai']} ({anexo.name})",
-                                "paginas": len(r2.pages)}
 
-    # Pastas AX_ sem AI correspondente (informativo, nao entram no PDF).
-    try:
-        for d in pasta.iterdir():
-            if d.is_dir() and re.fullmatch(r"AX_(\d{9})", d.name):
-                if d.name[3:] not in numeros_ai:
-                    result["anexos_orfaos"].append(d.name)
-    except (PermissionError, OSError):
-        pass
+        # Cada empresa abre um marcador proprio no PDF: quem folheia o anexo
+        # precisa saber de quem e o auto que esta lendo.
+        marcador_emp = (writer.add_outline_item(nome_emp, pagina_atual)
+                        if grupo else None)
+        pagina_inicial_emp = pagina_atual
+        autos_antes = len(result["autos"])
+
+        # 1º passe: abre cada auto, lê a ementa e separa os de jornada (anexos
+        # volumosos), que vão para o fim — cronológicos entre si.
+        comuns, jornada = [], []
+        for pdf in pdfs:
+            m = RE_AI_NOME.search(pdf.name)
+            digitos = m.group(1) if m else None
+            reader, erro = abrir_pdf(pdf)
+            ementa = extrair_ementa(reader) if reader is not None else None
+            item = (pdf, digitos, reader, erro, ementa)
+            if ementa in EMENTAS_JORNADA:
+                jornada.append(item)
+            else:
+                comuns.append(item)
+
+        result["autos_jornada_no_fim"] = [
+            numero_ai_formatado(d) if d else p.name for p, d, *_ in jornada]
+
+        # 2º passe: monta o PDF na ordem final. Anexo com o mesmo conteúdo (hash)
+        # já incluído em auto anterior não entra de novo.
+        for pdf, digitos, reader, erro, ementa in comuns + jornada:
+            info: dict = {
+                "arquivo": pdf.name,
+                "numero_ai": numero_ai_formatado(digitos) if digitos else None,
+                "ementa_num": ementa,
+                "jornada": ementa in EMENTAS_JORNADA,
+                "paginas_auto": 0,
+                "anexos": [],
+                "anexo_cortado": False,
+                "warnings": [],
+            }
+            result["autos"].append(info)
+
+            if reader is None:
+                info["warnings"].append(f"auto pulado: {erro}")
+                continue
+            inicio = pagina_atual
+            writer.append(reader, import_outline=False)
+            info["paginas_auto"] = len(reader.pages)
+            pagina_atual += len(reader.pages)
+            marcador = writer.add_outline_item(
+                f"AI {info['numero_ai'] or pdf.name}", inicio,
+                parent=marcador_emp)
+
+            if not digitos:
+                continue
+            numeros_ai.add(digitos)
+            pasta_ax = pasta / f"AX_{digitos}"
+            if not pasta_ax.is_dir():
+                continue
+            limite = args.paginas_anexo
+            for anexo in list_pdf_anexos(pasta_ax):
+                ax_info = {"arquivo": anexo.name, "paginas_total": None,
+                           "paginas_incluidas": 0}
+                info["anexos"].append(ax_info)
+                try:
+                    h = hashlib.sha256(anexo.read_bytes()).hexdigest()
+                except OSError as e:
+                    info["warnings"].append(f"anexo {anexo.name} pulado: "
+                                            f"leitura falhou ({type(e).__name__})")
+                    continue
+                if h in anexos_vistos:
+                    visto = anexos_vistos[h]
+                    ax_info["repetido_de"] = visto["rotulo"]
+                    ax_info["paginas_total"] = visto["paginas"]
+                    result["anexos_repetidos_omitidos"].append(
+                        f"AI {info['numero_ai']} — {anexo.name} "
+                        f"(já incluído em {visto['rotulo']})")
+                    continue
+                r2, erro2 = abrir_pdf(anexo)
+                if r2 is None:
+                    info["warnings"].append(f"anexo {anexo.name} pulado: {erro2}")
+                    continue
+                ax_info["paginas_total"] = len(r2.pages)
+                incluir = len(r2.pages) if limite <= 0 else min(len(r2.pages), limite)
+                writer.append(r2, pages=(0, incluir), import_outline=False)
+                writer.add_outline_item(f"Anexo: {anexo.name}", pagina_atual,
+                                        parent=marcador)
+                ax_info["paginas_incluidas"] = incluir
+                pagina_atual += incluir
+                if incluir < len(r2.pages):
+                    info["anexo_cortado"] = True
+                anexos_vistos[h] = {"rotulo": f"AI {info['numero_ai']} ({anexo.name})",
+                                    "paginas": len(r2.pages)}
+
+        # Pastas AX_ sem AI correspondente (informativo, nao entram no PDF).
+        try:
+            for d in pasta.iterdir():
+                if d.is_dir() and re.fullmatch(r"AX_(\d{9})", d.name):
+                    if d.name[3:] not in numeros_ai:
+                        result["anexos_orfaos"].append(d.name)
+        except (PermissionError, OSError):
+            pass
+
+        resumo_emp["autos"] = len(result["autos"]) - autos_antes
+        resumo_emp["paginas"] = pagina_atual - pagina_inicial_emp
 
     if pagina_atual == 0:
         return falha("Nenhuma pagina montada: todos os PDFs falharam na leitura.")
