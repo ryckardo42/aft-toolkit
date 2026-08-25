@@ -31,7 +31,6 @@ Além da lista de próximos vencimentos em ordem de data.
 Sem internet, sem servidor na nuvem, sem conta. Junto com o painel roda um **pequeno programa só na máquina do AFT** (o "servidor local"), que escuta no endereço `127.0.0.1:8347` — `127.0.0.1` é o nome técnico da própria máquina, não sai dela. É esse programa que transforma os cards em botões para o trabalho mecânico:
 
 - marcar notificação DET como respondida / reabrir;
-- dispensar o alerta ⚠️ de atualização pendente;
 - registrar e resolver pendências;
 - registrar constatação da auditoria de documentos;
 - registrar o dia trabalhado;
