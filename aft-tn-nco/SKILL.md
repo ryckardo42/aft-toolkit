@@ -278,6 +278,34 @@ Não pergunte item a item: ofereça o padrão e recolha apenas as exceções.
 
 ---
 
+## FASE 3.7 — Revisar ANTES de apresentar ao AFT
+
+Antes de mostrar qualquer bloco ao AFT, chame a tool `Agent` com
+`subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` já redigido e o
+contexto da notificação (dupla visita ou não; se os itens exigem retorno de documentos; o
+prazo pretendido). **Apresente o parecer dele JUNTO com o teor**, na FASE 4.
+
+> **Por que aqui, e não na FASE 4.5.** O gate do revisor existia apenas imediatamente antes
+> de criar o rascunho no DET — ou seja, DEPOIS de o AFT já ter lido e aprovado o texto.
+> Numa fiscalização real isso levou o auditor a revisar à mão um texto que ninguém havia
+> revisado, e a encontrar ele próprio o que o revisor encontraria: um item cujo cumprimento
+> dependia do produto de outro item, com os dois correndo o mesmo prazo em paralelo, e um
+> item que reunia exigências de porte muito diferente. Revisão que roda depois da entrega
+> não protege ninguém: transforma o AFT em revisor de primeira linha, que é o oposto do
+> papel dele.
+
+O que o revisor julga, e a conferência automática não: se cada item está redigido como
+obrigação a cumprir; se o prazo é exequível para o que cada item exige, **item a item**; se
+o retorno solicitado combina com o que o item pede; e se algum item ficaria incompreensível
+para o empregador. Onde você discordar do parecer, diga ao AFT por quê — nem você nem o
+revisor decidem.
+
+Na FASE 4.5, quando houver criação de rascunho no DET, o revisor pode ser chamado de novo:
+ali o objeto é outro (a prévia do payload, com tipo, retorno e prazo efetivos), e a revisão
+é de conferência, não a primeira.
+
+---
+
 ## FASE 4 — Apresentar no chat (bloco a bloco) + salvar .md e .docx
 
 O AFT **copia cada parte individualmente** para os campos correspondentes do DET (Introdução · um Item Solicitado por irregularidade · Observações). Por isso, apresente cada parte em seu **próprio bloco de código copiável**, com rótulo claro.
@@ -391,7 +419,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Entrada automática:** esta skill sempre consulta antes a `/aft-autos-lavrados` (FASE 0.5) — o AFT não precisa rodá-la à mão.
 - **Origem natural:** em dupla visita / ME-EPP, logo após `/aft-auditoria-geral` ou `/aft-PGR-analise` identificarem irregularidades que ensejariam auto mas cuja autuação for diferida para a segunda visita, ofereça rodar `/aft-tn-nco`. Fora da dupla visita, só ofereça NCO para irregularidades que o AFT decidiu **não** autuar — nunca para o que já vai virar auto (o auto já coage sozinho).
 - **Interdição/embargo:** para as irregularidades que motivaram a medida, o caminho é `/aft-auditoria-AR-NR12` (julgar o laudo/AR apresentado) e depois `/aft-embargo-interdicao-levantamento` (levantar) ou `/aft-embargo-interdicao-manutencao` (manter) — não a notificação NCO.
-- **Criar o rascunho no DET** (opcional, exige o painel local no ar e o token do DET — veja como obtê-lo em `~/.claude/skills/config/canal-token-det.md`): a prévia sai de `POST /api/det-criar` sem `confirmar`. Antes de confirmar, chame a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` e o JSON da prévia — ele julga o que a conferência automática não julga (o retorno combina com o que o item pede? o prazo é exequível?). Mostre o parecer ao AFT e só confirme com o "sim" dele. O toolkit **nunca** lavra: o rascunho fica no DET esperando a revisão e o clique dele.
+- **Criar o rascunho no DET** (opcional, exige o painel local no ar e o token do DET — veja como obtê-lo em `~/.claude/skills/config/canal-token-det.md`): a prévia sai de `POST /api/det-criar` sem `confirmar`. Antes de confirmar, chame de novo a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, agora passando o caminho do `.md` e o JSON da prévia — esta é a revisão de CONFERÊNCIA, sobre o payload montado (tipo, retorno e prazo efetivos). A revisão do TEXTO já ocorreu na FASE 3.7, antes de o AFT ler. Mostre o parecer ao AFT e só confirme com o "sim" dele. O toolkit **nunca** lavra: o rascunho fica no DET esperando a revisão e o clique dele.
 - Sem o painel, o AFT cola os blocos manualmente no DET.
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 
