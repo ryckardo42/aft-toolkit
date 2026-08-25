@@ -397,8 +397,11 @@ def main() -> int:
             else:
                 comuns.append(item)
 
-        result["autos_jornada_no_fim"] = [
-            numero_ai_formatado(d) if d else p.name for p, d, *_ in jornada]
+        # ACUMULA (nao substitui): com mais de uma empresa, atribuir aqui
+        # apagaria os autos de jornada da empresa anterior, e o relatorio
+        # anunciaria menos autos no fim do PDF do que o PDF de fato tem.
+        result["autos_jornada_no_fim"].extend(
+            numero_ai_formatado(d) if d else p.name for p, d, *_ in jornada)
 
         # 2º passe: monta o PDF na ordem final. Anexo com o mesmo conteúdo (hash)
         # já incluído em auto anterior não entra de novo.
