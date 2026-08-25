@@ -951,6 +951,7 @@ class Handler(BaseHTTPRequestHandler):
                 tipo=int(p["tipo"]) if p.get("tipo") is not None else None,
                 retorno=int(p["retorno"]) if p.get("retorno") is not None else None,
                 preassinalado=p.get("preassinalado"),
+                ni=p.get("ni"),
                 overrides=ov)
             revisao = det_criar.revisar_payload(payload)
             resumo = {"ri": payload["ri"], "ni": payload["ni"],

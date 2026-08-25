@@ -723,6 +723,7 @@ def _prazo_para_iso(prazo) -> str | None:
 def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
                    prazo_dias=None, token: str = "", id_modelo=None, cif=None,
                    prazo=None, tipo=None, retorno=None, preassinalado=None,
+                   ni=None,
                    overrides=None) -> tuple[dict, list[dict]]:
     """Lê a TN-NCO e o memory.md da OS e devolve (payload, itens) prontos —
     sem escrever nada.
@@ -742,9 +743,29 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
             f"nenhum item reconhecido em {arquivo_tn} — esperado uma seção "
             "'## Itens' (um parágrafo por item) ou linhas no formato "
             "'*Título* - norma: texto [ementa]'")
-    ri, cnpj = ids_do_memory((pasta_os / "memory.md").read_text(encoding="utf-8"))
+    _mem = (pasta_os / "memory.md").read_text(encoding="utf-8")
+    ri, cnpj = ids_do_memory(_mem)
     if not ri:
         raise RuntimeError("RI não encontrado no memory.md da OS")
+    # O NI nao e adivinhado. Numa OS de GRUPO ECONOMICO uma pasta so serve
+    # a duas empresas, e o campo `cnpj:` do memory.md guarda um valor unico:
+    # montando a notificacao para a SEGUNDA empresa, o NI saia o da
+    # primeira -- notificacao no RI de uma com o sujeito passivo da outra.
+    # Sujeito passivo e campo em que adivinhar e pior do que falhar: o
+    # art. 8o da Portaria MTP 667/2021 nao admite corrigi-lo depois. Por
+    # isso o chamador INFORMA o ni, e o valor e conferido contra a ficha da
+    # OS antes de ser aceito.
+    if ni:
+        ni_lim = re.sub(r"\D", "", str(ni))
+        if len(ni_lim) not in (11, 14):
+            raise RuntimeError(
+                "NI informado tem %d digitos; esperado 14 (CNPJ) ou 11 (CPF)"
+                % len(ni_lim))
+        if ni_lim not in re.sub(r"\D", "", _mem):
+            raise RuntimeError(
+                "o NI informado (%s) nao aparece no memory.md da OS — confira "
+                "antes de notificar, para nao trocar o sujeito passivo" % ni_lim)
+        cnpj = ni_lim
 
     do_md = parametros_do_md(bruto)
     def escolher(da_chamada, chave, padrao):
