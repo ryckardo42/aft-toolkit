@@ -20,6 +20,18 @@ Só entram na lista formas cuja versão sem acento não é, ela mesma, uma palav
 portuguesa válida (evita falso-positivo). Por isso NÃO estão aqui casos ambíguos
 como "para/pára", "e/é", "esta/está", "so/só", "as/às".
 
+Duas redes complementam a lista, pelo mesmo critério de inequivocidade:
+
+  TERMINAÇÃO — nenhuma palavra portuguesa correta termina em "-cao", "-coes",
+  "-oes", "-avel" ou "-ivel" sem acento. Isso alcança vocabulário que nenhuma
+  lista teria ("exequivel", "manutencoes") sem precisar prevê-lo um a um.
+
+  RAZÃO SOCIAL — ela é registrada na Receita Federal SEM acento e vai ao auto
+  como consta do cadastro, de modo que a conferência de acentuação a ignora.
+  Sem isso o script reprovava um auto CORRETO sempre que a autuada se chamasse
+  "... PRODUCAO ...", "... MANUTENCAO ..." ou "... SEGURANCA ...", palavras que
+  já estavam na lista e são comuns em nome de empresa.
+
 Uso:
     python checar_acentos.py "<arquivo.md>"
 Saída: lista de achados com nº da linha; exit 0 se limpo, 1 se encontrou defeito.
@@ -57,8 +69,20 @@ MARCADORES = [
     "deteccao", "condicao", "condicoes", "observacao", "observacoes",
     "ocorrencia", "ocorrencias", "consequencia", "frequencia", "referencia",
     "emergencia", "existencia", "advertencia", "eficiencia",
+    "aderencia", "abrangencia", "incidencia", "reincidencia", "competencia",
+    "insalubridade_ignore", "periculosidade_ignore", "transferencia",
+    "permanencia", "urgencia", "ausencia", "presencia_ignore", "clemencia",
+    "tolerancia", "vigilancia", "importancia", "distancia_ignore",
+    "circunstancia", "circunstancias", "instancia", "relevancia",
     # substantivos/adjetivos com acento gráfico
-    "analise", "analises", "maquina", "maquinas", "pagina", "paginas",
+    #
+    # "analise" saiu da lista: é forma verbal legítima ("a análise que ele
+    # analise depois"), e reprovava texto correto. Mesmo motivo de "calculo"
+    # (eu calculo), "numero" (eu numero) e "vinculo" (eu vinculo), que também
+    # não entram. É o critério que o cabeçalho já declara — só entra a forma
+    # cuja versão sem acento NÃO é, ela mesma, palavra portuguesa válida.
+    "analise_ignore", "analises_ignore",
+    "maquina", "maquinas", "pagina", "paginas",
     "area", "areas", "nivel", "niveis", "criterio", "criterios", "periodo",
     "periodos", "seguranca", "amonia", "quimico", "quimicos", "quimica",
     "fisico", "fisicos", "fisica", "mecanico", "mecanicos", "mecanica",
@@ -70,6 +94,18 @@ MARCADORES = [
     "eletrico", "eletrica", "eletricos", "explosao", "corrosao", "reducao",
     "distancia", "vitima", "vitimas", "obitos", "obito", "saude", "tambem",
     "porem", "alem", "atraves", "apos", "ja_ignore",
+    # Vocabulario de SST e de inspecao colhido em fiscalizacao real
+    # (25/08/2026). Ficaram de fora as formas ja cobertas pela rede por
+    # terminacao acima, para nao repetir, e as que tem homografo verbal:
+    # "ultima" (ele ultima), "medica" e "medico" (eu medico).
+    "admissao", "automatica", "automatico", "biologica", "carcaca",
+    "carcacas", "codigo", "eletricas", "hidraulica", "hidraulico",
+    "higienica", "higienico", "indicio", "indicios", "maxima", "maximo",
+    "minima", "minimo", "moveis", "movel", "necessaria", "necessario",
+    "orgao", "orgaos", "periodica", "periodico", "pneumatica", "pneumatico",
+    "residuo", "residuos", "ruido", "ruidos", "sanitaria", "sanitario",
+    "sanitarios", "servico", "servicos", "ultimo", "uteis", "util", "veiculo",
+    "veiculos",
 ]
 # remove sentinelas ambíguas
 MARCADORES = [m for m in MARCADORES if not m.endswith("_ignore")]
@@ -78,8 +114,69 @@ MARCADORES = sorted(set(MARCADORES), key=len, reverse=True)
 PADRAO = re.compile(r"(?<![0-9A-Za-zÀ-ÿ])(" + "|".join(MARCADORES) + r")(?![0-9A-Za-zÀ-ÿ])",
                     re.IGNORECASE)
 
+# Rede por TERMINAÇÃO, complementar à lista acima. Em português não existe
+# palavra correta terminada assim SEM acento: toda palavra com estas
+# terminações leva acento. Isso alcança vocabulário que nenhuma lista teria —
+# "aderencia", "exequivel", "manutencoes" — sem precisar prevê-lo um a um.
+#
+# Ficaram DE FORA, de propósito, as terminações que produziriam falso-positivo
+# em texto bem escrito: "-orio/-oria" (auditoria, categoria, maioria são
+# corretas sem acento), "-ario/-aria" (padaria, maquinaria) e "-ico" (rico).
+# Guarda que reprova texto correto é desligada por quem a usa, e aí deixa de
+# proteger de tudo — mesmo critério da lista acima, que já exclui os ambíguos.
+#
+# Duas outras ficaram de fora depois de reprovarem texto CORRETO no teste desta
+# mudança, contra os autos reais de fiscalizações já encerradas:
+#   "-aes"   pegaria SOBRENOME grafado corretamente sem acento (há vários, e um
+#            deles apareceu no corpo de um auto real durante este teste);
+#   "-encia" e "-ancia" têm homógrafo VERBAL — em "o que evidencia que...",
+#            "evidencia" é verbo e está certo sem acento, como "influencia",
+#            "diferencia" e "presencia". Os substantivos úteis dessa família
+#            entraram na lista MARCADORES acima, um a um, que é onde o critério
+#            de inequivocidade pode ser aplicado palavra por palavra.
+SUFIXOS = re.compile(
+    r"(?<![0-9A-Za-zÀ-ÿ])(\w{2,}(?:cao|coes|oes|avel|aveis|ivel|iveis))"
+    r"(?![0-9A-Za-zÀ-ÿ])", re.IGNORECASE)
+
+# Identificador em CamelCase não é prosa: é nome de pasta, de arquivo ou de
+# variável, e ali a grafia sem acento é a correta. Sem esta exclusão a rede por
+# terminação reprova o caminho "C:\SistemasAFT\...\AutosDeInfracao\PRO" citado
+# no corpo de um relatório — outro caso apanhado no teste desta mudança.
+CAMELCASE = re.compile(r"^.[a-zà-ÿ]*[A-ZÀ-Ü]")
+
+# RAZÃO SOCIAL. Ela é registrada na Receita Federal SEM acento e tem de ser
+# escrita no auto exatamente como consta do cadastro — grafá-la "MÓVEIS" seria
+# divergir do registro, e o art. 8º da Portaria MTP nº 667/2021 não admite
+# corrigir o sujeito passivo depois. Nos documentos ela aparece como sequência
+# de palavras em CAIXA ALTA.
+#
+# Sem esta máscara o script REPROVA HOJE um auto correto sempre que a autuada
+# se chama "... PRODUCAO ...", "... PROTECAO ...", "... MANUTENCAO ...",
+# "... REFRIGERACAO ..." ou "... SEGURANCA ..." — todas na lista acima, e todas
+# comuns em razão social brasileira. Foi assim que o defeito apareceu: numa
+# fiscalização real, a razão social da autuada terminava em "DECORACOES".
+CAIXA_ALTA = re.compile(
+    r"(?<![0-9A-Za-zÀ-ÿ])[A-ZÀ-ÜÇ][A-ZÀ-ÜÇ0-9&./\-]*"
+    r"(?:\s+[A-ZÀ-ÜÇ0-9&./\-]{2,}){1,}(?![0-9A-Za-zÀ-ÿ])")
+
+
+def mascarar_nomes_proprios(linha):
+    """Troca por espaços as sequências em CAIXA ALTA, preservando as colunas.
+
+    Preservar o comprimento importa: o número da coluna continua valendo para o
+    trecho de contexto que o relatório imprime.
+    """
+    return CAIXA_ALTA.sub(lambda m: " " * len(m.group(0)), linha)
+
 
 def main():
+    # -h/--help responde com o proprio docstring. Antes, "--help" era tratado
+    # como caminho de arquivo: o script levantava FileNotFoundError e o
+    # mecanismo de ticket registrava isso como DEFEITO DO TOOLKIT -- um relato
+    # de bug gerado por alguem perguntando como usar a ferramenta.
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print(__doc__ or "uso: python checar_acentos.py <arquivo>")
+        return 0
     if len(sys.argv) < 2:
         print("uso: python checar_acentos.py <arquivo>", file=sys.stderr)
         return 2
@@ -91,13 +188,24 @@ def main():
 
     achados = []
     for i, linha in enumerate(texto.splitlines(), 1):
+        # A razão social vai no auto sem acento, como consta do cadastro da RFB:
+        # ela sai da conferência, e só ela. O resto da linha continua valendo.
+        conferivel = mascarar_nomes_proprios(linha)
         # ignora a linha de OBSERVAÇÕES já injetada com marcadores #13#10 (boilerplate)
-        for m in PADRAO.finditer(linha):
-            token = m.group(1)
-            ini = max(0, m.start() - 30)
-            fim = min(len(linha), m.end() + 30)
-            trecho = linha[ini:fim].replace("\t", " ")
-            achados.append((i, token, trecho))
+        vistos = set()
+        for padrao in (PADRAO, SUFIXOS):
+            for m in padrao.finditer(conferivel):
+                token = m.group(1)
+                if m.start() in vistos:      # a lista e a terminação podem casar
+                    continue                 # a mesma palavra; conta uma vez só
+                if padrao is SUFIXOS and CAMELCASE.match(token):
+                    continue                 # identificador, não prosa
+                vistos.add(m.start())
+                ini = max(0, m.start() - 30)
+                fim = min(len(linha), m.end() + 30)
+                trecho = linha[ini:fim].replace("\t", " ")
+                achados.append((i, token, trecho))
+    achados.sort(key=lambda a: a[0])
 
     if not achados:
         print("OK: nenhum indicio de texto sem acentuacao pt-br.")

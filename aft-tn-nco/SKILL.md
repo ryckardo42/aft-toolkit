@@ -187,6 +187,31 @@ Em conformidade com a legislação em vigor, especialmente o previsto na alínea
 
 ### Itens (um por irregularidade)
 
+**ORDEM DOS ITENS: crescente por Norma Regulamentadora, da NR-01 à NR-38.** Agrupe os itens
+pela NR citada na base legal e ordene os grupos por número. Dentro de cada NR, mantenha a
+ordem lógica em que os itens foram redigidos (identificação de perigos antes do inventário,
+inventário antes do plano de ação).
+
+> Por que importa: uma notificação com os itens embaralhados por norma obriga o empregador a
+> reconstruir o assunto a cada linha. Agrupada, ela se lê de uma vez, e ele enxerga o que
+> resolve com cada consultoria — o PGR num bloco, o PCMSO noutro, as máquinas noutro. Numa
+> fiscalização real o AFT recebeu a notificação fora dessa ordem e a devolveu com a
+> observação de que estava "muito confusa, toda embaralhada".
+
+Três cuidados ao ordenar:
+
+- **A chave é a PRIMEIRA NR citada na base legal** do item — é a principal, sob a qual ele
+  foi redigido. As demais entram como complemento e não mudam a posição.
+- **Item sem NR na base legal** (só CLT, só Portaria) vai para o fim, e você avisa o AFT:
+  nunca se atribui uma NR ao item só para ele caber na ordem.
+- **REFERÊNCIA CRUZADA.** Item que mencione "no item N" tem o alvo deslocado pela
+  reordenação. Confira e corrija cada uma DEPOIS de ordenar — numa fiscalização real um item
+  apontava para "o item 1" quando o alvo havia se tornado o item 10.
+
+Ordene **antes** de gerar o `.docx` e **antes** de criar o rascunho no DET: o `det_criar.py`
+apenas cria notificação, não atualiza, e reordenar depois obriga a criar outra e o AFT a
+apagar a anterior no site.
+
 Formato de cada item:
 
 ```
@@ -275,6 +300,34 @@ Texto sozinho não vira notificação. O DET exige, de **cada item**, o que a em
 Não pergunte item a item: ofereça o padrão e recolha apenas as exceções.
 
 > **O prazo vira data fixa.** O DET grava uma data, não uma contagem. "16 dias" é calculado no dia em que a notificação é criada — se o AFT lavrar dias depois, a data continua a mesma. Por isso a FASE 4 **sempre informa a data que ficou** e lembra que ela pode ser alterada direto no DET.
+
+---
+
+## FASE 3.7 — Revisar ANTES de apresentar ao AFT
+
+Antes de mostrar qualquer bloco ao AFT, chame a tool `Agent` com
+`subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` já redigido e o
+contexto da notificação (dupla visita ou não; se os itens exigem retorno de documentos; o
+prazo pretendido). **Apresente o parecer dele JUNTO com o teor**, na FASE 4.
+
+> **Por que aqui, e não na FASE 4.5.** O gate do revisor existia apenas imediatamente antes
+> de criar o rascunho no DET — ou seja, DEPOIS de o AFT já ter lido e aprovado o texto.
+> Numa fiscalização real isso levou o auditor a revisar à mão um texto que ninguém havia
+> revisado, e a encontrar ele próprio o que o revisor encontraria: um item cujo cumprimento
+> dependia do produto de outro item, com os dois correndo o mesmo prazo em paralelo, e um
+> item que reunia exigências de porte muito diferente. Revisão que roda depois da entrega
+> não protege ninguém: transforma o AFT em revisor de primeira linha, que é o oposto do
+> papel dele.
+
+O que o revisor julga, e a conferência automática não: se cada item está redigido como
+obrigação a cumprir; se o prazo é exequível para o que cada item exige, **item a item**; se
+o retorno solicitado combina com o que o item pede; e se algum item ficaria incompreensível
+para o empregador. Onde você discordar do parecer, diga ao AFT por quê — nem você nem o
+revisor decidem.
+
+Na FASE 4.5, quando houver criação de rascunho no DET, o revisor pode ser chamado de novo:
+ali o objeto é outro (a prévia do payload, com tipo, retorno e prazo efetivos), e a revisão
+é de conferência, não a primeira.
 
 ---
 
@@ -391,7 +444,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Entrada automática:** esta skill sempre consulta antes a `/aft-autos-lavrados` (FASE 0.5) — o AFT não precisa rodá-la à mão.
 - **Origem natural:** em dupla visita / ME-EPP, logo após `/aft-auditoria-geral` ou `/aft-PGR-analise` identificarem irregularidades que ensejariam auto mas cuja autuação for diferida para a segunda visita, ofereça rodar `/aft-tn-nco`. Fora da dupla visita, só ofereça NCO para irregularidades que o AFT decidiu **não** autuar — nunca para o que já vai virar auto (o auto já coage sozinho).
 - **Interdição/embargo:** para as irregularidades que motivaram a medida, o caminho é `/aft-auditoria-AR-NR12` (julgar o laudo/AR apresentado) e depois `/aft-embargo-interdicao-levantamento` (levantar) ou `/aft-embargo-interdicao-manutencao` (manter) — não a notificação NCO.
-- **Criar o rascunho no DET** (opcional, exige o painel local no ar e o token do DET — veja como obtê-lo em `~/.claude/skills/config/canal-token-det.md`): a prévia sai de `POST /api/det-criar` sem `confirmar`. Antes de confirmar, chame a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, passando o caminho do `.md` e o JSON da prévia — ele julga o que a conferência automática não julga (o retorno combina com o que o item pede? o prazo é exequível?). Mostre o parecer ao AFT e só confirme com o "sim" dele. O toolkit **nunca** lavra: o rascunho fica no DET esperando a revisão e o clique dele.
+- **Criar o rascunho no DET** (opcional, exige o painel local no ar e o token do DET — veja como obtê-lo em `~/.claude/skills/config/canal-token-det.md`): a prévia sai de `POST /api/det-criar` sem `confirmar`. Antes de confirmar, chame de novo a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, agora passando o caminho do `.md` e o JSON da prévia — esta é a revisão de CONFERÊNCIA, sobre o payload montado (tipo, retorno e prazo efetivos). A revisão do TEXTO já ocorreu na FASE 3.7, antes de o AFT ler. Mostre o parecer ao AFT e só confirme com o "sim" dele. O toolkit **nunca** lavra: o rascunho fica no DET esperando a revisão e o clique dele.
 - Sem o painel, o AFT cola os blocos manualmente no DET.
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 
