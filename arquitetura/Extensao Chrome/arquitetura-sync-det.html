@@ -376,11 +376,16 @@ não é referenciado pelo <code>manifest.json</code> e não é executado nem emp
       prazo que mudou é atualizado na linha existente; o checkbox <code>[ ]/[x]</code> nunca é
       alterado — respondida é decisão do AFT. O alerta "atualização pendente" é
       <em>dispensável</em> no painel (um clique grava <code>&lt;!-- visto: --&gt;</code>) e só
-      volta se a empresa fizer entrega nova. Com o triângulo aceso, o sync também busca o
-      <strong>status de cada item</strong> (uma requisição <code>GET /itens-notificacao</code>,
-      desde 24/08/2026) e resume na sub-linha com o marcador <code>📋</code>
-      (<code>itens: 5 aguardando avaliação de prazo</code>) — o AFT vê o que o triângulo
-      esconde sem abrir o DET.</li>
+      volta se a empresa fizer entrega nova. Para toda notificação ainda <strong>em aberto</strong>
+      (<code>- [ ]</code>) o sync também busca o <strong>status de cada item</strong> (uma
+      requisição <code>GET /itens-notificacao</code>, desde 24/08/2026) e resume na sub-linha
+      com o marcador <code>📋</code> (<code>itens: 5 aguardando avaliação de prazo</code>).
+      O painel mostra o resumo no dossiê e leva ao card da grade um selo com os que dependem
+      de ato do AFT (<em>"📋 5 itens aguardam sua decisão"</em>).
+      <strong>O gate NÃO é o triângulo</strong> (corrigido em 25/08/2026, caso BUENO 28):
+      o triângulo é alerta de <em>novidade</em>, dispensável por clique e apagado ao abrir a
+      notificação no DET — usá-lo como condição fazia o <em>estado</em> dos itens evaporar
+      justo depois de o AFT interagir com o alerta.</li>
   <li><strong>O resultado volta pelo mesmo caminho</strong> e aparece como toast na página do
       DET. O painel (<code>painel.html</code>) passa a mostrar os novos vencimentos.</li>
 </ol>
@@ -412,7 +417,7 @@ Content-Type: application/json</code></pre>
     <tr><td><code>itemDataUltimaEntrega</code></td><td>última entrega do empregador</td><td>sub-linha + fingerprint do alerta dispensável</td></tr>
     <tr><td><code>itemAtualizado</code></td><td>triângulo "Existe atualização pendente"</td><td>alerta "⚠️" da sub-linha (dispensável)</td></tr>
     <tr><td><code>isPendenciaComunicacaoAuditor</code></td><td>envelope laranja: mensagem do empregador no canal de comunicação, aguardando você</td><td>chip "✉️ mensagem no DET" no cartão</td></tr>
-    <tr><td><code>status</code> (por item, em <code>GET /itens-notificacao</code>)</td><td>estado de cada item — mesmo número da coluna "Status" da tela (ex.: 4 = "Prazo Solicitado")</td><td>resumo "📋 itens: N ..." na sub-linha (só com o ⚠️ aceso; uma requisição)</td></tr>
+    <tr><td><code>status</code> (por item, em <code>GET /itens-notificacao</code>)</td><td>estado de cada item — mesmo número da coluna "Status" da tela (ex.: 4 = "Prazo Solicitado")</td><td>resumo "📋 itens: N ..." na sub-linha + selo "N itens aguardam sua decisão" no card (gate: notificação em aberto na ficha, NUNCA o ⚠️; uma requisição)</td></tr>
   </table>
   <p class="sub" style="margin:0"><strong>Constatado em produção (19–22/07/2026):</strong> a API
   pode continuar devolvendo <code>itemAtualizado=true</code> mesmo depois de o triângulo sumir da
