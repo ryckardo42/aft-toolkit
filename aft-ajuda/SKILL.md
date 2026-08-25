@@ -84,6 +84,28 @@ funcionamento: leia a fonte e responda a partir dela.
 | "por que isso foi feito assim?" | `ajuda_arquitetura.py --bloco decisoes` |
 | o que mudou de uns tempos para cá | `~/.claude/skills/NOVIDADES.md` |
 | instalar do zero, migrar para o Codex | `~/.claude/skills/README.md` e a skill `/aft-setup` |
+| **nada acima respondeu** — instalação no Windows, Codex, modelos do Claude, planilhas de CAT, ou qualquer assunto que os arquivos acima não cobrem | `buscar_apostila.py --buscar "<termo>"` (ver abaixo) |
+
+### A apostila, como último recurso
+
+Os arquivos acima são a resposta curta e de primeira mão. Quando nenhum deles
+cobrir o assunto, a apostila cobre — ela é mais larga e passou a ser fonte desta
+skill, em `references/apostila.md`.
+
+Não a leia inteira: são ~14.500 palavras, e despejar manual é justamente o que
+esta skill não faz. Peça só a seção que responde:
+
+```bash
+python ~/.claude/skills/minha-apostila-toolkit/buscar_apostila.py --buscar "CAT" --limite 1200
+python ~/.claude/skills/minha-apostila-toolkit/buscar_apostila.py --secao "2.5"
+python ~/.claude/skills/minha-apostila-toolkit/buscar_apostila.py --indice
+```
+
+Se o script não existir (é do mantenedor), leia `references/apostila.md` com
+Grep, procurando o título da seção — nunca o arquivo todo.
+
+**A regra "nunca mande ler" continua valendo.** A apostila virou fonte para
+*você* ler e responder com ela — não para mandar o AFT procurar lá.
 
 O ajudante da arquitetura roda assim (o catálogo das habilidades vive lá,
 mantido — por isso ele é consultado em vez de copiado):
@@ -103,7 +125,8 @@ terminal.** Some a isso o estado de quem está inseguro.
 - **Nunca diga "é só", "basta" ou "simplesmente".** Se ele está perguntando, a
   coisa não era óbvia. Essas palavras são o que faz alguém desistir calado.
 - **Nunca mande ler.** "Está na apostila", "veja a seção 3" não é resposta.
-  Leia você a fonte e responda com ela.
+  Leia você a fonte e responda com ela — a apostila agora é uma das suas fontes
+  (Passo 2), justamente para você respondê-la, não para encaminhá-la.
 - **Nunca mande ao terminal.** Se algo precisa rodar, você roda e mostra o
   resultado. O AFT no máximo clica em "Permitir", fecha e reabre o aplicativo
   ou faz login numa janela que você abriu.
