@@ -89,11 +89,23 @@ def marcado(linha):
     return None if not m else m.group(1).lower() == "x"
 
 
+class NaoEUmaOS(Exception):
+    """A pasta existe, mas nao e uma OS: nao ha memory.md para conferir.
+
+    Isto NAO e contradicao. A primeira versao devolvia a falta do memory.md
+    junto com os achados, e o script saia com o codigo de "encontrei
+    contradicao" -- de modo que quem apontasse para a pasta errada concluiria
+    que a fiscalizacao tem defeito. Erro de uso e erro de uso.
+    """
+
+
 def conferir(pasta):
     """Devolve a lista de contradições encontradas (vazia = tudo coerente)."""
     memoria = Path(pasta) / "memory.md"
     if not memoria.is_file():
-        return ["nao achei memory.md em %s" % pasta]
+        raise NaoEUmaOS(
+            "nao achei memory.md em %s -- esta pasta nao e uma OS. Aponte para a "
+            "pasta da empresa, a que contem o memory.md." % pasta)
     texto = memoria.read_text(encoding="utf-8", errors="replace")
     problemas = []
 
@@ -178,7 +190,11 @@ def main():
         print("ERRO: nao e uma pasta: %s" % pasta, file=sys.stderr)
         return 2
 
-    problemas = conferir(pasta)
+    try:
+        problemas = conferir(pasta)
+    except NaoEUmaOS as e:
+        print("ERRO: %s" % e, file=sys.stderr)
+        return 2
     if not args.resumo:
         print("=" * 72)
         print("  RASTREAMENTO DOS AUTOS -- %s" % pasta.name[:52])
