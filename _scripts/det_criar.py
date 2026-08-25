@@ -849,6 +849,16 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
         payload["observacoes"] = obs
     enriquecer(payload, token, ri, id_modelo, cif,
                manter_titulo=bool(do_md.get("titulo")))
+    completar_endereco_pela_rfb(payload, cnpj)
+    # O relato do enriquecer e montado ANTES do preenchimento; sem esta
+    # atualizacao a previa mostra UF vazia num payload que ja tem UF --
+    # previa que mente e pior do que previa que falta.
+    _ends = payload.get("enderecos") or []
+    if _ends:
+        payload["_enriquecimento"]["endereco_uf"] = _ends[0].get("uf")
+        payload["_enriquecimento"]["endereco_completo"] = ", ".join(
+            str(_ends[0].get(c) or "?") for c in
+            ("logradouro", "numero", "bairro", "municipio", "uf", "cep"))
     payload["_enriquecimento"]["observacoes_do_md"] = len(obs)
     payload["_enriquecimento"]["parametros_do_md"] = do_md or None
     payload["_parametros"] = {"titulo": titulo, "prazo": prazo_iso,
@@ -939,6 +949,60 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
 
 
 LIMITE_CAMPO = 1000   # teto de caracteres de todo campo de texto do DET
+
+
+def completar_endereco(payload: dict, dados: dict) -> dict:
+    """Preenche os campos VAZIOS do endereco do payload com `dados`.
+
+    Completa, nao substitui: o que o detalhe do RI informou prevalece, e `dados`
+    entra apenas onde havia branco.
+    """
+    ends = payload.get("enderecos") or []
+    if not ends or not dados:
+        return payload
+    end = ends[0]
+    for chave, valor in dados.items():
+        if valor and not str(end.get(chave) or "").strip():
+            end[chave] = valor
+    return payload
+
+
+def completar_endereco_pela_rfb(payload: dict, ni: str) -> dict:
+    r"""Fecha as lacunas do endereco com a base aberta do CNPJ da Receita Federal.
+
+    So age quando o CEP do endereco ja presente no payload COINCIDE com o CEP
+    cadastral do CNPJ. E a guarda que impede o pior caso: se o RI trouxer o
+    endereco do estabelecimento (um CEP) com os demais campos em branco, e a RFB
+    devolver o endereco da matriz (outro CEP), completar seria costurar duas ruas
+    diferentes num endereco so. CEPs diferentes -> nao mexe, e a revisao mantem o
+    endereco incompleto como IMPEDIMENTO, para o AFT decidir.
+
+    Silenciosa por natureza: qualquer falha (sem rede, CNPJ nao encontrado,
+    consulta_cnpj ausente) deixa o payload como estava.
+    """
+    ends = payload.get("enderecos") or []
+    ni = re.sub(r"\D", "", str(ni or ""))
+    if not ends or len(ni) != 14:
+        return payload
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import consulta_cnpj
+        dados, _ = consulta_cnpj.consultar(ni)
+    except Exception:
+        return payload
+    cep_rfb = re.sub(r"\D", "", str(consulta_cnpj.g(dados, "cep") or ""))
+    cep_atual = re.sub(r"\D", "", str(ends[0].get("cep") or ""))
+    if cep_atual and cep_rfb and cep_atual != cep_rfb:
+        return payload          # enderecos distintos: nao costurar
+    return completar_endereco(payload, {
+        "logradouro": consulta_cnpj.g(dados, "logradouro"),
+        "numero": consulta_cnpj.g(dados, "numero"),
+        "complemento": consulta_cnpj.g(dados, "complemento"),
+        "bairro": consulta_cnpj.g(dados, "bairro"),
+        "municipio": consulta_cnpj.g(dados, "municipio"),
+        "uf": consulta_cnpj.g(dados, "uf"),
+        "cep": cep_rfb,
+    })
 
 
 def revisar_payload(payload: dict) -> list[dict]:
@@ -1042,11 +1106,24 @@ def revisar_payload(payload: dict) -> list[dict]:
               "os textos iriam sem posição definida, ou com posição repetida — "
               "a empresa leria a notificação fora da ordem escrita")
 
+    # O DET valida estes quatro campos na LAVRATURA e RECUSA o ato:
+    #   "Erro de Validacao: Parametro Enderecos.Logradouro invalido: length(1|100);
+    #    Enderecos.Numero: length(1|6); Enderecos.Municipio: length(1|100);
+    #    Enderecos.Uf: length(2)"
+    # Enquanto isto era "aviso", o rascunho nascia sem reclamacao e o AFT so
+    # descobria o problema ao tentar lavrar, com a notificacao inteira pronta.
+    ENDERECO_OBRIGATORIO = ("logradouro", "numero", "municipio", "uf")
     ends = payload.get("enderecos") or []
     if not ends:
-        anota("aviso", "endereço", "notificação sem endereço do estabelecimento")
-    elif not (ends[0].get("uf") or "").strip():
-        anota("aviso", "endereço", "endereço veio sem UF")
+        anota("impede", "endereço", "notificação sem endereço do estabelecimento — "
+                                    "o DET recusa a lavratura")
+    else:
+        faltando = [c for c in ENDERECO_OBRIGATORIO
+                    if not str(ends[0].get(c) or "").strip()]
+        if faltando:
+            anota("impede", "endereço",
+                  "endereço incompleto (%s) — o DET recusa a lavratura"
+                  % ", ".join(faltando))
     return achados
 
 
