@@ -391,10 +391,11 @@ Linhas separadas por `\n`.
 | 5 | **DtAdmissão** | **SIM** | data de admissão em `dd/mm/aaaa` |
 | 6 | DtAfast | não | data de afastamento em `dd/mm/aaaa`, se informada |
 | 7 | Observação | não | geralmente vazio |
-| 8 | Função | não | geralmente vazio (a função já consta da narrativa do auto) |
+| 8 | Função | não | **sempre vazio — NUNCA preencha este campo** |
 
 > `[nome_completo]` é tokenizado (`[[TRAB_NN]]`) — o `rehydrate.py` injeta o real. Os demais campos (PIS, CPF, datas, observação, função) **não** são tokenizados; CPF vai sempre literal e vazio no TXT.
 > **`[data_admissao]` (campo 5) é o único obrigatório** dos campos do trabalhador além do nome — normalize sempre para `dd/mm/aaaa`. Se desconhecida, deixe vazia.
+> **Campo 8 (Função) é SEMPRE vazio.** Mesmo quando a função do trabalhador é conhecida (ex.: consta da narrativa do auto ou de um ASO), **não a repita aqui** — o Sistema Auditor recusou a importação de um auto real (25/08/2026) com este campo preenchido. A função, se relevante, já fica registrada no texto do auto; a linha tipo 4 é só identificação do trabalhador prejudicado (nome + admissão).
 
 **Linha tipo 6** — CIF do auditor (uma única, no final do arquivo):
 ```
