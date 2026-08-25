@@ -172,6 +172,36 @@ def snippet_canal(token: str, uid: str) -> str:
     return texto
 
 
+def codigos_abertos(texto: str) -> set[str]:
+    """Códigos das notificações ainda EM ABERTO (`- [ ]`) na seção
+    `## Notificações DET` da ficha.
+
+    É o gate do resumo de itens: enquanto o AFT não marcar a notificação como
+    respondida, o status dos itens interessa — independentemente do triângulo
+    amarelo, que ele pode ter dispensado no painel ou apagado ao abrir a
+    notificação no DET (ver resumo_itens). Só a seção do DET é varrida: a de
+    Pendências também tem checkboxes, e um texto em maiúsculas ali poderia
+    passar por código de notificação."""
+    linhas = texto.splitlines()
+    ini = next((i + 1 for i, l in enumerate(linhas)
+                if l.strip().startswith("## ")
+                and l.strip()[3:].strip() in ("Notificações DET",
+                                              "Notificacoes DET")), -1)
+    if ini < 0:
+        return set()
+    fim = next((i for i in range(ini, len(linhas))
+                if linhas[i].strip().startswith("## ")), len(linhas))
+    abertos = set()
+    for l in linhas[ini:fim]:
+        m = re.match(r"^\s*-\s*\[([ xX]?)\]\s*(.*)$", l)
+        if not m or m.group(1).lower() == "x":
+            continue
+        cod = RE_CODIGO.match(m.group(2).strip())
+        if cod:
+            abertos.add(cod.group(1))
+    return abertos
+
+
 def resumo_itens(token: str, uid: str) -> str:
     """Resumo do status de cada item de uma notificação, para a sub-linha da
     ficha — o que está por trás do triângulo amarelo (quantos itens aguardam a
@@ -645,12 +675,17 @@ def sincronizar_os(pasta_os: Path, token: str,
             if trecho:
                 msgs[(n.get("codigo") or "").strip()] = trecho
 
-    # Triângulo amarelo aceso: busca o status de cada item para a sub-linha
-    # (uma requisição extra só nas notificações com atualização pendente — é
-    # exatamente quando há algo aguardando o AFT, e o custo fica limitado).
+    # Status dos itens para a sub-linha: uma requisição extra por notificação
+    # ainda EM ABERTO na ficha (checkbox `- [ ]`), não por triângulo aceso.
+    # O triângulo é péssimo gate: some quando o AFT o dispensa no painel ou
+    # abre a notificação no DET, e o resumo sumia junto — informação de ESTADO
+    # (o que cada item aguarda) desaparecendo por causa de um alerta de
+    # NOVIDADE. Constatado com o AFT em 25/08/2026, caso BUENO 28. Notificação
+    # já marcada como respondida não é consultada: o custo fica no que importa.
+    abertos = codigos_abertos(texto)
     resumos = {}
     for n in minhas:
-        if _flag(n.get("itemAtualizado")) and n.get("uid"):
+        if (n.get("codigo") or "").strip() in abertos and n.get("uid"):
             res = resumo(token, n["uid"])
             if res:
                 resumos[(n.get("codigo") or "").strip()] = res

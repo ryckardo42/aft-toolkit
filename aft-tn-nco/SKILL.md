@@ -187,6 +187,31 @@ Em conformidade com a legislação em vigor, especialmente o previsto na alínea
 
 ### Itens (um por irregularidade)
 
+**ORDEM DOS ITENS: crescente por Norma Regulamentadora, da NR-01 à NR-38.** Agrupe os itens
+pela NR citada na base legal e ordene os grupos por número. Dentro de cada NR, mantenha a
+ordem lógica em que os itens foram redigidos (identificação de perigos antes do inventário,
+inventário antes do plano de ação).
+
+> Por que importa: uma notificação com os itens embaralhados por norma obriga o empregador a
+> reconstruir o assunto a cada linha. Agrupada, ela se lê de uma vez, e ele enxerga o que
+> resolve com cada consultoria — o PGR num bloco, o PCMSO noutro, as máquinas noutro. Numa
+> fiscalização real o AFT recebeu a notificação fora dessa ordem e a devolveu com a
+> observação de que estava "muito confusa, toda embaralhada".
+
+Três cuidados ao ordenar:
+
+- **A chave é a PRIMEIRA NR citada na base legal** do item — é a principal, sob a qual ele
+  foi redigido. As demais entram como complemento e não mudam a posição.
+- **Item sem NR na base legal** (só CLT, só Portaria) vai para o fim, e você avisa o AFT:
+  nunca se atribui uma NR ao item só para ele caber na ordem.
+- **REFERÊNCIA CRUZADA.** Item que mencione "no item N" tem o alvo deslocado pela
+  reordenação. Confira e corrija cada uma DEPOIS de ordenar — numa fiscalização real um item
+  apontava para "o item 1" quando o alvo havia se tornado o item 10.
+
+Ordene **antes** de gerar o `.docx` e **antes** de criar o rascunho no DET: o `det_criar.py`
+apenas cria notificação, não atualiza, e reordenar depois obriga a criar outra e o AFT a
+apagar a anterior no site.
+
 Formato de cada item:
 
 ```
