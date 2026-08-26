@@ -74,7 +74,7 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
    - **Exceção (única):** se o próprio AFT mencionar espontaneamente, no relato ou na conversa, que a empresa é ME/EPP, optante do Simples, ou beneficiária de dupla visita/programa de orientação, então marque `[DUPLA_VISITA] = true` e anote no memory.md (`**Dupla visita:** sim (ME/EPP)`); caso contrário, nem registre o tema.
    - Não há pergunta a fazer: o silêncio do AFT = sem dupla visita.
 
-   > ME/EPP têm direito à dupla visita por lei (art. 627-A CLT), mas a decisão de invocá-la é do AFT — o assistente nunca pergunta nem assume dupla visita por conta própria. Na dúvida, autua (default `false`).
+   > ME/EPP têm direito à dupla visita por lei (art. 55, § 1º, da LC 123/2006 c/c art. 23, IV, do RIT), mas a decisão de invocá-la é do AFT — o assistente nunca pergunta nem assume dupla visita por conta própria. Na dúvida, autua (default `false`).
 
 ---
 
@@ -588,7 +588,7 @@ vai reaproveitar os textos sem re-perguntar.
 ⚖️ Dupla visita ativa — N irregularidades encaminhadas para notificação:
   [lista numerada das irregularidades]
 
-Nenhum auto de infração lavrado (proteção legal art. 627-A CLT).
+Nenhum auto de infração lavrado (proteção legal do art. 55, § 1º, da LC 123/2006).
 Lista salva em irregularidades-para-TN.md para subsidiar o Termo de Notificação.
 ```
 

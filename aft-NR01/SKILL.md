@@ -238,7 +238,7 @@ Esta skill **não toca** em CIF, anexos ou encoding latin-1. Tudo isso fica com 
 | AFT pergunta apenas "qual ementa para X?" | Devolva o pacote completo mesmo assim. |
 | Narrativa sugere risco grave e iminente | NR-01 não fundamenta interdição. Encaminhe à consultora da NR específica + `/aft-embargo-interdicao`; avalie a 101056-5 se o empregador exigiu retorno sem correção. |
 | Dúvida sobre redação atual de item da NR-01 | Confira `references/norma-nr01.md`; persistindo a dúvida (portaria mais nova), texto oficial no gov.br ou NotebookLM. |
-| ME/EPP e dupla visita | Não pergunte. Regra do toolkit: autuação direta, salvo se o AFT mencionar espontaneamente o art. 627-A da CLT. |
+| ME/EPP e dupla visita | Não pergunte. Regra do toolkit: autuação direta, salvo se o AFT mencionar espontaneamente a dupla visita de ME/EPP (art. 55, § 1º, da LC 123/2006). |
 
 ---
 
