@@ -282,7 +282,7 @@
     },
     {
      "nome": "/aft-analise-acidente",
-     "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022): varre CAT, RAI/BO, laudos e PGR, propõe fatores causais (códigos SFIT 251–260) e gera o Relatório de Análise em .docx; ao final, oferece encadear /aft-auditoria-geral + /aft-gera-ai.",
+     "role": "Analisa acidente/doença do trabalho (IN GMTP/MTP nº 2/2022). Pergunta, antes da análise, pelos autos já lavrados na empresa (levanta pela /aft-autos-lavrados) e os considera sem tomá-los por fator causal automático. Produz o Relatório de Análise no roteiro canônico de 7 seções que espelha os campos do SFITWEB (local, organização do trabalho, atividade, acidente, informações adicionais, fatores causais, condutas). A Árvore de Causas sustenta a análise por dentro e sai como desenho sob demanda (prompt de imagem + Mermaid), nunca em prosa. Escreve em linguagem didática (o leitor inclui a família da vítima, o Judiciário e o MPT) e não conclui sobre causa material sem laudo pericial (a AFT não é perícia). Propõe os fatores com os códigos SFIT 251–260 e oferece encadear /aft-auditoria-geral + /aft-gera-ai.",
      "tech": "gerar_relatorio_docx.py · model: opus 1M"
     }
    ]
@@ -548,7 +548,7 @@
   {
    "nome": "gerar_relatorio_docx.py",
    "caminho": "aft-analise-acidente/scripts/gerar_relatorio_docx.py",
-   "papel": "Gera o Relatório de Análise de Acidente em .docx, no roteiro fixo de 6 seções da IN GMTP/MTP nº 2/2022.",
+   "papel": "Gera o Relatório de Análise de Acidente em .docx a partir de um JSON de conteúdo: seções (Heading 1), subtópicos de 2º e 3º nível (blocos sub/sub3, títulos de verdade), bullets, blocos de fator SFIT e sumário opcional (campo TOC do Word).",
    "runtime": "Python stdlib · zipfile"
   },
   {
