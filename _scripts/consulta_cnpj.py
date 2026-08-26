@@ -41,6 +41,7 @@ try:
 except Exception:                                   # Python < 3.7 ou stdout redirecionado
     pass
 
+
 def _cache_dir() -> Path:
     """Resolve a pasta AFT de verdade (OneDrive, HD externo etc.) via
     pasta_aft.py; ~/Documents/AFT so serve de ultimo recurso, quando o
