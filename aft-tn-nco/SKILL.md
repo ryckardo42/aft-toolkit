@@ -185,6 +185,16 @@ Em conformidade com a legislação em vigor, especialmente o previsto na alínea
 
 > ⚠️ **O "X" em "alínea X" está CORRETO e é intencional** — designa a décima alínea (alínea 10) do art. 18. **Nunca** substitua o "X" por uma letra, número arábico ou qualquer outro valor, e nunca "corrija" essa frase. Copie a introdução exatamente como está acima.
 
+#### Variante orientativa (quando TODOS os itens forem `tipo: orientacao` / `retorno: sem`)
+
+A introdução acima fala em cumprir obrigações e corrigir irregularidades — linguagem de exigência, que contradiz uma notificação inteiramente orientativa. Nesse caso, e **somente nesse caso**, use esta variante, também literal:
+
+```
+Em conformidade com a legislação em vigor, especialmente o previsto na alínea X do art. 18 do Decreto 4552/2002 (Regulamento da Inspeção do Trabalho), fica a empresa ORIENTADA quanto às irregularidades relacionadas nessa notificação, para que adote as medidas de correção nela indicadas:
+```
+
+> Vale a mesma regra do "X": copie literal. E vale a mesma fronteira: a variante troca **só** o verbo e o comando; nada de contexto da fiscalização entra na introdução. Contexto (data de elaboração do documento auditado, quadro de pessoal, norma revogada que ele adota) é matéria de **item**, não de texto fixo. Se a notificação tiver itens orientativos E itens de obrigação, use a introdução principal — a variante é para a notificação inteiramente orientativa.
+
 ### Itens (um por irregularidade)
 
 **ORDEM DOS ITENS: crescente por Norma Regulamentadora, da NR-01 à NR-38.** Agrupe os itens
@@ -263,6 +273,20 @@ Dúvidas:
 
 > Esse texto de observações é o boilerplate canônico do AFT — reproduza-o verbatim, sem reescrever ou "consertar" a redação.
 
+#### Variante orientativa (quando TODOS os itens forem `tipo: orientacao` / `retorno: sem`)
+
+O bloco "Comprovação de cumprimento" fala em prazos previstos nos itens e em comprovação pelo empregador — e item de orientação não tem prazo nem pede documento. Numa notificação inteiramente orientativa, **substitua aquele primeiro bloco** por este, mantendo o bloco "Dúvidas" verbatim:
+
+```
+Natureza desta notificação:
+> Os itens acima têm caráter de orientação e não exigem retorno nem apresentação de documentos por esta notificação. O cumprimento será verificado em fiscalização futura.
+
+Dúvidas:
+>  Perguntas/esclarecimentos adicionais podem ser feitos no  "Canal de Comunicação" dentro dessa própria notificação, ou pelos e-mails disponíveis na notificação.
+```
+
+> **Blocos de observação adicionais** são permitidos depois destes, quando a skill chamadora os fornecer (é o caso da `/aft-PGR-analise`, que acrescenta a recomendação sobre a empresa terceira elaboradora do PGR). Escreva-os no mesmo formato `Título:` seguido de `> texto`. O que **não** se faz é reescrever os blocos fixos acima para acomodar um assunto novo: acrescenta-se um bloco.
+
 ---
 
 ## FASE 3.5 — Parâmetros do DET (o que faz a notificação existir)
@@ -278,6 +302,9 @@ Texto sozinho não vira notificação. O DET exige, de **cada item**, o que a em
 | `prazo_dias` | `16` | dias corridos, contados da criação da notificação |
 | `preassinalado` | `sim` | o item já nasce marcado |
 | `arquivos` | `todos` | aceita qualquer extensão que o DET permite |
+| `abrangencia` | `estabelecimento` | Abrangência da notificação: só o CNPJ notificado. `empresa` alcança matriz e filiais; `estabelecimento_e_indicados` alcança o notificado mais os CNPJs listados na aba Demais Estabelecimentos do DET |
+
+> **Abrangência é campo da notificação, não do item.** O DET a exige na aba "Informações Básicas" e a valida **na lavratura**: nula, a tela mostra "Não informada" e o Lavrar falha com a notificação inteira já montada. O padrão do toolkit é `estabelecimento` — a notificação sai contra o estabelecimento inspecionado. Ampliar o alcance é decisão do AFT e precisa ser dita: só grave `empresa` ou `estabelecimento_e_indicados` quando ele pedir. Ao usar `estabelecimento_e_indicados`, lembre-o de preencher a aba **Demais Estabelecimentos** no DET antes de lavrar, porque o toolkit não a preenche. De todo modo, o campo é editável no site antes da lavratura.
 
 > **O retorno depende do tipo.** O DET não oferece as quatro opções sempre — a lista muda conforme o tipo do item, e combinação fora dela é impossível na tela do site (e o toolkit recusa):
 >
@@ -382,6 +409,8 @@ det:
   prazo: 07/09/2026          # data fixa; ou prazo_dias: 16
   tipo: obrigacao            # solicitacao | obrigacao | orientacao
   retorno: digital           # sem | digital | impresso | vistoria
+  abrangencia: estabelecimento   # empresa | estabelecimento |
+                                 # estabelecimento_e_indicados
   preassinalado: sim
   arquivos: todos
   excecoes:

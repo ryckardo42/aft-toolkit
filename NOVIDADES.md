@@ -6,6 +6,34 @@ rever tudo, basta abrir este arquivo.
 
 ---
 
+## 26/08/2026
+<!-- commit: nco-orientativa-e-do-pgr -->
+
+**Dá para notificar orientando, sem exigir prazo nem documento — e o texto da notificação agora acompanha essa escolha.** Quando todos os itens de uma notificação são de orientação, ela não tem prazo e não pede comprovação. Só que o texto de abertura e o de rodapé continuavam falando em "prazos previstos nos itens" e em "comprovação pelo empregador", contradizendo os próprios itens. Havia duas saídas ruins: mandar assim mesmo, ou reescrever o texto padrão na hora — e texto padrão reescrito na hora é texto que muda de uma notificação para outra.
+
+Agora existe a versão orientativa dos dois textos, pronta e fixa: a abertura diz que a empresa fica ORIENTADA a adotar as medidas indicadas, e o rodapé explica que os itens não exigem retorno e que o cumprimento será verificado em fiscalização futura. O bloco de dúvidas não muda. A versão orientativa só entra quando TODOS os itens forem de orientação; havendo qualquer item de obrigação, valem os textos de sempre.
+
+Ficaram escritas também duas regras que evitam o texto padrão virar rascunho de cada um: contexto da fiscalização (data de elaboração do documento auditado, número de empregados, norma revogada que ele segue) não entra na abertura, e sim num item ou num bloco próprio; e, quando faltar assunto, acrescenta-se um bloco novo — não se reescreve os fixos.
+
+**A análise de PGR passou a terminar numa notificação do DET, e não num relatório solto.** Antes, ao final da auditoria do PGR, a oferta era um relatório de recomendações em arquivo separado. Só que o caminho para mandar a empresa revisar o programa é o DET. Agora a oferta é a notificação pronta, com um item por irregularidade encontrada, cada um apontando a página ou a tabela do PGR onde está o defeito — que é o que permite ao empregador achar o que corrigir.
+
+A proposta padrão é notificar orientando (sem prazo, sem documento), porque as irregularidades do PGR costumam já ter virado auto, e o auto por si já cobra. Se você preferir exigir a revisão com prazo e comprovação, é só dizer.
+
+Toda notificação de PGR passa a levar também esta recomendação: fornecer cópia da notificação à empresa terceira que elaborou o programa, quando houver. O PGR quase sempre é feito por consultoria de fora, e quem precisa conhecer as falhas apontadas é quem o redige. Isso não tira responsabilidade de ninguém: quem responde continua sendo o empregador.
+
+---
+
+## 26/08/2026
+<!-- commit: abrangencia-da-notificacao -->
+
+**Você escolhe a abrangência da notificação, e o padrão passou a ser o estabelecimento fiscalizado.** O DET pergunta, em toda notificação, se ela alcança toda a empresa (matriz e filiais), somente o estabelecimento notificado, ou o estabelecimento mais outros indicados por você. O toolkit vinha mandando sempre a mesma resposta, sem dizer qual era e sem deixar você mudá-la pelo arquivo da notificação.
+
+Agora a abrangência é escolha sua, escrita junto dos demais parâmetros da notificação, e o padrão é **somente o estabelecimento notificado** — que é como a fiscalização sai, por regra. Alcançar matriz e filiais, ou outros CNPJs, passou a exigir que você diga isso expressamente. E o assistente confere antes de escrever no DET: abrangência em branco ou fora das três opções barra a criação do rascunho, em vez de você descobrir o problema só na hora de lavrar.
+
+Se escolher a opção que alcança outros estabelecimentos, lembre-se de preencher a aba "Demais Estabelecimentos" no DET antes de lavrar — o toolkit não a preenche. E, de todo modo, o campo continua editável no site.
+
+---
+
 ## 25/08/2026
 <!-- commit: itens-aguardando-no-card -->
 

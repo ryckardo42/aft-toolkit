@@ -528,8 +528,8 @@ Ao final, salve a análise completa em
 Ao terminar as sete ementas, faça uma pergunta única ao AFT:
 
 > "Deseja que eu (1) redija os autos de infração das ementas presentes (formato pronto
-> para o `/aft-gera-ai`, com o PGR como anexo), (2) escreva um relatório de recomendação
-> geral para envio à empresa, ou (3) ambos?"
+> para o `/aft-gera-ai`, com o PGR como anexo), (2) monte a notificação para correção do
+> PGR (NCO do DET, itens de orientação), ou (3) ambos?"
 
 ### 1) Redação dos autos de infração (formato /aft-gera-ai)
 
@@ -648,20 +648,61 @@ remove o hífen no cod_3):
      /aft-gera-ai comprime com o script do toolkit.
 ```
 
-### 2) Relatório de recomendação geral para a empresa
+### 2) NCO do PGR — notificação para correção, no DET
 
-Quando solicitado, redija um relatório técnico **resumido e de fácil entendimento**
-dirigido à empresa, com:
+Notificar a empresa a revisar o PGR é o desfecho normal desta análise, e o canal é o
+DET. **Esta skill fornece o CONTEÚDO; quem monta a notificação é a `/aft-tn-nco`** —
+front-matter, parâmetros do DET, textos fixos, `.md`, `.docx` e a revisão da FASE 3.7
+vivem lá, e não devem ser reescritos aqui. Duas fontes para o mesmo boilerplate é
+exatamente o que o toolkit evita.
 
-- Identificação dos principais problemas encontrados no PGR auditado, agrupados por
-  tema (identificação de perigos, avaliação, Inventário, Plano de Ação, ergonomia,
-  aft-consulta/comunicação).
-- Orientação clara de que a empresa deve **revisar integralmente o PGR**, com foco nos
-  pontos críticos apontados.
-- Tom técnico, direto, sem linguagem jurídica de auto de infração. O destinatário aqui
-  é o empregador, não o processo.
+**Parâmetros a propor ao AFT** (ele decide; não assuma em silêncio):
 
-Salve o relatório como `recomendacao-geral-PGR.md` na pasta da OS.
+| Parâmetro | Proposta | Por quê |
+|---|---|---|
+| `tipo` | `orientacao` | as irregularidades do PGR costumam já ter virado auto, e o auto é, por si, meio de coerção indireto. A notificação orienta a revisão do documento |
+| `retorno` | `sem` | é o único que o DET aceita em item de orientação, e por isso a notificação não tem prazo |
+| `abrangencia` | `estabelecimento` | padrão do toolkit |
+
+> Se o AFT preferir **exigir** a revisão em vez de orientar (não houve auto, ou ele quer
+> prazo e comprovação), passe `tipo: obrigacao` / `retorno: digital` e peça, no fecho de
+> cada item, o PGR revisado. Aí valem a introdução e as observações **principais** da
+> `/aft-tn-nco`, não a variante orientativa.
+
+**Um item por ementa irregular**, na ordem da análise, no formato da `/aft-tn-nco`
+(`*Título* - norma: texto [ementa]`). Cada item manda **rever o que está errado**, com
+a referência concreta do documento auditado (página, tabela, seção) que a análise
+levantou — é isso que permite ao empregador achar o defeito. Títulos sugeridos:
+
+| Ementa | Título do item | O item manda |
+|---|---|---|
+| 101059-0 | Evitar os Riscos na Origem | incorporar a etapa de evitar, anterior à avaliação, com levantamento preliminar de perigos; reescrever a hierarquia de medidas para alcançar o perigo mecânico, e não só o agente ambiental |
+| 101060-3 | Identificação de Perigos e Análise de Risco de Máquinas | elaborar análise de risco das máquinas, individualizada, com limites do equipamento, perigos e estimativa de risco; alcançar atividades não rotineiras e de contratadas |
+| 101062-0 | Classificação dos Riscos Ocupacionais | explicitar os critérios e a regra que liga severidade e probabilidade ao nível; assegurar que risco de nível elevado gere medida no plano de ação |
+| 101064-6 | Condições Previstas na NR-17 | realizar AEP e, onde couber, AET, com resultados no inventário; identificação específica por função; gradação da probabilidade por norma de produção, ritmo e modo operatório; limite de peso; fatores de organização do trabalho |
+| 101074-3 | Plano de Ação | novo plano datado e assinado, vinculado ao inventário, com cronograma, formas de acompanhamento e aferição de resultados |
+| 101079-4 | Inventário de Riscos Ocupacionais | caracterização de processos e ambientes; atividades não rotineiras e de contratadas; resultados da NR-17; critérios adotados; inventariar os perigos reais ainda ausentes; manter atualizado |
+| 101115-4 | Consulta e Comunicação aos Trabalhadores | estabelecer e documentar consulta sobre percepção de riscos e comunicação do inventário e do plano de ação, com registro de recebimento e resposta |
+
+Inclua **apenas** as ementas que a análise concluiu presentes.
+
+**Bloco de observação adicional (SEMPRE, nas NCOs de PGR)** — acrescente depois dos
+blocos fixos da `/aft-tn-nco`, sem reescrevê-los:
+
+```
+Elaboração por terceiro:
+> Recomendamos o fornecimento de uma cópia dessa notificação caso haja uma terceira empresa responsável pela elaboração do PGR.
+```
+
+> O PGR é, com frequência, elaborado por consultoria externa, e quem precisa conhecer as
+> falhas apontadas é quem o redige. A recomendação não transfere responsabilidade: o
+> sujeito passivo continua sendo o empregador.
+
+**O contexto do documento auditado NÃO entra na introdução** (que é texto fixo). Data de
+elaboração, quadro de pessoal declarado, norma revogada que o documento adota: isso é
+matéria de item, ou vai num bloco de observação próprio.
+
+Entregue os itens à `/aft-tn-nco` e deixe-a concluir o fluxo dela.
 
 ---
 

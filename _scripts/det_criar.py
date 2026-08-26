@@ -17,7 +17,20 @@ ouro do perfil: o assistente redige a minuta, o AFT decide e transmite.
 
 Estrutura confirmada no molde real (RMNHLB58LINBKP, 21/08/2026):
   - casca:  POST /notificacoes  {cpfAuditor, status:0 (EM_ELABORACAO),
-            tipoGeracao:0, auditores:[{cpf,nome,cif}], rascunho:"<json>"}
+            tipoGeracao:0, tipoAbrangencia, auditores:[{cpf,nome,cif}],
+            rascunho:"<json>"}
+            tipoAbrangencia vai na casca por precaução. O que se APUROU em
+            26/08/2026, lendo o DET de volta: enquanto a notificação está EM
+            ELABORAÇÃO, o registro principal fica vazio de qualquer forma
+            (titulo=None, itens=0, observacoes=0, tipoAbrangencia=None) e tudo
+            vive no blob `rascunho`; é a LAVRATURA que transfere blob ->
+            registro principal. Mandar tipoAbrangencia no POST não mudou o
+            registro principal (continuou nulo), mas é inofensivo e deixa a
+            casca coerente com o blob. NÃO está comprovado que isto conserte
+            a falha de lavratura relatada — se ela voltar, investigue por
+            outro caminho, e não presuma que o campo nulo no registro
+            principal seja a causa (titulo e itens ficam nulos do mesmo jeito
+            numa notificação que lavra sem problema).
   - item:   {ordem, descricao, tipo, tipoRetornoSolicitado, dataPrazoEntrega,
             status:0, preAssinalado:false, versao:1}
             tipo:   0 SOLICITACAO_DOCUMENTO · 1 CUMPRIMENTO_OBRIGACAO · 2 ORIENTACAO
@@ -56,6 +69,15 @@ RETORNO_IMPRESSO = 2
 RETORNO_VISTORIA = 3
 STATUS_EM_ELABORACAO = 0
 PRAZO_PADRAO_DIAS = 16
+# Abrangência da notificação (enum bt do bundle do DET, chunk 251): campo do
+# REGISTRO PRINCIPAL, não do item. 0 EMPRESA (matriz e filiais) · 1
+# ESTABELECIMENTO (só o CNPJ notificado) · 2 ESTABELECIMENTO_E_INDICADOS.
+ABRANGENCIA_EMPRESA = 0
+ABRANGENCIA_ESTABELECIMENTO = 1
+ABRANGENCIA_ESTABELECIMENTO_E_INDICADOS = 2
+# Padrão do toolkit: a notificação sai contra o estabelecimento inspecionado.
+# Ampliar para matriz e filiais é decisão do AFT, dita expressamente.
+ABRANGENCIA_PADRAO = ABRANGENCIA_ESTABELECIMENTO
 
 # "Todos os tipos de arquivo" marcados — a string vem de config/det-opcoes.json
 # (o site concatena os grupos e repete o .txt; reproduzir igual é o que faz a
@@ -378,6 +400,8 @@ def parametros_do_md(texto: str) -> dict:
           prazo: 07/09/2026          # ou prazo_dias: 16
           tipo: obrigacao            # solicitacao | obrigacao | orientacao
           retorno: digital           # sem | digital | impresso | vistoria
+          abrangencia: estabelecimento   # empresa | estabelecimento |
+                                         # estabelecimento_e_indicados
           preassinalado: sim
           excecoes:
             - item: 7
@@ -440,6 +464,9 @@ def parametros_do_md(texto: str) -> dict:
     r = _palavra(_palavras("retorno_solicitado"), simples.get("retorno"))
     if r is not None:
         p["retorno"] = r
+    a = _palavra(_palavras("abrangencia_da_notificacao"), simples.get("abrangencia"))
+    if a is not None:
+        p["abrangencia"] = a
     if "preassinalado" in simples:
         p["preassinalado"] = _verdadeiro(simples["preassinalado"])
     if simples.get("arquivos"):
@@ -757,7 +784,7 @@ def _prazo_para_iso(prazo) -> str | None:
 def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
                    prazo_dias=None, token: str = "", id_modelo=None, cif=None,
                    prazo=None, tipo=None, retorno=None, preassinalado=None,
-                   ri=None, ni=None,
+                   abrangencia=None, ri=None, ni=None,
                    overrides=None) -> tuple[dict, list[dict]]:
     """Lê a TN-NCO e o memory.md da OS e devolve (payload, itens) prontos —
     sem escrever nada.
@@ -828,6 +855,7 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
     tipo = escolher(tipo, "tipo", TIPO_CUMPRIMENTO_OBRIGACAO)
     retorno = escolher(retorno, "retorno", RETORNO_DIGITAL)
     preassinalado = escolher(preassinalado, "preassinalado", True)
+    abrangencia = escolher(abrangencia, "abrangencia", ABRANGENCIA_PADRAO)
     prazo_iso = (_prazo_para_iso(prazo)
                  or _prazo_para_iso(do_md.get("prazo"))
                  or _prazo_iso(prazo_dias or do_md.get("prazo_dias")
@@ -839,7 +867,8 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
 
     payload = montar_payload(token, ri, cnpj, titulo, itens, prazo_iso,
                              tipo=tipo, retorno=retorno,
-                             preassinalado=preassinalado, overrides=combinadas)
+                             preassinalado=preassinalado,
+                             abrangencia=abrangencia, overrides=combinadas)
     # Introdução e observações saem do PRÓPRIO .md — é o texto que o AFT
     # revisou. O modelo do DET só entra se o arquivo não trouxer nada
     # (ver `enriquecer`, que não sobrescreve o que já veio daqui).
@@ -863,6 +892,9 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
     payload["_enriquecimento"]["parametros_do_md"] = do_md or None
     payload["_parametros"] = {"titulo": titulo, "prazo": prazo_iso,
                               "tipo": tipo, "retorno": retorno,
+                              "abrangencia": abrangencia,
+                              "abrangencia_rotulo": rotulo(
+                                  "abrangencia_da_notificacao", abrangencia),
                               "preassinalado": preassinalado,
                               "excecoes": combinadas or None}
     return payload, itens
@@ -874,6 +906,7 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
                    retorno: int = RETORNO_DIGITAL,
                    preassinalado: bool = True,
                    tipos_arquivo: str | None = None,
+                   abrangencia: int | None = None,
                    overrides: dict | None = None) -> dict:
     """Corpo do rascunho, PRONTO para conferência — NÃO envia nada.
     Espelha o molde real: casca (auditor/status) + itens com o texto integral.
@@ -885,6 +918,8 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
     o penúltimo pedir Vistoria in loco."""
     aud = auditor_do_token(token)
     ni = re.sub(r"\D", "", cnpj or "")
+    if abrangencia is None:
+        abrangencia = ABRANGENCIA_PADRAO
     overrides = overrides or {}
     itens_payload = []
     for i, it in enumerate(itens, 1):
@@ -931,7 +966,7 @@ def montar_payload(token: str, ri: str, cnpj: str, titulo: str,
         "cpfAuditor": aud["cpf"],
         "status": STATUS_EM_ELABORACAO,
         "tipoGeracao": 0,
-        "tipoAbrangencia": 1,
+        "tipoAbrangencia": abrangencia,
         "tipoNi": 0 if len(ni) == 14 else 1,   # 0 = CNPJ, 1 = CPF (14 vs 11)
         "auditores": [aud],
         "ri": re.sub(r"\D", "", ri or ""),
@@ -1029,6 +1064,22 @@ def revisar_payload(payload: dict) -> list[dict]:
               f"CNPJ/CPF do empregador inválido ({len(ni)} dígitos; esperado 14 ou 11)")
     if not (payload.get("titulo") or "").strip():
         anota("impede", "notificação", "sem título")
+    # Abrangência é obrigatória na tela do DET e validada na LAVRATURA, no
+    # registro principal. Nula, a tela mostra "Não informada" e o Lavrar falha
+    # — com a notificação inteira já montada. Melhor barrar aqui.
+    abr = payload.get("tipoAbrangencia")
+    if abr not in (ABRANGENCIA_EMPRESA, ABRANGENCIA_ESTABELECIMENTO,
+                   ABRANGENCIA_ESTABELECIMENTO_E_INDICADOS):
+        anota("impede", "notificação",
+              f"abrangência ausente ou inválida ({abr!r}) — esperado 0 (toda a "
+              "empresa), 1 (somente o estabelecimento notificado) ou 2 "
+              "(estabelecimento e os demais indicados)")
+    elif abr == ABRANGENCIA_ESTABELECIMENTO_E_INDICADOS \
+            and not (payload.get("estabelecimentos") or []):
+        anota("aviso", "notificação",
+              "abrangência 'estabelecimento e os demais indicados' sem nenhum "
+              "estabelecimento na aba Demais Estabelecimentos — inclua-os no "
+              "DET antes de lavrar")
 
     itens = payload.get("itens") or []
     if not itens:
@@ -1208,8 +1259,16 @@ def criar_rascunho(token: str, corpo: dict) -> dict:
         raise RuntimeError("rascunho incompleto, nada foi enviado ao DET — " + detalhe)
     corpo = {k: v for k, v in corpo.items()
              if k not in ("_enriquecimento", "_parametros")}
+    # tipoAbrangencia também na casca, para o POST ficar coerente com o blob.
+    # Ver a nota do topo do módulo: em elaboração o registro principal fica
+    # vazio de todo modo, e mandar o campo aqui não o preencheu no teste de
+    # 26/08/2026. Mantido por ser inofensivo e por deixar explícito, em quem
+    # ler o POST, qual abrangência a notificação carrega.
     casca = {"cpfAuditor": corpo["cpfAuditor"], "status": STATUS_EM_ELABORACAO,
-             "tipoGeracao": 0, "auditores": corpo["auditores"]}
+             "tipoGeracao": 0,
+             "tipoAbrangencia": corpo.get("tipoAbrangencia",
+                                          ABRANGENCIA_PADRAO),
+             "auditores": corpo["auditores"]}
     casca["rascunho"] = json.dumps(casca, ensure_ascii=False)
     criada = json.loads(det_baixar._requisicao(
         token, "/notificacoes", corpo=casca, metodo="POST").decode("utf-8"))
@@ -1268,6 +1327,41 @@ def _autoteste() -> int:
                 "observacoes": observacoes}
         return [a for a in revisar_payload(base)
                 if a["onde"] == "introdução/observações"]
+
+    # 3b. abrangência: padrão, palavras do front-matter e barreira do revisor
+    confere("abrangência: padrão do toolkit é 'somente o estabelecimento'",
+            ABRANGENCIA_PADRAO == 1)
+    confere("abrangência: rótulo do enum 1 bate com o do DET",
+            rotulo("abrangencia_da_notificacao", 1)
+            == "Somente o Estabelecimento Notificado")
+    _pal = _palavras("abrangencia_da_notificacao")
+    confere("abrangência: 'empresa' no front-matter vira 0",
+            _palavra(_pal, "empresa") == 0)
+    confere("abrangência: 'estabelecimento' vira 1",
+            _palavra(_pal, "estabelecimento") == 1)
+    confere("abrangência: 'estabelecimento_e_indicados' vira 2",
+            _palavra(_pal, "estabelecimento_e_indicados") == 2)
+    confere("abrangência: acento e espaço não atrapalham",
+            _palavra(_pal, "Somente o Estabelecimento Notificado") == 1)
+    confere("abrangência: valor desconhecido não é aceito",
+            _palavra(_pal, "toda a galáxia") is None)
+    _fm = parametros_do_md(
+        "---\ndet:\n  tipo: orientacao\n  abrangencia: empresa\n---\n")
+    confere("abrangência: lida do front-matter", _fm.get("abrangencia") == 0)
+    _fm2 = parametros_do_md("---\ndet:\n  tipo: orientacao\n---\n")
+    confere("abrangência: ausente do front-matter não inventa valor",
+            "abrangencia" not in _fm2)
+
+    def _abr(valor):
+        base = {"ri": "1", "ni": "1" * 14, "titulo": "t", "itens": [],
+                "observacoes": norm, "tipoAbrangencia": valor}
+        return [a for a in revisar_payload(base)
+                if "abrangência" in a["problema"] and a["gravidade"] == "impede"]
+
+    confere("revisão: barra abrangência nula", bool(_abr(None)))
+    confere("revisão: barra abrangência fora do enum", bool(_abr(7)))
+    confere("revisão: aceita abrangência 0, 1 e 2",
+            not (_abr(0) or _abr(1) or _abr(2)))
 
     confere("revisão: barra texto sem ordem", bool(desordem(do_modelo)))
     confere("revisão: barra ordem repetida",

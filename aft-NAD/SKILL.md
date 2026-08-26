@@ -226,11 +226,15 @@ det:
   prazo_dias: 16          # ou prazo: dd/mm/aaaa
   tipo: solicitacao       # a NAD é Solicitação de Documento
   retorno: digital        # a empresa anexa pelo DET
+  abrangencia: estabelecimento   # empresa | estabelecimento |
+                                 # estabelecimento_e_indicados
   preassinalado: sim
   arquivos: todos
   modelo: 11301           # só se veio de modelo (FASE 0.5)
   cif: 358070             # a CIF do DONO do modelo
 ---
+
+> **Abrangência** é campo da notificação (aba "Informações Básicas" do DET), não do item, e o DET a valida na lavratura: nula, o Lavrar falha. O padrão do toolkit é `estabelecimento`, ou seja, apenas o CNPJ notificado. Use `empresa` (matriz e filiais) ou `estabelecimento_e_indicados` somente quando o AFT pedir; neste último caso, lembre-o de preencher a aba Demais Estabelecimentos no DET antes de lavrar. O campo continua editável no site.
 
 # Notificação para Apresentação de Documentos
 
