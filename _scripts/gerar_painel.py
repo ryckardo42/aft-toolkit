@@ -208,7 +208,8 @@ SCAN_TIMEOUT = 180  # segundos por OS no scan ao vivo
 
 
 def argv_posicionais() -> list[str]:
-    return [a for a in sys.argv[1:] if a not in ("--scan", "--todas")]
+    return [a for a in sys.argv[1:]
+            if a not in ("--scan", "--todas", "--bom-dia")]
 
 
 def quer_scan() -> bool:
@@ -217,6 +218,13 @@ def quer_scan() -> bool:
 
 def quer_todas() -> bool:
     return "--todas" in sys.argv[1:]
+
+
+def quer_so_bom_dia() -> bool:
+    """--bom-dia: no stdout, só o bloco da /aft-bom-dia. O resumo completo
+    tem ~16 KB (a agenda de vencimentos sozinha passa de 5 KB) e vai inteiro
+    para o contexto do assistente; o briefing da manhã usa 6 KB deles."""
+    return "--bom-dia" in sys.argv[1:]
 
 
 def home_os() -> Path:
@@ -1939,6 +1947,163 @@ def selo_det(d: dict, hoje: datetime.date) -> tuple[str, str]:
     return "neutro", f"em {n}d"
 
 
+# Auditoria aberta há mais de 4 meses entra no briefing da /aft-bom-dia como
+# "envelhecendo". Não é prazo legal — é o limite prático a partir do qual vale
+# perguntar por que a fiscalização ainda não fechou.
+BOM_DIA_OS_DIAS = 120
+
+
+# Extensões de material volumoso que o layout manda guardar em NOTIFICACOES/,
+# AUTOS/ ou fotos/ — nunca soltas na raiz da OS. (.md/.docx na raiz é o certo:
+# ver a "regra dura" do layout em aft-organiza-os/SKILL.md.)
+ARRUMACAO_EXT = {".pdf", ".jpg", ".jpeg", ".png", ".heic", ".zip"}
+# Documento do SFIT é a exceção: Ordem de Serviço, Demanda e Relação de Vínculos
+# Ativos ficam na raiz por desenho (a /aft-preparacao-acao-fiscal os lê de lá) e o
+# layout não lhes dá subpasta — apontá-los seria ruído diário. Calibrado em
+# 26/08/2026 contra as pastas reais, onde 4 dos 5 primeiros achados eram isso.
+RE_OS_SFIT = re.compile(r"(^(os[ _-]|ordem))|v[ií]nculo|demanda|sfit",
+                        re.IGNORECASE)
+RE_ITEM_DET = re.compile(r"^item\s*\d+$", re.IGNORECASE)
+
+
+def checar_arrumacao(base: Path, oss: list[dict]) -> dict:
+    """Conferência BARATA da estrutura das pastas, para o briefing da manhã.
+
+    Não abre arquivo nenhum: só olha nome e lugar. Existe para que a
+    /aft-bom-dia possa OFERECER a /aft-organiza-os na OS que precisa, em vez de
+    rodá-la todo dia em todas — aquela skill classifica PDF por PDF (a 1ª página
+    de cada um vai para o contexto do assistente), o que num acervo real custa
+    duas ordens de grandeza mais que a rotina inteira da manhã.
+
+    Conservador de propósito: falso positivo aqui vira ruído diário, e ruído
+    diário é ignorado em uma semana. Na dúvida, não aponta.
+    """
+    sem_ficha: list[str] = []
+    try:
+        for d in sorted(base.iterdir()):
+            if not d.is_dir() or d.name.startswith((".", "_")):
+                continue
+            if not (d / "memory.md").is_file():
+                sem_ficha.append(d.name)
+    except OSError:
+        pass
+
+    fora_do_lugar: list[dict] = []
+    for o in oss:
+        pasta = Path(o.get("caminho") or "")
+        soltos: list[str] = []
+        itens_det: list[str] = []
+        try:
+            for f in sorted(pasta.iterdir()):
+                if f.is_dir():
+                    if RE_ITEM_DET.match(f.name):
+                        itens_det.append(f.name)
+                elif (f.suffix.lower() in ARRUMACAO_EXT
+                      and not RE_OS_SFIT.search(f.name)):
+                    soltos.append(f.name)
+        except OSError:
+            continue
+        if soltos or itens_det:
+            fora_do_lugar.append({
+                "empregador": o.get("empregador") or o.get("pasta") or "?",
+                "pasta": o.get("pasta") or "",
+                "soltos": len(soltos),
+                "exemplos": soltos[:3],
+                "itens_det": itens_det,
+            })
+    return {"pastas_sem_ficha": sem_ficha, "fora_do_lugar": fora_do_lugar}
+
+
+def resumo_bom_dia(oss: list[dict], hoje: datetime.date,
+                   diario: list[dict], base: Path) -> dict:
+    """Recorte do stdout que a /aft-bom-dia lê para montar o briefing da manhã.
+
+    Nada aqui é apurado de novo: o painel já leu os memory.md, já resolveu o
+    triângulo amarelo de cada notificação e já derivou a data de abertura de
+    cada OS (ver data_criacao). Este bloco só separa o que a rotina diária
+    cita, na ordem em que ela cita, para a skill não reabrir ficha nenhuma.
+    """
+    nao_vistas: list[dict] = []
+    vencidos: list[dict] = []
+    vencendo: list[dict] = []
+    pendencias: list[dict] = []
+    longas: list[dict] = []
+    for o in oss:
+        emp = o.get("empregador") or o.get("pasta") or "?"
+        for d in o.get("dets") or []:
+            if not det_cobra_acao(d):
+                continue
+            dias = (d["prazo"] - hoje).days if d.get("prazo") else None
+            cont = d.get("itens_cont") or {}
+            # "Venceu" não diz o que houve: a empresa pode ter entregue tudo,
+            # parte ou nada. Quem enquadra é o AFT — o briefing só entrega o
+            # fato (ver classificar_itens).
+            item = {"empregador": emp,
+                    "codigo": d.get("codigo") or "",
+                    "prazo": d["prazo"].strftime("%d/%m/%Y") if d.get("prazo") else "",
+                    "dias": dias,
+                    "entregues": cont.get("entregues", 0),
+                    "nao_enviados": cont.get("nao_enviados", 0),
+                    "aguardando": cont.get("aguardando", 0)}
+            if (d.get("atualizacao_pendente") or item["aguardando"]
+                    or d.get("mensagem_canal")):
+                nao_vistas.append(item | {
+                    "motivo": ("atualização pendente no DET"
+                               if d.get("atualizacao_pendente") else
+                               "pedido do empregador aguardando sua decisão"
+                               if item["aguardando"] else
+                               "mensagem no canal de comunicação")})
+            if dias is None:
+                continue
+            if dias < 0:
+                vencidos.append(item)
+            elif dias <= 7:
+                vencendo.append(item)
+        if o.get("pendencias"):
+            pendencias.append({"empregador": emp, "itens": list(o["pendencias"])})
+        criada = o.get("criada")
+        dv = o.get("data_vencimento")
+        dias_aberta = (hoje - criada).days if criada else None
+        dias_venc = (dv - hoje).days if dv else None
+        if (dias_venc is not None and dias_venc <= 30) or (
+                dias_aberta is not None and dias_aberta >= BOM_DIA_OS_DIAS):
+            longas.append({
+                "empregador": emp,
+                "aberta_em": criada.strftime("%d/%m/%Y") if criada else "",
+                "dias_aberta": dias_aberta,
+                "vencimento": dv.strftime("%d/%m/%Y") if dv else "",
+                "dias_para_vencer": dias_venc,
+            })
+    vencidos.sort(key=lambda i: i["dias"])            # mais antigo primeiro
+    vencendo.sort(key=lambda i: i["dias"])
+    nao_vistas.sort(key=lambda i: (i["dias"] is None, i["dias"] or 0))
+    longas.sort(key=lambda i: (i["dias_para_vencer"] is None,
+                               i["dias_para_vencer"] if i["dias_para_vencer"]
+                               is not None else 0,
+                               -(i["dias_aberta"] or 0)))
+
+    # Diário: dias ÚTEIS já decorridos no mês contra os que têm registro. HOJE
+    # fica de fora — o dia mal começou, cobrar registro dele seria ruído.
+    mes = hoje.strftime("%Y-%m")
+    com_registro = {e["d"] for e in diario if e["d"][:7] == mes}
+    uteis = [hoje.replace(day=n) for n in range(1, hoje.day)]
+    uteis = [d for d in uteis if d.weekday() < 5]
+    sem_registro = [d.strftime("%d/%m/%Y") for d in uteis
+                    if d.isoformat() not in com_registro]
+    return {
+        "entregas_nao_vistas": nao_vistas,
+        "dets_vencidos": vencidos,
+        "dets_vencendo_7d": vencendo,
+        "os_longas": longas,
+        "pendencias": pendencias,
+        "arrumacao": checar_arrumacao(base, oss),
+        "diario": {"dias_uteis_decorridos": len(uteis),
+                   "dias_com_registro": len(uteis) - len(sem_registro),
+                   "dias_sem_registro": len(sem_registro),
+                   "datas_sem_registro": sem_registro},
+    }
+
+
 def coletar_vencimentos(oss: list[dict], hoje: datetime.date) -> list[dict]:
     """Agenda única de prazos de TODAS as OS, ordenada por data: notificações
     DET com prazo (abertas e checadas — as checadas servem ao /aft-agenda-det, que
@@ -2426,6 +2591,8 @@ def main() -> int:
         "notificacoes_nao_cadastradas": n_novas,
         "autos_lavrados": n_autos,
         "dias_trabalhados_no_mes": dias_mes,
+        # Briefing da manhã (/aft-bom-dia) — ver resumo_bom_dia.
+        "bom_dia": resumo_bom_dia(oss, hoje, diario, base),
         "scan_ao_vivo": {"pedido": scan, "os_com_scan_ok": n_scan_ok},
         # Agenda consolidada de prazos (DETs — inclusive checados, para o
         # /aft-agenda-det marcar ✓ no calendário — e pendências datadas).
@@ -2444,6 +2611,9 @@ def main() -> int:
             if o["dias_top"] is not None and o["dias_top"] <= 7
         ],
     }
+    if quer_so_bom_dia():
+        resumo = {"painel": resumo["painel"], "os_ativas": resumo["os_ativas"],
+                  "bom_dia": resumo["bom_dia"]}
     print(json.dumps(resumo, ensure_ascii=False, indent=2))
     return 0
 
