@@ -278,6 +278,9 @@ Texto sozinho não vira notificação. O DET exige, de **cada item**, o que a em
 | `prazo_dias` | `16` | dias corridos, contados da criação da notificação |
 | `preassinalado` | `sim` | o item já nasce marcado |
 | `arquivos` | `todos` | aceita qualquer extensão que o DET permite |
+| `abrangencia` | `estabelecimento` | Abrangência da notificação: só o CNPJ notificado. `empresa` alcança matriz e filiais; `estabelecimento_e_indicados` alcança o notificado mais os CNPJs listados na aba Demais Estabelecimentos do DET |
+
+> **Abrangência é campo da notificação, não do item.** O DET a exige na aba "Informações Básicas" e a valida **na lavratura**: nula, a tela mostra "Não informada" e o Lavrar falha com a notificação inteira já montada. O padrão do toolkit é `estabelecimento` — a notificação sai contra o estabelecimento inspecionado. Ampliar o alcance é decisão do AFT e precisa ser dita: só grave `empresa` ou `estabelecimento_e_indicados` quando ele pedir. Ao usar `estabelecimento_e_indicados`, lembre-o de preencher a aba **Demais Estabelecimentos** no DET antes de lavrar, porque o toolkit não a preenche. De todo modo, o campo é editável no site antes da lavratura.
 
 > **O retorno depende do tipo.** O DET não oferece as quatro opções sempre — a lista muda conforme o tipo do item, e combinação fora dela é impossível na tela do site (e o toolkit recusa):
 >
@@ -382,6 +385,8 @@ det:
   prazo: 07/09/2026          # data fixa; ou prazo_dias: 16
   tipo: obrigacao            # solicitacao | obrigacao | orientacao
   retorno: digital           # sem | digital | impresso | vistoria
+  abrangencia: estabelecimento   # empresa | estabelecimento |
+                                 # estabelecimento_e_indicados
   preassinalado: sim
   arquivos: todos
   excecoes:
