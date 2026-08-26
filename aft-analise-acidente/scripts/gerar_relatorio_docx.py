@@ -18,18 +18,24 @@ Esquema do JSON:
   "titulo": "RELATORIO DE ANALISE DE ACIDENTE DO TRABALHO",
   "subtitulo": "Acidente do trabalho tipico com obito",   # opcional
   "identificacao": [["Empregador","..."], ["CNPJ","..."]],# linhas da tabela de capa
+  "sumario": true,                                        # opcional: indice com paginas
   "secoes": [
      {"titulo": "1. DESCRICAO DO LOCAL DO ACIDENTE",
       "blocos": [
          {"t":"p",   "x":"paragrafo, aceita **negrito** inline"},
-         {"t":"sub", "x":"Subtitulo em negrito"},
+         {"t":"sub", "x":"1.1 Subtopico de 2o nivel"},
+         {"t":"sub3","x":"5.4.1 Subtopico de 3o nivel"},
          {"t":"b",   "x":"item de lista (bullet)"},
          {"t":"fator","codigo":"251008","nome":"...","classe":"determinante","desc":"..."}
       ]}
   ],
   "rodape": "texto final em italico pequeno"             # opcional
 }
-Tipos de bloco: "p" paragrafo | "sub" subtitulo | "b" bullet | "fator" fator SFIT.
+Tipos de bloco: "p" paragrafo | "sub" subtopico 2o nivel | "sub3" subtopico 3o nivel |
+"b" bullet | "fator" fator SFIT.
+
+Os subtopicos "sub" e "sub3" sao titulos de verdade (Heading 2 e 3), e nao paragrafos em
+negrito: e o que permite ao Word montar o sumario com numero de pagina.
 """
 
 try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
@@ -49,7 +55,9 @@ import sys, os, json, re
 from pathlib import Path
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 try:  # cabecalho institucional com a lotacao do AFT (ver _scripts/cabecalho.py)
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_scripts"))
@@ -59,6 +67,32 @@ except Exception:  # sem ele o relatorio sai sem cabecalho, como antes
         pass
 
 AZUL = RGBColor(0x1F, 0x3A, 0x5F)
+PRETO = RGBColor(0x00, 0x00, 0x00)
+
+def add_sumario(doc):
+    """Insere o campo TOC do Word (niveis 1 a 3). O Word calcula as paginas ao abrir."""
+    t = doc.add_paragraph(); t.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = t.add_run('SUMARIO'); r.bold = True; r.font.size = Pt(13); r.font.color.rgb = AZUL
+
+    p = doc.add_paragraph()
+    r = p.add_run()
+    ini = OxmlElement('w:fldChar'); ini.set(qn('w:fldCharType'), 'begin')
+    instr = OxmlElement('w:instrText'); instr.set(qn('xml:space'), 'preserve')
+    instr.text = r'TOC \o "1-3" \h \z \u'
+    sep = OxmlElement('w:fldChar'); sep.set(qn('w:fldCharType'), 'separate')
+    txt = OxmlElement('w:t')
+    txt.text = 'Sumario: clique com o botao direito sobre esta linha e escolha Atualizar campo.'
+    fim = OxmlElement('w:fldChar'); fim.set(qn('w:fldCharType'), 'end')
+    for el in (ini, instr, sep, txt, fim):
+        r._r.append(el)
+
+    doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+
+    try:  # pede ao Word para atualizar os campos na abertura
+        el = OxmlElement('w:updateFields'); el.set(qn('w:val'), 'true')
+        doc.settings.element.append(el)
+    except Exception:
+        pass
 
 def add_runs(p, texto, size=11, base_bold=False):
     """Interpreta **negrito** inline e adiciona os runs ao paragrafo."""
@@ -118,7 +152,21 @@ def main(json_path):
                 for pp in cc.paragraphs: pp.paragraph_format.space_after = Pt(2)
         doc.add_paragraph()
 
+    if d.get('sumario'):
+        add_sumario(doc)
+
     # ---- secoes ----
+    def subtopico(texto, nivel):
+        h = doc.add_heading(level=nivel)
+        h.paragraph_format.space_before = Pt(8 if nivel == 2 else 6)
+        h.paragraph_format.space_after = Pt(2)
+        if nivel == 3:
+            h.paragraph_format.left_indent = Cm(0.5)
+        rr = h.add_run(texto)
+        rr.bold = True; rr.font.color.rgb = PRETO
+        rr.font.size = Pt(11.5 if nivel == 2 else 11)
+        return h
+
     for sec in d.get('secoes', []):
         h = doc.add_heading(level=1)
         rr = h.add_run(sec.get('titulo', '')); rr.font.color.rgb = AZUL; rr.font.size = Pt(13)
@@ -127,7 +175,9 @@ def main(json_path):
             if t == 'p':
                 par(bloco.get('x', ''))
             elif t == 'sub':
-                par(bloco.get('x', ''), bold=True, align='left', after=2, before=6)
+                subtopico(bloco.get('x', ''), 2)
+            elif t == 'sub3':
+                subtopico(bloco.get('x', ''), 3)
             elif t == 'b':
                 p = doc.add_paragraph(style='List Bullet')
                 p.paragraph_format.space_after = Pt(3)
