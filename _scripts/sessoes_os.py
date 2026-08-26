@@ -771,36 +771,49 @@ def vigia():
     PIDFILE.write_text(str(os.getpid()))
     log(f"Vigia automático de sessões iniciado (PID {os.getpid()}).")
 
-    atraso = 20
+    # Enquanto NADA está pendente, o custo de checar é irrelevante e o
+    # intervalo largo (OCIOSO) evita gastar CPU à toa. Mas assim que uma OS
+    # nova aparece, o app pode estar aberto e ser fechado e reaberto pelo AFT
+    # em poucos segundos (um restart rápido do app leva bem menos que 20s) —
+    # um poll de 20-60s pode nunca observar o app fechado nesse meio-tempo, e
+    # a sessão fica sem ser criada, sem erro nenhum aparecer em lugar nenhum.
+    # Por isso, havendo pendência, o poll de app_aberto() encurta para
+    # ATIVO_S: é o mesmo intervalo que o aplicador pontual (--aplicar) já usa
+    # com sucesso na espera de fechamento (aplicar(), ~linha 630).
+    OCIOSO_S = 60
+    ATIVO_S = 5
     while True:
-        time.sleep(atraso)
         try:
             # o AGENTS.md de contexto das pastas de OS não depende do app estar
             # fechado — garante em todo ciclo (barato: só cria o que falta)
             garantir_contexto(ler_oss(pasta_os_ativas()))
+            p = plano()
+            pend = [i for i in p["itens"] if i["criar"] or i["agrupar"] or i["vincular"]]
+            if not pend and (p["grupo_existe"] or not agrupamento_ligado()):
+                time.sleep(OCIOSO_S)
+                continue
             if app_aberto():
-                atraso = 20
+                time.sleep(ATIVO_S)     # há pendência: poll curto até fechar
                 continue
             realinhar_pendente()  # mudança de pasta feita com o app aberto
             p = plano()
             pend = [i for i in p["itens"] if i["criar"] or i["agrupar"] or i["vincular"]]
             if not pend and (p["grupo_existe"] or not agrupamento_ligado()):
-                atraso = 60
+                time.sleep(OCIOSO_S)
                 continue
             time.sleep(3)              # o app grava as preferências ao fechar
             if app_aberto():           # reabriu nesse meio-tempo? próximo ciclo
-                atraso = 20
+                time.sleep(ATIVO_S)
                 continue
             aplicar(agora=True, reabrir=False)
             if app_aberto():
                 log("AVISO: o app reabriu durante a aplicação — reconfiro no próximo ciclo.")
-            atraso = 20
         except SystemExit as e:        # config ausente/estrutura mudou etc.
             log(f"Vigia: {e} — nova tentativa em 5 min.")
-            atraso = 300
+            time.sleep(300)
         except Exception as e:         # nunca morre por erro pontual
             log(f"Vigia: erro inesperado ({type(e).__name__}: {e}) — nova tentativa em 5 min.")
-            atraso = 300
+            time.sleep(300)
 
 
 def desfazer():
