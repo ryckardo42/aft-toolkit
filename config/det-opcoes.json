@@ -110,6 +110,34 @@
   }
  },
 
+ "abrangencia_da_notificacao": {
+  "campo_no_payload": "tipoAbrangencia",
+  "obrigatorio": true,
+  "onde_aparece": "Aba 'Informações Básicas' da notificação, campo 'Abrangência (Obrigatório)'. Vai no REGISTRO PRINCIPAL da notificação, não no item.",
+  "padrao_do_toolkit": 1,
+  "_por_que_esse_padrao": "Notificação de fiscalização sai, por regra, contra o estabelecimento inspecionado. Ampliar para matriz e filiais, ou para outros CNPJs, é decisão do AFT e tem de ser dita expressamente.",
+  "opcoes": {
+   "0": {
+    "rotulo": "Toda a Empresa",
+    "enum_no_bundle": "EMPRESA",
+    "palavras_no_frontmatter": ["empresa", "toda_a_empresa", "toda_empresa", "matriz_e_filiais"],
+    "tooltip_do_site": "Toda a Empresa: Os CNPJs de matriz e filiais."
+   },
+   "1": {
+    "rotulo": "Somente o Estabelecimento Notificado",
+    "enum_no_bundle": "ESTABELECIMENTO",
+    "palavras_no_frontmatter": ["estabelecimento", "somente_o_estabelecimento_notificado", "somente_estabelecimento", "so_o_estabelecimento"],
+    "tooltip_do_site": "Somente o Estabelecimento Notificado: Apenas o CNPJ notificado."
+   },
+   "2": {
+    "rotulo": "Estabelecimento Notificado e os demais indicados na notificação",
+    "enum_no_bundle": "ESTABELECIMENTO_E_INDICADOS",
+    "palavras_no_frontmatter": ["estabelecimento_e_indicados", "estabelecimento_e_demais", "notificado_e_demais", "demais_estabelecimentos"],
+    "tooltip_do_site": "Estabelecimento Notificado e os demais indicados na Notificação: O CNPJ notificado e outros citados na notificação (ver Demais Estabelecimentos)."
+   }
+  },
+  "_fonte": "Bundle Angular do proprio DET, chunk 251 (enum bt: EMPRESA=0, ESTABELECIMENTO=1, ESTABELECIMENTO_E_INDICADOS=2, com o Map de rotulos ao lado). Lido em 26/08/2026."
+ },
  "outros_enums": {
   "status_da_notificacao": {"0": "Em Elaboração", "1": "Confirmada", "2": "Cancelada"},
   "status_do_item": {"0": "Inicial", "1": "Recebido", "2": "Rejeitado", "3": "Dispensado"},

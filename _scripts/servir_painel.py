@@ -889,7 +889,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def _det_criar(self):
         """POST /api/det-criar — ESCREVE um rascunho de notificação no DET.
-        Corpo {pasta, arquivo, titulo?, prazo_dias?, confirmar}. Sem
+        Corpo {pasta, arquivo, titulo?, prazo_dias?, abrangencia?, confirmar}.
+        `abrangencia` (0 toda a empresa · 1 só o estabelecimento notificado ·
+        2 estabelecimento e os demais indicados) só precisa ser passada para
+        contrariar o front-matter do .md; omitida, vale o .md e, na falta
+        dele, o padrão do toolkit (1). Sem
         confirmar=true, devolve só a PRÉVIA (payload montado), sem tocar o DET.
         Com confirmar=true, cria a casca + salva o rascunho — NUNCA lavra."""
         try:
@@ -920,6 +924,8 @@ class Handler(BaseHTTPRequestHandler):
                 tipo=int(p["tipo"]) if p.get("tipo") is not None else None,
                 retorno=int(p["retorno"]) if p.get("retorno") is not None else None,
                 preassinalado=p.get("preassinalado"),
+                abrangencia=(int(p["abrangencia"])
+                             if p.get("abrangencia") is not None else None),
                 ri=p.get("ri"),
                 ni=p.get("ni"),
                 overrides=ov)
