@@ -13,8 +13,10 @@ Uso:
     python3 consulta_cnpj.py 00000000000191 --socios
     python3 consulta_cnpj.py --sem-cache 00000000000191
 
-Cache: respostas ficam em ~/Documents/AFT/cache/cnpj/ para nao repetir consulta
-da mesma empresa (mais rapido e reduz exposicao do CNPJ na rede).
+Cache: respostas ficam em <PASTA_AFT>/cache/cnpj/ para nao repetir consulta
+da mesma empresa (mais rapido e reduz exposicao do CNPJ na rede). PASTA_AFT
+e a pasta de trabalho resolvida por pasta_aft.py (OneDrive, HD externo etc.),
+com ~/Documents/AFT como ultimo recurso se a resolucao falhar.
 """
 from __future__ import annotations
 
@@ -39,7 +41,20 @@ try:
 except Exception:                                   # Python < 3.7 ou stdout redirecionado
     pass
 
-CACHE_DIR = Path.home() / "Documents" / "AFT" / "cache" / "cnpj"
+def _cache_dir() -> Path:
+    """Resolve a pasta AFT de verdade (OneDrive, HD externo etc.) via
+    pasta_aft.py; ~/Documents/AFT so serve de ultimo recurso, quando o
+    modulo nao existe ou a resolucao falha (mesmo padrao de gerar_painel.py,
+    servir_painel.py e diario_mensal.py)."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from pasta_aft import pasta_aft
+        return pasta_aft() / "cache" / "cnpj"
+    except Exception:
+        return Path.home() / "Documents" / "AFT" / "cache" / "cnpj"
+
+
+CACHE_DIR = _cache_dir()
 TIMEOUT = 30
 
 # Backends publicos servindo os dados abertos da RFB.
