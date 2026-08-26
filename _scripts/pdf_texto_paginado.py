@@ -31,6 +31,7 @@ Uso:
 
 import sys
 import os
+import hashlib
 import io
 import re
 import shutil
@@ -306,8 +307,19 @@ def main():
         # NUNCA ao lado do PDF: o intermediario e uma copia integral do texto do
         # documento, e a pasta da OS nao e lugar para copia sobrando. Vai para a pasta
         # temporaria do sistema, e o caminho aparece na tela.
+        #
+        # O nome leva um sufixo derivado do CAMINHO ABSOLUTO do PDF, e nao so do nome
+        # do arquivo. Sem ele, dois PDFs homonimos em pastas diferentes -- "01 2025.pdf"
+        # em item2/ e em item3/, por exemplo -- disputam o mesmo arquivo temporario. Numa
+        # extracao paralela, que e o que as skills de analise de resposta a NAD fazem por
+        # padrao (um agente extrator por documento, todos ao mesmo tempo), um processo
+        # sobrescreve o texto do outro EM SILENCIO, e o extrato sai com o conteudo do
+        # documento errado sem nenhum erro na tela.
+        marca = hashlib.sha1(
+            os.path.abspath(pdf_path).encode("utf-8", "replace")).hexdigest()[:8]
         saida = os.path.join(tempfile.gettempdir(),
-                             os.path.splitext(os.path.basename(pdf_path))[0] + "_texto.txt")
+                             "%s_%s_texto.txt"
+                             % (os.path.splitext(os.path.basename(pdf_path))[0], marca))
 
     partes = []
     texto_pag, motivos_pag = {}, {}
@@ -390,8 +402,13 @@ def main():
             "Se esta linha nao aparece no que voce leu, a leitura foi TRUNCADA:\n"
             "leia o restante antes de concluir qualquer coisa sobre o documento.\n"
             % (os.path.basename(pdf_path), n, len(corpo_final)))
-        with io.open(saida, "w", encoding="utf-8") as f:
+        # Escrita atomica: grava num arquivo proprio deste processo e so entao
+        # renomeia por cima. Assim ninguem le o arquivo pela metade enquanto ele
+        # esta sendo escrito -- os.replace e atomico no Windows e no POSIX.
+        parcial = "%s.%d.parcial" % (saida, os.getpid())
+        with io.open(parcial, "w", encoding="utf-8") as f:
             f.write(corpo_final)
+        os.replace(parcial, saida)
 
     print("PDF: %s" % os.path.basename(pdf_path))
     print("Paginas: %d" % n)
