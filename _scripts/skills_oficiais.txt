@@ -15,6 +15,7 @@ aft-auditoria-AR-NR12
 aft-auditoria-geral
 aft-autos-lavrados
 aft-autos-pdf-reunidos
+aft-bom-dia
 aft-cat-trabalhador
 aft-cipa-nr05-dimensionamento
 aft-cnae-grau-risco-nr04

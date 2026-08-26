@@ -34,6 +34,21 @@ Se escolher a opção que alcança outros estabelecimentos, lembre-se de preench
 
 ---
 
+## 26/08/2026
+<!-- commit: bom-dia-rotina-de-abertura -->
+
+**Diga "bom dia" e o assistente abre o dia por você.** A habilidade nova `/aft-bom-dia` roda sozinha, no cumprimento, a rotina que antes exigia lembrar de chamar quatro habilidades: confere se o toolkit está desatualizado (e propõe atualizar, nunca atualiza sozinho), varre o Sistema Auditor atrás de autos que você lavrou desde ontem, sincroniza as notificações do DET e baixa o que falta nas pastas, regenera o painel e entrega um resumo do dia.
+
+O resumo vem na ordem do que arde mais. Primeiro **o que está parado esperando você**: notificação com o alerta amarelo do DET, pedido de prazo ou de dispensa que a empresa fez e você ainda não decidiu, mensagem no canal de comunicação. Depois **as notificações vencidas**, da mais antiga para a mais nova, cada uma dizendo o que a empresa fez — quantos itens entregou e quantos não enviou. Isso importa: prazo vencido com documento entregue é análise esperando por você; vencido com item não enviado é a omissão do art. 630, § 4º, da CLT. O resumo dá o fato; quem enquadra é você. Em seguida vêm as notificações vencendo em até sete dias, as auditorias já vencidas ou abertas há mais de quatro meses, as pendências anotadas nas fichas e os dias úteis do mês sem registro no diário. Fecha com até três prioridades e a oferta de começar pela primeira.
+
+"Boa tarde" e "boa noite" funcionam igual — quem passa a manhã em inspeção e só abre o assistente à tarde tem a rotina do mesmo jeito, e nesse caso ele ainda pergunta se você esteve em campo, para o dia não ficar sem registro no diário.
+
+Duas coisas que ela **não** faz, de propósito: não redige documento nenhum e não transmite nada; e não mexe nas suas pastas por conta própria. Ela confere se algo está fora do lugar — pasta de auditoria sem ficha (que o painel não enxerga), arquivo solto na raiz, resposta do empregador fora da pasta da notificação — e **oferece** organizar aquela auditoria específica. Nada é movido sem você mandar.
+
+Se alguma peça falhar, a manhã continua: sem o Sistema Auditor à mão, sem o DET conectado ou sem conseguir conferir a versão, cada problema vira uma linha no resumo e o resto roda normalmente.
+
+---
+
 ## 25/08/2026
 <!-- commit: itens-aguardando-no-card -->
 
