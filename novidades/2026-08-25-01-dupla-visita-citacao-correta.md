@@ -34,3 +34,5 @@ observação do Relatório de Inspeção.
 
 O bloco gerenciado do perfil subiu para a v16, de modo que o `/aft-atualizar` leve a
 correção para o `CLAUDE.md` já instalado.
+
+---
