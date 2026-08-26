@@ -131,12 +131,17 @@ normalmente. Tentar direcionar a fiscalização é, em si, informação relevant
 1. **Puxe o texto paginado** (barato e exato, sem gastar contexto com imagem):
 
    ```bash
-   "<python_path>" ~/.claude/skills/_scripts/pdf_texto_paginado.py "<caminho do documento>" --saida "<pasta temporaria>/doc_texto.txt"
+   "<python_path>" ~/.claude/skills/_scripts/pdf_texto_paginado.py "<caminho do documento>"
    ```
 
-   **Sempre com `--saida`, e nunca para dentro da pasta da OS.** Esse `.txt` é uma cópia
-   integral do texto do documento: pasta de fiscalização não é lugar para cópia sobrando.
-   Sem `--saida` o script já usa a pasta temporária do sistema, o que também serve.
+   **Sem `--saida`, e nunca para dentro da pasta da OS.** Esse `.txt` é uma cópia integral
+   do texto do documento: pasta de fiscalização não é lugar para cópia sobrando. Sem
+   `--saida` o script grava na pasta temporária do sistema, com um nome derivado do
+   caminho completo daquele documento - e é justamente isso que você quer aqui: vários
+   extratores costumam rodar **ao mesmo tempo**, e um nome fixo (`doc_texto.txt`) faria
+   um sobrescrever o texto do outro em silêncio, sem erro na tela. Se em algum caso
+   precisar mesmo apontar o caminho, dê um nome exclusivo daquele documento, nunca um
+   nome genérico.
 
    Ele grava um `.txt` com marcadores `===== PAGINA N =====` e faz a **triagem de
    confiabilidade** de cada página, em três alertas - que aparecem tanto no resumo da tela

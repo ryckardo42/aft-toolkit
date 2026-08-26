@@ -23,7 +23,7 @@ Tres alertas, que pedem condutas diferentes:
 O terceiro e o mais traicoeiro: o texto parece bom e nao e.
 
 Uso:
-    python pdf_texto_paginado.py "documento.pdf"                 # -> ao lado do PDF
+    python pdf_texto_paginado.py "documento.pdf"                 # -> pasta temporaria do sistema
     python pdf_texto_paginado.py "documento.pdf" --saida "t.txt"
     python pdf_texto_paginado.py "documento.pdf" --so-resumo     # so o diagnostico
     python pdf_texto_paginado.py "documento.pdf" --sem-motores   # ignora os extras opcionais
