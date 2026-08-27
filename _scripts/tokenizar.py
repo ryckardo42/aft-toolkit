@@ -122,6 +122,33 @@ def add(mapa, nome, funcao, admissao, fonte):
     for t in mapa.setdefault("trabalhadores", []):
         if normaliza(t.get("nome", "")) == alvo:
             return t["token_nome"], True
+
+    # NOME QUE E PREFIXO (OU CONTINUACAO) DE OUTRO JA MAPEADO -- provavelmente a
+    # MESMA pessoa (26/08/2026, achado rodando o fluxo de ponta a ponta). O
+    # assistente passou "CARLOS HENRIQUE DE ALBUQUERQUE", cortado por uma
+    # exibicao de 30 caracteres, quando o de-para ja tinha "Carlos Henrique de
+    # Albuquerque Pereira": nasceu um segundo token para o mesmo trabalhador, sem
+    # aviso nenhum. Dois tokens da mesma pessoa num auto sugerem dois prejudicados
+    # onde ha um -- erro que so aparece depois de o auto estar lavrado.
+    # A guarda RECUSA e manda decidir; nao escolhe sozinha, porque homonimo
+    # parcial existe de verdade (pai e filho, irmaos com nome composto igual).
+    partes_alvo = alvo.split()
+    for t in mapa["trabalhadores"]:
+        outro = normaliza(t.get("nome", ""))
+        p_outro = outro.split()
+        menor, maior = sorted((partes_alvo, p_outro), key=len)
+        if len(menor) >= 2 and maior[:len(menor)] == menor:
+            print("ERRO: o nome informado e prefixo de um ja mapeado (ou vice-versa), "
+                  "e quase sempre e a MESMA pessoa:", file=sys.stderr)
+            print("  ja no de-para: %s -> %s" % (t["token_nome"], mascara(t.get("nome", ""))),
+                  file=sys.stderr)
+            print("  informado agora: %s" % mascara(nome), file=sys.stderr)
+            print("Se for a mesma pessoa, use o token que ja existe -- nao acrescente. "
+                  "Se forem pessoas diferentes, informe o nome COMPLETO de cada uma "
+                  "(nome truncado nunca entra no de-para: o auto sai com o nome errado).",
+                  file=sys.stderr)
+            sys.exit(3)
+
     token = proximo_token(mapa)
     entrada = {"token_nome": token, "nome": nome.strip()}
     if funcao:
