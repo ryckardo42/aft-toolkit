@@ -777,7 +777,7 @@ da loja e, na fase documental, pela gerente de DP):
 
 ```
 I - DA FISCALIZAÇÃO:
-Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º, do Decreto nº 4.552/2002, iniciada em 03/07/2026 e ainda em curso na presente data no empregador acima qualificado. A inspeção foi realizada no estabelecimento denominado SUPERMERCADO EXEMPLO, que funciona como supermercado, com açougue, padaria e depósito. O estabelecimento conta com 81 trabalhadores. A inspeção física foi acompanhada pelo gerente da loja e a auditoria de documentos, pela gerente de departamento pessoal.
+Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º, do Decreto nº 4.552/2002, iniciada em 01/01/2026 e ainda em curso na presente data no empregador acima qualificado. A inspeção foi realizada no estabelecimento denominado SUPERMERCADO EXEMPLO, que funciona como supermercado, com açougue, padaria e depósito. O estabelecimento conta com 81 trabalhadores. A inspeção física foi acompanhada pelo gerente da loja e a auditoria de documentos, pela gerente de departamento pessoal.
 ```
 
 #### 7.3. Regras de substituição
