@@ -160,12 +160,26 @@ CAIXA_ALTA = re.compile(
     r"(?:\s+[A-ZÀ-ÜÇ0-9&./\-]{2,}){1,}(?![0-9A-Za-zÀ-ÿ])")
 
 
+# Trecho entre crases e LITERAL, nao prosa: caminho de arquivo, nome de pasta,
+# comando. A convencao do toolkit escreve todos assim, e varios sao legitimamente
+# sem acento porque a pasta se chama exatamente assim no disco --
+# `interdicao-embargo/`, `caderno-constatacoes.md`, `NOTIFICACOES/`. Acusa-los
+# ensina a ignorar a saida da guarda, que e o pior efeito possivel num
+# verificador (a mesma licao dos alarmes falsos ja corrigidos no metodo).
+CODIGO = re.compile(r"`[^`]*`")
+
+
 def mascarar_nomes_proprios(linha):
-    """Troca por espaços as sequências em CAIXA ALTA, preservando as colunas.
+    """Troca por espaços o que não é prosa, preservando as colunas.
+
+    Duas classes saem da conferência: sequências em CAIXA ALTA (razão social, que
+    vai no auto sem acento, como consta do cadastro da RFB) e trechos entre crases
+    (caminho, nome de arquivo, comando -- literais do disco).
 
     Preservar o comprimento importa: o número da coluna continua valendo para o
     trecho de contexto que o relatório imprime.
     """
+    linha = CODIGO.sub(lambda m: " " * len(m.group(0)), linha)
     return CAIXA_ALTA.sub(lambda m: " " * len(m.group(0)), linha)
 
 

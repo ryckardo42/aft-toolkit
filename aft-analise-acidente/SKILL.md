@@ -75,7 +75,7 @@ com a gestão de segurança e saúde no trabalho? Se preferir, eu levanto os já
 com a /aft-autos-lavrados."*
 
 Levante-os por um dos dois caminhos — o que o AFT informar, ou a `/aft-autos-lavrados` (que
-lê o Sistema Auditor) — e leia também o `## Anotações da auditoria` do `memory.md` da OS.
+lê o Sistema Auditor) — e leia também o `## Auditoria de documentos` do `memory.md` da OS — nas OS anteriores à renomeação, a mesma seção se chama `## Anotações da auditoria`.
 Os autos importam por três razões, e é assim que entram na análise:
 
 - **São fato apurado por autoridade pública.** O que já foi autuado não precisa ser
