@@ -62,6 +62,9 @@ PADROES = [
      "token de pseudonimizacao nao re-hidratado"),
 ]
 
+# So estes padroes valem no autos.md; o token, nao. Ver SO_NO_TXT abaixo.
+SO_NO_TXT = {"token de pseudonimizacao nao re-hidratado"}
+
 
 def trechos_do_arquivo(caminho):
     """Devolve [(rotulo, texto)] das regioes que de fato vao para o auto."""
@@ -102,6 +105,18 @@ def main():
     achados = []
     for rotulo, texto in trechos_do_arquivo(sys.argv[1]):
         for padrao, motivo in PADROES:
+            # TOKEN DE PSEUDONIMIZACAO no autos.md e CORRETO, nao defeito
+            # (26/08/2026). Duas skills oficiais mandam escreve-lo ali: a
+            # /aft-auditoria-geral ("ao redigi-los nos autos, use os tokens
+            # [[TRAB_NN]]") e a /aft-gera-ai ("a partir dai refira-se a ele so
+            # pelo token"). Como esta guarda rodava a mesma regra nos dois
+            # arquivos, TODO auto redigido conforme a skill manda era reprovado
+            # pelo gate da /aft-revisa-auto -- achado rodando o fluxo de ponta a
+            # ponta numa fiscalizacao real. No TXT final a regra continua
+            # valendo integralmente: token ali significa que o rehydrate.py nao
+            # rodou, e e o nome do trabalhador que deixa de chegar ao autuado.
+            if motivo in SO_NO_TXT and rotulo == "autos.md":
+                continue
             for m in padrao.finditer(texto):
                 ini = max(0, m.start() - 45)
                 fim = min(len(texto), m.end() + 45)
