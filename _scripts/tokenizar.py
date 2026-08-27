@@ -25,7 +25,10 @@ Uso:
   tokenizar.py <pasta-OS> --conferir <arquivo>        (token orfao? nome real vazado?)
   tokenizar.py <pasta-OS> --listar [--mostrar]        (mascarado por padrao)
 
-Exit 0 = ok; 1 = achado que exige acao; 2 = erro de uso.
+Exit 0 = ok; 1 = achado que exige acao; 2 = erro de uso; 3 = nome informado e
+prefixo de outro ja mapeado (provavel duplicata do mesmo trabalhador) -- quem
+decide e o AFT. Com --add-lista o 3 interrompe a lista e NADA e gravado: o
+arquivo so e salvo ao fim; corrija a lista e rode de novo.
 """
 
 try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
