@@ -233,21 +233,34 @@ def carregar_config():
     return cfg
 
 
+# A instalação sob demanda do plyvel-ci é tentada UMA vez por processo. O vigia
+# roda em laço permanente, e há máquinas onde a instalação nunca pode dar certo
+# (Python gerenciado pelo uv recusa com "externally-managed-environment"):
+# repetir o pip a cada volta do laço custaria um subprocesso por minuto, para
+# sempre, e enchia o log com o mesmo AVISO. Falhou uma vez, segue no fallback.
+_PLYVEL_FALHOU = False
+
+
 def _ensure_plyvel():
     """Importa a lib de leveldb; instala plyvel-ci sob demanda (é problema técnico
-    nosso, não do AFT — resolvemos sozinhos)."""
+    nosso, não do AFT — resolvemos sozinhos). Instala só na primeira tentativa."""
+    global _PLYVEL_FALHOU
     try:
         import plyvel  # noqa: F401
         return plyvel
     except ImportError:
         pass
+    if _PLYVEL_FALHOU:
+        return None
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "--quiet",
                         "plyvel-ci"], check=True, **SEM_JANELA)
         import plyvel  # noqa: F401
         return plyvel
     except (OSError, subprocess.CalledProcessError, ImportError) as e:
-        log(f"AVISO: não consegui preparar a leveldb (plyvel-ci): {e}")
+        _PLYVEL_FALHOU = True
+        log(f"AVISO: não consegui preparar a leveldb (plyvel-ci): {e} — sigo pelo "
+            "config JSON e não tento instalar de novo nesta execução.")
         return None
 
 
@@ -287,8 +300,10 @@ def ler_scopes_leveldb():
     """Lê o mapa dframe-group-scopes do Local Storage (fonte de verdade dos grupos).
     Retorna o dict de scopes, {} se a chave não existe, ou None se não deu para ler."""
     plyvel = _ensure_plyvel()
+    if not plyvel:       # sem a lib, copiar a leveldb inteira do app seria desperdício
+        return None
     cop = _copia_leveldb()
-    if not plyvel or not cop:
+    if not cop:
         return None
     tmp, dst = cop
     try:
