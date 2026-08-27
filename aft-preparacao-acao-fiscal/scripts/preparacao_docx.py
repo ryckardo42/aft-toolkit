@@ -653,7 +653,7 @@ def gera(pasta: Path, conteudo: dict, saida: Path, vinculos=None, saude=False):
                     + (f" — CNPJ {dados['cnpj']}" if dados["cnpj"] else "")))
     m.tabela_rotulo_valor(doc, linha_os(dados, grau, efetivo))
     m.caixa_destaque(doc, "Regra de decisão", [TESE],
-                     cor_titulo=m.AZUL_ESCURO, fundo="EBF3FB", borda="9DC3E6")
+                     cor_titulo=m.AZUL_ESCURO, fundo=m.ZEBRA_AZUL, borda=m.AZUL_MEDIO)
 
     n = 1
     secao_empresa(doc, n, conteudo.get("empresa"))
