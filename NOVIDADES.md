@@ -87,6 +87,28 @@ Nada muda no que você vê: as sessões continuam sendo criadas do mesmo jeito.
 
 ---
 
+## 27/08/2026
+<!-- commit: interdicao-padrao-unico -->
+
+**O auto derivado de interdição agora sai no mesmo padrão de todos os outros autos - e o exemplo de trabalhador prejudicado não se presume mais.** Contribuição do Diego (PR 108), em duas frentes:
+
+**1. Um padrão só de auto.** A habilidade de interdição/embargo mantinha um modelo próprio de auto de infração, paralelo ao padrão geral - e os dois divergiram: o auto da interdição saía sem a data no corpo da irregularidade, descrevia a norma em vez do fato constatado, e apoiava toda a fundamentação no Termo de Interdição (que, suspensa a interdição, deixava o auto sem base). Justamente os autos com a prova mais forte - constatação direta, fotos, Relatório Técnico - eram os que saíam com a redação mais frágil. Agora a habilidade de interdição reúne os dados (ementa, objeto, data, fato constatado, risco) e entrega para o padrão único redigir; antes de o auditor ver qualquer texto, a revisão de qualidade roda sozinha, e o parecer vem junto com os autos.
+
+**2. Trabalhador citado no auto é trabalhador constatado.** Cinco habilidades mandavam, quando a fiscalização não tinha identificado o trabalhador exposto, escolher nomes na relação de vínculos "com função compatível com a exposição". Isso é presunção: a relação de vínculos prova que a pessoa é empregada, não que ela operava aquela máquina - e a defesa só precisa provar que aquele empregado não trabalhava no setor para abalar o auto inteiro. Agora a regra nas cinco é a mesma: cita-se apenas quem a fiscalização registrou como exposto (o operador identificado na inspeção, o nome que está no relato de campo ou no Relatório Técnico); sem esse registro, o parágrafo de dano coletivo encerra sem exemplo e a falta é declarada ao auditor - que decide, porque a constatação é dele. A dispensa legal de individualizar (Portaria MTP 667/2021 e OT SIT 2/2022) já protege o auto; nome presumido só criava flanco.
+
+---
+
+## 27/08/2026
+<!-- commit: secao-dois-nomes-e-acentos -->
+
+**Constatação registrada em ficha antiga voltou a chegar aos autos - e o verificador de acentos parou de acusar nome de pasta.** Contribuição do Diego (PR 109):
+
+**1. A seção da ficha tem dois nomes, e as habilidades só conheciam um.** A seção de constatações da auditoria documental foi renomeada de "Anotações da auditoria" para "Auditoria de documentos" - mas as fichas abertas antes da mudança ficaram com o nome antigo, e a habilidade que redige os autos procurava só o novo. O efeito era silencioso: nada quebrava, nada avisava; as constatações simplesmente não chegavam à redação. Num acervo real, 24 auditorias tinham constatações presas na seção invisível - uma delas com 37. Agora as habilidades leem os dois nomes (e, se uma ficha antiga tiver as duas seções, leem as duas), a análise de PGRTR passa a gravar no nome atual, e nenhuma ficha é renomeada - ficha de fiscalização não se reescreve para consertar habilidade. A apostila da ajuda também foi atualizada, que ainda ensinava o nome antigo.
+
+**2. Caminho de pasta não é erro de grafia.** O verificador que barra texto sem acentuação antes do Sistema Auditor acusava nomes de arquivo e de pasta - "interdicao-embargo", "caderno-constatacoes.md" - que são assim mesmo no disco, de propósito. Alarme que dispara no que está certo ensina a ignorar o alarme. Agora trecho entre crases (a convenção do kit para caminho e comando) sai da conferência; palavra sem acento no texto corrido continua sendo pega igual.
+
+---
+
 ## 26/08/2026
 <!-- commit: nco-orientativa-e-do-pgr -->
 
