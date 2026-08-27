@@ -10,6 +10,7 @@ aft-aet-auditoria
 aft-agenda-det
 aft-ajuda
 aft-analise-acidente
+aft-analise-preliminar
 aft-atualizar
 aft-auditoria-AR-NR12
 aft-auditoria-geral

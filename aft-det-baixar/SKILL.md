@@ -145,9 +145,11 @@ Falhas (N): <código — erro em linguagem simples>
 ```
 
 Se a notificação venceu sem entrega (itens `sem_arquivo` e prazo passado),
-lembre o AFT do `/aft-det-630` (auto por omissão). A auditoria do que foi
-entregue segue o fluxo normal: constatações em `## Auditoria de documentos`
-e, depois, `/aft-auditoria-geral`.
+lembre o AFT do `/aft-det-630` (auto por omissão). Se chegaram arquivos,
+ofereça a triagem `/aft-analise-preliminar` (item a item, por dia de entrega,
+sem carregar os PDFs na conversa) — oferta, nunca execução automática. A
+auditoria do que foi entregue segue o fluxo normal: constatações em
+`## Auditoria de documentos` e, depois, `/aft-auditoria-geral`.
 
 ## Regras
 
