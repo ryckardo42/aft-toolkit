@@ -777,11 +777,18 @@ def vigia():
     # em poucos segundos (um restart rápido do app leva bem menos que 20s) —
     # um poll de 20-60s pode nunca observar o app fechado nesse meio-tempo, e
     # a sessão fica sem ser criada, sem erro nenhum aparecer em lugar nenhum.
-    # Por isso, havendo pendência, o poll de app_aberto() encurta para
-    # ATIVO_S: é o mesmo intervalo que o aplicador pontual (--aplicar) já usa
-    # com sucesso na espera de fechamento (aplicar(), ~linha 630).
+    # Por isso, havendo pendência, a espera pelo fechamento passa a checar a
+    # cada ATIVO_S: é o mesmo intervalo que o aplicador pontual (--aplicar) já
+    # usa com sucesso na espera de fechamento (aplicar(), ~linha 630).
+    #
+    # Nessa espera curta roda SÓ app_aberto() (11 ms aqui). O ciclo inteiro,
+    # não: plano() copia a leveldb do app por completo a cada chamada — 15 MB
+    # nesta máquina, 0,34 s — e repetir isso de 5 em 5 segundos, durante todo o
+    # tempo em que o AFT estiver com o app aberto, sairia caro em disco e em
+    # CPU justamente enquanto ele trabalha.
     OCIOSO_S = 60
     ATIVO_S = 5
+    time.sleep(ATIVO_S)   # o vigia sobe no login: dá tempo de o app subir também
     while True:
         try:
             # o AGENTS.md de contexto das pastas de OS não depende do app estar
@@ -793,8 +800,14 @@ def vigia():
                 time.sleep(OCIOSO_S)
                 continue
             if app_aberto():
-                time.sleep(ATIVO_S)     # há pendência: poll curto até fechar
-                continue
+                # Há pendência: só falta o app fechar. Espera barata, checando
+                # de ATIVO_S em ATIVO_S, até OCIOSO_S — depois refaz o plano
+                # (a pendência pode ter mudado) e volta a esperar.
+                limite = time.monotonic() + OCIOSO_S
+                while app_aberto() and time.monotonic() < limite:
+                    time.sleep(ATIVO_S)
+                if app_aberto():
+                    continue
             realinhar_pendente()  # mudança de pasta feita com o app aberto
             p = plano()
             pend = [i for i in p["itens"] if i["criar"] or i["agrupar"] or i["vincular"]]
@@ -808,6 +821,11 @@ def vigia():
             aplicar(agora=True, reabrir=False)
             if app_aberto():
                 log("AVISO: o app reabriu durante a aplicação — reconfiro no próximo ciclo.")
+            # Sem esta pausa, uma pendência que o aplicar() NÃO consiga resolver
+            # (pasta sem permissão, memory.md sem front-matter) faria o ciclo
+            # inteiro repetir de 3 em 3 segundos, para sempre, copiando a
+            # leveldb duas vezes por volta.
+            time.sleep(OCIOSO_S)
         except SystemExit as e:        # config ausente/estrutura mudou etc.
             log(f"Vigia: {e} — nova tentativa em 5 min.")
             time.sleep(300)
