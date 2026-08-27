@@ -33,7 +33,8 @@ ou "<COD> <data>" (na raiz da OS ou em NOTIFICACOES/) é renomeado para o
 padrão — preservando sufixo descritivo que o AFT tenha dado —, PDF solto na
 raiz ou em NOTIFICACOES/ é movido para dentro do pacote, e conteúdo que
 morava na raiz do pacote desce para a subpasta "baixada em <data>" do dia em
-que foi baixado (data de modificação do arquivo). Tudo conta em `movidos`.
+que foi baixado (data de modificação do arquivo) — essa descida roda DEPOIS
+do download completar, nunca antes (issue #104). Tudo conta em `movidos`.
 O modo --reorganizar aplica essa migração sem rede (usado pela
 /aft-organiza-os).
 
@@ -84,6 +85,7 @@ except Exception:
 
 import datetime
 import json
+import os
 import re
 import subprocess
 import sys
@@ -232,6 +234,36 @@ def pesquisar_por_codigo(token: str, codigo: str) -> dict | None:
     return None
 
 
+# ── Caminho longo no Windows (MAX_PATH) e remoção tolerante ──────────────────
+
+def _lp(p: Path) -> Path:
+    """Windows: caminho estendido (prefixo \\\\?\\), que escapa do limite de
+    260 caracteres do MAX_PATH. Pasta de OS com razão social longa + pacote de
+    notificação + subpasta do dia + item com descrição longa passam fácil dos
+    260 (issue #104, caso real com 263). Usar em TODA operação de disco dentro
+    do pacote: exists, stat, mkdir, rename, write. No macOS/Linux devolve o
+    caminho como veio."""
+    if os.name != "nt":
+        return p
+    s = os.path.abspath(str(p))
+    if s.startswith("\\\\?\\"):
+        return Path(s)
+    if s.startswith("\\\\"):  # caminho de rede (UNC)
+        return Path("\\\\?\\UNC\\" + s[2:])
+    return Path("\\\\?\\" + s)
+
+
+def _rmdir_tolerante(d: Path) -> None:
+    """Remove pasta VAZIA e desiste em silêncio se o sistema não deixar.
+    Em pasta sincronizada pelo OneDrive o serviço ainda segura o identificador
+    por instantes e o Windows responde WinError 5 (issue #104). Pasta vazia
+    que sobra é cosmética: não pode derrubar um download inteiro."""
+    try:
+        _lp(d).rmdir()
+    except OSError:
+        pass
+
+
 # ── Nomes seguros de pasta/arquivo (funções puras, testáveis sem rede) ───────
 
 _RE_PROIBIDOS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
@@ -278,7 +310,7 @@ RE_PACOTE = re.compile(
 
 
 def _data_mtime(p: Path) -> str:
-    return datetime.date.fromtimestamp(p.stat().st_mtime).strftime("%d-%m-%Y")
+    return datetime.date.fromtimestamp(_lp(p).stat().st_mtime).strftime("%d-%m-%Y")
 
 
 def pasta_do_pacote(pasta_os: Path, codigo: str, hoje: str | None = None,
@@ -364,10 +396,10 @@ def migrar_pacote_para_dias(raiz: Path) -> int:
     def _desce(arq: Path, rel: Path) -> None:
         nonlocal movidos
         destino = raiz / f"baixada em {_data_mtime(arq)}" / rel
-        if destino.exists():
+        if _lp(destino).exists():
             return
-        destino.parent.mkdir(parents=True, exist_ok=True)
-        arq.rename(destino)
+        _lp(destino.parent).mkdir(parents=True, exist_ok=True)
+        _lp(arq).rename(_lp(destino))
         movidos += 1
 
     for arq in sorted(raiz.iterdir()):
@@ -381,9 +413,9 @@ def migrar_pacote_para_dias(raiz: Path) -> int:
                     _desce(f, Path(nome) / f.relative_to(arq))
             for d in sorted(arq.rglob("*"), reverse=True):
                 if d.is_dir() and not any(d.iterdir()):
-                    d.rmdir()
+                    _rmdir_tolerante(d)
             if not any(arq.iterdir()):
-                arq.rmdir()
+                _rmdir_tolerante(arq)
     return movidos
 
 
@@ -430,10 +462,11 @@ def registrar_atividade(texto: str, detalhe: str) -> str:
 
 def _salvar(destino: Path, conteudo: bytes) -> bool:
     """Grava se ainda não existe (idempotência). True = gravou agora."""
-    if destino.exists() and destino.stat().st_size > 0:
+    d = _lp(destino)
+    if d.exists() and d.stat().st_size > 0:
         return False
-    destino.parent.mkdir(parents=True, exist_ok=True)
-    destino.write_bytes(conteudo)
+    d.parent.mkdir(parents=True, exist_ok=True)
+    d.write_bytes(conteudo)
     return True
 
 
@@ -468,16 +501,16 @@ def baixar_so_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
         raiz = renumerar_pacotes(raiz.parent, raiz) or raiz
     destino = raiz / f"notificacao-{codigo}.pdf"
     r["pacote"] = str(raiz)
-    if destino.exists() and destino.stat().st_size > 0:
+    if _lp(destino).exists() and _lp(destino).stat().st_size > 0:
         r["ja_existiam"] = 1
         return r
-    raiz.mkdir(parents=True, exist_ok=True)
+    _lp(raiz).mkdir(parents=True, exist_ok=True)
     # numeroDeLinhas=0 é o que o próprio site passa no download direto
     bruto = _requisicao(token, f"/notificacoes/{uid}/pdf",
                         params={"numeroDeLinhas": 0}, timeout=TIMEOUT_BLOB)
     if not bruto:
         raise RuntimeError("o DET devolveu um PDF vazio")
-    destino.write_bytes(bruto)
+    _lp(destino).write_bytes(bruto)
     raiz = renumerar_pacotes(raiz.parent, raiz) or raiz
     r["pacote"] = str(raiz)
     r["baixados"] = 1
@@ -512,14 +545,15 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     # os 2 PDFs, para não poluir a raiz da OS (convenção do AFT, 21/08/2026;
     # numeração, data de lavratura e subpasta do dia em 24/08/2026). PDF que um
     # download antigo deixou solto (na raiz da OS ou em NOTIFICACOES/) é
-    # MOVIDO para dentro (migração, nunca re-baixado), e o conteúdo que morava
-    # na raiz do pacote desce para a subpasta do dia em que foi baixado.
+    # MOVIDO para dentro (migração, nunca re-baixado). O conteúdo que morava
+    # na raiz do pacote (layout antigo) também desce para a subpasta do dia em
+    # que foi baixado — mas SÓ NO FINAL, com o download já completo: quando a
+    # migração quebrava ANTES de baixar, o historico-itens.md velho já tinha
+    # descido para a subpasta do dia e o pacote ficava com cara de atualizado
+    # sem estar (issue #104, defeito 3).
     raiz = pasta_do_pacote(pasta_os, codigo,
                            lavratura=_data_nome(n.get("dataEnvio")))
     raiz.mkdir(parents=True, exist_ok=True)
-    movidos = migrar_pacote_para_dias(raiz)
-    if movidos:
-        r["movidos"] = movidos
     raiz = renumerar_pacotes(raiz.parent, raiz) or raiz
     r["pacote"] = raiz.name
     hoje = datetime.date.today().strftime("%d-%m-%Y")
@@ -533,16 +567,18 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                 continue
             novo = (raiz / f"baixada em {_data_mtime(antigo)}" / nome
                     if para_o_dia_do_arquivo else raiz / nome)
-            if not novo.exists():
-                novo.parent.mkdir(parents=True, exist_ok=True)
-                antigo.rename(novo)
+            if not _lp(novo).exists():
+                _lp(novo.parent).mkdir(parents=True, exist_ok=True)
+                _lp(antigo).rename(_lp(novo))
                 r["movidos"] = r.get("movidos", 0) + 1
 
     def _ja_baixado(rel: Path) -> bool:
-        """O arquivo já veio num download anterior? (procura em todas as
-        subpastas "baixada em <data>" do pacote)"""
-        for d in raiz.glob("baixada em *"):
-            f = d / rel
+        """O arquivo já veio num download anterior? Procura nas subpastas
+        "baixada em <data>" E na raiz do pacote (layout antigo — que agora só
+        é migrado depois do download, então na hora desta checagem o arquivo
+        antigo ainda mora na raiz)."""
+        for base in (raiz, *raiz.glob("baixada em *")):
+            f = _lp(base / rel)
             if f.is_file() and f.stat().st_size > 0:
                 return True
         return False
@@ -552,7 +588,7 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     try:
         _migrar(f"notificacao-{codigo}.pdf")
         destino = raiz / f"notificacao-{codigo}.pdf"
-        if destino.exists() and destino.stat().st_size > 0:
+        if _lp(destino).exists() and _lp(destino).stat().st_size > 0:
             r["ja_existiam"] += 1
         else:
             conta(_salvar(destino,
@@ -591,10 +627,10 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                                f"/notificacoes/{uid}/pdf-relatorio-atendimento",
                                params={"tipo": 2, "exibeHistorico": "true"},
                                timeout=TIMEOUT_BLOB)
-        if not destino.exists() or destino.stat().st_size == 0:
+        if not _lp(destino).exists() or _lp(destino).stat().st_size == 0:
             conta(_salvar(destino, novo_pdf))
         else:
-            destino.write_bytes(novo_pdf)
+            _lp(destino).write_bytes(novo_pdf)
             r["relatorio_refrescado"] = True
     except TokenExpirado:
         raise
@@ -662,9 +698,15 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     # (o de cada dia é a fotografia daquele dia); anotação do AFT não pertence
     # a ele (vai no memory.md).
     if historico:
+        # O cabeçalho carimba QUANDO o extrato saiu do DET: sem isso, um
+        # historico-itens.md antigo que a migração pôs na subpasta do dia era
+        # indistinguível de um extrato fresco — e já induziu análise com dados
+        # de dois dias antes (issue #104, defeito 3).
+        agora = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
         md = [f"# Histórico dos itens — notificação {codigo}", "",
-              "Gerado do DET pelo AFT Toolkit (arquivo derivado: regravado a "
-              "cada download). Pedidos de prorrogação, justificativas e "
+              f"Extraído do DET em {agora} pelo AFT Toolkit (arquivo "
+              "derivado: regravado a cada download; o que vale é a data acima, "
+              "não a da pasta). Pedidos de prorrogação, justificativas e "
               "mudanças de status de cada item solicitado.", ""]
         for rot, evs in historico:
             md.append(f"## {rot}")
@@ -679,8 +721,9 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                     linha += f" · justificativa: {obs}"
                 md.append(linha)
             md.append("")
-        dia.mkdir(parents=True, exist_ok=True)
-        (dia / "historico-itens.md").write_text("\n".join(md), encoding="utf-8")
+        _lp(dia).mkdir(parents=True, exist_ok=True)
+        _lp(dia / "historico-itens.md").write_text("\n".join(md),
+                                                   encoding="utf-8")
 
     # Canal de comunicação: mensagens trocadas naquela notificação. Vai para
     # canal-comunicacao/ no pacote — mensagens.md (derivado, regravado), os
@@ -696,10 +739,11 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     if registros:
         pasta_canal = raiz / "canal-comunicacao"
         pasta_canal.mkdir(parents=True, exist_ok=True)
+        agora = datetime.datetime.now().strftime("%d/%m/%Y às %H:%M")
         md = [f"# Canal de comunicação — notificação {codigo}", "",
-              "Gerado do DET pelo AFT Toolkit (arquivo derivado: regravado a "
-              "cada download). O histórico oficial em PDF está ao lado "
-              "(historico-canal.pdf).", ""]
+              f"Extraído do DET em {agora} pelo AFT Toolkit (arquivo "
+              "derivado: regravado a cada download). O histórico oficial em "
+              "PDF está ao lado (historico-canal.pdf).", ""]
         usados: set[str] = set()
         for reg in registros:
             tipo = reg.get("tipoRegistroComunicacao")
@@ -722,7 +766,7 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                 nome = nome_do_arquivo(reg["arquivoNome"], usados)
                 md.append(f"  - anexo: {nome}")
                 destino = pasta_canal / nome
-                if destino.exists() and destino.stat().st_size > 0:
+                if _lp(destino).exists() and _lp(destino).stat().st_size > 0:
                     r["ja_existiam"] += 1
                 else:
                     try:
@@ -735,10 +779,10 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
                         raise
                     except Exception as e:
                         r["erros"].append(f"canal/{nome}: {e}")
-        (pasta_canal / "mensagens.md").write_text("\n".join(md) + "\n",
-                                                  encoding="utf-8")
+        _lp(pasta_canal / "mensagens.md").write_text("\n".join(md) + "\n",
+                                                     encoding="utf-8")
         try:
-            (pasta_canal / "historico-canal.pdf").write_bytes(_requisicao(
+            _lp(pasta_canal / "historico-canal.pdf").write_bytes(_requisicao(
                 token, f"/notificacoes/{uid}/pdf-historico-canal-comunicacao",
                 timeout=TIMEOUT_BLOB))
         except TokenExpirado:
@@ -764,6 +808,18 @@ def baixar_notificacao(pasta_os: Path, token: str, codigo: str) -> dict:
     except Exception as e:
         r["visto_no_det"] = False
         r["erros"].append(f"registro de visualização no DET: {e}")
+
+    # Migração do layout antigo (conteúdo na raiz do pacote → subpastas
+    # "baixada em <data>") SÓ AGORA, com o download já no disco: se ela
+    # falhar no meio, o extrato fresco de hoje já está na pasta do dia — nada
+    # antigo ganha cara de novo. Falha aqui vira erro relatado, não derruba o
+    # resultado, e a próxima execução termina o serviço (é idempotente).
+    try:
+        movidos = migrar_pacote_para_dias(raiz)
+        if movidos:
+            r["movidos"] = r.get("movidos", 0) + movidos
+    except Exception as e:
+        r["erros"].append(f"migração do layout antigo: {e}")
 
     _registrar_no_memory(pasta_os, r)
     return r

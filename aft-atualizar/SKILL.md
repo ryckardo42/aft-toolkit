@@ -194,15 +194,33 @@ grep -q 'servidor_painel: *"ligado"' "$(python ~/.claude/skills/_scripts/pasta_a
 ```
 
 - **`ja_ligado`** → se o Passo 1 **baixou atualização** (a lista de commits não estava
-  vazia), reinicie o servidor para que ele carregue o código novo — um processo em
-  execução não enxerga arquivos atualizados até reiniciar:
+  vazia), o servidor precisa carregar o código novo — mas **reiniciar o processo apaga
+  o token do DET** da memória e obriga o AFT a ir ao Chrome clicar em Sincronizar de
+  novo. Então o caminho depende do que a atualização mexeu (olhe a lista do
+  `git diff --stat` do Passo 1a):
 
-  ```bash
-  python ~/.claude/skills/_scripts/instalar_servidor_painel.py reiniciar
-  ```
+  - `_scripts/servir_painel.py` **NÃO está** na lista → recarga a quente, que troca o
+    código dos módulos do DET **sem derrubar o processo e sem perder o token**:
 
-  (no Windows, com o `python_path` do `aft-config.md`). Sem atualização no Passo 1,
-  nada a fazer. Siga para o Passo 2d.
+    ```bash
+    python ~/.claude/skills/_scripts/det_token.py --recarregar
+    ```
+
+    Respondeu `"ok": true` → pronto, siga para o Passo 2d (o `gerar_painel.py` nem
+    precisa disso: é subprocesso e já pega a versão nova sozinho). O painel não
+    respondeu → caia no reinício completo abaixo.
+  - `_scripts/servir_painel.py` **está** na lista (ou a recarga falhou) → reinício
+    completo:
+
+    ```bash
+    python ~/.claude/skills/_scripts/instalar_servidor_painel.py reiniciar
+    ```
+
+    (no Windows, com o `python_path` do `aft-config.md`). O reinício apagou o token:
+    **avise no resumo** (Passo 4), em uma linha, que antes do próximo download ou sync
+    do DET será preciso abrir a aba do DET e clicar em **Sincronizar** uma vez.
+
+  Sem atualização no Passo 1, nada a fazer. Siga para o Passo 2d.
 - **`instalar`** → rode o Passo 7c do `/aft-setup` (mesmo script
   `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados) e
   grave `servidor_painel: "ligado"` no `aft-config.md` — se a chave já existir com outro

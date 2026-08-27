@@ -236,9 +236,23 @@ com o token de sessão do próprio AFT.</p>
 <ul>
   <li>A sessão do DET dura <strong>~30 min</strong> (o <code>exp</code> do JWT) e <strong>não tem refresh</strong>: quando vence, o AFT reloga no gov.br — isso é do governo, nenhuma mudança na extensão remove. O auto-push da v3.0 elimina o Sincronizar manual e os "token expirado" durante a sessão, mas não o login em si.</li>
   <li>O canal de comunicação é <strong>somente leitura</strong>: responder e registrar ciência são atos do AFT, no site (os endpoints de escrita existem, mas ficaram de fora de propósito).</li>
-  <li>Reinício do serviço do painel zera o token: primeiro download depois de publicar pede novo Sincronizar (não é defeito).</li>
-  <li><code>det_baixar.py</code> é importado pelo servidor: mexeu, <strong>reinicie o serviço</strong> (o <code>publicar.py</code> já reinicia).</li>
+  <li>Reinício do serviço do painel zera o token: primeiro download depois pede novo Sincronizar (não é defeito). Desde 27/08/2026 o <code>/aft-atualizar</code> evita a maior parte dos reinícios com a recarga a quente (<code>det_token.py --recarregar</code> → <code>POST /api/recarregar</code>), que preserva o token; reinício de verdade só quando o próprio <code>servir_painel.py</code> mudou, com aviso ao AFT.</li>
+  <li><code>det_baixar.py</code> é importado pelo servidor: mexeu, <strong>recarregue a quente</strong> (<code>det_token.py --recarregar</code>) ou reinicie o serviço (o <code>publicar.py</code> já reinicia).</li>
 </ul>
+<div class="note ok">
+  <strong>Atualizações posteriores</strong> (detalhe no <code>historico</code> do
+  <code>arquitetura-det-baixar.json</code> ao lado): em <strong>24/08/2026</strong> o
+  pacote ganhou a convenção <code>&lt;NN&gt; - &lt;COD&gt; &lt;data de lavratura&gt;/</code>
+  com o conteúdo de cada download na subpasta <code>baixada em &lt;data&gt;/</code> — a
+  árvore da seção 3 desta página descreve o formato anterior. Em
+  <strong>27/08/2026</strong> (issue #104, caso real Windows 11 + OneDrive): caminhos
+  estendidos <code>\\?\</code> em toda operação de disco no pacote (a subpasta do dia
+  estourava o MAX_PATH de 260), remoção tolerante de pasta vazia (o WinError 5 do
+  OneDrive não derruba mais o download), migração de layout antigo só DEPOIS do
+  download completar (quebra no meio deixava <code>historico-itens.md</code> velho com
+  cara de novo) e carimbo da data/hora de extração no cabeçalho do
+  <code>historico-itens.md</code> e do <code>mensagens.md</code>.
+</div>
 <div class="note ok">
   <strong>Resolvidas em 21/08/2026 (3ª rodada):</strong> o histórico de
   prorrogações/justificativas virou o <code>historico-itens.md</code>; o canal de
