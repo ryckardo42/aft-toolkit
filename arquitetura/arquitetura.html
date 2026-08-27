@@ -134,13 +134,13 @@
 const ARCH = {
   "projeto": "AFT Toolkit — skills de fiscalização para Claude Code e Codex (Windows)",
   "repo": "github.com/ryckardo42/aft-toolkit",
-  "data": "2026-08-25",
+  "data": "2026-08-27",
   "resumo": "Repositório de distribuição que transforma o assistente de código (Claude Code no app desktop, Windows — ou o Codex) num assistente de fiscalização 100% local para Auditores-Fiscais do Trabalho. O repositório É a própria pasta ~/.claude/skills do colega, sempre, inclusive para quem só usa o Codex (é o caminho escrito dentro dos SKILL.md); o Codex enxerga a mesma pasta pelo atalho ~/.agents/skills e lê o perfil do auditor pelo atalho ~/.codex/AGENTS.md. 46 skills cobrem o fluxo completo (planejar a ação fiscal antes da visita, cadastrar a OS, narrar a inspeção, consultar ementas, redigir autos, auditar PGR e AET, analisar acidentes, revisar antes de empacotar, gerar o TXT do Sistema Auditor, manter o toolkit atualizado e relatar), apoiadas por scripts Python locais e por uma política de pseudonimização reversível. Não usa servidor nem banco: os memory.md de cada OS são o estado local e o /aft-painel é a camada de visão (SISOS-lite). Cada skill declara o modelo adequado ao seu perfil (opus 1M para auditoria documental, sonnet/haiku para o mecânico) e as skills read-only têm a restrição imposta por allowed-tools. É uma adaptação das skills pessoais do mantenedor — base distinta, nunca um link para elas.",
   "stats": {
-    "skills": 53,
-    "scripts": 45,
+    "skills": 54,
+    "scripts": 46,
     "dados": 6,
-    "commit": "ver `git log -1` — atualizado em 23/08/2026"
+    "commit": "ver `git log -1` — atualizado em 27/08/2026"
   },
   "atores": [
     {
@@ -352,6 +352,11 @@ const ARCH = {
           "nome": "/aft-consulta",
           "role": "Consulta os ementários do NotebookLM com missão tripla: identifica a ementa, fundamenta capitulação/gradação/notas e redige a minuta do campo Histórico anti-nulidade. Só consulta — não lavra.",
           "tech": "notebooklm ask · herda o modelo da sessão"
+        },
+        {
+          "nome": "/aft-analise-preliminar",
+          "role": "Triagem da resposta do empregador a uma notificação DET, por dia de entrega, logo após a /aft-det-baixar. Um agente isolado (aft-analista-preliminar) lê a notificação e cada arquivo entregue fora da conversa e classifica cada item: ATENDIDO, PARCIALMENTE ATENDIDO, IRREGULAR, ENTREGUE — MÉRITO PENDENTE (PGR/PGRTR/AET/laudo NR-12/ponto: aponta a skill dedicada, que só o AFT decide rodar) ou PRECISA AUDITORIA AFT. Detecta documento duplicado entre itens e dias (SHA-256), grava analise-preliminar-<CODIGO>.md na pasta da OS (incremental: rodada nova só analisa dia de entrega novo) e registra a constatação na Auditoria de documentos do memory.md. Não julga mérito, não enquadra, não aciona as skills de auditoria.",
+          "tech": "sonnet · agente aft-analista-preliminar · analise_preliminar_scan.py · pdf_texto_paginado.py"
         },
         {
           "nome": "/aft-auditoria-geral",
@@ -806,6 +811,12 @@ const ARCH = {
       "nome": "conferir_cotejo.py",
       "caminho": "_scripts/conferir_cotejo.py",
       "papel": "Cotejo de encerramento: lista documento e foto que entraram na OS e nunca foram mencionados em nenhuma análise. Antes de encerrar, ou o documento é confrontado, ou o motivo de não o ser é declarado ao AFT.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "analise_preliminar_scan.py",
+      "caminho": "_scripts/analise_preliminar_scan.py",
+      "papel": "Inventário SOMENTE LEITURA do pacote de uma notificação DET, por dia de entrega (baixada em <data>/): tipo lógico, SHA-256 e tamanho de cada arquivo, invalidados/ à parte, marca de item volumoso e duplicatas entre itens e dias. Sem flatten: a estrutura por dia é prova. JSON no stdout ou em arquivo (--saida).",
       "runtime": "Python stdlib"
     }
   ],
