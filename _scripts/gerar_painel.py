@@ -95,6 +95,14 @@ RE_TITULO = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
 # rural, empregador doméstico) tem CPF/CAEPF no lugar do CNPJ — a linha vem
 # rotulada "**CPF:**", e sem isso o card ficava "CNPJ não informado".
 RE_CNPJ_BODY = re.compile(r"\*\*(?:CNPJ|CPF|CAEPF|CNPJ/CPF)\s*:\*\*\s*([\d./-]+)")
+# Fallback dos campos cadastrais no corpo (o espelho humano do front-matter):
+# ficha em que uma skill apurou o dado e gravou só a linha em negrito, deixando
+# o front-matter vazio. Pega só o número/código inicial — o resto da linha é
+# texto para gente ("3 (Anexo I da NR-04)", "1.306 empregados (1.151 homens...)").
+RE_GRAU_BODY = re.compile(r"\*\*Grau de risco\s*:\*\*\s*([1-4])\b")
+RE_CNAE_BODY = re.compile(r"\*\*CNAE\s*:\*\*\s*([0-9][0-9./-]*[0-9])")
+RE_TRAB_BODY = re.compile(
+    r"\*\*(?:N[ºo°]?\.?\s*de\s*trabalhadores|Quadro de pessoal)\s*:\*\*\s*([\d.]+)")
 RE_PRAZO = re.compile(
     r"(?:prazo|entrega\s+at[eé])[:\s]+(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})",
     re.IGNORECASE)
@@ -254,7 +262,9 @@ def saida_artifact() -> Path | None:
 
 
 def parse_fm(fm: str, chave: str) -> str | None:
-    m = re.search(rf"^{chave}\s*:\s*(.+?)\s*$", fm, re.MULTILINE)
+    # [ \t] em vez de \s: com o campo vazio ("grau_risco:"), \s engolia a quebra
+    # de linha e o valor devolvido era a LINHA SEGUINTE do front-matter.
+    m = re.search(rf"^{chave}[ \t]*:[ \t]*(.*?)[ \t]*$", fm, re.MULTILINE)
     if not m:
         return None
     v = m.group(1).strip().strip('"').strip("'")
@@ -347,6 +357,18 @@ def parse_memory(path: Path) -> dict:
     num_trab = parse_fm(fm, "trabalhadores") or parse_fm(fm, "num_trabalhadores")
     cnae = parse_fm(fm, "cnae")
     grau_risco = parse_fm(fm, "grau_risco")
+    # Front-matter vazio, corpo preenchido: cai para o espelho humano, como já
+    # acontece com empregador e CNPJ.
+    if not num_trab:
+        m = RE_TRAB_BODY.search(corpo)
+        if m:
+            num_trab = m.group(1).replace(".", "")
+    if not cnae:
+        m = RE_CNAE_BODY.search(corpo)
+        cnae = m.group(1) if m else None
+    if not grau_risco:
+        m = RE_GRAU_BODY.search(corpo)
+        grau_risco = m.group(1) if m else None
     ri = parse_fm(fm, "ri") or parse_fm(fm, "os") or ""
 
     # DETs — uma entrada por linha checkbox da seção.
