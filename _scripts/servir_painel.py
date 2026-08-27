@@ -427,7 +427,9 @@ def acao_embargo(texto: str, estado: str) -> tuple[str, str]:
     m = RE_FM.match(texto)
     atual = ""
     if m:
-        vm = re.search(r"^embargo_interdicao\s*:\s*(.*)$", m.group(1), re.MULTILINE)
+        # `[ \t]*` e não `\s*`: campo vazio não pode engolir a linha seguinte.
+        vm = re.search(r"^embargo_interdicao[ \t]*:[ \t]*(.*)$", m.group(1),
+                       re.MULTILINE)
         if vm:
             atual = vm.group(1).strip().strip('"').strip("'")
             if atual in ("null", "~"):

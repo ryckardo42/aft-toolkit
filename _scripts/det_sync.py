@@ -81,6 +81,12 @@ DET_API = ("https://auditor-det.sit.trabalho.gov.br"
            "/services/auditor/v1/notificacoes/pesquisa")
 DET_ITENS = ("https://auditor-det.sit.trabalho.gov.br"
              "/services/auditor/v1/itens-notificacao")
+# Uma notificação inteira, pelo uid. Só o rascunho precisa dela: a pesquisa por
+# CNPJ devolve o rascunho sem data e sem itens (campos `UpdatedAt` e `itens`
+# vêm nulos na lista), e o conteúdo real dele mora no campo `rascunho`, um JSON
+# guardado dentro do registro.
+DET_NOTIF = ("https://auditor-det.sit.trabalho.gov.br"
+             "/services/auditor/v1/notificacoes")
 DET_TIMEOUT = 12  # segundos por OS (igual ao SisOS)
 
 # Tradução do nº de status de cada item (coluna "Status" da tela do DET) para
@@ -99,8 +105,10 @@ RE_CODIGO = re.compile(r"([A-Z0-9]{6,})")
 RE_PRAZO_LINHA = re.compile(
     r"((?:prazo|entrega\s+at[eé])[:\s]+)(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})",
     re.IGNORECASE)
-# Sub-linha de detalhes mantida pelo sync (sempre começa com "  - lavrada").
-RE_DETALHE = re.compile(r"^\s+-\s+lavrada\s", re.IGNORECASE)
+# Sub-linha de detalhes mantida pelo sync: "  - lavrada ..." na notificação
+# lavrada, "  - RASCUNHO ..." na que ainda está em elaboração. As duas formas
+# são do sync, e é por elas que ele reconhece a linha que pode regravar.
+RE_DETALHE = re.compile(r"^\s+-\s+(lavrada|RASCUNHO)\b", re.IGNORECASE)
 
 
 # ── Chamada à API do DET ─────────────────────────────────────────────────────
@@ -251,6 +259,34 @@ def resumo_itens(token: str, uid: str) -> str:
     return f"itens: {', '.join(partes)}" if partes else ""
 
 
+def detalhe_rascunho(token: str, uid: str) -> tuple[str, int]:
+    """(data da última gravação em dd/mm/aaaa, nº de itens) de um rascunho.
+
+    Vem de UMA requisição a /notificacoes/{uid}: na pesquisa por CNPJ o
+    rascunho chega oco (sem data e sem itens). O conteúdo verdadeiro está no
+    campo `rascunho`, um JSON embutido com os itens que o AFT redigiu — é dali
+    que sai a contagem. Best-effort: qualquer falha devolve ('', 0) e a
+    sub-linha sai sem esses dados."""
+    req = urllib.request.Request(
+        f"{DET_NOTIF}/{uid}",
+        headers={"Authorization": f"Bearer {token}",
+                 "Accept": "application/json, text/plain, */*"})
+    try:
+        with urllib.request.urlopen(req, timeout=DET_TIMEOUT) as resp:
+            n = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return "", 0
+    quando = _data_br((n.get("UpdatedAt") or "")[:10])
+    itens = 0
+    try:
+        blob = n.get("rascunho")
+        if isinstance(blob, str) and blob.strip().startswith("{"):
+            itens = len(json.loads(blob).get("itens") or [])
+    except Exception:
+        itens = 0
+    return quando, itens
+
+
 # Status da notificação no DET. Os três valores são os do enum do próprio
 # DET, lidos do código do site em 19/08/2026 (chunk 251 do front Angular):
 #   0 EM_ELABORACAO ("ainda em elaboração")
@@ -258,6 +294,7 @@ def resumo_itens(token: str, uid: str) -> str:
 #   2 CANCELADA     ("cancelada pelo auditor")
 # Confere com o caso MENINA TEIMOSA: a notificação que a tela do DET mostra
 # como "Cancelada" era a que a ficha registrava como `status 2`.
+STATUS_EM_ELABORACAO = 0
 STATUS_CONFIRMADA = 1
 STATUS_CANCELADA = 2
 
@@ -276,8 +313,17 @@ def elegiveis(notificacoes: list[dict]) -> list[dict]:
     lavratura; o estado real (Confirmada / aguardando ciência / status N) vai
     na sub-linha de detalhes e é atualizado a cada sync. (O SisOS filtra por
     status=1 — Confirmada —; aqui o filtro foi relaxado de propósito para o
-    painel local refletir a NAD recém-lavrada.)"""
-    return [n for n in notificacoes if n.get("dataEnvio")]
+    painel local refletir a NAD recém-lavrada.)
+
+    Entra TAMBÉM a notificação ainda EM ELABORAÇÃO (status 0, sem dataEnvio):
+    é o rascunho parado no DET, que não produz efeito nenhum sobre a empresa e
+    por isso não conta prazo, mas que o AFT precisa ver — ou ele esquece que
+    deixou uma notificação pronta e não lavrada (pedido do AFT, 27/08/2026,
+    caso ANICUNS, com dois rascunhos no DET e nenhum deles no painel). O que
+    distingue rascunho de lavrada na ficha é a sub-linha, escrita por
+    `_linha_detalhe`."""
+    return [n for n in notificacoes
+            if n.get("dataEnvio") or n.get("status") == STATUS_EM_ELABORACAO]
 
 
 # ── Vínculo notificação × OS (o filtro que importa) ─────────────────────────
@@ -372,6 +418,16 @@ def _linha_detalhe(n: dict, msg: str = "", itens_resumo: str = "") -> str:
     o AFT abre a notificação no DET, o que o /aft-det-baixar já faz ao
     registrar a visualização (confirmado em produção em 21/08/2026)."""
     partes = []
+    # Rascunho: nada de "lavrada"/"aguardando ciência" — não foi lavrado, e
+    # o painel afirma isso com todas as letras.
+    if not n.get("dataEnvio") and n.get("status") == STATUS_EM_ELABORACAO:
+        partes = ["RASCUNHO no DET"]
+        if n.get("_rascunho_itens"):
+            partes.append(f"{n['_rascunho_itens']} itens")
+        if n.get("_rascunho_data"):
+            partes.append(f"salvo em {n['_rascunho_data']}")
+        partes.append("AINDA NÃO LAVRADO")
+        return "  - " + " · ".join(partes) + "\n"
     if n.get("dataEnvio"):
         partes.append(f"lavrada {_data_br(n['dataEnvio'])}")
     if n.get("dataCiencia"):
@@ -546,7 +602,9 @@ def preencher_ri(texto: str, ri: str) -> tuple[str, bool]:
     if not m:
         return texto, False
     fm = m.group(1)
-    atual = re.search(r"^ri\s*:\s*(.*)$", fm, re.MULTILINE)
+    # `[ \t]*` e não `\s*`: com `ri:` vazio, o `\s*` pulava a quebra de linha e
+    # lia o campo seguinte — o RI parecia preenchido e nunca era gravado.
+    atual = re.search(r"^ri[ \t]*:[ \t]*(.*)$", fm, re.MULTILINE)
     valor = (atual.group(1).strip().strip('"').strip("'") if atual else "")
     if valor not in ("", "null", "~"):
         return texto, False
@@ -602,7 +660,7 @@ def identificadores(texto: str, pasta: str) -> tuple[str, str]:
 
 def sincronizar_os(pasta_os: Path, token: str,
                    consultar=consultar_det, canal=snippet_canal,
-                   resumo=resumo_itens) -> dict:
+                   resumo=resumo_itens, rascunho=detalhe_rascunho) -> dict:
     """Sincroniza uma OS. `consultar`, `canal` e `resumo` são injetáveis
     para testes."""
     r = {"os": pasta_os.name, "recebidas": 0, "inseridas": 0,
@@ -660,6 +718,8 @@ def sincronizar_os(pasta_os: Path, token: str,
     # sub-linha (uma requisição extra só nas notificações com pendência).
     msgs = {}
     for n in minhas:
+        if not n.get("dataEnvio"):
+            continue
         if _flag(n.get("isPendenciaComunicacaoAuditor")) and n.get("uid"):
             trecho = canal(token, n["uid"])
             if trecho:
@@ -678,10 +738,22 @@ def sincronizar_os(pasta_os: Path, token: str,
     # cinco itens ainda esperando a decisão dele). Sem esta segunda porta, o
     # card mostrava o ⚠️ sozinho, sem dizer o quê — o defeito que o AFT
     # mandou corrigir. Os dois selos têm de andar juntos.
+    # Rascunho: uma requisição a /notificacoes/{uid} para saber quando foi
+    # gravado e quantos itens tem — a pesquisa por CNPJ não traz nem um nem
+    # outro. Os dois valores viajam no próprio dict, para _linha_detalhe.
+    for n in minhas:
+        if (not n.get("dataEnvio") and n.get("status") == STATUS_EM_ELABORACAO
+                and n.get("uid")):
+            n["_rascunho_data"], n["_rascunho_itens"] = rascunho(token, n["uid"])
+
     abertos = codigos_abertos(texto)
     resumos = {}
     for n in minhas:
         cod = (n.get("codigo") or "").strip()
+        # Rascunho não tem itens entregues nem canal: as duas consultas extras
+        # não se aplicam a ele.
+        if not n.get("dataEnvio"):
+            continue
         if (cod in abertos or _flag(n.get("itemAtualizado"))) and n.get("uid"):
             res = resumo(token, n["uid"])
             if res:
