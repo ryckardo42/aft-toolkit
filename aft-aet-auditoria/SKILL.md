@@ -469,9 +469,11 @@ exemplos de trabalhadores prejudicados [NOME 1], [função], e [NOME 2],
 
   **Exemplo de trabalhador prejudicado (frase final "Contudo, ..."):** se o contexto da
   fiscalização (inspeção física, narrativa do AFT, a própria AET) identificar trabalhador
-  exposto ao risco ergonômico, cite esse(s), com a função se conhecida. Senão, procure na
-  pasta da OS uma relação de vínculos ativos (ex.: `ImprimirVinculosAtivos*.pdf`) e cite
-  **pelo menos dois** empregados com função compatível com a exposição. Nome em
+  exposto ao risco ergonômico, cite esse(s), com a função se conhecida. A relação de vínculos NÃO
+  escolhe o exemplo: ela diz quem é empregado, não quem estava exposto, e "função
+  compatível com a exposição" é presunção, não fato. Constar de relação de vínculos, de
+  certificado de capacitação, de ficha de EPI ou de lista de presença não é registro de
+  exposição; sem esse registro, encerre sem a frase final e declare a falta ao AFT. Nome em
   capitalização normal, podendo abreviar (primeiro nome + um sobrenome); função em
   minúsculas; **nunca cite CPF**. Com um só nome, use o singular ("cita-se como exemplo
   de trabalhador prejudicado..."). Sem nenhum nome disponível (exceção), encerre em
