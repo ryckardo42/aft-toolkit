@@ -419,7 +419,7 @@ parágrafo, **nesta ordem**: a conclusão jurídica vem logo após o enquadramen
   cada ementa cobre (ex.: "área de prensagem" num auto, "área dos roletes" no outro), de
   modo que nenhum auto autue duas vezes o mesmo fato. Na dúvida sobre qual ementa é a
   específica para o caso, confirme via NotebookLM (Fase 2, Camada 1) antes de redigir.
-- **Sempre cite ao menos 1 ou 2 empregados** como exemplos de prejudicados, mesmo em infrações de natureza coletiva. O nome do empregado é necessário para permitir a defesa do autuado. **Na redação e nos ecos do chat, use os tokens `[[TRAB_NN]]` (e `[[CPF_NN]]` se citar CPF)**, registrando o par real no `.depara_[CNPJ].json` da OS — o `/aft-gera-ai` re-hidrata no TXT final. Se o auditor não forneceu nomes, use `[NOME DO EMPREGADO 1 - FUNÇÃO]` como placeholder e peça os dados.
+- **Cite 1 ou 2 empregados como exemplos de prejudicados SEMPRE QUE A FISCALIZAÇÃO OS TIVER IDENTIFICADO** como expostos ao objeto daquele auto — o nome ajuda a defesa do autuado. Não havendo essa identificação, encerre sem exemplo (regra 3 do parágrafo de dano coletivo, abaixo): nome escolhido por parecer compatível é presunção, e presunção não vira fato por estar num auto. **Na redação e nos ecos do chat, use os tokens `[[TRAB_NN]]` (e `[[CPF_NN]]` se citar CPF)**, registrando o par real no `.depara_[CNPJ].json` da OS — o `/aft-gera-ai` re-hidrata no TXT final. Se o auditor não forneceu nomes, use `[NOME DO EMPREGADO 1 - FUNÇÃO]` como placeholder e peça os dados.
 - Se houver consulta ao eSocial, mencione a data e os eventos verificados (S-2190, S-2200, etc.).
 - **Conclusão jurídica logo após o enquadramento normativo** (parágrafo próprio, imediatamente depois do movimento 3): "Sendo assim, incorreu o empregador na infração ementada supracitada."
 - **Parágrafo de dano coletivo** — incluir APENAS em infrações de SST (NRs), NÃO em infrações puramente CLT (registro, jornada, CTPS). É o **último parágrafo do bloco II** (depois da conclusão jurídica, antes de ELEMENTOS DE CONVICÇÃO). Texto canônico:
@@ -440,13 +440,22 @@ exemplo de trabalhador prejudicado [[TRAB_01]], [função].
   1. **Contexto primeiro:** se a inspeção física, a análise documental ou a narrativa do
      AFT identificarem trabalhador prejudicado/exposto (ex.: o operador da máquina), cite
      esse(s), com a função se conhecida.
-  2. **Senão, lista de vínculos da OS:** procure na pasta da OS uma relação de vínculos
-     ativos (ex.: `ImprimirVinculosAtivos*.pdf`, relação de vínculos do SFIT) e cite
-     **pelo menos dois** empregados com função compatível com a exposição (ex.: padeiros
-     para máquina da padaria). Plural: "Contudo, citam-se como exemplos de trabalhadores
-     prejudicados [[TRAB_01]], [função], e [[TRAB_02]], [função]."
-  3. **Sem nenhum nome disponível (exceção):** encerre o parágrafo em "...(Orientação
-     Técnica SIT nº 2/2022).", sem a frase final.
+  2. **A lista de vínculos NÃO escolhe o exemplo.** Ela diz quem é empregado, não quem
+     estava exposto — e "função compatível com a exposição" é **presunção**, não fato.
+     Presumir aqui é caro: o nome escolhido por parecer plausível não se distingue, na
+     leitura seguinte, do nome constatado, e só aparece na impugnação. A lista serve para
+     conferir o vínculo de quem a fiscalização JÁ identificou como exposto (e a data de
+     desligamento, quando houver), nunca para preencher a frase.
+  3. **Sem registro de exposição, encerre sem exemplo:** o parágrafo termina em
+     "...(Orientação Técnica SIT nº 2/2022).", e a falta do nome é declarada ao AFT — ele
+     decide se cita alguém, porque a constatação é dele. Lacuna declarada vale mais que
+     preenchimento plausível.
+
+  > **O que NÃO é registro de exposição:** constar de relação de vínculos, de certificado
+  > de capacitação, de ficha de entrega de EPI ou de lista de presença em treinamento.
+  > Nenhum desses documentos afirma que a pessoa operava aquela máquina ou estava naquele
+  > setor. Registro de exposição é o operador identificado na inspeção, o trabalhador
+  > nomeado no relato de campo, no caderno de constatações ou no Relatório Técnico.
 
   Nome do trabalhador em capitalização normal, podendo abreviar (primeiro nome + um
   sobrenome: "Alessandro Martins", não "ALESSANDRO MARTINS DE OLIVEIRA"); função em

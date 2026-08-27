@@ -6,10 +6,12 @@ description: >
   Técnico para Interdição e/ou Embargo (RT). Acione com "relatório técnico
   de interdição/embargo", "RT de interdição", "gerar o relatório técnico",
   "montar o RT", "/aft-embargo-interdicao", "embargar a obra", "interditar
-  a máquina". Logo após o RT, redige obrigatoriamente os
-  autos derivados das ementas da seção 4. Acione TAMBÉM quando o AFT ANEXAR
-  um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta skill
-  que os redige, nunca improvisar por fora. Gera o RT em dois formatos: por
+  a máquina". Logo após o RT, monta obrigatoriamente o dossiê dos
+  autos derivados das ementas da seção 4 e o encaminha à FASE 3 da
+  /aft-auditoria-geral, que os redige no padrão, e depois à /aft-revisa-auto:
+  o padrão de auto é um só e não se duplica aqui. Acione TAMBÉM quando o AFT
+  ANEXAR um RT ou Termo de Interdição já pronto e pedir os autos dele: é esta
+  skill que os FUNDAMENTA, nunca improvisar por fora. Gera o RT em dois formatos: por
   TÓPICO (padrão, seções temáticas) ou por OBJETO ("RT por objeto": cada objeto
   interditado com suas irregularidades, riscos, medidas e documentos); com
   objetos de tipos diferentes, pergunta ao AFT qual usar. Acione AINDA quando o AFT
@@ -652,7 +654,7 @@ Informe o caminho ao AFT — ele revisa o `.docx` no Word.
 
 ---
 
-### 7. Gerar os autos de infração derivados do RT (OBRIGATÓRIO)
+### 7. Autos de infração derivados do RT (OBRIGATÓRIO) — esta skill NÃO os redige
 
 Esta fase é parte integrante do fluxo — **não é opcional**, **não perguntar ao usuário se
 deseja gerá-los**. O RT acabou de ser produzido e tem todas as informações necessárias: data
@@ -661,6 +663,27 @@ da inspeção, objetos interditados (seção 3) e ementas com código + descriç
 objeto). Reaproveite esses dados sem nova consulta ao NotebookLM. **O formato do RT não
 muda os autos em nada**: as regras 7.1 a 7.6 valem iguais para os dois.
 
+**O que mudou é QUEM escreve.** O padrão de redação de auto de infração é **um só**, e mora
+na **FASE 3 da `/aft-auditoria-geral`**. Esta skill produz o FUNDAMENTO — o RT, as ementas,
+os objetos, o fato constatado, a caracterização do risco; a redação é lá. Template próprio
+aqui significa duas verdades sobre o mesmo documento, e a que existia neste passo divergia
+do padrão em quatro pontos, todos verificados em fiscalização real: abria sem a data
+(perdendo o "Quando" do 5W1H), remetia a fundamentação ao Termo em vez de descrever o fato,
+e não trazia o fechamento normativo nem a conclusão jurídica. Auto que se apoia no Termo
+cai junto com ele.
+
+**A cadeia é obrigatória e nesta ordem:**
+
+1. **`/aft-embargo-interdicao`** (aqui) — monta o **dossiê dos autos** (7.2) e para.
+2. **`/aft-auditoria-geral`, FASE 3** — redige cada auto no padrão, a partir do dossiê.
+3. **`/aft-revisa-auto`** — revisa (5W1H, dano coletivo, acentuação, paragrafação,
+   vazamento de arquivo interno).
+4. **Só então** os autos são apresentados ao AFT (7.6).
+5. **`/aft-gera-ai`** — empacota o TXT, depois de o AFT aprovar.
+
+**Nunca apresentar auto ao AFT antes do passo 3.** Revisão que roda depois da entrega não
+protege ninguém: faz do AFT o revisor de primeira linha, invertendo os papéis.
+
 #### 7.1. Regras de agrupamento ementa × objeto
 
 - **1 auto por ementa.** Se a ementa aparece para múltiplos objetos, gere 1 auto único que
@@ -668,43 +691,50 @@ muda os autos em nada**: as regras 7.1 a 7.6 valem iguais para os dois.
 - **N ementas para 1 objeto.** Gere N autos, cada um referenciando aquele objeto.
 - A ordem dos autos segue a ordem em que as ementas aparecem na seção 4 do RT.
 
-#### 7.2. Template de cada auto (formato consumido por /aft-gera-ai)
+#### 7.2. Dossiê dos autos — o que esta skill entrega à `/aft-auditoria-geral`
 
-Para cada ementa, monte um bloco EXATAMENTE neste formato:
+Para cada ementa, monte um bloco de **dados**, não de texto pronto. A FASE 3 decide a
+redação; aqui se reúne o que só o RT tem:
+
+| Campo | De onde sai | Observação |
+|---|---|---|
+| `codigo` | seção 4 do RT | formato `XXXXXX-X` |
+| `descricao_curta` | seção 4 do RT | descrição da ementa **sem** a capitulação |
+| `data_inspecao` | item 2 do RT | `DD/MM/AAAA` — é o **"Quando"** do 5W1H |
+| `objeto` | seção 3 do RT (`OBJETO: N ...`) | identificação literal; marca, modelo ou nº de série quando houver |
+| `setor` | item 2 do RT / `inspecao-fisica.md` | o **"Onde"**; declare ausente se o RT não trouxer |
+| `fato_constatado` | itens 4 e 5 do RT, relato de campo, fotografias | **o que se viu**, não o que a norma exige |
+| `exposicao` | item 5 do RT (fator de risco) | que lesão o fato pode causar, e a quem |
+| `dispositivo` | capitulação da seção 4 | item da NR + síntese da exigência |
+| `medida_do_RT` | item 6 do RT | vai para ELEMENTOS DE CONVICÇÃO |
+| `zona_delimitada` | seções 3 e 4 | qual zona física esta ementa cobre, quando a mesma máquina rende mais de um auto |
+
+> **`fato_constatado` é o campo em que este passo mais erra, e o erro é sempre o mesmo:
+> converter a MEDIDA em FATO.** O item 6 do RT diz o que a empresa tem de fazer
+> ("instalar dispositivo que impeça o acionamento involuntário") — isso **não** afirma que
+> o dispositivo faltava. Quem afirma o fato é o AFT, e o fato sai da observação direta
+> registrada nos itens 4 e 5, do relato de campo e do registro fotográfico. Não havendo
+> descrição do que se viu, escreva `[A CONFIRMAR PELO AFT: ...]` e pergunte — nunca deduza
+> o fato a partir da solução.
+
+**Entregue o dossiê e invoque a `/aft-auditoria-geral`, FASE 3**, informando que a fonte é
+de **campo**. A própria FASE 3 já resolve este caso, com estas palavras: *"Auto que combina
+achado de campo confirmado por documento (ex.: interdição seguida de Relatório Técnico):
+use a fórmula de campo (Fonte A)"*. Cada auto abrirá, então, em:
 
 ```
-=== AUTO DE INFRAÇÃO #{N} ===
-Ementa: {codigo} - {descricao_curta}
-
-I - DA FISCALIZAÇÃO:
-Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em {data_inspecao}. {enriquecimento_contextual}
-
-II - IRREGULARIDADE:
-DA INFRAÇÃO COMETIDA: Constatou-se que o empregador aqui autuado incorreu na ementa supracitada, ao {descricao_ementa_min}, {trecho_objetos}, resultando no termo de embargo/interdição em anexo.
-
-O quadro resultante dessa sistematização e análise de informações levou à caracterização da condição de RISCO GRAVE E IMINENTE à saúde e à integridade física dos trabalhadores expostos, na forma conceituada pelo subitem 3.2.1 da Norma Regulamentadora nº 3 do Ministério do Trabalho e Previdência, com atualização dada pela Portaria nº 1.068, de 23 de setembro de 2019: "Considera-se grave e iminente risco toda condição ou situação de trabalho que possa causar acidente ou doença com lesão grave ao trabalhador.", resultando na lavratura do termo de interdição/embargo em anexo.
-
-Dano de natureza coletiva. Conforme a Portaria MTP nº 667/2021, a citação nominal do empregado só é necessária quando imprescindível à caracterização da infração ou quando a multa se baseia no quantitativo de trabalhadores prejudicados. Nas infrações que atingem a coletividade, tais como as relativas ao meio ambiente de trabalho (SST), dispensa-se a individualização, dado o caráter difuso ou coletivo do bem jurídico tutelado (Orientação Técnica SIT nº 2/2022). Contudo, cita-se como exemplo de trabalhador prejudicado {exemplo_trabalhador}.
-
-ELEMENTOS DE CONVICÇÃO:
-Inspeção realizada no estabelecimento e relatório técnico do embargo/interdição em anexo.
+Em {data_inspecao}, durante inspeção física no estabelecimento do empregador, [no setor {setor},] constatou-se que...
 ```
 
-> **NÃO escreva o Subtítulo 3 (OBSERVAÇÕES).** Ele é único e fixo para todo auto e é
-> injetado pelo `/aft-gera-ai` (de `config/blocos_auto.md`) entre o Subtítulo 2 e os
-> ELEMENTOS DE CONVICÇÃO. O template acima termina, de propósito, no Subtítulo 2 +
-> ELEMENTOS DE CONVICÇÃO.
-
-> **`{exemplo_trabalhador}`** (frase final do parágrafo de dano coletivo, boas práticas
-> da inspeção): se o RT/`inspecao-fisica.md` identificar trabalhador exposto ao objeto
-> interditado (o operador da máquina, por exemplo), cite esse(s), com a função se
-> conhecida. Senão, use a relação de vínculos ativos da pasta da OS (ex.:
-> `ImprimirVinculosAtivos*.pdf`) e cite **pelo menos dois** empregados com função
-> compatível com a exposição, ajustando para o plural ("citam-se como exemplos de
-> trabalhadores prejudicados NOME 1, função, e NOME 2, função"). Nome em capitalização
-> normal, podendo abreviar (primeiro nome + um sobrenome); função em minúsculas;
-> **nunca cite CPF**. Sem nenhum nome disponível (exceção), encerre o parágrafo em
-> "...(Orientação Técnica SIT nº 2/2022).", sem a frase final.
+> **Trabalhador prejudicado: nome só havendo registro de EXPOSIÇÃO ÀQUELE objeto.** Não se
+> escolhe o exemplo por "função compatível com a exposição" — compatibilidade de função é
+> **presunção**, e presunção em auto de infração só aparece na impugnação. Cita-se apenas
+> quem a fiscalização registrou como exposto ao objeto deste auto: o operador identificado
+> na inspeção, o trabalhador nomeado no relato de campo ou no caderno de constatações.
+> Constar de lista de vínculos, de certificado de capacitação ou de ficha de EPI **não** é
+> registro de exposição. Sem esse registro, o parágrafo de dano coletivo encerra em
+> "...(Orientação Técnica SIT nº 2/2022).", sem exemplo — a mesma regra que a
+> `/aft-revisa-auto` aplica ao revisor: *"você, revisor, não inventa nome"*.
 
 #### 7.2.1. Enriquecimento contextual do Subtítulo 1
 
@@ -747,7 +777,7 @@ da loja e, na fase documental, pela gerente de DP):
 
 ```
 I - DA FISCALIZAÇÃO:
-Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em 05/08/2026. A inspeção foi realizada no estabelecimento denominado Store Supermercados, que funciona como supermercado, com açougue, padaria, estoque de produtos alimentícios em geral, hortifruti e demais setores. O estabelecimento conta com 81 trabalhadores. A inspeção foi acompanhada pelo preposto Educlenio Alves, gerente da loja. A auditoria de documentos foi acompanhada por Raine Dias, gerente de Departamento Pessoal.
+Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º, do Decreto nº 4.552/2002, iniciada em 01/01/2026 e ainda em curso na presente data no empregador acima qualificado. A inspeção foi realizada no estabelecimento denominado SUPERMERCADO EXEMPLO, que funciona como supermercado, com açougue, padaria e depósito. O estabelecimento conta com 81 trabalhadores. A inspeção física foi acompanhada pelo gerente da loja e a auditoria de documentos, pela gerente de departamento pessoal.
 ```
 
 #### 7.3. Regras de substituição
@@ -765,15 +795,6 @@ Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (
   do contexto que já está no item 2 do RT. Idêntica em todos os autos do mesmo RT. Se o
   contexto nada trouxer, remova o marcador e encerre o Subtítulo 1 na frase-âncora, sem
   deixar espaço duplo.
-- `{descricao_ementa_min}` — a descrição curta com **a primeira letra em minúscula** e **sem
-  ponto final**. Ex: `deixar de instalar sistemas de segurança em zonas de perigo de máquinas
-  e/ou equipamentos`.
-- `{trecho_objetos}` — texto que cita o(s) objeto(s) atingido(s):
-  - 1 objeto: `para o objeto {n} ({DESCRIÇÃO DO OBJETO EM CAIXA ALTA})`.
-  - N objetos: `para os objetos {n1} ({DESCRIÇÃO 1}), {n2} ({DESCRIÇÃO 2})`.
-  - A descrição do objeto deve vir literal da seção 3 do RT (linha
-    `OBJETO: N – TIPO – Paralisação: ...`).
-
 **NUNCA** mencionar número do termo de interdição/embargo nos autos — sempre referenciar
 apenas como "termo de interdição em anexo" / "termo de embargo/interdição em anexo".
 
@@ -805,10 +826,26 @@ python ~/.claude/skills/_scripts/checar_rt_autos.py "[caminho do RT .docx ou .pd
   no RT) → relate ao AFT em linguagem simples e pergunte como reconciliar (incluir o auto
   faltante, remover o excedente, ou ajustar o RT). **Não encerre como se estivesse coerente.**
 
+#### 7.5.1. Revisar ANTES de apresentar (gate obrigatório)
+
+Os autos vieram da FASE 3 da `/aft-auditoria-geral` (passo 7.2). Antes de o AFT ver
+qualquer linha, rode a revisão — é o passo 3 da cadeia declarada no início do item 7.
+
+Invoque a **`/aft-revisa-auto`** apontando para o `autos.md` desta pasta (ela despacha o
+agente isolado `aft-revisor-autos`, que julga só o arquivo, sem ver a conversa que o
+redigiu). O
+**parecer vai junto com os autos** quando eles forem apresentados no 7.6 — nunca depois: o
+AFT decide sobre o texto e sobre as ressalvas de uma vez.
+
+**Nunca apresente auto que não passou por aqui.** A falha típica não é esquecer a revisão,
+é rodá-la *depois* de já ter mostrado o texto — e aí quem revisou de primeira linha foi o
+AFT.
+
 #### 7.6. Apresentar e encerrar
 
 - **Imprima no chat os N blocos `=== AUTO DE INFRAÇÃO #N ===` na íntegra** (para o AFT revisar
-  visualmente) e indique o caminho da pasta e os arquivos gerados. Exemplo:
+  visualmente), **acompanhados do parecer da revisão (7.5.1)**, e indique o caminho da pasta
+  e os arquivos gerados. Exemplo:
 
   > RT e autos salvos em `<OS_ATIVAS>/{PASTA_EMPRESA}/interdicao-embargo/`
   > (`autos.md` + RT em .docx).
