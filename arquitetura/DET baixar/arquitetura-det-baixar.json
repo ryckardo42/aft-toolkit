@@ -195,8 +195,8 @@
   "Sessão do DET dura ~30 min (exp do JWT) e NÃO tem refresh: quando vence, o AFT reloga no gov.br — isso é do governo e nenhuma mudança na extensão remove. O auto-push v3.0 elimina o Sincronizar manual e os 'token expirado' durante a sessão, mas não o login em si.",
   "Canal de comunicação é somente leitura: responder e registrar ciência são atos do AFT no site (os endpoints de escrita existem, mas ficaram de fora de propósito).",
   "Porta 8347 fixa no modo --via-painel (igual às demais referências do painel).",
-  "Reinício do serviço do painel zera o token (RAM): o primeiro download depois de publicar toolkit pede um novo Sincronizar — não é defeito.",
-  "det_baixar.py é importado pelo servir_painel.py: mexeu no arquivo, reinicie o serviço (o publicar.py já reinicia).",
+  "Reinício do serviço do painel zera o token (RAM): o primeiro download depois pede um novo Sincronizar — não é defeito. Desde 27/08/2026 (issue #104) o /aft-atualizar evita a maior parte dos reinícios: quando a atualização não mexeu no servir_painel.py, recarrega o código a quente (det_token.py --recarregar → POST /api/recarregar), preservando o token; reinício de verdade só quando o próprio servidor mudou, com aviso ao AFT de que será preciso Sincronizar de novo.",
+  "det_baixar.py é importado pelo servir_painel.py: mexeu no arquivo, recarregue a quente (det_token.py --recarregar) ou reinicie o serviço (o publicar.py já reinicia).",
   "O hash dos bundles do DET muda a cada deploy; endpoints REST tendem a ser estáveis, mas mudança de contrato aparece como erro legível no resultado."
  ],
  "historico": [
@@ -227,6 +227,14 @@
   {
    "quando": "2026-08-21",
    "o_que": "Extensão v3.0: auto-push do token (POST /api/det-token, canal leve com throttle) — some o Sincronizar manual e a espera durante a sessão. Cache do painel passa a valer pelo exp real do JWT, não 25 min fixos."
+  },
+  {
+   "quando": "2026-08-24",
+   "o_que": "Convenção nova do pacote (pedido do AFT): NOTIFICACOES/<NN> - <COD> <data de LAVRATURA>/ com numeração pela ordem de lavratura (renumerar_pacotes) e o conteúdo de cada download na subpasta 'baixada em <data>/' (migrar_pacote_para_dias desce legados pela data de modificação). A árvore e as regras de layout desta página descrevem o formato anterior."
+  },
+  {
+   "quando": "2026-08-27",
+   "o_que": "Issue #104 (caso real Windows 11 + OneDrive, quatro defeitos encadeados): _lp() prefixa \\\\?\\ em toda operação de disco no pacote (a subpasta do dia estourava o MAX_PATH de 260 com razão social longa); _rmdir_tolerante() engole o WinError 5 do OneDrive ao remover pasta vazia (cosmético não derruba download); a migração de layout antigo passou a rodar DEPOIS do download completar (antes, quebra no meio deixava historico-itens.md velho com cara de novo — induziu conclusão errada de omissão do art. 630, §4º); historico-itens.md e mensagens.md carimbam a data/hora de extração no cabeçalho; e o filtro do erro_ticket.py ganhou o padrão do código de notificação (<NOTIFICACAO>), que vazava em traceback."
   }
  ]
 }

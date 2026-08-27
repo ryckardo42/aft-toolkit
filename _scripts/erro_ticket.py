@@ -101,17 +101,23 @@ def _redigir(texto) -> str:
     s = re.sub(r"\b\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}\b", "<INSCRICAO>", s)
     s = re.sub(r"\b\d{11,14}\b", "<INSCRICAO>", s)
 
-    # 3. E-mail.
+    # 3. Código de notificação do DET: bloco de 10+ maiúsculas E dígitos
+    #    misturados (ex.: ABCDE12345FGHIJ). Vazou num traceback de download
+    #    dentro do nome da pasta do pacote (issue #104).
+    s = re.sub(r"\b(?=[A-Z0-9]{10,}\b)(?=[0-9]*[A-Z])(?=[A-Z]*[0-9])[A-Z0-9]+\b",
+               "<NOTIFICACAO>", s)
+
+    # 4. E-mail.
     s = re.sub(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b", "<EMAIL>", s)
 
-    # 4. Caminho da pasta de trabalho e da pasta pessoal (sem diferenciar
+    # 5. Caminho da pasta de trabalho e da pasta pessoal (sem diferenciar
     #    maiúsculas: o Windows escreve o mesmo caminho de várias formas).
     for alvo, marca in _caminhos_sensiveis():
         if alvo:
             s = re.sub(re.escape(alvo), marca, s, flags=re.IGNORECASE)
             s = re.sub(re.escape(alvo.replace("\\", "/")), marca, s, flags=re.IGNORECASE)
 
-    # 5. Nome da conta do usuário solto no texto.
+    # 6. Nome da conta do usuário solto no texto.
     try:
         usuario = Path.home().name
         if usuario and len(usuario) > 2:
@@ -369,9 +375,11 @@ def _registrar(titulo, mensagem, script, skill, erro, automatico) -> Path:
     linhas.append("")
     linhas.append("> **Privacidade:** este ticket é gerado com os dados de "
                   "fiscalização já removidos — nome de empresa, CNPJ/CPF, "
-                  "e-mail e o caminho das suas pastas aparecem como `<EMPRESA>`, "
-                  "`<INSCRICAO>`, `<EMAIL>`, `<PASTA AFT>`. Ainda assim, dê uma "
-                  "lida antes de enviar: quem decide o que sai da sua máquina é você.")
+                  "código de notificação do DET, e-mail e o caminho das suas "
+                  "pastas aparecem como `<EMPRESA>`, `<INSCRICAO>`, "
+                  "`<NOTIFICACAO>`, `<EMAIL>`, `<PASTA AFT>`. Ainda assim, dê "
+                  "uma lida antes de enviar: quem decide o que sai da sua "
+                  "máquina é você.")
     linhas.append("")
 
     alvo.write_text("\n".join(linhas) + "\n", encoding="utf-8")
