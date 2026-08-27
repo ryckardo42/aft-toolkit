@@ -572,7 +572,7 @@ recomendação escrita), atualize o `memory.md` da OS:
 - Se autos foram redigidos: acrescente uma seção em `## Autos de Infração` (mesmo
   padrão usado pelas demais skills de lavratura — data, arquivo gerado, ementas,
   elementos de convicção).
-- Sempre: acrescente uma linha em `## Anotações da auditoria` resumindo o que a análise
+- Sempre: acrescente uma linha em `## Auditoria de documentos` (nas OS anteriores à renomeação a seção se chama `## Anotações da auditoria`: escreva na que existir, sem renomeá-la) resumindo o que a análise
   encontrou (quantas ementas não conformes, se autos foram gerados).
 
 Ao final, registre o dia trabalhado no diário — sem perguntar nada ao AFT (o script
