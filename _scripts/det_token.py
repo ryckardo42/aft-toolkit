@@ -18,7 +18,8 @@ memória do painel. Ele nunca escreve o token em disco e nunca o imprime.
 
 Uso:
     python det_token.py --status
-    python det_token.py --gravar    # o token vem pelo stdin
+    python det_token.py --gravar      # o token vem pelo stdin
+    python det_token.py --recarregar  # recarga a quente (preserva o token)
 """
 from __future__ import annotations
 
@@ -56,6 +57,19 @@ def status(porta: int) -> dict:
             "validade_s": int(r.get("token_validade_s") or 0)}
 
 
+def recarregar(porta: int) -> dict:
+    """Recarrega a quente os módulos do DET no painel (POST /api/recarregar),
+    PRESERVANDO o token na RAM. É o que o /aft-atualizar usa depois de uma
+    atualização que não mexeu no servir_painel.py: reiniciar o serviço apaga
+    o token e obriga o AFT a clicar em Sincronizar de novo (issue #104)."""
+    r = _chamar(porta, "/api/recarregar", {})
+    if not r.get("ok"):
+        return r
+    return {"ok": True, "recarregados": r.get("recarregados"),
+            "tem_token": bool(r.get("token_preservado")),
+            "validade_s": int(r.get("token_validade_s") or 0)}
+
+
 def gravar(porta: int, token: str) -> dict:
     token = (token or "").strip()
     if token.count(".") != 2 or len(token) < 100:
@@ -72,11 +86,16 @@ def main() -> int:
                     help="diz se o painel tem token vivo e por quanto tempo")
     ap.add_argument("--gravar", action="store_true",
                     help="lê o token do stdin e o entrega ao painel")
+    ap.add_argument("--recarregar", action="store_true",
+                    help="recarga a quente dos módulos do DET no painel, "
+                         "preservando o token (não derruba o processo)")
     ap.add_argument("--porta", type=int, default=PORTA_PADRAO)
     a = ap.parse_args()
 
     if a.gravar:
         r = gravar(a.porta, sys.stdin.read())
+    elif a.recarregar:
+        r = recarregar(a.porta)
     elif a.status:
         r = status(a.porta)
     else:
