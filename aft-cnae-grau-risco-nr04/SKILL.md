@@ -64,6 +64,23 @@ integralmente contra o PDF oficial (zero divergências). O Anexo I opera em nív
 5. Para dúvidas conceituais ou navegação por seção/divisão da CNAE, consulte
    `references/anexo_i_cnae_gr.md` (tabela integral estruturada, com seções A–U).
 
+## Gravação na ficha da OS (memory.md)
+
+Se a consulta é de uma empresa com pasta em `OS ATIVAS/` (sessão da OS, ou empresa
+identificada pelo AFT), grave o resultado no `memory.md` dela — **nos dois lugares,
+sempre juntos**:
+
+1. **Front-matter:** `grau_risco: <GR>` e, se o campo estiver vazio, também
+   `cnae: "<XXXX-X/XX>"`. É daqui que o `/aft-painel` e os scripts leem — a linha em
+   negrito do corpo é o espelho humano, não a fonte deles.
+2. **Corpo** (cabeçalho em negrito, esquema da `/aft-nova-auditoria`):
+   `**CNAE:** <código> — <denominação>` e `**Grau de risco:** <GR> (Anexo I da NR-04)`.
+
+Nunca preencha só um dos dois: front-matter vazio deixa o card do painel sem o dado, e
+corpo vazio esconde o dado do AFT. Se a atividade preponderante divergir da principal
+(item 4.5.1), grave o **maior** GR e anote a divergência em `## Auditoria de documentos`.
+Consulta avulsa, sem OS, não grava nada.
+
 ## Formato padrão de resposta (consulta por código)
 
 ```

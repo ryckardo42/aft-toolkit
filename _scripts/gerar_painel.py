@@ -95,11 +95,22 @@ RE_TITULO = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
 # rural, empregador doméstico) tem CPF/CAEPF no lugar do CNPJ — a linha vem
 # rotulada "**CPF:**", e sem isso o card ficava "CNPJ não informado".
 RE_CNPJ_BODY = re.compile(r"\*\*(?:CNPJ|CPF|CAEPF|CNPJ/CPF)\s*:\*\*\s*([\d./-]+)")
+# Fallback dos campos cadastrais no corpo (o espelho humano do front-matter):
+# ficha em que uma skill apurou o dado e gravou só a linha em negrito, deixando
+# o front-matter vazio. Pega só o número/código inicial — o resto da linha é
+# texto para gente ("3 (Anexo I da NR-04)", "1.306 empregados (1.151 homens...)").
+RE_GRAU_BODY = re.compile(r"\*\*Grau de risco\s*:\*\*\s*([1-4])\b")
+RE_CNAE_BODY = re.compile(r"\*\*CNAE\s*:\*\*\s*([0-9][0-9./-]*[0-9])")
+RE_TRAB_BODY = re.compile(
+    r"\*\*(?:N[ºo°]?\.?\s*de\s*trabalhadores|Quadro de pessoal)\s*:\*\*\s*([\d.]+)")
 RE_PRAZO = re.compile(
     r"(?:prazo|entrega\s+at[eé])[:\s]+(\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})",
     re.IGNORECASE)
 RE_CODIGO_DET = re.compile(r"([A-Z0-9]{6,})")
 RE_CHECKBOX = re.compile(r"^-\s*\[([ xX]?)\]\s*(.*)$")
+# Endereço do estabelecimento: o modelo da /aft-nova-auditoria o escreve no
+# corpo da ficha, como "**Endereço:** ...". Não é campo do front-matter.
+RE_ENDERECO = re.compile(r"^\*\*Endere[çc]o:\*\*\s*(.+?)\s*$", re.MULTILINE)
 # Item da "Auditoria de documentos": com ou sem checkbox (o formato antigo,
 # das OS abertas quando a seção ainda era uma lista de tarefas).
 RE_ITEM = re.compile(r"^-\s*(?:\[[ xX]?\]\s*)?(.*)$")
@@ -170,6 +181,16 @@ RE_DET_CANCELADA = re.compile(r"CANCELADA\s+no\s+DET|status\s+2\b", re.IGNORECAS
 # Notificação lavrada mas ainda sem ciência do empregador (ciência tácita em
 # até 15 dias) — o det_sync escreve "aguardando ciência" na sub-linha.
 RE_DET_AGUARDA = re.compile(r"aguardando\s+ci[eê]ncia", re.IGNORECASE)
+# Notificação ainda EM ELABORAÇÃO no DET. O det_sync escreve a sub-linha
+# "  - RASCUNHO no DET · 7 itens · salvo em dd/mm/aaaa · AINDA NÃO LAVRADO";
+# fichas antigas trazem uma versão escrita à mão pela sessão, com os arquivos
+# que geraram o rascunho no fim ("· texto em x.md · .docx em ..."). O painel
+# mostra os trechos como estão, menos os que apontam arquivo — caminho de
+# arquivo não cabe no card.
+RE_DET_RASCUNHO = re.compile(r"^\s+-\s+.*\bRASCUNHO\b", re.IGNORECASE)
+# Cuidado: nada de casar "/" solto aqui — data (21/08/2026) tem barra.
+RE_ARQUIVO_NA_LINHA = re.compile(
+    r"\.(docx|md|pdf|xlsx)\b|\b(texto|arquivo|anexo)\s+em\b", re.IGNORECASE)
 # Rótulo e notas da linha do checkbox: além das datas (que viram campos
 # estruturados do card), a linha carrega texto do próprio AFT — o tipo da
 # notificação ("NAD jornada/ponto") e observações ("itens 3, 4 e 9 não
@@ -254,7 +275,9 @@ def saida_artifact() -> Path | None:
 
 
 def parse_fm(fm: str, chave: str) -> str | None:
-    m = re.search(rf"^{chave}\s*:\s*(.+?)\s*$", fm, re.MULTILINE)
+    # [ \t] em vez de \s: com o campo vazio ("grau_risco:"), \s engolia a quebra
+    # de linha e o valor devolvido era a LINHA SEGUINTE do front-matter.
+    m = re.search(rf"^{chave}[ \t]*:[ \t]*(.*?)[ \t]*$", fm, re.MULTILINE)
     if not m:
         return None
     v = m.group(1).strip().strip('"').strip("'")
@@ -341,12 +364,27 @@ def parse_memory(path: Path) -> dict:
         m = re.search(r"(\d{11,14})\s*$", pasta)
         cnpj = m.group(1) if m else ""
 
+    m = RE_ENDERECO.search(corpo)
+    endereco = m.group(1).strip() if m else ""
+
     # Campos extras do schema v2 (ficam vazios no esquema padrão — sem erro).
     data_inicio = parse_data(parse_fm(fm, "data_inicio") or "")
     data_vencimento = parse_data(parse_fm(fm, "data_vencimento") or "")
     num_trab = parse_fm(fm, "trabalhadores") or parse_fm(fm, "num_trabalhadores")
     cnae = parse_fm(fm, "cnae")
     grau_risco = parse_fm(fm, "grau_risco")
+    # Front-matter vazio, corpo preenchido: cai para o espelho humano, como já
+    # acontece com empregador e CNPJ.
+    if not num_trab:
+        m = RE_TRAB_BODY.search(corpo)
+        if m:
+            num_trab = m.group(1).replace(".", "")
+    if not cnae:
+        m = RE_CNAE_BODY.search(corpo)
+        cnae = m.group(1) if m else None
+    if not grau_risco:
+        m = RE_GRAU_BODY.search(corpo)
+        grau_risco = m.group(1) if m else None
     ri = parse_fm(fm, "ri") or parse_fm(fm, "os") or ""
 
     # DETs — uma entrada por linha checkbox da seção.
@@ -365,16 +403,23 @@ def parse_memory(path: Path) -> dict:
         codigo = cod_m.group(1) if cod_m else None
         if not (prazo or codigo):
             continue
-        # Sub-linha de detalhes do det_sync, se presente logo abaixo do checkbox:
-        # lavratura, ciência e última entrega vêm do próprio DET.
+        # Sub-linhas do item (as linhas "  - ..." logo abaixo do checkbox): a de
+        # detalhes, escrita pelo det_sync a cada sincronização, e a do rascunho,
+        # escrita pela sessão que montou a notificação no DET.
+        sublinhas = []
+        for j in range(idx + 1, len(linhas_sec)):
+            if not re.match(r"^\s+-\s+", linhas_sec[j]):
+                break
+            sublinhas.append(linhas_sec[j])
         lavrada = ciencia = ultima = None
+        rascunho = ""
         pendente = aguarda = mensagem = cancelada = False
         mensagem_txt = ""
         itens_status = ""
         itens_aguardando = 0
         itens_cont = {}
-        if idx + 1 < len(linhas_sec) and RE_DET_DETALHE.match(linhas_sec[idx + 1]):
-            det = linhas_sec[idx + 1]
+        det = next((l for l in sublinhas if RE_DET_DETALHE.match(l)), "")
+        if det:
             ml, mc, mu = (RE_DET_LAVRADA.search(det), RE_DET_CIENCIA.search(det),
                           RE_DET_ULTIMA.search(det))
             lavrada = parse_data(ml.group(1)) if ml else None
@@ -390,6 +435,17 @@ def parse_memory(path: Path) -> dict:
             itens_status = m_it.group(1).strip() if m_it else ""
             itens_cont = classificar_itens(itens_status)
             itens_aguardando = itens_cont["aguardando"]
+        # Só enquanto NÃO houver lavratura: no dia em que o AFT lavrar no DET, o
+        # sync escreve a data e o aviso de rascunho some sozinho. Sem isso, o
+        # painel afirmaria "AINDA NÃO LAVRADO" para sempre — e afirmar errado
+        # sobre notificação lavrada é pior do que não afirmar nada.
+        if not lavrada:
+            linha_r = next((l for l in sublinhas if RE_DET_RASCUNHO.match(l)), "")
+            if linha_r:
+                bruto = re.sub(r"<!--.*?-->", "", linha_r).strip().lstrip("- ").strip()
+                trechos = [t.strip() for t in bruto.split("·")
+                           if t.strip() and not RE_ARQUIVO_NA_LINHA.search(t)]
+                rascunho = " · ".join(trechos)
         rotulo, notas = rotulo_e_notas(resto, codigo)
         dets.append({"codigo": codigo, "prazo": prazo, "feito": feito,
                      "linha": resto, "rotulo": rotulo, "notas": notas,
@@ -397,16 +453,26 @@ def parse_memory(path: Path) -> dict:
                      "ultima_entrega": ultima, "atualizacao_pendente": pendente,
                      "aguardando_ciencia": aguarda, "mensagem_canal": mensagem,
                      "mensagem_txt": mensagem_txt, "cancelada": cancelada,
-                     "itens_status": itens_status,
+                     "itens_status": itens_status, "rascunho": rascunho,
                      "itens_aguardando": itens_aguardando,
                      "itens_cont": itens_cont})
 
-    # Pendências (checkbox) — só as em aberto interessam ao painel.
-    pendencias = []
+    # Pendências (checkbox). As em aberto movem o painel: contagem, alerta e
+    # próximo passo. As resolvidas ([x]) não somem da tela — o dossiê as mostra
+    # tachadas, para o AFT ver o que já foi vencido nesta OS.
+    pendencias, pendencias_ok = [], []
     for linha in extrair_secao(corpo, "Pendências").splitlines():
         cb = RE_CHECKBOX.match(linha.strip())
-        if cb and cb.group(1).strip().lower() != "x":
+        if not cb:
+            continue
+        if cb.group(1).strip().lower() != "x":
             pendencias.append(cb.group(2).strip())
+        else:
+            # A resolvida traz o carimbo `<!-- resolvida em ... -->`, que é
+            # rastreio do arquivo e não texto da pendência.
+            feita = re.sub(r"<!--.*?-->", "", cb.group(2)).strip()
+            if feita:
+                pendencias_ok.append(feita)
 
     # Auditoria de documentos — o que a análise documental apurou (PGR, ASO,
     # atas de CIPA...). Não é checklist: entra tudo, na ordem do arquivo.
@@ -446,6 +512,7 @@ def parse_memory(path: Path) -> dict:
         "empregador": empregador,
         "cnpj": cnpj,
         "municipio": parse_fm(fm, "municipio") or "",
+        "endereco": endereco,
         "status": parse_fm(fm, "status") or "em_andamento",
         "embargo": parse_fm(fm, "embargo_interdicao") or "",
         "ri": ri,
@@ -456,6 +523,7 @@ def parse_memory(path: Path) -> dict:
         "data_vencimento": data_vencimento,
         "dets": dets,
         "pendencias": pendencias,
+        "pendencias_ok": pendencias_ok,
         "anotacoes": anotacoes,
         "atividades": atividades,
         "autos_mem": autos_mem,
@@ -920,6 +988,12 @@ background:var(--cream)}
 .auto .quando{font-size:12px;color:var(--t3);margin-top:4px}
 ul.lista{margin:0;padding-left:18px;font-size:13.5px}
 ul.lista li{margin-bottom:5px}
+/* Pendência resolvida: continua na lista, tachada. O que já foi vencido é
+   histórico da OS — sumir da tela apaga o trabalho feito. */
+ul.lista.feitas{margin-top:6px}
+ul.lista.feitas li{color:var(--t3)}
+/* Endereço do estabelecimento, logo abaixo da linha do CNPJ. */
+#detalhe .cab .ender{font-size:13px;color:var(--t2)}
 /* Notificações DET no detalhe: coral só para o que realmente aperta o prazo. */
 .det-ok{color:var(--teal)}
 .det-aberto{color:var(--t1)}
@@ -1083,6 +1157,15 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 /* Resumo do status dos itens (o que o triângulo amarelo esconde): coral suave,
    para diferenciar do texto do AFT e chamar o olho ao que aguarda decisão. */
 .det-item .itens-status{color:var(--coral-deep);margin-top:2px}
+/* Rascunho no DET: existe, mas ainda não produziu efeito nenhum sobre a
+   empresa. Fica visível e sóbrio — nada de coral, que aqui significa prazo. */
+.det-item .rascunho{color:var(--ochre);margin-top:2px;font-weight:600}
+/* Nao ha o que marcar num rascunho: a caixa vira lapis e o item nao convida
+   ao clique (mesma ideia da cancelada, sem o riscado - o rascunho esta vivo). */
+.det-item.rascunho-item{cursor:default}
+.det-item.rascunho-item:hover{border-color:var(--bds);background:none}
+.det-item.rascunho-item .cx{border-style:dashed;color:var(--ochre);
+  font:12px/16px var(--sans);text-align:center}
 .det-item .selo{margin:3px 0 0}
 /* Envelope laranja do DET: mensagem do empregador aguardando resposta do AFT */
 .det-item .cod .msg{font:700 11px var(--sans);background:#FCEBD8;color:#9A5B12;
@@ -1419,7 +1502,7 @@ function copiaPasso(i,k){const pp=proximoPasso(DATA.os[i]);
 const FASES=[['Campo',[0]],['Autuação',[1,2,3]],['DET / documentos',[4,5]],['Encerramento',[6,7]]];
 function stepperHTML(o,st){
  const venc=(o.dets||[]).filter(d=>!d.feito&&d.urg==='vencido').length;
- const nDets=(o.dets||[]).filter(d=>!d.cancelada).length;
+ const nDets=(o.dets||[]).filter(d=>!d.cancelada&&!d.rascunho).length;
  const autos=o.autos||[],datas=autos.map(a=>a.data).filter(Boolean);
  const subs=[o.inicio||'—',
   (o.inspecao&&o.inspecao.data)||((o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)?'relato registrado':'sem relato de campo'),
@@ -1434,7 +1517,7 @@ function stepperHTML(o,st){
  return h+'</div>'}
 function cartaoDets(o,i){
  // Contador só do que vale: cancelada no DET não é notificação viva.
- const vivas=(o.dets||[]).filter(d=>!d.cancelada).length;
+ const vivas=(o.dets||[]).filter(d=>!d.cancelada&&!d.rascunho).length;
  let h='<div class="cartao"><h3>Notificações DET <span class="cont">'+vivas+'</span></h3>';
  if(!(o.dets||[]).length)return h+'<p class="vazio">nenhuma registrada</p></div>';
  h+=o.dets.map((d,k)=>{
@@ -1446,19 +1529,21 @@ function cartaoDets(o,i){
     '</span> <span class="val">'+esc(c[1])+'</span></span>').join('<span class="sep">·</span>');
   // Cancelada no DET: fica visível (o AFT precisa saber que foi cancelada),
   // mas apagada e sem clique — não há o que marcar numa notificação sem efeito.
-  return '<div class="det-item'+(d.feito?' feito':'')+(d.cancelada?' cancelada':'')+'"'+
-   (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?' onclick="agDet('+i+','+k+')" title="clique para '+
+  return '<div class="det-item'+(d.feito?' feito':'')+(d.cancelada?' cancelada':'')+
+   (d.rascunho?' rascunho-item':'')+'"'+
+   (ATIVO&&o.pasta&&d.codigo&&!d.cancelada&&!d.rascunho?' onclick="agDet('+i+','+k+')" title="clique para '+
     (d.feito?'desmarcar':'marcar como checado')+'"':'')+'>'+
-   '<span class="cx">'+(d.cancelada?'✕':d.feito?'✓':'')+'</span><div><div class="cod">'+
+   '<span class="cx">'+(d.cancelada?'✕':d.rascunho?'✎':d.feito?'✓':'')+'</span><div><div class="cod">'+
    (d.mensagem?'<span class="msg" title="o empregador mandou mensagem no canal de comunicação desta notificação e ela aguarda resposta sua — responda no DET">✉️ mensagem no DET'+
     (d.mensagem_txt?': “'+esc(d.mensagem_txt)+'”':'')+'</span> ':'')+
    (d.pendente&&!d.cancelada?'<span class="pend" onclick="event.stopPropagation()" title="o DET marca esta notificação com o triângulo amarelo. Só some quando sumir no DET — abra a notificação lá, ou use o botão baixar arquivos, que registra a visualização. Clicar aqui não faz nada, de propósito">⚠️ atualização pendente</span> ':'')+
    (d.aguarda&&!d.cancelada?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
+   (d.rascunho&&!d.cancelada?'<div class="info rascunho" title="a notificação foi montada no DET pelo toolkit e está lá como rascunho: só passa a valer quando você a lavrar no site. O aviso some sozinho no primeiro sync depois da lavratura">'+esc(d.rascunho)+'</div>':'')+
    (d.itens_status&&!d.cancelada?'<div class="info itens-status" title="status de cada item na tela do DET — o que o triângulo amarelo esconde">📋 '+esc(d.itens_status)+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
-   (ATIVO&&o.pasta&&d.codigo&&!d.cancelada?'<button class="mini acao" '+
+   (ATIVO&&o.pasta&&d.codigo&&!d.cancelada&&!d.rascunho?'<button class="mini acao" '+
     'title="baixa da API do DET o PDF da notificação, o Relatório de Atendimento e os arquivos entregues, organizados por item na pasta da OS (precisa de um Sincronizar na aba do DET nos últimos 25 min)" '+
     'onclick="agDetBaixar('+i+','+k+',event,this)">⬇ baixar arquivos</button>':'')+
    (d.selo?'<span class="selo '+esc(d.urg)+'">'+esc(d.selo)+'</span>':'')+'</div></div>'}).join('');
@@ -1469,12 +1554,15 @@ function cartaoNovas(o){
   (n.prazo?' — prazo '+esc(n.prazo):'')+(n.ciencia?' — ciência '+esc(n.ciencia):'')+
   '</li>').join('')+'</ul></div>'}
 function cartaoPendencias(o,i){
- const ps=o.pendencias||[];
+ const ps=o.pendencias||[],ok=o.pendencias_ok||[];
+ // O contador conta as EM ABERTO: é o que ainda pesa na auditoria.
  let h='<div class="cartao"><h3>Pendências da OS <span class="cont">'+ps.length+'</span></h3>';
  if(ps.length)h+='<ul class="lista">'+ps.map((s,k)=>'<li>◻ '+esc(s)+
   (ATIVO&&o.pasta?'<button class="mini acao" onclick="agPend('+i+','+k+')">resolvido</button>':'')+
   '</li>').join('')+'</ul>';
  else h+='<p class="vazio">nenhuma pendência em aberto</p>';
+ if(ok.length)h+='<ul class="lista feitas">'+ok.map(s=>'<li>☑ <s>'+esc(s)+
+  '</s></li>').join('')+'</ul>';
  if(ATIVO&&o.pasta)h+='<div class="entrada">'+
   '<label for="pend-txt">Nova pendência</label><div class="linha">'+
   '<input id="pend-txt" type="text" placeholder="ex.: cobrar o AEJ de julho na próxima visita" '+
@@ -1653,7 +1741,8 @@ function abre(i){
   o.caminho?'<span class="pasta-btn" onclick="copiaCaminho('+i+')">copiar caminho da pasta</span>':''
  ].filter(Boolean);
  h+='<div class="cab"><h2>'+esc(o.empregador)+'</h2><div class="meta">'+
-  meta.join('<span class="sep">·</span>')+'</div></div>';
+  meta.join('<span class="sep">·</span>')+'</div>'+
+  (o.endereco?'<div class="ender">'+esc(o.endereco)+'</div>':'')+'</div>';
  h+=stepperHTML(o,st);
  const pp=proximoPasso(o);
  if(pp)h+='<div class="hero-passo"><div><span class="rotulo">Próximo passo sugerido</span>'+
@@ -1904,8 +1993,10 @@ def dias_humano(d: datetime.date | None, hoje: datetime.date) -> str:
 def det_cobra_acao(d: dict) -> bool:
     """Notificação que ainda pesa sobre o AFT: não checada e não cancelada.
     Cancelada pelo auditor no DET (status 2) não tem efeito legal nenhum — não
-    conta prazo, não colore card, não vai para a agenda do Google Calendar."""
-    return not d["feito"] and not d.get("cancelada")
+    conta prazo, não colore card, não vai para a agenda do Google Calendar.
+    Rascunho (ainda em elaboração no DET) tampouco: ele não foi lavrado, então
+    não corre prazo nenhum contra a empresa nem a favor dela."""
+    return not d["feito"] and not d.get("cancelada") and not d.get("rascunho")
 
 
 def badge_os(os_: dict, hoje: datetime.date) -> tuple[str, str]:
@@ -2221,6 +2312,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "empregador": o["empregador"],
             "cnpj_fmt": fmt_cnpj(o["cnpj"]) if o["cnpj"] else "",
             "municipio": o["municipio"],
+            "endereco": o["endereco"],
             # Nome da pasta = chave das ações do modo interativo (só local).
             "pasta": o["pasta"] if com_pasta else "",
             "status": o["status"],
@@ -2258,6 +2350,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
                       "itens_status": d.get("itens_status") or "",
+                      "rascunho": d.get("rascunho") or "",
                       "itens_aguardando": d.get("itens_aguardando") or 0,
                       "itens_entregues": (d.get("itens_cont") or {}).get("entregues", 0),
                       "itens_nao_env": (d.get("itens_cont") or {}).get("nao_enviados", 0),
@@ -2270,6 +2363,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "substituidos": o["autos_lavrados_md"]["substituidos"],
             "autos_pendentes": o["autos_lavrados_md"]["pendentes"],
             "pendencias": [datas_para_br(p) for p in o["pendencias"]],
+            "pendencias_ok": [datas_para_br(p) for p in o["pendencias_ok"]],
             # Anotações podem conter nome/CPF de trabalhador (PII): só na versão
             # local (com_pasta), nunca no Artifact publicado.
             "anotacoes": ([datas_para_br(a) for a in o.get("anotacoes", [])]
@@ -2482,10 +2576,12 @@ def main() -> int:
                     "criado_em": criado_em,
                     "pasta": mem.parent.name, "caminho": str(mem.parent),
                     "empregador": mem.parent.name, "cnpj": "", "municipio": "",
+                    "endereco": "",
                     "status": "erro", "embargo": "", "ri": "", "num_trabalhadores": None,
                     "cnae": "", "grau_risco": "",
                     "data_inicio": None, "data_vencimento": None,
-                    "dets": [], "pendencias": [], "anotacoes": [], "atividades": [],
+                    "dets": [], "pendencias": [], "pendencias_ok": [],
+                    "anotacoes": [], "atividades": [],
                     "autos_mem": "", "memoria": "", "erro": str(e),
                 })
 

@@ -118,7 +118,8 @@ def empregador_de(pasta_os: Path) -> str:
                                                    errors="replace")
     except OSError:
         return pasta_os.name
-    m = re.search(r"^empregador:\s*(.+)$", texto, re.MULTILINE)
+    # `[ \t]*` e não `\s*`: campo vazio não pode engolir a linha seguinte.
+    m = re.search(r"^empregador:[ \t]*(.+)$", texto, re.MULTILINE)
     return m.group(1).strip().strip('"') if m else pasta_os.name
 
 
