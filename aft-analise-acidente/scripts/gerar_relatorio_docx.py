@@ -66,7 +66,7 @@ except Exception:  # sem ele o relatorio sai sem cabecalho, como antes
     def aplicar_no_arquivo(caminho, lotacao=None):
         pass
 
-AZUL = RGBColor(0x1F, 0x3A, 0x5F)
+AZUL = RGBColor(0x11, 0x3C, 0x5B)   # cor oficial do logotipo AFT (Papel Timbrado)
 PRETO = RGBColor(0x00, 0x00, 0x00)
 
 def add_sumario(doc):

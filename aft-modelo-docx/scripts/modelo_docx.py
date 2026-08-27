@@ -18,14 +18,20 @@ peças do modelo "Relatório de Fiscalização / Indícios":
     t = m.nova_tabela(doc, ["Coluna A", "Coluna B"], larguras_cm=(5, 11.5))
     m.linha_subcabecalho(t, "Subgrupo dentro da tabela")
     m.linha_dados(t, ["valor A", "valor B"])          # zebra automática
+    m.quadro_citacao(doc, "NR-01, item 1.5.3.2", ["texto do dispositivo"])
     m.assinatura(doc, "Nome do Auditor", "Auditor-Fiscal do Trabalho — CIF 000000")
     doc.save("saida.docx")
 
-Especificação: Times New Roman 12 em tudo; página A4 com margens sup/inf/dir
-2 cm e esq 2,5 cm; paleta azul #1F3864 (títulos, cabeçalho de tabela) e
-#2E5496 (subtítulos, subcabeçalhos); zebra #EBF3FB/#F5F5F5; bordas #AAAAAA
-finas; entrelinhas 1,15; espaço-depois: título 12pt, subtítulo 6pt, corpo
-10pt, lista 6pt, capa 4pt; espaço-antes: título 18pt, subtítulo 6pt.
+Especificação (identidade visual da SIT, abril/2026): corpo em Times New Roman
+12, justificado — a leitura jurídica tradicional; título e subtítulo em Public
+Sans, a fonte oficial da SIT (sem ela instalada, o Word substitui sozinho).
+Página A4 com margens sup/inf/dir 2 cm e esq 2,5 cm; paleta azul #113C5B (cor do
+logotipo AFT no Papel Timbrado: títulos e cabeçalho de tabela) e #1266D1 (azul do
+brasão SIT: subtítulos e subcabeçalhos); dourado #F7C548 só em linha divisória e
+marcador, nunca em texto ou fundo; zebra #EAF1F8/#F5F5F5; bordas #AAAAAA finas;
+fio de rodapé #B1C0CD, como no Papel Timbrado AFT; entrelinhas 1,15;
+espaço-depois: título 12pt, subtítulo 6pt, corpo 10pt, lista 6pt, capa 4pt;
+espaço-antes: título 18pt, subtítulo 6pt.
 
 O cabeçalho institucional (brasão, Ministério do Trabalho e Emprego, Secretaria
 de Inspeção do Trabalho, lotação do AFT e logos SIT/AFT) é montado pelo
@@ -63,21 +69,28 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-AZUL_ESCURO = "1F3864"   # título principal, títulos de seção, cabeçalho de tabela
-AZUL_MEDIO = "2E5496"    # subtítulos nível 2, subcabeçalhos de tabela
+AZUL_ESCURO = "113C5B"   # cor oficial do logotipo AFT no Papel Timbrado
+AZUL_MEDIO = "1266D1"    # azul do brasão SIT
 BRANCO = "FFFFFF"
 PRETO = "000000"
 CINZA_CAPA1 = "444444"   # subtítulo da capa
 CINZA_CAPA2 = "555555"   # data da capa
-ZEBRA_AZUL = "EBF3FB"
+ZEBRA_AZUL = "EAF1F8"    # tom claro derivado do azul SIT
 ZEBRA_CINZA = "F5F5F5"
 BORDA = "AAAAAA"
+# destaque da apresentação oficial da SIT: só em linha divisória/marcador —
+# nunca em texto corrido nem em fundo de tabela (não tem contraste para isso)
+DOURADO = "F7C548"
+FIO_RODAPE = "B1C0CD"    # fio fino do rodapé, como no Papel Timbrado AFT
 # alerta (embaraço à fiscalização, fraude): vermelho institucional sóbrio
 ALERTA_TITULO = "A61C1C"   # texto do título da caixa de alerta
 ALERTA_FUNDO = "F8EAE6"    # fundo da caixa de alerta
 ALERTA_BORDA = "D99694"    # borda da caixa de alerta
 
 FONTE = "Times New Roman"
+# fonte oficial da SIT, só em título/subtítulo e no rodapé: o corpo do texto
+# continua Times New Roman. Se não estiver instalada, o Word substitui sozinho.
+FONTE_TITULO = "Public Sans"
 TAM = Pt(12)
 
 TEMPLATE = Path(__file__).parent / "template-cabecalho.docx"
@@ -92,6 +105,25 @@ def rgb(hexa: str) -> RGBColor:
 
 
 # ---------------------------------------------------------------- fundação
+# o <w:pBdr> tem lugar fixo no <w:pPr>: vem antes de espaçamento, alinhamento e
+# afins. Fora de ordem, o Word acusa o documento como corrompido.
+_DEPOIS_DA_BORDA = ("w:shd", "w:tabs", "w:spacing", "w:ind", "w:contextualSpacing",
+                    "w:jc", "w:rPr", "w:sectPr")
+
+
+def _borda(p, lado, cor, largura_pt, espaco):
+    """Fio colorido em um dos lados do parágrafo (`lado`: "top" ou "bottom")."""
+    pBdr = OxmlElement("w:pBdr")
+    el = OxmlElement(f"w:{lado}")
+    el.set(qn("w:val"), "single")
+    el.set(qn("w:sz"), str(int(largura_pt * 8)))
+    el.set(qn("w:color"), cor)
+    el.set(qn("w:space"), str(espaco))
+    pBdr.append(el)
+    p._p.get_or_add_pPr().insert_element_before(pBdr, *_DEPOIS_DA_BORDA)
+    return p
+
+
 def novo_documento(template=None) -> Document:
     """Documento novo sobre o template oficial (cabeçalho institucional com a
     lotação do AFT), margens e estilo Normal (Times 12) já aplicados."""
@@ -110,7 +142,41 @@ def novo_documento(template=None) -> Document:
     for p in list(doc.paragraphs):          # corpo do template vem vazio
         if not p.text.strip():
             p._element.getparent().remove(p._element)
+    rodape(sec)
     return doc
+
+
+def rodape(sec):
+    """Rodapé do Papel Timbrado AFT: fio fino cinza-azulado e "Página N" à
+    direita. O template vem com o rodapé vazio; quem o desenha é este módulo."""
+    p = sec.footer.paragraphs[0]
+    for r in list(p.runs):
+        r._element.getparent().remove(r._element)
+    fmt(p, antes=0, depois=0, alinh=WD_ALIGN_PARAGRAPH.RIGHT)
+
+    _borda(p, "top", FIO_RODAPE, 0.5, 6)              # o fio, acima do texto
+
+    def _run(texto=None):
+        r = p.add_run(texto or "")
+        r.font.name = FONTE_TITULO
+        r.font.size = Pt(9)
+        r.font.color.rgb = rgb(CINZA_CAPA1)
+        r._element.rPr.rFonts.set(qn("w:eastAsia"), FONTE_TITULO)
+        return r
+
+    _run("Página ")
+    r = _run()                                        # campo PAGE do Word
+    for tag, atrib, texto in (("fldChar", "begin", None), ("instrText", None, "PAGE"),
+                              ("fldChar", "separate", None), ("t", None, "1"),
+                              ("fldChar", "end", None)):
+        el = OxmlElement(f"w:{tag}")
+        if atrib:
+            el.set(qn("w:fldCharType"), atrib)
+        if texto is not None:
+            el.set(qn("xml:space"), "preserve")
+            el.text = texto
+        r._element.append(el)
+    return p
 
 
 def fmt(p, *, antes=0, depois=10, alinh=JUSTIFICADO):
@@ -136,12 +202,27 @@ def run(p, texto, *, negrito=False, italico=False, cor=PRETO):
     return r
 
 
+def fonte_titulo(r):
+    """Passa um run para a fonte oficial da SIT (títulos e subtítulos)."""
+    r.font.name = FONTE_TITULO
+    r._element.rPr.rFonts.set(qn("w:eastAsia"), FONTE_TITULO)
+    return r
+
+
+def _linha_divisoria(doc, cor=DOURADO, largura_pt=1.5):
+    """Parágrafo vazio com borda inferior colorida — o fio de divisão da capa."""
+    p = fmt(doc.add_paragraph(), antes=2, depois=6, alinh=CENTRO)
+    return _borda(p, "bottom", cor, largura_pt, 1)
+
+
 # ---------------------------------------------------------------- blocos
 def capa(doc, titulo, subtitulo=None, unidade=None, data=None):
-    """Bloco de capa centralizado: título navy negrito, subtítulo itálico
-    cinza, linha da unidade fiscalizada em itálico, data em cinza."""
+    """Bloco de capa centralizado: título navy negrito, fio dourado de divisão,
+    subtítulo itálico cinza, linha da unidade fiscalizada em itálico, data em
+    cinza."""
     p = fmt(doc.add_paragraph(), depois=4, alinh=CENTRO)
-    run(p, titulo, negrito=True, cor=AZUL_ESCURO)
+    fonte_titulo(run(p, titulo, negrito=True, cor=AZUL_ESCURO))
+    _linha_divisoria(doc)
     if subtitulo:
         p = fmt(doc.add_paragraph(), depois=4, alinh=CENTRO)
         run(p, subtitulo, italico=True, cor=CINZA_CAPA1)
@@ -156,14 +237,14 @@ def capa(doc, titulo, subtitulo=None, unidade=None, data=None):
 def titulo_secao(doc, texto):
     """Título de seção ("1. ...", "2. ..."): negrito navy, 18pt antes/12 depois."""
     p = fmt(doc.add_paragraph(), antes=18, depois=12, alinh=ESQUERDA)
-    run(p, texto, negrito=True, cor=AZUL_ESCURO)
+    fonte_titulo(run(p, texto, negrito=True, cor=AZUL_ESCURO))
     return p
 
 
 def subtitulo(doc, texto):
     """Subtítulo de nível 2 ("2.1 ..."): negrito azul médio, 6pt antes/depois."""
     p = fmt(doc.add_paragraph(), antes=6, depois=6, alinh=ESQUERDA)
-    run(p, texto, negrito=True, cor=AZUL_MEDIO)
+    fonte_titulo(run(p, texto, negrito=True, cor=AZUL_MEDIO))
     return p
 
 
@@ -348,3 +429,14 @@ def caixa_destaque(doc, titulo, paragrafos, *, cor_titulo=ALERTA_TITULO,
                 run(pp, texto, negrito=neg)
     _larguras(t, (largura_cm,))
     return t
+
+
+def quadro_citacao(doc, titulo, paragrafos, *, largura_cm=16.5):
+    """Quadro de citação legal (azul): mesma estrutura da caixa_destaque(), para
+    citar lei/NR sem o peso visual do alerta vermelho, que é reservado a
+    embaraço à fiscalização e fraude."""
+    return caixa_destaque(
+        doc, titulo, paragrafos,
+        cor_titulo=AZUL_MEDIO, fundo=ZEBRA_AZUL, borda=AZUL_MEDIO,
+        largura_cm=largura_cm,
+    )
