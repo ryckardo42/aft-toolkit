@@ -777,7 +777,7 @@ da loja e, na fase documental, pela gerente de DP):
 
 ```
 I - DA FISCALIZAÇÃO:
-Trata-se de ação fiscal (ainda em curso), na modalidade fiscalização mista (nos termos do § 3º, art. 30, do Regulamento da Inspeção do Trabalho - RIT -, aprovado pelo Decreto nº 4.552/2002), no estabelecimento da empresa qualificada. A inspeção física foi realizada em 05/08/2026. A inspeção foi realizada no estabelecimento denominado Store Supermercados, que funciona como supermercado, com açougue, padaria, estoque de produtos alimentícios em geral, hortifruti e demais setores. O estabelecimento conta com 81 trabalhadores. A inspeção foi acompanhada pelo preposto Educlenio Alves, gerente da loja. A auditoria de documentos foi acompanhada por Raine Dias, gerente de Departamento Pessoal.
+Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º, do Decreto nº 4.552/2002, iniciada em 03/07/2026 e ainda em curso na presente data no empregador acima qualificado. A inspeção foi realizada no estabelecimento denominado SUPERMERCADO EXEMPLO, que funciona como supermercado, com açougue, padaria e depósito. O estabelecimento conta com 81 trabalhadores. A inspeção física foi acompanhada pelo gerente da loja e a auditoria de documentos, pela gerente de departamento pessoal.
 ```
 
 #### 7.3. Regras de substituição
