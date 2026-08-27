@@ -795,12 +795,6 @@ Trata-se de fiscalização mista, realizada nos termos do art. 30, § 3º, do De
   do contexto que já está no item 2 do RT. Idêntica em todos os autos do mesmo RT. Se o
   contexto nada trouxer, remova o marcador e encerre o Subtítulo 1 na frase-âncora, sem
   deixar espaço duplo.
-- `{trecho_objetos}` — texto que cita o(s) objeto(s) atingido(s):
-  - 1 objeto: `para o objeto {n} ({DESCRIÇÃO DO OBJETO EM CAIXA ALTA})`.
-  - N objetos: `para os objetos {n1} ({DESCRIÇÃO 1}), {n2} ({DESCRIÇÃO 2})`.
-  - A descrição do objeto deve vir literal da seção 3 do RT (linha
-    `OBJETO: N – TIPO – Paralisação: ...`).
-
 **NUNCA** mencionar número do termo de interdição/embargo nos autos — sempre referenciar
 apenas como "termo de interdição em anexo" / "termo de embargo/interdição em anexo".
 
