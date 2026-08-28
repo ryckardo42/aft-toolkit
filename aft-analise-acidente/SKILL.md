@@ -460,7 +460,9 @@ no JSON. Antes de regravar um `.docx` que já existe, rode `backup_arquivo.py` e
 3. Gere o `.docx` completo na pasta da OS.
 4. Ofereça a árvore gráfica (Fase 5).
 5. Registre no `memory.md` da OS: constatações que virarão auto (em `## Anotações da
-   auditoria`), documentos faltantes (em `## Pendências`) e a atividade no registro.
+   auditoria`) e a atividade no registro. Se houver documentos faltantes, **pergunte
+   antes** se o AFT quer cada um como item de `## Pendências` — a seção é a lista
+   pessoal dele; sem o sim, apenas cite os faltantes no chat e no relatório.
 6. **Pergunte** (não faça automaticamente):
    *"Deseja que eu redija os autos de infração decorrentes desta análise?"*
    - Sim → `/aft-auditoria-geral`, passando as irregularidades apuradas; depois `/aft-gera-ai`.

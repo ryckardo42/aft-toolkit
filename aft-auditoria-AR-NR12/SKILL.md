@@ -411,9 +411,11 @@ X = (maior número encontrado) + 1; se não houver nenhum, X = 1. **Nunca sobres
 análise anterior** — cada auditoria de documento gera um arquivo novo (é o histórico de
 auditorias da OS, consumido pelo painel).
 
-Salve a análise completa nesse arquivo e acrescente uma linha na seção `## Pendências`
-(ou `## Análises`) do `memory.md` da OS (se existir): parecer + data + documento analisado + nome do
-arquivo gerado. Não sobrescreva conteúdo existente do memory.md.
+Salve a análise completa nesse arquivo e acrescente uma linha na seção `## Auditoria de
+documentos` do `memory.md` da OS (se existir; crie a seção se faltar): parecer + data +
+documento analisado + nome do arquivo gerado. É registro, não tarefa — **nunca em
+`## Pendências`**, que é a lista pessoal do AFT. Não sobrescreva conteúdo existente do
+memory.md.
 
 ### Etapa 7 — Ofertas de encadeamento (na ordem)
 
