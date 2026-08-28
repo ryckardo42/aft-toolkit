@@ -330,6 +330,26 @@ Regras do plano:
   caminho antigo** (ex.: `(autos-pgr.md)` vira `(auditoria-PGR/autos-pgr.md)`), sem
   reescrever o resto da linha. Relatório temático avulso solto na raiz (fora dos nomes
   acima) só entra no plano com pasta sugerida — na ambiguidade de tema, pergunte.
+- **Condensar a ficha junto com a migração (automático, dentro da aprovação única).**
+  Para cada tema cujo relatório de análise EXISTE na pasta da OS (na subpasta
+  `auditoria-<tema>/` recém-criada ou ainda na raiz), reescreva a
+  `## Auditoria de documentos` do `memory.md` (backup antes, com
+  `backup_arquivo.py`): os bullets que pertencem àquele tema (falam do PGR, do
+  PCMSO, da jornada, do laudo…) **saem da lista de constatações** e viram, na
+  subseção `### <Tema>` ao final da seção (crie-a se não houver), **um resumo
+  datado em prosa de até 2 linhas** terminando no ponteiro do relatório — a data é
+  a dos bullets condensados. O bullet é só a noção do que foi auditado; o inteiro
+  teor mora no arquivo do tema, e é para lá que o resumo aponta. Regras duras da
+  condensação:
+  - bullet **sem tema identificável** (SESMT, CIPA, constatação avulsa) fica
+    intocado no topo — continua sendo a fila da `/aft-auditoria-geral`;
+  - tema **sem arquivo de relatório** na pasta não se condensa: sem o inteiro
+    teor em arquivo, os bullets são o único registro e permanecem;
+  - bullet condensado que carregava o carimbo `<!-- auto ... -->` (ou cujo tema
+    tem autos redigidos/lavrados): preserve a informação no resumo, em prosa
+    ("autos das ementas X e Y redigidos/lavrados") — o rastreio não se perde;
+  - o plano mostra a condensação antes de executar ("ficha: condensar N bullets
+    de PGR em `### PGR`"), e ela sai na mesma aprovação única do resto.
 - Trabalho do AFT em andamento (.docx/.md de minutas que não são análise temática):
   **fica na raiz**, intocado, anotado no memory.md.
 - Ambiguidade real (ex.: dois empregadores diferentes nos documentos) → **pergunte**, não
