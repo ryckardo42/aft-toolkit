@@ -7,20 +7,6 @@ rever tudo, basta abrir este arquivo.
 ---
 
 ## 28/08/2026
-<!-- commit: tokenizar-substituir-multi-palavra -->
-
-**Conserto no `tokenizar.py --substituir`: nome de trabalhador com mais de uma palavra
-podia deixar de ser trocado pelo token, sem aviso nenhum.** A rotina que tornava a busca
-insensível a maiúscula/minúscula acabava corrompendo, sem querer, o próprio espaço em
-branco usado para separar as palavras do nome — o efeito era a substituição principal
-falhar silenciosamente, caindo às vezes num atalho de reserva que só reconhece a forma
-sem acento, deixando passar a ocorrência acentuada do nome real no arquivo. Quem rodasse
-`--substituir` confiando no "substituições: N" da tela podia achar que o nome tinha
-saído do documento quando na verdade continuava lá. Corrigido; adicionados casos de
-teste (nome fictício) cobrindo nome de uma palavra, várias palavras, acento, maiúscula e
-espaço duplo.
-
-## 28/08/2026
 <!-- commit: painel-tela-inicial -->
 
 **A tela inicial do painel ficou mais útil: filtros, busca e o próximo passo em cada
@@ -202,6 +188,15 @@ temas já analisados em resumos de duas linhas apontando o relatório — a anot
 serve para você lembrar do que foi auditado; o inteiro teor fica no arquivo do tema.
 Constatação avulsa (SESMT, CIPA, ASO faltando) e tema sem relatório salvo ficam como
 estão.
+
+**Um cuidado importante antes de reorganizar uma pasta antiga:** se você tem autos de
+infração já importados no Sistema Auditor mas **ainda não lavrados**, eles podem dar
+ERRO depois da reorganização — o Sistema Auditor guarda o caminho dos anexos no
+momento da importação, e mover ou renomear arquivos e pastas faz esse caminho deixar
+de bater. Recomenda-se **lavrar esses autos antes** de aplicar a reorganização; a
+alternativa é gerar o pacote de novo com o `/aft-gera-ai` depois dela e reimportar. A
+própria `/aft-organiza-os` avisa em destaque, no plano, quando encontra autos nessa
+situação.
 
 ---
 
