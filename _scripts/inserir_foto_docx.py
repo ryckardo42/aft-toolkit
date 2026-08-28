@@ -61,6 +61,22 @@ def inserir(docx, foto, ancora, legenda):
     nome_media = f'foto{n}{ext}'
     shutil.copy(foto, media / nome_media)
 
+    # 1b. garante que [Content_Types].xml declara o tipo da extensão da imagem
+    # (achado em 28/08/2026: o script copiava a mídia e criava a relação, mas
+    # nunca registrava o Content-Type — o Word/python-docx recusam o .docx com
+    # "no content type for partname '/word/media/fotoN.ext'", porque o OOXML
+    # exige essa declaração para toda parte nova, e um template sem nenhuma
+    # imagem antes não tem o Default da extensão usada aqui).
+    ct_path = raiz / '[Content_Types].xml'
+    ct = ct_path.read_text(encoding='utf-8')
+    ext_sem_ponto = ext.lstrip('.')
+    mime = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png'}.get(
+        ext_sem_ponto, f'image/{ext_sem_ponto}')
+    if f'Extension="{ext_sem_ponto}"' not in ct:
+        novo_default = f'<Default Extension="{ext_sem_ponto}" ContentType="{mime}"/>'
+        ct = ct.replace('</Types>', novo_default + '</Types>')
+        ct_path.write_text(ct, encoding='utf-8')
+
     # 2. cria a relação em document.xml.rels
     rels_path = raiz / 'word/_rels/document.xml.rels'
     rels = rels_path.read_text(encoding='utf-8')
