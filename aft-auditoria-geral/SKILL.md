@@ -91,7 +91,12 @@ Carregar dados da OS para evitar re-perguntar CNPJ, razão social e outros dados
    - **Encontrado:** leia-o; cada bullet é matéria-prima factual. O cabeçalho traz empresa e data da inspeção (use a data como default de `[data_inspecao]`).
    - **Não encontrado:** siga só com as outras fontes (não é obrigatório).
 
-   **Fonte B — auditoria de documentos (`## Auditoria de documentos` no memory.md; OS abertas antes da renomeação trazem a MESMA seção como `## Anotações da auditoria` — procure as duas, nesta ordem, e leia a que existir; se as DUAS existirem — OS antiga onde uma skill recente criou a seção nova ao lado da antiga — leia as duas, sem renomear nem fundir):** constatações que o AFT lançou durante a análise documental (SESMT/CIPA subdimensionado, ASO faltando, PGR sem inventário de riscos, programa vencido, etc.). Leia a seção do memory.md já aberto na Fase 0 e extraia **cada constatação da lista** (`- dd/mm/aaaa — texto`; OS abertas antes da mudança de nome ainda trazem `- [ ]`/`- [x]` — leia do mesmo jeito). Cada uma é candidata a auto, **menos** as que já carregam o comentário de rastreio `<!-- auto ... -->`: essas viraram auto em passagem anterior — ignore.
+   **Fonte B — auditoria de documentos (`## Auditoria de documentos` no memory.md; OS abertas antes da renomeação trazem a MESMA seção como `## Anotações da auditoria` — procure as duas, nesta ordem, e leia a que existir; se as DUAS existirem — OS antiga onde uma skill recente criou a seção nova ao lado da antiga — leia as duas, sem renomear nem fundir):** a seção tem duas camadas, e cada uma entra de um jeito:
+
+   - **Bullets no topo da seção (antes de qualquer `###`) = constatações avulsas.** São o que o AFT lançou durante a análise documental sem relatório próprio (SESMT/CIPA subdimensionado, ASO faltando, programa vencido, etc.). Extraia **cada constatação da lista** (`- dd/mm/aaaa — texto`; OS abertas antes da mudança de nome ainda trazem `- [ ]`/`- [x]` — leia do mesmo jeito). Cada uma é candidata a auto, **menos** as que já carregam o comentário de rastreio `<!-- auto ... -->`: essas viraram auto em passagem anterior — ignore.
+   - **Subseções `###` (PGR, PCMSO, AET, Jornada, Laudo NR-12, eSocial, Análise preliminar, temas livres) = auditorias temáticas.** Cada linha ali é um **resumo com ponteiro** para o relatório completo na pasta temática da OS (`auditoria-PGR/analise-PGR.md`, `auditoria-jornada/...`, etc.). O resumo **nunca** é tratado como constatação: quando os achados de um tema forem relevantes para esta autuação, **siga o ponteiro e leia o relatório completo** — é lá que estão os fatos, as evidências e as páginas. Se a pasta temática já tiver autos redigidos pela skill especialista (`autos-pgr.md`, `autos-aet.md`, ...), **não os redija em duplicata**: eles seguem o próprio fluxo de empacotamento via `/aft-gera-ai`.
+
+   Em OS antigas, sem subseções, a seção inteira é lida como constatações avulsas — nada muda.
 
    **Fallback (nenhuma das duas):** receba o texto que o auditor colar descrevendo os achados, ou ofereça rodar `/aft-inspecao-fisica` (para campo) — *"Não encontrei `inspecao-fisica.md` nem constatações de auditoria documental nesta OS. Cole os achados, ou rode `/aft-inspecao-fisica` primeiro."*
 
@@ -564,7 +569,7 @@ Esta fase só executa se existe um `memory.md` na pasta da OS (criado na Fase 0 
    ```
    - DD/MM/AAAA — SESMT subdimensionado <!-- auto ementa 004600-1 em DD/MM/AAAA -->
    ```
-   É esse comentário — não uma caixa marcada — que impede a constatação de ser reproposta na próxima passagem. As que o AFT decidiu não autuar ficam como estão, sem carimbo. Use Edit cirúrgico linha a linha.
+   É esse comentário — não uma caixa marcada — que impede a constatação de ser reproposta na próxima passagem. As que o AFT decidiu não autuar ficam como estão, sem carimbo. Use Edit cirúrgico linha a linha. O carimbo só se aplica aos **bullets avulsos** — as linhas de resumo dentro das subseções `###` nunca são carimbadas nem reescritas (o rastreio das auditorias temáticas é feito nos próprios relatórios e autos delas).
 
 6. **Append em `## Registro de atividades`** (tabela | Data | Ação | Detalhes |):
    - **Com autuação:** `| [DD/MM/AAAA] | Auditoria (autos) | N autos redigidos (NR-XX, NR-YY) |`

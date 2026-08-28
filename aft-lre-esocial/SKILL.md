@@ -240,6 +240,25 @@ dias pode ser abono pecuniário regular (art. 143) e que a folha mostra a base
 de férias e na folha de pagamento antes de autuar — e que os arquivos têm
 dados pessoais e são locais.
 
+### Passo 4b — Registrar no memory.md
+
+Registre a análise no `memory.md` da OS (backup antes, com `backup_arquivo.py`): na
+seção `## Auditoria de documentos` (nas OS anteriores à renomeação ela se chama
+`## Anotações da auditoria`: escreva na que existir, sem renomeá-la; se nenhuma existir,
+crie `## Auditoria de documentos`), acrescente ao **final da seção** uma subseção
+`### eSocial` (se ainda não houver) e, nela, uma linha datada:
+
+```
+### eSocial
+dd/mm/aaaa — <resumo em até 2 linhas: vínculos, indícios de registro tardio e, se
+rodadas, férias/folha — sempre como indício> — painéis: eSocial/
+```
+
+Três regras do registro: (1) é **prosa** — nunca comece a linha com `-`: na seção,
+bullet é constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e indício
+ainda não confirmado não é constatação; (2) **até 2 linhas** por rodada; (3) rodada nova
+acrescenta outra linha datada na mesma subseção, mantendo as anteriores.
+
 ### Passo 5 — Registrar no diário
 
 ```bash

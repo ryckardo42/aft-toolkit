@@ -135,6 +135,9 @@ Documentos\AFT\
 │       ├── inspecao-fisica.md       (relato de campo)
 │       ├── autos.md                 (autos redigidos)
 │       ├── autos-lavrados.md        (o que já foi transmitido — fica na raiz)
+│       ├── auditoria-PGR\           (uma pasta por análise temática: relatório,
+│       ├── auditoria-jornada\ ...    extrato e autos daquele tema; o resumo fica
+│       │                             na "Auditoria de documentos" do memory.md)
 │       ├── NOTIFICACOES\            (PDFs do DET + respostas do empregador)
 │       │   └── ABC123 21-08-2026\   (tudo daquela notificação; data do download)
 │       │       ├── notificacao-ABC123.pdf

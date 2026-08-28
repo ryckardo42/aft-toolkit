@@ -148,8 +148,10 @@ Se a notificação venceu sem entrega (itens `sem_arquivo` e prazo passado),
 lembre o AFT do `/aft-det-630` (auto por omissão). Se chegaram arquivos,
 ofereça a triagem `/aft-analise-preliminar` (item a item, por dia de entrega,
 sem carregar os PDFs na conversa) — oferta, nunca execução automática. A
-auditoria do que foi entregue segue o fluxo normal: constatações em
-`## Auditoria de documentos` e, depois, `/aft-auditoria-geral`.
+auditoria do que foi entregue segue o fluxo normal: constatações avulsas como bullets
+no topo de `## Auditoria de documentos`, análises temáticas (PGR, PCMSO, AET, jornada)
+pela skill dedicada — que grava o relatório na pasta `auditoria-<tema>/` e o resumo na
+subseção própria — e, depois, `/aft-auditoria-geral`.
 
 ## Regras
 

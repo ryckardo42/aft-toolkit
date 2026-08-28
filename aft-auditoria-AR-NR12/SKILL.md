@@ -96,6 +96,12 @@ find "<pasta-OS>" -iname "*laudo*" -o -iname "*aprecia*" -o -iname "*risco*" | g
 - Vários → liste e pergunte.
 - Nenhum → peça o documento.
 
+> **Onde esta skill grava.** Tudo o que ela produz mora na subpasta
+> `auditoria-laudo-NR12/` da OS (crie-a na primeira gravação): os
+> `auditoria-X-AR-NR12.md` e o `laudo-extrato.md`. **Nunca grave esses arquivos na
+> raiz da OS.** Em OS antigas eles podem existir na raiz: use-os normalmente para
+> leitura, mas toda gravação nova vai para a subpasta.
+
 #### Leitura do documento: delegue ao agente extrator
 
 Laudo de adequação costuma ser longo e cheio de tabela e foto de máquina. Lido direto na
@@ -103,7 +109,8 @@ conversa, ele consome o contexto e o limite de uso do AFT, e é **recobrado a ca
 julgamento. Por isso a leitura é feita fora da conversa, por um agente próprio.
 
 **Antes de medir, veja se o extrato já existe.** Se
-`<OS_ATIVAS>/[PASTA_EMPRESA]/laudo-extrato.md` já estiver na pasta, a extração já foi
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-laudo-NR12/laudo-extrato.md` já estiver na pasta
+(ou, em OS antigas, `laudo-extrato.md` na raiz da OS), a extração já foi
 feita - por uma execução anterior deste skill, ou por um fluxo de trabalho que extraiu os
 documentos numa triagem inicial. Confira que ele cobre os seis blocos do roteiro abaixo
 (e cada máquina, quando o laudo cobrir mais de uma) e **julgue sobre ele**: não meça o
@@ -124,7 +131,7 @@ páginas **sem texto** (escaneadas), com **texto suspeito** (OCR ruim já embuti
 
 - **Mais de 20 páginas:** **delegue ao agente `aft-extrator-documento`**, passando no
   prompt: o tipo de documento (laudo de NR-12), o caminho do PDF, o caminho de saída
-  `<OS_ATIVAS>/[PASTA_EMPRESA]/laudo-extrato.md`, o `python_path` e - obrigatoriamente - o
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-laudo-NR12/laudo-extrato.md`, o `python_path` e - obrigatoriamente - o
   **roteiro de extração**:
 
   > Os seis blocos do checklist deste skill, na ordem: Bloco 1 (método de estimativa de
@@ -399,23 +406,39 @@ teria que apresentar para sanar. Didático: o AFT pode reutilizar em conversa co
 
 ### Etapa 6 — Persistir na OS
 
-O arquivo de saída segue **numeração sequencial por OS**: `auditoria-X-AR-NR12.md`, onde
-X é o próximo número livre (1ª análise da OS → `auditoria-1-AR-NR12.md`; 3ª →
-`auditoria-3-AR-NR12.md`). Determine X listando os já existentes na pasta da OS:
+O arquivo de saída vai em `auditoria-laudo-NR12/` e segue **numeração sequencial por
+OS**: `auditoria-X-AR-NR12.md`, onde X é o próximo número livre (1ª análise da OS →
+`auditoria-1-AR-NR12.md`; 3ª → `auditoria-3-AR-NR12.md`). Determine X listando os já
+existentes — na subpasta E na raiz da OS (OS antigas guardavam-nos na raiz; a numeração
+é uma só):
 
 ```bash
-ls "<pasta-OS>" | grep -E '^auditoria-[0-9]+-AR-NR12\.md$' | sed -E 's/auditoria-([0-9]+)-.*/\1/' | sort -n | tail -1
+ls "<pasta-OS>" "<pasta-OS>/auditoria-laudo-NR12" 2>/dev/null | grep -E '^auditoria-[0-9]+-AR-NR12\.md$' | sed -E 's/auditoria-([0-9]+)-.*/\1/' | sort -n | tail -1
 ```
 
 X = (maior número encontrado) + 1; se não houver nenhum, X = 1. **Nunca sobrescreva uma
 análise anterior** — cada auditoria de documento gera um arquivo novo (é o histórico de
 auditorias da OS, consumido pelo painel).
 
-Salve a análise completa nesse arquivo e acrescente uma linha na seção `## Auditoria de
-documentos` do `memory.md` da OS (se existir; crie a seção se faltar): parecer + data +
-documento analisado + nome do arquivo gerado. É registro, não tarefa — **nunca em
-`## Pendências`**, que é a lista pessoal do AFT. Não sobrescreva conteúdo existente do
-memory.md.
+Salve a análise completa em
+`<pasta-OS>/auditoria-laudo-NR12/auditoria-X-AR-NR12.md` e **registre a auditoria no
+`memory.md` da OS**: na seção `## Auditoria de documentos` (nas OS anteriores à
+renomeação ela se chama `## Anotações da auditoria`: escreva na que existir, sem
+renomeá-la; se nenhuma existir, crie `## Auditoria de documentos`), acrescente ao
+**final da seção** uma subseção `### Laudo NR-12` (se ainda não houver) e, nela, uma
+linha datada:
+
+```
+### Laudo NR-12
+dd/mm/aaaa — <documento analisado + parecer, em até 2 linhas> — relatório: auditoria-laudo-NR12/auditoria-X-AR-NR12.md
+```
+
+Três regras do registro: (1) é **prosa** — nunca comece a linha com `-`: na seção,
+bullet é constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e o resumo
+não é uma constatação; (2) **até 2 linhas** por análise — o detalhe fica no relatório;
+(3) análise nova acrescenta outra linha datada na mesma subseção, mantendo as
+anteriores. É registro, não tarefa — **nunca em `## Pendências`**, que é a lista pessoal
+do AFT. Não sobrescreva conteúdo existente do memory.md.
 
 ### Etapa 7 — Ofertas de encadeamento (na ordem)
 

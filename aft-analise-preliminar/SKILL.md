@@ -104,8 +104,9 @@ Repasse ao AFT, curto:
 - a contagem por estado da tabela consolidada;
 - 1 a 3 destaques (duplicatas, itens críticos, tentativas de direcionamento);
 - as **decisões que são dele**, como oferta e sem executar nada:
-  - itens IRREGULARES → constatações já estão na `## Auditoria de documentos`; a
-    autuação, se ele quiser, é a `/aft-auditoria-geral`;
+  - itens IRREGULARES → o resumo da rodada já está na subseção `### Análise preliminar`
+    da `## Auditoria de documentos`, apontando o relatório; a autuação, se ele quiser,
+    é a `/aft-auditoria-geral` (que segue o ponteiro e lê o relatório);
   - MÉRITO PENDENTE → a skill dedicada de cada documento, com o aviso de custo (e, para
     PGR/PGRTR/AET/laudo, o de que a análise pede a caixa em Opus);
   - prazo vencido sem entrega → `/aft-det-630`.
