@@ -688,7 +688,7 @@
     {
       "nome": "analise_preliminar_scan.py",
       "caminho": "_scripts/analise_preliminar_scan.py",
-      "papel": "Inventário SOMENTE LEITURA do pacote de uma notificação DET, por dia de entrega (baixada em <data>/): tipo lógico, SHA-256 e tamanho de cada arquivo, invalidados/ à parte, marca de item volumoso e duplicatas entre itens e dias. Sem flatten: a estrutura por dia é prova. JSON no stdout ou em arquivo (--saida).",
+      "papel": "Inventário SOMENTE LEITURA do pacote de uma notificação DET, por dia de entrega (baixada em <data>/): tipo lógico, SHA-256 e tamanho de cada arquivo, invalidados/ à parte, marca de item volumoso e duplicatas entre itens e dias. Sem flatten: a estrutura por dia é prova. JSON no stdout ou em arquivo (--saida). Windows: varre por caminho estendido (\\\\?\\, mesmo remédio da issue #104 no det_baixar.py) — sem ele, pacote dentro do OneDrive passava dos 260 caracteres do MAX_PATH e itens sumiam do inventário sem erro (ticket de 28/08/2026). Arquivo ilegível nunca é pulado calado: entra no campo 'avisos' do JSON, que o agente transcreve nas decisões pendentes.",
       "runtime": "Python stdlib"
     }
   ],
