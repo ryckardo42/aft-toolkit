@@ -6,7 +6,8 @@ Uso:
 
 Embute a imagem em word/media/, cria a relação em document.xml.rels e monta o
 parágrafo <w:drawing> com a foto centralizada, seguido de um parágrafo de legenda.
-A largura é ajustada para caber na mancha do texto (máx. ~15,5 cm).
+O tamanho é ajustado para caber na mancha do texto (máx. 15,5 cm de largura,
+9,0 cm de altura), para reduzir saltos de página com vão em branco.
 """
 import re, sys, shutil, subprocess, struct, random
 from pathlib import Path
@@ -14,6 +15,7 @@ from pathlib import Path
 SCRIPTS = Path.home() / '.claude/skills/_scripts'
 EMU_POR_CM = 360000
 LARGURA_MAX_CM = 15.5
+ALTURA_MAX_CM = 9.0
 
 
 def dimensoes(caminho):
@@ -88,16 +90,27 @@ def inserir(docx, foto, ancora, legenda):
     rels_path.write_text(rels, encoding='utf-8')
 
     # 3. calcula o tamanho preservando a proporção
+    # (achado em 28/08/2026: só a largura era limitada; uma foto quadrada saía
+    # com 15,5 x 15,5 cm, quase meia página, e quando não cabia no que sobrava
+    # da página corrente o Word empurrava o bloco inteiro para a próxima,
+    # deixando um vão grande em branco no fim da página anterior. Limitando
+    # também a altura, a imagem fica pequena o bastante para caber com mais
+    # previsibilidade no espaço restante)
     px_w, px_h = dimensoes(foto)
     larg_cm = min(LARGURA_MAX_CM, px_w / 96 * 2.54)
     alt_cm = larg_cm * px_h / px_w
+    if alt_cm > ALTURA_MAX_CM:
+        alt_cm = ALTURA_MAX_CM
+        larg_cm = alt_cm * px_w / px_h
     cx, cy = int(larg_cm * EMU_POR_CM), int(alt_cm * EMU_POR_CM)
 
     # 4. monta os parágrafos (imagem centralizada + legenda)
+    # w:keepNext prende a imagem ao parágrafo seguinte (a legenda), para que o
+    # Word nunca quebre página entre a foto e o texto que a identifica.
     did = random.randint(100, 9999)
     p_img = (
         f'<w:p w14:paraId="{novo_paraid()}" w14:textId="77777777" w:rsidR="00B0080B" '
-        f'w:rsidRDefault="00B0080B"><w:pPr><w:spacing w:before="120" w:after="60"/>'
+        f'w:rsidRDefault="00B0080B"><w:pPr><w:keepNext/><w:spacing w:before="120" w:after="60"/>'
         f'<w:jc w:val="center"/></w:pPr><w:r><w:drawing>'
         f'<wp:inline distT="0" distB="0" distL="0" distR="0">'
         f'<wp:extent cx="{cx}" cy="{cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
