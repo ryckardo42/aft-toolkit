@@ -265,7 +265,10 @@ rotina nunca falha por causa disso.
   notificações sem registro, o **relato da inspeção física** completo (todos os bullets
   do `inspecao-fisica.md`), TODOS os autos lavrados em grade (Nº do AI, ementa,
   descrição, constatação, data), autos substituídos (re-lavratura), pendentes de
-  transmissão, pendências da OS e registro de atividades.
+  transmissão, pendências da OS e registro de atividades. A **coluna direita**
+  (Ações rápidas, Comandos para o Claude Code e o Registro de atividades) fica
+  **fixa ao rolar** — acompanha a leitura em vez de sumir no topo; quando é maior
+  que a janela, ganha rolagem própria.
 - **Datas sempre em dd/mm/aaaa na tela**: as fichas do schema v2 gravam datas ISO nas
   linhas de DET; o painel normaliza só na exibição (os `memory.md` não são tocados).
 - Coral é reservado ao que aperta o prazo: DET aberto só fica vermelho se estiver
