@@ -22,6 +22,12 @@ e aplica o resultado na seção `## Notificações DET` do memory.md:
     pertence ao sync: é criada se faltar e regravada quando o DET mudar.
     A flag final espelha o triângulo amarelo do DET (campo itemAtualizado
     da API). O gerar_painel a ignora (ele só lê linhas checkbox);
+  - sob cada notificação LAVRADA, mantém também uma SUB-LINHA DE RESUMO DO
+    CONTEÚDO (`  - 📄 NAD · 2 documentos e 1 orientação: Carta de prepostos;
+    PGR…`), gerada do título e dos itens da própria notificação no DET.
+    Diferente da sub-linha de detalhes, é gravada UMA vez e nunca regravada
+    (o conteúdo de notificação lavrada não muda): custa uma requisição extra
+    apenas na primeira vez que o sync vê a notificação sem o resumo;
   - `ri:` vazio no front-matter → preenche (ver ris_conhecidos/ri_mais_recente).
 
 Filtros, nesta ordem:
@@ -109,6 +115,11 @@ RE_PRAZO_LINHA = re.compile(
 # lavrada, "  - RASCUNHO ..." na que ainda está em elaboração. As duas formas
 # são do sync, e é por elas que ele reconhece a linha que pode regravar.
 RE_DETALHE = re.compile(r"^\s+-\s+(lavrada|RASCUNHO)\b", re.IGNORECASE)
+# Sub-linha de resumo do conteúdo ("  - 📄 NAD · 3 documentos: ..."), também do
+# sync — mas gravada UMA vez e nunca regravada (ver aplicar_resumos).
+RE_RESUMO = re.compile(r"^\s+-\s+📄\s")
+# Qualquer sub-linha de um item da seção (detalhe, resumo ou anotação do AFT).
+RE_SUBLINHA = re.compile(r"^\s+-\s+")
 
 
 # ── Chamada à API do DET ─────────────────────────────────────────────────────
@@ -285,6 +296,166 @@ def detalhe_rascunho(token: str, uid: str) -> tuple[str, int]:
     except Exception:
         itens = 0
     return quando, itens
+
+
+# ── Resumo do conteúdo (o que a notificação cobra) ───────────────────────────
+#
+# Pedido do AFT (28/08/2026): o card no painel dizia QUANDO a notificação foi
+# lavrada e QUANDO vence, mas não O QUE ela cobra — para lembrar, era preciso
+# abrir o PDF. O DET entrega isso pela mesma API do sync: o GET
+# /notificacoes/{uid} traz o `titulo` (que distingue a NAD do Termo de
+# Notificação) e os `itens`, cada um com `tipo` (0 solicitação de documento ·
+# 1 cumprimento de obrigação · 2 orientação — mesmo enum do det_criar) e a
+# `descricao` integral. Ler o PDF foi descartado: a API é a fonte, sem OCR.
+
+def conteudo_notificacao(token: str, uid: str) -> dict:
+    """JSON completo de uma notificação (GET /notificacoes/{uid}) — título e
+    itens com descrição. Best-effort: {} em qualquer falha."""
+    req = urllib.request.Request(
+        f"{DET_NOTIF}/{uid}",
+        headers={"Authorization": f"Bearer {token}",
+                 "Accept": "application/json, text/plain, */*"})
+    try:
+        with urllib.request.urlopen(req, timeout=DET_TIMEOUT) as resp:
+            n = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return {}
+    return n if isinstance(n, dict) else {}
+
+
+# Nome da natureza de cada tipo de item (singular, plural).
+_NATUREZA_ITEM = {0: ("documento", "documentos"),
+                  1: ("obrigação", "obrigações"),
+                  2: ("orientação", "orientações")}
+
+
+def _rotulo_item(descricao: str) -> str:
+    """Rótulo curto de um item para o resumo: o título em negrito quando o AFT
+    o escreveu ("*Mobiliário dos Postos de Trabalho* - itens 17.6.6..."), senão
+    o começo da descrição, cortado em palavra."""
+    limpo = re.sub(r"\s+", " ", descricao or "").strip()
+    m = re.match(r"\*([^*]{3,80})\*", limpo)
+    if m:
+        return m.group(1).strip(" -–:")
+    limpo = limpo.strip("* ")
+    if len(limpo) <= 48:
+        return limpo
+    corte = limpo[:48]
+    if " " in corte:
+        corte = corte.rsplit(" ", 1)[0]
+    return corte + "…"
+
+
+def resumo_conteudo(n: dict) -> str:
+    """Sub-linha de resumo do conteúdo, pronta para a ficha ('' se o JSON não
+    der para resumir). Formato:
+    '  - 📄 NAD · 2 documentos e 1 orientação: Carta de prepostos; PGR…'
+    Só fatos vindos do DET — título, contagem por natureza e os primeiros
+    itens; nada é interpretado."""
+    titulo = re.sub(r"\s+", " ", (n.get("titulo") or "")).strip()
+    itens = sorted(n.get("itens") or [], key=lambda i: i.get("ordem") or 0)
+    if not itens:
+        return ""
+    t = titulo.lower()
+    if "apresenta" in t and "documento" in t:
+        curto = "NAD"
+    elif t.startswith(("termo de notifica",)):
+        curto = "TN"
+    else:
+        curto = titulo[:60] if titulo else "Notificação"
+    contagem: dict[int, int] = {}
+    for it in itens:
+        tp = it.get("tipo")
+        contagem[tp if tp in _NATUREZA_ITEM else -1] = \
+            contagem.get(tp if tp in _NATUREZA_ITEM else -1, 0) + 1
+    partes_nat = []
+    for tp in (0, 1, 2, -1):
+        qtd = contagem.get(tp, 0)
+        if not qtd:
+            continue
+        sing, plur = _NATUREZA_ITEM.get(tp, ("item", "itens"))
+        partes_nat.append(f"{qtd} {sing if qtd == 1 else plur}")
+    natureza = " e ".join(partes_nat) if len(partes_nat) <= 2 else \
+        ", ".join(partes_nat[:-1]) + " e " + partes_nat[-1]
+    rotulos, usado = [], 0
+    for k, it in enumerate(itens):
+        rot = _rotulo_item(it.get("descricao") or "")
+        if not rot:
+            continue
+        if usado + len(rot) > 180 and rotulos:
+            rotulos.append(f"… (+{len(itens) - k})")
+            break
+        rotulos.append(rot)
+        usado += len(rot)
+    digesto = "; ".join(rotulos)
+    return f"  - 📄 {curto} · {natureza}" + (f": {digesto}" if digesto else "") + "\n"
+
+
+def resumos_registrados(texto: str) -> set[str]:
+    """Códigos das notificações que JÁ têm sub-linha de resumo (📄) na seção
+    `## Notificações DET` — o sync não busca de novo o conteúdo delas."""
+    linhas = texto.splitlines()
+    ini = next((i + 1 for i, l in enumerate(linhas)
+                if l.strip().startswith("## ")
+                and l.strip()[3:].strip() in ("Notificações DET",
+                                              "Notificacoes DET")), -1)
+    if ini < 0:
+        return set()
+    fim = next((i for i in range(ini, len(linhas))
+                if linhas[i].strip().startswith("## ")), len(linhas))
+    com_resumo: set[str] = set()
+    cod_atual = ""
+    for l in linhas[ini:fim]:
+        cb = RE_CHECKBOX.match(l)
+        if cb:
+            m = RE_CODIGO.match(cb.group(1).strip())
+            cod_atual = m.group(1) if m else ""
+            continue
+        if cod_atual and RE_RESUMO.match(l):
+            com_resumo.add(cod_atual)
+    return com_resumo
+
+
+def aplicar_resumos(texto: str, resumos_linha: dict[str, str]) -> tuple[str, int]:
+    """Insere a sub-linha de resumo (📄) das notificações que ainda não a têm.
+    `resumos_linha` mapeia código → linha pronta (de resumo_conteudo). A linha
+    entra depois da sub-linha de detalhes do sync (ou logo abaixo do checkbox,
+    se ela faltar) e NUNCA é regravada depois. Função pura."""
+    if not resumos_linha:
+        return texto, 0
+    linhas = texto.splitlines(keepends=True)
+    ini = next((i + 1 for i, l in enumerate(linhas)
+                if l.strip().startswith("## ")
+                and l.strip()[3:].strip() in ("Notificações DET",
+                                              "Notificacoes DET")), -1)
+    if ini < 0:
+        return texto, 0
+    fim = next((i for i in range(ini, len(linhas))
+                if linhas[i].strip().startswith("## ")), len(linhas))
+    insercoes: list[tuple[int, str]] = []
+    for i in range(ini, fim):
+        cb = RE_CHECKBOX.match(linhas[i])
+        if not cb:
+            continue
+        m = RE_CODIGO.match(cb.group(1).strip())
+        codigo = m.group(1) if m else ""
+        if codigo not in resumos_linha:
+            continue
+        pos = i + 1
+        tem = False
+        while pos < fim and RE_SUBLINHA.match(linhas[pos]):
+            if RE_RESUMO.match(linhas[pos]):
+                tem = True
+            pos += 1
+        if tem:
+            continue
+        # Depois da sub-linha de detalhes, quando ela existir; senão, logo
+        # abaixo do checkbox (antes de anotação manual do AFT).
+        pos = i + 2 if (i + 1 < fim and RE_DETALHE.match(linhas[i + 1])) else i + 1
+        insercoes.append((pos, resumos_linha[codigo]))
+    for pos, linha in sorted(insercoes, reverse=True):
+        linhas.insert(pos, linha)
+    return "".join(linhas), len(insercoes)
 
 
 # Status da notificação no DET. Os três valores são os do enum do próprio
@@ -568,9 +739,9 @@ def aplicar_notificacoes(texto: str, notifs: list[dict],
         fim += 1
 
     if novas:
-        # Insere após a última linha checkbox — pulando a sub-linha de
-        # detalhes dela — ou no início da seção; remove um "_(vazio)_" que
-        # esteja sozinho na seção.
+        # Insere após a última linha checkbox — pulando as sub-linhas dela
+        # (detalhes, resumo 📄, anotação manual) — ou no início da seção;
+        # remove um "_(vazio)_" que esteja sozinho na seção.
         ult = max((i for i in range(ini, fim) if RE_CHECKBOX.match(linhas[i])),
                   default=None)
         if ult is None:
@@ -585,7 +756,7 @@ def aplicar_notificacoes(texto: str, notifs: list[dict],
             linhas[pos:pos] = novas
         else:
             pos = ult + 1
-            if pos < fim and RE_DETALHE.match(linhas[pos]):
+            while pos < fim and RE_SUBLINHA.match(linhas[pos]):
                 pos += 1
             linhas[pos:pos] = novas
 
@@ -660,11 +831,13 @@ def identificadores(texto: str, pasta: str) -> tuple[str, str]:
 
 def sincronizar_os(pasta_os: Path, token: str,
                    consultar=consultar_det, canal=snippet_canal,
-                   resumo=resumo_itens, rascunho=detalhe_rascunho) -> dict:
-    """Sincroniza uma OS. `consultar`, `canal` e `resumo` são injetáveis
-    para testes."""
+                   resumo=resumo_itens, rascunho=detalhe_rascunho,
+                   conteudo=conteudo_notificacao) -> dict:
+    """Sincroniza uma OS. `consultar`, `canal`, `resumo` e `conteudo` são
+    injetáveis para testes."""
     r = {"os": pasta_os.name, "recebidas": 0, "inseridas": 0,
          "prazos_atualizados": 0, "detalhes_atualizados": 0,
+         "resumos_gravados": 0,
          "ri_preenchido": False, "ignoradas": [], "canceladas": [],
          "erro": None}
     mem = pasta_os / "memory.md"
@@ -759,9 +932,25 @@ def sincronizar_os(pasta_os: Path, token: str,
             if res:
                 resumos[cod] = res
 
+    # Resumo do conteúdo: UMA requisição extra por notificação lavrada que
+    # ainda não tem a sub-linha 📄 na ficha (na prática, só na primeira vez em
+    # que cada notificação é vista — depois disso, custo zero). Cancelada não
+    # ganha resumo (aparece riscada no painel); rascunho tampouco (o conteúdo
+    # dele ainda muda no DET).
+    registrados = resumos_registrados(texto)
+    conteudos: dict[str, str] = {}
+    for n in minhas:
+        cod = (n.get("codigo") or "").strip()
+        if (cod and cod not in registrados and n.get("uid")
+                and n.get("dataEnvio") and n.get("status") != STATUS_CANCELADA):
+            linha = resumo_conteudo(conteudo(token, n["uid"]))
+            if linha:
+                conteudos[cod] = linha
+
     (novo, r["inseridas"], r["prazos_atualizados"],
      r["detalhes_atualizados"], r["canceladas"]) = aplicar_notificacoes(
         texto, minhas, msgs, resumos)
+    novo, r["resumos_gravados"] = aplicar_resumos(novo, conteudos)
     novo, r["ri_preenchido"] = preencher_ri(novo, ri_novo)
     if novo == texto:
         return r
@@ -773,6 +962,8 @@ def sincronizar_os(pasta_os: Path, token: str,
         partes.append(f"{r['prazos_atualizados']} prazo(s) atualizado(s)")
     if r["detalhes_atualizados"]:
         partes.append(f"{r['detalhes_atualizados']} detalhe(s) atualizado(s)")
+    if r["resumos_gravados"]:
+        partes.append(f"{r['resumos_gravados']} resumo(s) de conteúdo gravado(s)")
     if r["ri_preenchido"]:
         partes.append(f"RI {ri_novo} preenchido (notificação mais recente)")
     if r["canceladas"]:
@@ -828,6 +1019,7 @@ def sincronizar_todas(base: Path, token: str, consultar=consultar_det,
         "inseridas": sum(r["inseridas"] for r in resultados),
         "prazos_atualizados": sum(r["prazos_atualizados"] for r in resultados),
         "detalhes_atualizados": sum(r["detalhes_atualizados"] for r in resultados),
+        "resumos_gravados": sum(r.get("resumos_gravados", 0) for r in resultados),
         "ris_preenchidos": sum(1 for r in resultados if r["ri_preenchido"]),
         # De outra fiscalização do mesmo empregador — não importadas, relatadas.
         "ignoradas": len(ignoradas),

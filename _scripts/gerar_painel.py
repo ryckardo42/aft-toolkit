@@ -138,6 +138,11 @@ RE_DET_ITENS = re.compile(r"📋\s*(itens:[^·<]+)", re.IGNORECASE)
 # Cada grupo do resumo ("5 enviado, 2 não enviado") — o número e o rótulo, que
 # vem do enum STATUS_ITEM do DET (fonte única, no det_baixar).
 RE_DET_ITENS_GRUPO = re.compile(r"(\d+)\s+([^,]+)")
+# Sub-linha de resumo do conteúdo, escrita uma única vez pelo det_sync:
+# "  - 📄 NAD · 2 documentos e 1 orientação: Carta de prepostos; PGR…".
+# É o que a notificação COBRA (título + itens do DET), para o AFT lembrar o
+# que notificou sem abrir o PDF. O grupo 1 captura o texto após o marcador.
+RE_DET_RESUMO = re.compile(r"^\s+-\s+📄\s*(.+?)\s*$")
 
 
 def classificar_itens(resumo: str) -> dict:
@@ -435,6 +440,9 @@ def parse_memory(path: Path) -> dict:
             itens_status = m_it.group(1).strip() if m_it else ""
             itens_cont = classificar_itens(itens_status)
             itens_aguardando = itens_cont["aguardando"]
+        resumo_conteudo = next(
+            (m.group(1) for m in (RE_DET_RESUMO.match(l) for l in sublinhas)
+             if m), "")
         # Só enquanto NÃO houver lavratura: no dia em que o AFT lavrar no DET, o
         # sync escreve a data e o aviso de rascunho some sozinho. Sem isso, o
         # painel afirmaria "AINDA NÃO LAVRADO" para sempre — e afirmar errado
@@ -455,7 +463,15 @@ def parse_memory(path: Path) -> dict:
                      "mensagem_txt": mensagem_txt, "cancelada": cancelada,
                      "itens_status": itens_status, "rascunho": rascunho,
                      "itens_aguardando": itens_aguardando,
-                     "itens_cont": itens_cont})
+                     "itens_cont": itens_cont,
+                     "resumo_conteudo": resumo_conteudo})
+
+    # Ordem de emissão: a ficha acumula as notificações na ordem em que o sync
+    # (ou o AFT) as registrou; o painel as mostra por data de lavratura, a
+    # cronologia real da fiscalização. Sort estável: linha sem lavratura
+    # (rascunho, registro manual sem sub-linha do sync) fica no fim, na ordem
+    # do arquivo.
+    dets.sort(key=lambda d: d["lavrada"] or datetime.date.max)
 
     # Pendências (checkbox). As em aberto movem o painel: contagem, alerta e
     # próximo passo. As resolvidas ([x]) não somem da tela — o dossiê as mostra
@@ -1214,6 +1230,7 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 .det-item .det-campo .val{color:var(--t1);font-weight:600}
 .det-item .campos .sep{color:var(--t3);opacity:.55}
 .det-item .notas{color:var(--t2);margin-top:2px}
+.det-item .resumo-det{color:var(--t2);margin-top:2px}
 /* Resumo do status dos itens (o que o triângulo amarelo esconde): coral suave,
    para diferenciar do texto do AFT e chamar o olho ao que aguarda decisão. */
 .det-item .itens-status{color:var(--coral-deep);margin-top:2px}
@@ -1618,6 +1635,7 @@ function cartaoDets(o,i){
    (d.aguarda&&!d.cancelada?'<span class="pend">⏳ aguardando ciência</span> ':'')+esc(d.codigo||'?')+
    (d.rotulo?'<span class="rotulo">'+esc(d.rotulo)+'</span>':'')+'</div>'+
    (campos?'<div class="info campos">'+campos+'</div>':'')+
+   (d.resumo&&!d.cancelada?'<div class="info resumo-det" title="o que esta notificação cobra — título e itens lidos do DET pelo sync">📄 '+esc(d.resumo)+'</div>':'')+
    (d.rascunho&&!d.cancelada?'<div class="info rascunho" title="a notificação foi montada no DET pelo toolkit e está lá como rascunho: só passa a valer quando você a lavrar no site. O aviso some sozinho no primeiro sync depois da lavratura">'+esc(d.rascunho)+'</div>':'')+
    (d.itens_status&&!d.cancelada?'<div class="info itens-status" title="status de cada item na tela do DET — o que o triângulo amarelo esconde">📋 '+esc(d.itens_status)+'</div>':'')+
    (d.notas?'<div class="info notas">'+esc(d.notas)+'</div>':'')+
@@ -2475,6 +2493,7 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
                       "cancelada": bool(d.get("cancelada")),
                       "aguarda": bool(d.get("aguardando_ciencia")),
                       "itens_status": d.get("itens_status") or "",
+                      "resumo": datas_para_br(d.get("resumo_conteudo") or ""),
                       "rascunho": d.get("rascunho") or "",
                       "itens_aguardando": d.get("itens_aguardando") or 0,
                       "itens_entregues": (d.get("itens_cont") or {}).get("entregues", 0),
