@@ -155,9 +155,19 @@ CAMELCASE = re.compile(r"^.[a-zà-ÿ]*[A-ZÀ-Ü]")
 # "... REFRIGERACAO ..." ou "... SEGURANCA ..." — todas na lista acima, e todas
 # comuns em razão social brasileira. Foi assim que o defeito apareceu: numa
 # fiscalização real, a razão social da autuada terminava em "DECORACOES".
+# O "E" e o "&" entram como CONECTOR de uma letra so. Sem isso, uma razao social
+# que comece imediatamente antes do conector -- "MOVEIS E DECORACOES LTDA" -- tinha
+# a primeira palavra deixada de fora da mascara, e "MOVEIS" caia na lista de
+# palavras sem acento. Achado em 27/08/2026, no teste que consolidou esta guarda
+# com a do metodo: o nome COMPLETO da autuada passava (a corrida comeca antes e
+# cobre tudo), e so o nome comecado no conector falhava -- falso positivo raro e
+# por isso mais dificil de achar. Continua exigindo ao menos uma palavra de 2+
+# letras na corrida: letra solta no meio de prosa nao vira mascara.
 CAIXA_ALTA = re.compile(
     r"(?<![0-9A-Za-zÀ-ÿ])[A-ZÀ-ÜÇ][A-ZÀ-ÜÇ0-9&./\-]*"
-    r"(?:\s+[A-ZÀ-ÜÇ0-9&./\-]{2,}){1,}(?![0-9A-Za-zÀ-ÿ])")
+    r"(?:\s+(?:[A-ZÀ-ÜÇ0-9&./\-]{2,}|E|&))*"
+    r"\s+[A-ZÀ-ÜÇ0-9&./\-]{2,}"
+    r"(?:\s+(?:[A-ZÀ-ÜÇ0-9&./\-]{2,}|E|&))*(?![0-9A-Za-zÀ-ÿ])")
 
 
 # Trecho entre crases e LITERAL, nao prosa: caminho de arquivo, nome de pasta,
