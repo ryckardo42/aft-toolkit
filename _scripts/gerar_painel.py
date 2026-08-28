@@ -898,7 +898,9 @@ def classifica(dias: int | None) -> str:
 CSS = """
 :root{--cream:#F0EEE6;--paper:#FAF9F5;--coral:#CC785C;--coral-deep:#B0593E;
 --t1:#141413;--t2:#5A574E;--t3:#8F8B7D;--bd:#DDD9CC;--bds:#E8E4D6;
---teal:#4F8A7C;--serif:'Source Serif 4',Georgia,'Times New Roman',serif;}
+--teal:#4F8A7C;--ochre:#A8842C;
+--serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+--sans:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--cream);color:var(--t1);
 font:15px/1.5 var(--serif);padding:28px clamp(14px,4vw,48px) 60px}
@@ -911,12 +913,33 @@ padding:10px 18px;min-width:118px}
 .contador b{display:block;font-size:24px;line-height:1.1}
 .contador span{font-size:12px;color:var(--t2)}
 .contador.alerta b{color:var(--coral-deep)}
+/* Contadores que filtram a grade: cursor + estado ativo com anel coral. */
+.contador.clicavel{cursor:pointer;position:relative}
+.contador.clicavel:hover{border-color:var(--coral)}
+.contador.ativo{border:2px solid var(--coral-deep);padding:9px 17px;
+box-shadow:0 0 0 3px rgba(176,89,62,.14)}
+.contador.ativo::after{content:'×';position:absolute;top:4px;right:9px;
+font:600 12px var(--sans);color:var(--coral-deep)}
+.dica-filtro{font:11.5px var(--sans);color:var(--t3);margin:-14px 0 18px}
+.dica-filtro b{color:var(--coral-deep)}
+/* Card fora do filtro/busca: esmaece, não some — a grade continua inteira. */
+.card.fora{opacity:.45}
 .venc{background:var(--paper);border:1px solid var(--bds);border-radius:10px;
 padding:12px 18px 14px;margin-bottom:24px}
 .venc h3{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;
 color:var(--t3);margin:0 0 8px}
 .venc ul{margin:0;padding-left:18px;font-size:13.5px}
 .venc li{margin-bottom:5px}
+/* Vencimentos agrupados por data: um bloco por dia; coral só no que aperta. */
+.venc-grupos{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch}
+.venc-grupo{flex:0 1 250px;background:var(--cream);border:1px solid var(--bds);
+border-radius:10px;padding:10px 14px}
+.venc-grupo.urgente,.venc-grupo.vencido{background:#FDF3F0;border-color:#E8C7B9;
+border-left:4px solid var(--coral-deep)}
+.venc-grupo .vdata{font:700 12px var(--sans);color:var(--t2)}
+.venc-grupo.urgente .vdata,.venc-grupo.vencido .vdata{color:var(--coral-deep)}
+.venc-grupo .vlin{font-size:13px;margin-top:6px;line-height:1.5}
+.venc-grupo .mini{margin:8px 0 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .ordena{display:flex;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap}
 .ordena label + select + label{margin-left:10px}
@@ -925,6 +948,12 @@ text-transform:uppercase;color:var(--t3)}
 .ordena select{font:13px var(--serif);color:var(--t1);background:var(--paper);
 border:1px solid var(--bd);border-radius:8px;padding:5px 10px;cursor:pointer}
 .ordena select:focus{outline:none;border-color:var(--coral-deep);
+box-shadow:0 0 0 3px rgba(176,89,62,.18)}
+/* Busca da grade: empresa, município, CNPJ ou código de notificação. */
+#busca{flex:1;min-width:260px;font:14px var(--serif);color:var(--t1);
+background:var(--paper);border:1px solid var(--bd);border-radius:8px;padding:7px 14px}
+#busca::placeholder{color:var(--t3);opacity:1}
+#busca:focus{outline:none;border-color:var(--coral-deep);
 box-shadow:0 0 0 3px rgba(176,89,62,.18)}
 .card{display:block;color:inherit;text-decoration:none;
 background:var(--paper);border:1px solid var(--bds);border-left:4px solid var(--teal);
@@ -943,6 +972,36 @@ background:#E4EEEB;color:var(--teal);margin-top:8px}
 border-radius:6px;padding:1px 7px;margin:0 4px 4px 0}
 .rodape-card{display:flex;justify-content:space-between;gap:8px;margin-top:10px;
 font-size:12px;color:var(--t3)}
+/* Contador de pendências no card, ao lado do badge de prazo. */
+.pend-num{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
+color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin:8px 0 0 6px}
+/* Próximo passo no card: a MESMA sugestão do hero do dossiê, preenchida
+   pelo JS (proximoPasso) — a grade diz o que fazer, não só quanto existe. */
+.passo-card{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--bds);
+font-size:12.5px;color:var(--t2);font-style:italic}
+.passo-card .seta{color:var(--coral-deep);font-style:normal}
+.passo-card b{color:var(--t1)}
+/* Markdown leve das fichas (`código`), convertido por md_inline/mdi. */
+code{font:12px ui-monospace,Menlo,Consolas,monospace;background:var(--bds);
+border-radius:4px;padding:0 4px}
+/* Pendências por auditoria: um cartão por empresa, não um bloco corrido. */
+.pend-cab{display:flex;align-items:baseline;gap:12px;margin:0 0 12px}
+.pend-cab h3{font:500 20px var(--serif);margin:0}
+.pend-cab h3 em{color:var(--coral-deep)}
+.pend-cab .cont{font:13px var(--sans);color:var(--t3)}
+.pend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:12px;align-items:start;margin-bottom:24px}
+.pend-emp{background:var(--paper);border:1px solid var(--bds);border-radius:12px;
+padding:14px 16px}
+.pend-emp .cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pend-emp .cab b{font:600 13.5px var(--sans)}
+.pend-emp .cab .n{font:700 11px var(--sans);background:#F5E4E0;color:var(--coral-deep);
+border-radius:20px;padding:2px 9px}
+.pend-emp ul{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
+.pend-emp li{margin-bottom:6px}
+.pend-emp .abrir{display:inline-block;margin-top:8px;font:12px var(--sans);
+color:var(--coral-deep);text-decoration:none}
+.pend-emp .abrir:hover{text-decoration:underline}
 .pend-card{display:inline-block;font:700 11px var(--sans);background:#F5E4E0;
 color:var(--coral-deep);border-radius:20px;padding:2px 10px;margin-top:8px;margin-right:6px}
 /* Mensagem do empregador no canal de comunicacao do DET, no mesmo molde */
@@ -1080,6 +1139,8 @@ font-size:13px;z-index:20;display:none}
 .badge{background:#233530}.chip{background:#3A2C22}
 .badge.vencido,.badge.urgente{background:#3D2521}
 .det-item .cod .pend,.pend-card{background:#3D2521;color:#E9A891}
+.pend-num,.pend-emp .cab .n{background:#3D2521;color:#E9A891}
+.venc-grupo.urgente,.venc-grupo.vencido{background:#3D2521;border-color:#5A3327}
 .det-item .cod .msg,.msg-card{background:#3B2E1B;color:#E8BE85}
 .itens-card{background:#3D2521;color:#E9A891}
 .card:hover{box-shadow:0 3px 14px rgba(0,0,0,.5)}
@@ -1090,7 +1151,6 @@ font-size:13px;z-index:20;display:none}
 box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 }
 /* ---- Dossiê da OS (tela de detalhe) ---- */
-:root{--sans:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;--ochre:#A8842C}
 #detalhe{top:2vh;width:min(1280px,96vw);max-height:96vh;border-radius:18px;
   padding:0 0 34px}
 #detalhe .topo{display:flex;justify-content:space-between;align-items:center;
@@ -1344,6 +1404,11 @@ const P=document.getElementById('detalhe'),V=document.getElementById('veu');
 // Modo interativo: só quando o painel vem do servidor local (servir_painel.py).
 const ATIVO=location.protocol==='http:'&&['127.0.0.1','localhost'].includes(location.hostname);
 function esc(s){const d=document.createElement('span');d.textContent=s==null?'':String(s);return d.innerHTML}
+// Markdown leve das fichas (**negrito** e `código`): escapa e converte —
+// senão asteriscos e crases vazam crus na tela. Espelho JS do md_inline do
+// Python: mudou um, muda o outro.
+function mdi(s){return esc(s).replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>')
+ .replace(/`([^`]+)`/g,'<code>$1</code>')}
 function aviso(t){let a=document.getElementById('aviso-copiado');
  if(!a){a=document.createElement('div');a.id='aviso-copiado';document.body.appendChild(a)}
  a.textContent=t;a.style.display='block';clearTimeout(a._t);
@@ -1394,6 +1459,19 @@ function agCal(j){const v=DATA.venc[j];
  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+
   encodeURIComponent(v.titulo)+'&dates='+ini+'/'+fim+'&details='+
   encodeURIComponent('Notificação DET '+v.codigo+' — '+v.empregador+' (AFT Toolkit)'),'_blank')}
+// "agendar os N": um evento único do dia listando todos os DETs — abrir N
+// abas esbarraria no bloqueador de pop-up. Evento por DET é o /aft-agenda-det.
+function agCalDia(iso){
+ const its=DATA.venc.filter(v=>v.prazo_iso===iso&&!v.checado&&v.tipo==='det'&&v.codigo);
+ if(!its.length)return;
+ const ini=iso.replaceAll('-','');
+ const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+1);
+ const fim=d.toISOString().slice(0,10).replaceAll('-','');
+ const dbr=iso.split('-').reverse().join('/');
+ window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+
+  encodeURIComponent('DET: '+its.length+' vencimentos '+dbr)+'&dates='+ini+'/'+fim+
+  '&details='+encodeURIComponent(its.map(v=>'DET '+v.codigo+' — '+v.empregador)
+  .join('\\n')+'\\n(AFT Toolkit)'),'_blank')}
 function agDet(i,k){const o=DATA.os[i];api({acao:'det',pasta:o.pasta,codigo:o.dets[k].codigo})}
 // "baixar arquivos": o servidor busca na API do DET (com o token do último
 // Sincronizar) o PDF da notificação, o Relatório de Atendimento e os arquivos
@@ -1492,7 +1570,7 @@ function proximoPasso(o){
   // afirma entrega nem omissão — manda conferir.
   return{html:cab+' — conferir no DET o que foi entregue antes de decidir sobre auto por omissão (art. 630 §4º CLT).',cmds:AUTO};
  }
- if((o.pendencias||[]).length)return{html:'Pendência aberta: '+esc(o.pendencias[0]),cmds:[]};
+ if((o.pendencias||[]).length)return{html:'Pendência aberta: '+mdi(o.pendencias[0]),cmds:[]};
  if(!(o.autos||[]).length&&o.inspecao&&o.inspecao.bullets&&o.inspecao.bullets.length)
   return{html:'Relato de campo registrado e nenhum auto lavrado — redigir os autos.',cmds:['/aft-auditoria-geral']};
  return null}
@@ -1557,11 +1635,11 @@ function cartaoPendencias(o,i){
  const ps=o.pendencias||[],ok=o.pendencias_ok||[];
  // O contador conta as EM ABERTO: é o que ainda pesa na auditoria.
  let h='<div class="cartao"><h3>Pendências da OS <span class="cont">'+ps.length+'</span></h3>';
- if(ps.length)h+='<ul class="lista">'+ps.map((s,k)=>'<li>◻ '+esc(s)+
+ if(ps.length)h+='<ul class="lista">'+ps.map((s,k)=>'<li>◻ '+mdi(s)+
   (ATIVO&&o.pasta?'<button class="mini acao" onclick="agPend('+i+','+k+')">resolvido</button>':'')+
   '</li>').join('')+'</ul>';
  else h+='<p class="vazio">nenhuma pendência em aberto</p>';
- if(ok.length)h+='<ul class="lista feitas">'+ok.map(s=>'<li>☑ <s>'+esc(s)+
+ if(ok.length)h+='<ul class="lista feitas">'+ok.map(s=>'<li>☑ <s>'+mdi(s)+
   '</s></li>').join('')+'</ul>';
  if(ATIVO&&o.pasta)h+='<div class="entrada">'+
   '<label for="pend-txt">Nova pendência</label><div class="linha">'+
@@ -1965,6 +2043,40 @@ function ordena(v){
 (function(){const sel=document.getElementById('ordem');if(!sel)return;
  const v=localStorage.getItem('painel-ordem')||'criada';
  sel.value=v;ordena(v)})();
+// ---- Filtro pelos contadores + busca da grade -------------------------------
+// Um estado só (contador ativo + texto buscado). Card fora do critério fica
+// esmaecido (.fora), não some: a grade continua inteira à vista. O filtro é da
+// sessão da tela — de propósito não persiste entre aberturas.
+let FILTRO=null;
+const ROT_FILTRO={venc:'DETs vencidos',urg:'vencendo em 7 dias ou menos',
+ novas:'notificações sem registro'};
+function deacc(s){return (s||'').toLowerCase().normalize('NFD')
+ .replace(/[\\u0300-\\u036f]/g,'')}
+function aplicaGrade(){
+ const el=document.getElementById('busca');
+ const q=deacc(el?el.value:'');
+ document.querySelectorAll('.grid .card').forEach(c=>{
+  let ok=true;
+  if(FILTRO==='venc')ok=+c.dataset.venc>0;
+  else if(FILTRO==='urg')ok=+c.dataset.urg>0;
+  else if(FILTRO==='novas')ok=+c.dataset.novas>0;
+  if(ok&&q)ok=deacc(c.dataset.busca||'').indexOf(q)>=0;
+  c.classList.toggle('fora',!ok)});
+ const d=document.getElementById('dica-filtro');
+ if(d)d.innerHTML=FILTRO?'filtro ativo: <b>'+esc(ROT_FILTRO[FILTRO])+
+  '</b> — clique de novo no contador para limpar':
+  'clique num contador para filtrar a grade'}
+function filtra(f,el){
+ FILTRO=(FILTRO===f)?null:f;
+ document.querySelectorAll('.contadores .contador').forEach(c=>c.classList.remove('ativo'));
+ if(FILTRO&&el)el.classList.add('ativo');
+ aplicaGrade()}
+// Próximo passo no card: a MESMA sugestão do hero do dossiê (proximoPasso),
+// ecoada na grade — ela passa a dizer o que fazer, não só quanto existe.
+document.querySelectorAll('.passo-card').forEach(el=>{
+ const o=DATA.os[+el.dataset.i];if(!o)return;
+ const pp=proximoPasso(o);
+ if(pp){el.innerHTML='<span class="seta">→</span> '+pp.html;el.style.display='block'}});
 // Restaura a vista (Auditorias | Calendário) escolhida antes do reload.
 (function(){if(sessionStorage.getItem('painel-vista')==='cal')mudaVista('cal')})();
 """
@@ -1975,6 +2087,19 @@ def datas_para_br(texto: str) -> str:
     schema v2 usam ISO nas linhas de DET e o resto do painel usa dd/mm/aaaa;
     misturar os dois no mesmo modal confunde. Os memory.md não são tocados."""
     return RE_DATA_ISO.sub(lambda m: f"{m.group(3)}/{m.group(2)}/{m.group(1)}", texto)
+
+
+RE_MD_NEG = re.compile(r"\*\*([^*\n]+)\*\*")
+RE_MD_COD = re.compile(r"`([^`\n]+)`")
+
+
+def md_inline(texto: str) -> str:
+    """Escapa HTML e converte o markdown leve que as skills escrevem nas fichas
+    (**negrito** e `código`) — sem isso os asteriscos e crases vazam crus na
+    tela. Espelho Python da mdi() do JS: mudou um, muda o outro."""
+    s = html.escape(datas_para_br(texto))
+    s = RE_MD_NEG.sub(r"<b>\1</b>", s)
+    return RE_MD_COD.sub(r"<code>\1</code>", s)
 
 
 def dias_humano(d: datetime.date | None, hoje: datetime.date) -> str:
@@ -2385,49 +2510,80 @@ def render_vencimentos(venc: list[dict]) -> str:
     abertos = [(j, v) for j, v in enumerate(venc) if not v["checado"] and v["dias"] >= 0]
     if not abertos:
         return ""
-    lis = []
-    for j, v in abertos[:15]:
-        classe = classifica(v["dias"])
-        if v["dias"] == 0:
-            selo = "vence HOJE"
+    # Agrupado por DATA: 4 DETs do mesmo dia são UM compromisso na agenda do
+    # AFT, não quatro linhas repetidas. Dentro do dia, os DETs agregam por
+    # empregador; pendência datada continua linha própria.
+    grupos: dict[str, list] = {}
+    for j, v in abertos:
+        grupos.setdefault(v["prazo_iso"], []).append((j, v))
+    blocos = []
+    for iso in sorted(grupos)[:8]:
+        itens = grupos[iso]
+        v0 = itens[0][1]
+        classe = classifica(v0["dias"])
+        selo = "vence HOJE" if v0["dias"] == 0 else f"em {v0['dias']}d"
+        dets_emp: dict[str, int] = {}
+        for j, v in itens:
+            if v["tipo"] == "det":
+                dets_emp[v["empregador"]] = dets_emp.get(v["empregador"], 0) + 1
+        linhas = [f'<div class="vlin">{n} DET{"s" if n > 1 else ""} · '
+                  f"<b>{html.escape(emp[:34].strip())}</b></div>"
+                  for emp, n in dets_emp.items()]
+        linhas += [f'<div class="vlin">Pendência · '
+                   f"<b>{html.escape(v['empregador'][:20].strip())}</b>: "
+                   f"{html.escape(v['titulo'][:70])}</div>"
+                   for j, v in itens if v["tipo"] != "det"]
+        dets = [(j, v) for j, v in itens if v["tipo"] == "det" and v["codigo"]]
+        if len(dets) == 1:
+            botao = (f'<button class="mini" onclick="agCal({dets[0][0]})">'
+                     'agendar no Google Calendar</button>')
+        elif dets:
+            botao = (f'<button class="mini" onclick="agCalDia(\'{iso}\')">'
+                     f'agendar os {len(dets)} no Google Calendar</button>')
         else:
-            selo = f"em {v['dias']}d"
-        if v["tipo"] == "det":
-            corpo = f"<b>{html.escape(v['titulo'])}</b>"
-            botao = (f'<button class="mini" onclick="agCal({j})">'
-                     'agendar no Google Calendar</button>' if v["codigo"] else "")
-        else:
-            corpo = (f"Pendência · {html.escape(v['empregador'][:12].strip())}: "
-                     f"{html.escape(v['titulo'][:90])}")
             botao = ""
-        lis.append(f'<li class="det-aberto {classe}">{corpo} » {v["prazo_br"]}'
-                   f'<span class="selo {classe}">{selo}</span>{botao}</li>')
-    resto = ("" if len(abertos) <= 15 else
-             f'<li class="vazio">… e mais {len(abertos) - 15} (veja nos cards)</li>')
-    return ('<div class="venc"><h3>Próximos vencimentos</h3><ul class="lista">'
-            + "".join(lis) + resto + "</ul></div>")
+        blocos.append(f'<div class="venc-grupo {classe}"><div class="vdata">'
+                      f'{v0["prazo_br"]}<span class="selo {classe}">{selo}</span>'
+                      f'</div>{"".join(linhas)}{botao}</div>')
+    resto = ("" if len(grupos) <= 8 else
+             f'<div class="venc-grupo"><div class="vlin vazio">… e mais '
+             f'{len(grupos) - 8} data(s) — veja nos cards</div></div>')
+    return ('<div class="venc"><h3>Próximos vencimentos</h3>'
+            '<div class="venc-grupos">' + "".join(blocos) + resto + "</div></div>")
 
 
 def render_pendencias(oss: list[dict]) -> str:
-    """Bloco 'Pendências por auditoria', abaixo dos vencimentos: TODAS as
-    pendências em aberto ([ ] do ## Pendências do memory.md), agrupadas por
-    OS na mesma ordem dos cards. É o destino do aviso semanal de segunda
-    (notificar_pendencias.py) — a notificação traz só os números, a lista
-    completa mora aqui."""
-    grupos = []
-    for o in oss:
-        pend = o.get("pendencias") or []
-        if not pend:
-            continue
-        lis = "".join(f"<li>◻ {html.escape(datas_para_br(p))}</li>" for p in pend)
-        grupos.append(f"<p><b>{html.escape(o['empregador'])}</b></p>"
-                      f'<ul class="lista">{lis}</ul>')
-    if not grupos:
+    """Bloco 'Pendências por auditoria', abaixo dos vencimentos: um cartão por
+    empresa (contagem + as 3 primeiras pendências resumidas + link para o
+    dossiê), com a empresa mais carregada primeiro — o bloco corrido de antes
+    virava um paredão de texto. A lista completa segue no dossiê da OS. É o
+    destino do aviso semanal de segunda (notificar_pendencias.py) — a
+    notificação traz só os números, o detalhe mora aqui."""
+    com_pend = [(i, o) for i, o in enumerate(oss) if o.get("pendencias")]
+    if not com_pend:
         return ""
+    com_pend.sort(key=lambda par: -len(par[1]["pendencias"]))
+    cartoes = []
+    for i, o in com_pend:
+        pend = o["pendencias"]
+        lis = "".join(
+            f"<li>{md_inline(p if len(p) <= 140 else p[:139].rstrip() + '…')}</li>"
+            for p in pend[:3])
+        # Mesma chave dos cards da grade (chaveOS do JS): abre o dossiê por cima.
+        chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
+        sobra = f"+ {len(pend) - 3} outras · " if len(pend) > 3 else ""
+        cartoes.append(
+            f'<div class="pend-emp"><div class="cab">'
+            f"<b>{html.escape(o['empregador'])}</b>"
+            f'<span class="n">{len(pend)}</span></div><ul>{lis}</ul>'
+            f'<a class="abrir" href="#os={chave}">{sobra}abrir dossiê →</a></div>')
     total = sum(len(o.get("pendencias") or []) for o in oss)
-    return (f'<div class="venc"><h3>Pendências por auditoria '
-            f'<span style="float:right">{total}</span></h3>'
-            + "".join(grupos) + "</div>")
+    plural_a = "abertas" if total > 1 else "aberta"
+    plural_e = "auditorias" if len(com_pend) > 1 else "auditoria"
+    return (f'<div class="pend-cab"><h3>Pendências <em>por auditoria</em></h3>'
+            f'<span class="cont">{total} {plural_a} em {len(com_pend)} '
+            f'{plural_e}</span></div><div class="pend-grid">'
+            + "".join(cartoes) + "</div>")
 
 
 def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
@@ -2467,15 +2623,32 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
                       'a sua avaliação no DET">📋 '
                       + (f'{n_ag} itens aguardam sua decisão' if n_ag > 1
                          else '1 item aguarda sua decisão') + '</div>') if n_ag else ""
+        # Contagens por card para o filtro dos contadores (mesma régua do topo:
+        # só DET que ainda cobra ação conta) e texto para a busca da grade.
+        n_venc_os = n_urg_os = 0
+        for d in o["dets"]:
+            if d["prazo"] and det_cobra_acao(d):
+                dd = (d["prazo"] - hoje).days
+                if dd < 0:
+                    n_venc_os += 1
+                elif dd <= 7:
+                    n_urg_os += 1
+        busca = " ".join(filter(None, [
+            o["empregador"], fmt_cnpj(o["cnpj"]) if o["cnpj"] else "", o["cnpj"],
+            o["municipio"]] + [d["codigo"] or "" for d in o["dets"]]))
+        n_pend = len(o.get("pendencias") or [])
+        pend_num = (f'<span class="pend-num">{n_pend} pendência'
+                    f'{"s" if n_pend > 1 else ""}</span>') if n_pend else ""
         # Endereço da auditoria. Sem pasta (Artifact publicado), cai no índice —
         # o link continua funcionando dentro daquela versão publicada.
         chave = urllib.parse.quote(o["pasta"] or f"os{i}", safe="")
         cards.append(f"""
-<a class="card {classe}" data-det="{o.get('ord_det', i)}" href="#so={chave}">
+<a class="card {classe}" data-det="{o.get('ord_det', i)}" data-venc="{n_venc_os}" data-urg="{n_urg_os}" data-novas="{len(o.get('novas') or [])}" data-busca="{html.escape(busca.lower())}" href="#so={chave}">
   <h2>{html.escape(o["empregador"])}</h2>
   <div class="meta">{html.escape(fmt_cnpj(o["cnpj"]) if o["cnpj"] else "CNPJ/CPF não informado")}{(" · " + html.escape(o["municipio"])) if o["municipio"] else ""}</div>
-  <span class="badge {classe}">{html.escape(rotulo)}</span>
+  <span class="badge {classe}">{html.escape(rotulo)}</span>{pend_num}
   <div class="chips">{chips}</div>
+  <div class="passo-card" data-i="{i}"></div>
   <div class="rodape-card">
     <span>{len(o["autos"])} auto(s) · {dets_abertos} DET(s) aberto(s)</span>
     <span>{html.escape(dias_humano(o["data_inicio"], hoje))}</span>
@@ -2498,7 +2671,14 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
               "AFT Toolkit · painel local · aberto pelo arquivo é somente "
               "leitura; pelo modo interativo (http://127.0.0.1:8347, via "
               "servir_painel.py) os cards ganham ações — ver skill /aft-painel.")
-    return f"""{titulo_art}<style>{CSS}</style>
+    # O CSS declara Source Serif 4 e Hanken Grotesk: sem este link elas nunca
+    # chegavam e tudo caía no fallback (Georgia/sistema). Sem internet o link
+    # falha em silêncio e o fallback segue valendo; só a fonte é baixada,
+    # nenhum dado da fiscalização sai da máquina.
+    fontes = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2'
+              '?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500'
+              '&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">')
+    return f"""{titulo_art}{fontes}<style>{CSS}</style>
 <h1>Painel <em>AFT</em></h1>
 <p class="sub">Gerado em {hoje.strftime("%d/%m/%Y")} a partir das fichas locais (memory.md) · clique num card para o detalhe da auditoria</p>
 <div class="abas">
@@ -2507,14 +2687,16 @@ def render_miolo(oss, hoje, n_venc, n_urg, n_novas, n_autos, venc, diario,
 </div>
 <div id="vista-painel">
 <div class="contadores">
-  <div class="contador"><b>{len(oss)}</b><span>OS ativas</span></div>
-  <div class="contador{' alerta' if n_venc else ''}"><b>{n_venc}</b><span>DETs vencidos</span></div>
-  <div class="contador{' alerta' if n_urg else ''}"><b>{n_urg}</b><span>vencendo em ≤ 7 dias</span></div>
-  <div class="contador{' alerta' if n_novas else ''}"><b>{n_novas}</b><span>notif. sem registro</span></div>
+  <div class="contador clicavel" onclick="filtra(null)" title="limpar o filtro da grade"><b>{len(oss)}</b><span>OS ativas</span></div>
+  <div class="contador clicavel{' alerta' if n_venc else ''}" onclick="filtra('venc',this)" title="filtrar a grade: auditorias com DET vencido"><b>{n_venc}</b><span>DETs vencidos</span></div>
+  <div class="contador clicavel{' alerta' if n_urg else ''}" onclick="filtra('urg',this)" title="filtrar a grade: auditorias com DET vencendo em 7 dias ou menos"><b>{n_urg}</b><span>vencendo em ≤ 7 dias</span></div>
+  <div class="contador clicavel{' alerta' if n_novas else ''}" onclick="filtra('novas',this)" title="filtrar a grade: auditorias com notificação ainda sem registro na ficha"><b>{n_novas}</b><span>notif. sem registro</span></div>
   <div class="contador"><b>{n_autos}</b><span>autos lavrados</span></div>
   <div class="contador"><b>{dias_mes}</b><span>dias trabalhados no mês</span></div>
 </div>
+<p class="dica-filtro" id="dica-filtro">clique num contador para filtrar a grade</p>
 <div class="ordena">
+  <input id="busca" type="search" placeholder="buscar empresa, município, CNPJ ou código de notificação…" oninput="aplicaGrade()">
   <label for="ordem">ordenar por</label>
   <select id="ordem" onchange="ordena(this.value)">
     <option value="criada">auditoria mais recente</option>
