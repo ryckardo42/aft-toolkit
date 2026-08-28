@@ -235,20 +235,30 @@ rotina nunca falha por causa disso.
 ## O que o painel mostra
 
 - Contadores: OS ativas, DET vencidos, DET vencendo em 7 dias, notificações não
-  cadastradas, autos lavrados.
+  cadastradas, autos lavrados. **Os quatro primeiros filtram a grade ao clique** (card
+  fora do critério fica esmaecido, não some; clicar de novo — ou em "OS ativas" —
+  limpa). O filtro não persiste entre aberturas.
+- **Busca acima da grade**: parte do nome da empresa, município, CNPJ (com ou sem
+  máscara) ou código de notificação; acentos são ignorados na comparação. Compõe com o
+  filtro dos contadores (os dois valem ao mesmo tempo).
 - **Próximos vencimentos** (bloco abaixo da grade de cards): a agenda consolidada de
   TODAS as OS — cada notificação DET aberta e cada pendência datada (as com "prazo
-  <data>" no texto) que **ainda não venceram**, em ordem de vencimento, com selo de
-  urgência (`DET <código> <12 primeiros caracteres do empregador> » dd/mm/aaaa`). O
+  <data>" no texto) que **ainda não venceram**, **agrupada por data**: um bloco por
+  dia, com selo de urgência e os DETs agregados por empregador ("3 DETs · EMPRESA"). O
   vencido não entra aqui — já grita nos contadores e no card da OS; este bloco é só o
-  que vem pela frente. Cada DET tem o botão **"agendar no Google Calendar"**: abre o
-  Google Calendar com o evento de dia inteiro já preenchido (URL de template — sem
-  login, sem API; o AFT só clica em Salvar). Para sincronização automática
-  (criar/atualizar/marcar ✓ sozinho), a skill é a `/aft-agenda-det`, via conector Google
-  Calendar do Claude.
+  que vem pela frente. Dia com uma notificação tem o botão **"agendar no Google
+  Calendar"** (evento de dia inteiro já preenchido — URL de template, sem login, sem
+  API; o AFT só clica em Salvar); dia com várias tem **"agendar os N"**, que cria UM
+  evento listando todas (abrir N abas cairia no bloqueador de pop-up). Para evento por
+  notificação e sincronização automática (criar/atualizar/marcar ✓ sozinho), a skill é
+  a `/aft-agenda-det`, via conector Google Calendar do Claude.
+- **Pendências por auditoria** (abaixo dos vencimentos): um cartão por empresa com a
+  contagem, as 3 primeiras pendências resumidas e o link "abrir dossiê"; a empresa com
+  mais pendências vem primeiro. A lista completa continua no dossiê da OS.
 - **Um card por OS**: empregador, CNPJ, município, badge de urgência (vencido / vence em
-  Xd / no prazo / sem prazo), chips das NRs autuadas, nº de autos e DETs abertos, "há N
-  dias" desde o início.
+  Xd / no prazo / sem prazo), contador de pendências, chips das NRs autuadas, nº de
+  autos e DETs abertos, "há N dias" desde o início — e a linha de **"próximo passo"**,
+  a mesma sugestão do destaque interno do dossiê, ecoada na grade.
 - **Clique no card → detalhe da auditoria** (modal central amplo): RI em destaque, botão
   para copiar o caminho da pasta, DETs com estado (✔ checada / ◻ aberta) e **selo de
   urgência por notificação** ("vencido há Xd" / "vence HOJE" / "vence em Xd" / "em Xd"),
