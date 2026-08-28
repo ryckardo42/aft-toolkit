@@ -13,8 +13,12 @@ Tudo local: nenhuma chamada de rede, nenhuma dependencia externa.
 O HTML e autocontido (CSS/JS embutidos, sem CDN) e contem DADOS PESSOAIS.
 
 Uso:
-  python lre_esocial.py "<pasta da OS>" <CNPJ14> [--sisfgts "<base>"]
-  python lre_esocial.py --achar <CNPJ14>
+  python lre_esocial.py "<pasta da OS>" <CNPJ14_ou_CPF11> [--sisfgts "<base>"]
+  python lre_esocial.py --achar <CNPJ14_ou_CPF11>
+
+Empregador pessoa fisica (produtor rural, empregador domestico) e indexado
+pelo CPF de 11 digitos, sem pontuacao - aceito nos dois lugares acima onde
+normalmente se informa o CNPJ.
 """
 import csv
 import glob
@@ -54,25 +58,30 @@ def achar_sisfgts(base_informada=None):
     return None
 
 
-def achar_partes_grupo(base, cnpj14, grupo):
+def achar_partes_grupo(base, identificador, grupo):
     """Partes de um grupo de arquivos do eSocial no SISFGTS, ordenadas pela
-    sequencia. O SISFGTS pagina os resultados (eSocial_<grupo>_<n>_<8dig>.txt);
+    sequencia. O SISFGTS pagina os resultados (eSocial_<grupo>_<n>_<sufixo>.txt);
     ler so a parte 1 perde registros. Grupos conhecidos: idA_LRE (vinculos),
-    idK_AFAST (afastamentos), idM_FOLHA (bases de FGTS da folha)."""
-    pasta = Path(base) / "Arquivos" / "eSocial" / cnpj14
+    idK_AFAST (afastamentos), idM_FOLHA (bases de FGTS da folha).
+
+    `identificador` e o CNPJ de 14 digitos (empregador pessoa juridica) ou o
+    CPF de 11 digitos (empregador pessoa fisica - produtor rural, doméstico):
+    o SISFGTS usa o mesmo formato como nome da pasta e como sufixo do arquivo
+    nos dois casos, so muda a quantidade de digitos (14 ou 11)."""
+    pasta = Path(base) / "Arquivos" / "eSocial" / identificador
     if not pasta.is_dir():
         return []
     partes = []
     for p in pasta.glob(f"eSocial_{grupo}_*.txt"):
-        m = re.match(rf"eSocial_{grupo}_(\d+)_(\d{{8}})\.txt$", p.name)
+        m = re.match(rf"eSocial_{grupo}_(\d+)_(\d+)\.txt$", p.name)
         if m:
             partes.append((int(m.group(1)), p))
     return [p for _, p in sorted(partes)]
 
 
-def achar_partes_lre(base, cnpj14):
+def achar_partes_lre(base, identificador):
     """Partes do LRE (grupo idA). O SISFGTS pagina de 1.000 em 1.000 vinculos."""
-    return achar_partes_grupo(base, cnpj14, "idA_LRE")
+    return achar_partes_grupo(base, identificador, "idA_LRE")
 
 
 def ler_partes(partes):
@@ -203,6 +212,18 @@ def fmt_cnpj(c):
     return f"{c[:2]}.{c[2:5]}.{c[5:8]}/{c[8:12]}-{c[12:]}" if len(c) == 14 else c
 
 
+def fmt_identificador(ident):
+    """CNPJ (14 digitos) ou CPF (11 digitos) de empregador pessoa fisica
+    (produtor rural, empregador domestico). O SISFGTS indexa o eSocial do
+    mesmo jeito nos dois casos - so muda a quantidade de digitos."""
+    ident = re.sub(r"\D", "", ident or "")
+    if len(ident) == 14:
+        return fmt_cnpj(ident), "CNPJ"
+    if len(ident) == 11:
+        return fmt_cpf(ident), "CPF"
+    return ident, "CNPJ/CPF"
+
+
 def detectar_lotes(vinc, min_reg=5, min_frac=0.02, spread_dias=365):
     """Datas em que houve recepcao EM MASSA (carga inicial do eSocial ou
     retransmissao em lote).
@@ -311,6 +332,7 @@ def montar_linhas(vinc, res, cbo_map):
             "categ": v.get("codcateg", ""),
             "bairro": v.get("bairro", ""), "mun": v.get("codmunic", ""),
             "uf": v.get("uf", ""), "recibo": v.get("meta_nr_recibo", ""),
+            "local": v.get("localtabgeral_nrinsc", ""),
         })
     return out
 
@@ -320,7 +342,7 @@ def gravar_csv(destino: Path, linhas: list[dict]):
     cols = ["mat", "nome", "cpf", "adm", "tpadm", "evt", "rec", "proc", "des",
             "mtv", "cbo", "cargo", "sal", "unid", "hrs", "jorn", "categ",
             "sexo", "nasc", "raca", "grau", "bairro", "mun", "uf", "pcd",
-            "tardio", "dias", "recibo"]
+            "tardio", "dias", "recibo", "local"]
     rot = {"mat": "MATRICULA", "nome": "NOME", "cpf": "CPF",
            "adm": "ADMISSAO", "tpadm": "TIPO_ADMISSAO", "evt": "EVENTO",
            "rec": "RECEPCAO_ESOCIAL", "proc": "PROCESSAMENTO_INTERNO",
@@ -330,7 +352,8 @@ def gravar_csv(destino: Path, linhas: list[dict]):
            "sexo": "SEXO", "nasc": "NASCIMENTO", "raca": "RACA_COR",
            "grau": "GRAU_INSTRUCAO", "bairro": "BAIRRO", "mun": "COD_MUNICIPIO",
            "uf": "UF", "pcd": "PCD", "tardio": "INDICIO_TARDIO",
-           "dias": "DIAS_ATRASO", "recibo": "RECIBO_ADMISSAO"}
+           "dias": "DIAS_ATRASO", "recibo": "RECIBO_ADMISSAO",
+           "local": "LOCAL_DE_TRABALHO"}
     with open(destino, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f, delimiter=";")
         w.writerow([rot[c] for c in cols])
@@ -344,7 +367,7 @@ def gravar_md(destino: Path, meta: dict, res: dict):
     documento da OS. NAO contem nome nem CPF: so agregados."""
     L = []
     L.append("# LRE eSocial - Livro de Registro de Empregados\n")
-    L.append(f"- **Estabelecimento:** {meta['cnpj']}")
+    L.append(f"- **Empregador ({meta.get('tipoDoc','CNPJ')}):** {meta['cnpj']}")
     L.append(f"- **Fonte:** SISFGTS, {meta['partes']} arquivo(s) "
              f"`eSocial_idA_LRE_*_{meta['raiz']}.txt`")
     L.append(f"- **Extraído em:** {meta['gerado']}")
@@ -358,6 +381,26 @@ def gravar_md(destino: Path, meta: dict, res: dict):
     L.append(f"| Desligados | {meta['desligados']} |")
     L.append(f"| PCD (entre os ativos) | {meta['pcd']} |")
     L.append("")
+    locais = meta.get("locais") or []
+    if len(locais) > 1:
+        L.append("## Local de trabalho\n")
+        L.append(f"> Este empregador declara **{len(locais)} locais de "
+                 "trabalho** distintos (`localtabgeral_nrinsc`) — comum em "
+                 "empregador pessoa física com mais de uma propriedade/imóvel. "
+                 "A lista completa dos vínculos por local está no painel "
+                 "(filtro \"Local de trabalho\") e na coluna "
+                 "`LOCAL_DE_TRABALHO` do CSV. Para saber qual código é o "
+                 "estabelecimento que você vai fiscalizar, busque no painel "
+                 "pelo nome ou CPF de um trabalhador que você já sabe que "
+                 "trabalha lá — o código aparece no detalhe do vínculo.\n")
+        L.append("| Código do local | Vínculos |")
+        L.append("|---|---|")
+        for cod, n in locais[:20]:
+            L.append(f"| {cod} | {n} |")
+        if len(locais) > 20:
+            L.append(f"\n_(mostrando 20 de {len(locais)} locais; lista "
+                     "completa no painel e no CSV)_")
+        L.append("")
     L.append(f"## Registro tardio — admissões a partir de {meta['marco']}\n")
     L.append(f"> A lista de indícios cobre **somente admissões de "
              f"{meta['marco']} em diante** — marco em que o registro "
@@ -493,8 +536,13 @@ mark{background:#ffe38a;color:#000;padding:0 1px;border-radius:2px}
 @media (prefers-color-scheme:dark){mark{background:#7a6320;color:#fff}}
 </style></head><body><div class="wrap">
 <header><h1 id="hEmp"></h1>
-<div class="sub">CNPJ <b id="mCnpj"></b> &middot; <span id="mFonte"></span>
+<div class="sub"><span id="mDocLbl">CNPJ</span> <b id="mCnpj"></b> &middot; <span id="mFonte"></span>
  &middot; extraído em <span id="mGer"></span></div></header>
+<div class="note" id="noteLocais" style="display:none"><b>Vários locais de trabalho declarados</b> —
+ este empregador tem <span id="nLocais"></span> locais de trabalho distintos (comum em pessoa física
+ com mais de uma propriedade/imóvel). Use o filtro <b>Local de trabalho</b> abaixo para restringir a
+ lista a um só local: se você já sabe o nome de um trabalhador daquele estabelecimento, busque por ele
+ primeiro, abra o detalhe do vínculo para ver o código do local, e então escolha esse código no filtro.</div>
 <div class="cards">
  <div class="card"><div class="n" id="cTot"></div><div class="l">Vínculos no LRE</div></div>
  <div class="card g"><div class="n" id="cAtv"></div><div class="l">Ativos</div></div>
@@ -523,6 +571,7 @@ mark{background:#ffe38a;color:#000;padding:0 1px;border-radius:2px}
  <button class="chip" data-f="desligados">Desligados</button>
  <button class="chip" data-f="tardios" title="somente admissões a partir do marco de obrigatoriedade">Indício tardio (desde <span id="chipMarco"></span>)</button>
  <button class="chip" data-f="pcd">PCD</button>
+ <select id="fLocal" style="display:none;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:13px"></select>
  <span class="cnt" id="cnt"></span></div>
 <div class="tw"><table><thead><tr>
  <th data-s="mat">Matríc. <span class="ar">&#9662;</span></th>
@@ -552,7 +601,15 @@ mark{background:#ffe38a;color:#000;padding:0 1px;border-radius:2px}
 <script>
 const D=__DADOS__, M=__META__;
 hEmp.textContent='LRE eSocial — '+M.empregador;
+mDocLbl.textContent=M.tipoDoc||'CNPJ';
 mCnpj.textContent=M.cnpj; mFonte.textContent=M.fonte; mGer.textContent=M.gerado;
+if(M.locais && M.locais.length>1){
+  noteLocais.style.display='block'; nLocais.textContent=M.locais.length;
+  fLocal.style.display='inline-block';
+  fLocal.innerHTML='<option value="">Local de trabalho: todos</option>'+
+    M.locais.map(l=>`<option value="${esc(l[0])}">${esc(l[0])} (${l[1]})</option>`).join('');
+  fLocal.onchange=()=>{filtroLocal=fLocal.value;pag=1;render();};
+}
 cTot.textContent=M.total; cAtv.textContent=M.ativos; cDes.textContent=M.desligados;
 cPcd.textContent=M.pcd; cReg.textContent=M.regulares; cTar.textContent=M.tardios;
 cApr.textContent=M.aprendizes;
@@ -583,7 +640,7 @@ cotasTxt.innerHTML=
  `${M.aprFaixaMin}–${M.aprFaixaMax} — <b>ordem de grandeza, não a cota devida</b>; o cálculo da base é do AFT.`+
  `<br><span style="color:var(--warn)">Os dois números saem do que o empregador declarou no eSocial: conferir em campo.</span>`;
 mtb.innerHTML=M.motivos.map(m=>`<tr><td>${esc(m[0]||'-')}</td><td>${esc(m[2])}</td><td>${m[1]}</td></tr>`).join('');
-let filtro='todos',termo='',ord='nome',asc=true,pag=1,tam=50;
+let filtro='todos',filtroLocal='',termo='',ord='nome',asc=true,pag=1,tam=50;
 function norm(s){return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function hl(s,t){s=esc(s); if(!t)return s;
  const n=norm(s),q=norm(t); let i=n.indexOf(q); if(i<0)return s;
@@ -594,6 +651,7 @@ function filtrar(){const t=norm(termo);
   if(filtro==='desligados'&&x.ativo)return false;
   if(filtro==='tardios'&&!x.tardio)return false;
   if(filtro==='pcd'&&!x.pcd)return false;
+  if(filtroLocal&&x.local!==filtroLocal)return false;
   if(!t)return true;
   return norm(x.nome).includes(t)||norm(x.cpf).includes(t)||
          norm(x.mat).includes(t)||norm(x.cargo).includes(t)||norm(x.cbo).includes(t);
@@ -649,6 +707,7 @@ function detalhe(tr,x){
   ${f('Raça/cor',x.raca)}${f('Grau de instrução',x.grau)}${f('Tipo de admissão',x.tpadm)}
   ${f('Categoria',x.categ)}${f('Jornada',x.jorn)}${f('Horas semanais',x.hrs)}
   ${f('Bairro',x.bairro)}${f('Município (IBGE)',x.mun?x.mun+' / '+x.uf:'')}
+  ${f('Local de trabalho',x.local)}
   ${f('Motivo do desligamento',x.mtv)}${f('Evento',x.evt)}
   ${f('Recepção no eSocial',x.rec)}${f('Processamento interno',x.proc)}
   ${f('Recibo da admissão',x.recibo)}
@@ -670,7 +729,11 @@ render();
 
 def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
           base_sisfgts=None) -> dict:
-    """Le o LRE do SISFGTS e grava <pasta_os>/eSocial/ com painel, CSV e md."""
+    """Le o LRE do SISFGTS e grava <pasta_os>/eSocial/ com painel, CSV e md.
+
+    `cnpj14` aceita tambem CPF de 11 digitos, para empregador pessoa fisica
+    (produtor rural, empregador domestico) - o SISFGTS indexa o eSocial da
+    mesma forma nos dois casos."""
     base = achar_sisfgts(base_sisfgts)
     if not base:
         raise FileNotFoundError(
@@ -679,8 +742,9 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
             "em /Volumes/... Informe a base com --sisfgts se estiver noutro lugar.")
     partes = achar_partes_lre(base, cnpj14)
     if not partes:
+        doc_lbl = "CNPJ" if len(cnpj14) == 14 else "CPF"
         raise FileNotFoundError(
-            f"Nenhum arquivo LRE para o CNPJ {cnpj14} em "
+            f"Nenhum arquivo LRE para o {doc_lbl} {cnpj14} em "
             f"{base / 'Arquivos' / 'eSocial' / cnpj14}. "
             "Baixe os dados do eSocial no SISFGTS antes de rodar esta skill.")
     vinc = ler_partes(partes)
@@ -690,12 +754,18 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
     res = resumir(vinc)
     cbo_map = carregar_cbo()
     linhas = montar_linhas(vinc, res, cbo_map)
-    raiz = cnpj14[:8]
+    raiz = cnpj14[:8] if len(cnpj14) == 14 else cnpj14
+    ident_fmt, tipo_doc = fmt_identificador(cnpj14)
+    # Local de trabalho (localtabgeral_nrinsc): empregador pessoa fisica rural
+    # costuma ter varias propriedades - cada uma com o proprio codigo. Sem
+    # isso, o AFT recebe uma lista enorme de trabalhadores sem saber quais
+    # pertencem ao estabelecimento que vai fiscalizar.
+    locais = Counter(l["local"] for l in linhas if l["local"])
     motivos = [(c, n, (MTV.get(c, NAO_MAP) if c else "-"))
                for c, n in res["motivos"].most_common()]
     meta = {
         "empregador": empregador or cnpj14,
-        "cnpj": fmt_cnpj(cnpj14), "raiz": raiz, "partes": len(partes),
+        "cnpj": ident_fmt, "tipoDoc": tipo_doc, "raiz": raiz, "partes": len(partes),
         "fonte": (f"SISFGTS · {len(partes)} arquivo"
                   f"{'s' if len(partes) > 1 else ''} LRE"),
         "gerado": date.today().strftime("%d/%m/%Y"),
@@ -722,6 +792,7 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
         "preMarco": res["pre_marco"], "marco": fmt_d(res["marco"]),
         "mesmoDia": res["mesmo_dia"], "apos": res["apos"],
         "porTipo": list(res["por_tipo"].items()), "motivos": motivos,
+        "locais": locais.most_common(),
     }
 
     destino = Path(pasta_os) / "eSocial"
@@ -852,6 +923,7 @@ def main():
 
     if argv and argv[0] == "--achar":
         cnpj = re.sub(r"\D", "", argv[1]) if len(argv) > 1 else ""
+        doc_lbl = "CNPJ" if len(cnpj) == 14 else "CPF" if len(cnpj) == 11 else "CNPJ/CPF"
         b = achar_sisfgts(base)
         if not b:
             print("SISFGTS: NAO ENCONTRADO")
@@ -859,9 +931,9 @@ def main():
         print(f"SISFGTS: {b}")
         partes = achar_partes_lre(b, cnpj)
         if not partes:
-            print(f"LRE do CNPJ {cnpj}: NENHUM ARQUIVO")
+            print(f"LRE do {doc_lbl} {cnpj}: NENHUM ARQUIVO")
             sys.exit(3)
-        print(f"LRE do CNPJ {cnpj}: {len(partes)} parte(s)")
+        print(f"LRE do {doc_lbl} {cnpj}: {len(partes)} parte(s)")
         for p in partes:
             print(f"  {p.name}")
         sys.exit(0)
@@ -872,8 +944,9 @@ def main():
     pasta_os = Path(argv[0])
     cnpj = re.sub(r"\D", "", argv[1])
     empregador = argv[2] if len(argv) > 2 else pasta_os.name
-    if len(cnpj) != 14:
-        print(f"CNPJ invalido: '{argv[1]}' -> precisa de 14 digitos.")
+    if len(cnpj) not in (11, 14):
+        print(f"CNPJ/CPF invalido: '{argv[1]}' -> precisa de 14 digitos (CNPJ) "
+              "ou 11 digitos (CPF, empregador pessoa fisica).")
         sys.exit(1)
     if not pasta_os.is_dir():
         print(f"Pasta da OS nao existe: {pasta_os}")

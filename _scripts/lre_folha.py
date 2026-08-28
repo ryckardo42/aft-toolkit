@@ -53,7 +53,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from lre_esocial import (achar_sisfgts, achar_partes_grupo, ler_partes,
-                         d_iso, fmt_d, fmt_cpf_mascarado, fmt_cnpj, MTV, UNID)
+                         d_iso, fmt_d, fmt_cpf_mascarado, fmt_cnpj, fmt_identificador, MTV, UNID)
 
 TP_MENSAL = 11
 TP_13 = 12
@@ -559,12 +559,12 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
             "em /Volumes/... Informe a base com --sisfgts se estiver noutro lugar.")
     if not achar_partes_grupo(base, cnpj14, "idA_LRE"):
         raise FileNotFoundError(
-            f"Nenhum arquivo LRE para o CNPJ {cnpj14} em "
+            f"Nenhum arquivo LRE para o CNPJ/CPF {cnpj14} em "
             f"{base / 'Arquivos' / 'eSocial' / cnpj14}. "
             "Baixe os dados do eSocial no SISFGTS antes.")
     if not achar_partes_grupo(base, cnpj14, "idM_FOLHA"):
         raise FileNotFoundError(
-            f"O CNPJ {cnpj14} tem o LRE mas NAO tem folha (idM). "
+            f"O CNPJ/CPF {cnpj14} tem o LRE mas NAO tem folha (idM). "
             "No SISFGTS, baixe o eSocial com a opcao 'LRE e demais registros' "
             "- e ela que traz as bases de FGTS de que esta analise precisa.")
     lre = ler_partes(achar_partes_grupo(base, cnpj14, "idA_LRE"))
@@ -577,7 +577,7 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
     ag = agregar(trabs, jan_ini, jan_fim, hoje)
     linhas = montar_linhas(trabs)
     meta = {
-        "empregador": empregador or cnpj14, "cnpj": fmt_cnpj(cnpj14),
+        "empregador": empregador or cnpj14, "cnpj": fmt_identificador(cnpj14)[0],
         "gerado": hoje.strftime("%d/%m/%Y"), "janela": ag["janela"],
         "vinculos": ag["vinculos"], "trabBuracos": ag["trab_buracos"],
         "mesesBuraco": ag["meses_buraco"], "trabSem13": ag["trab_sem_13"],
@@ -621,8 +621,9 @@ def main():
     pasta_os = Path(argv[0])
     cnpj = re.sub(r"\D", "", argv[1])
     empregador = argv[2] if len(argv) > 2 else pasta_os.name
-    if len(cnpj) != 14:
-        print(f"CNPJ invalido: '{argv[1]}' -> precisa de 14 digitos.")
+    if len(cnpj) not in (11, 14):
+        print(f"CNPJ/CPF invalido: '{argv[1]}' -> precisa de 14 digitos (CNPJ) "
+              "ou 11 digitos (CPF, empregador pessoa fisica).")
         sys.exit(1)
     if not pasta_os.is_dir():
         print(f"Pasta da OS nao existe: {pasta_os}")
