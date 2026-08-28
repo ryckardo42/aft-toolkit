@@ -189,6 +189,15 @@ serve para você lembrar do que foi auditado; o inteiro teor fica no arquivo do 
 Constatação avulsa (SESMT, CIPA, ASO faltando) e tema sem relatório salvo ficam como
 estão.
 
+**Um cuidado importante antes de reorganizar uma pasta antiga:** se você tem autos de
+infração já importados no Sistema Auditor mas **ainda não lavrados**, eles podem dar
+ERRO depois da reorganização — o Sistema Auditor guarda o caminho dos anexos no
+momento da importação, e mover ou renomear arquivos e pastas faz esse caminho deixar
+de bater. Recomenda-se **lavrar esses autos antes** de aplicar a reorganização; a
+alternativa é gerar o pacote de novo com o `/aft-gera-ai` depois dela e reimportar. A
+própria `/aft-organiza-os` avisa em destaque, no plano, quando encontra autos nessa
+situação.
+
 ---
 
 ## 28/08/2026
