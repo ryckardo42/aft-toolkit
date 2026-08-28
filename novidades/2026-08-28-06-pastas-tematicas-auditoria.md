@@ -23,7 +23,11 @@ o resumo — nada mais fica solto na raiz.
 
 Suas fiscalizações antigas continuam funcionando exatamente como estão: nada é movido
 sem você pedir. Quando quiser colocar uma pasta antiga no padrão novo, a
-`/aft-organiza-os` faz a mudança (e conserta os apontamentos da ficha) com uma única
-aprovação sua.
+`/aft-organiza-os` faz tudo com uma única aprovação sua: move os arquivos para as
+pastas de tema, conserta os apontamentos da ficha e condensa as anotações longas dos
+temas já analisados em resumos de duas linhas apontando o relatório — a anotação
+serve para você lembrar do que foi auditado; o inteiro teor fica no arquivo do tema.
+Constatação avulsa (SESMT, CIPA, ASO faltando) e tema sem relatório salvo ficam como
+estão.
 
 ---
