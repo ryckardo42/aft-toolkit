@@ -3,10 +3,11 @@
 """
 conferir_rastreamento.py — acha CONTRADIÇÃO entre os registros de auto do memory.md.
 
-O mesmo auto de infração aparece em até quatro lugares: as três seções do
-`memory.md` da OS (`## Ementas da OS`, `## Autos de Infração` e
-`## Autos lavrados`) e, depois de transmitido, o `autos-lavrados.md` que a
-`/aft-autos-lavrados` extrai do Sistema Auditor. Manter os quatro coerentes é
+O mesmo auto de infração aparece em até cinco lugares: duas seções do
+`memory.md` da OS (`## Autos de Infração` e `## Autos lavrados`), o
+`autos-lavrados.md` que a `/aft-autos-lavrados` extrai do Sistema Auditor, a
+folha `ementas.md` (item 2.5 do Relatório de Inspeção) e, nas OS ainda não
+migradas, o `## Ementas da OS` do próprio `memory.md`. Manter todos coerentes é
 trabalho manual, e numa fiscalização real dois deles se contradisseram: a caixa
 marcada `[x]` com o texto ao lado dizendo "pendente de importação".
 
@@ -14,10 +15,10 @@ A convenção que evita isso já existe — status e checkbox mudam JUNTOS, no m
 Edit — e não impediu nada, porque convenção escrita não confere arquivo. Este
 script confere.
 
-A seção `## Ementas da OS` é a mais perigosa das três, porque alimenta a
-avaliação de ementas do Relatório de Inspeção: um "auto lavrado" falso ali entra
-em documento oficial. Nela o `[x]` significa "ementa TRATADA nesta fiscalização",
-nunca "auto transmitido" — e é essa confusão que o script procura.
+A folha de ementas é a mais perigosa de todas, porque é ela que o AFT digita
+no item 2.5 do Relatório de Inspeção: erro ali entra em documento oficial. Uma
+ementa autuada que aparece na folha como "Regular" ou "Não fiscalizada" é o
+defeito caro, e é o que o script procura com mais cuidado.
 
 O que ele acha:
 
@@ -28,7 +29,14 @@ O que ele acha:
      e aí o número real aparece;
   3. em `## Autos lavrados`, caixa `[ ]` cujo texto já traz número de AI;
   4. em `## Ementas da OS`, linha que AFIRMA auto lavrado sem respaldo em
-     `## Autos lavrados`.
+     `## Autos lavrados` (só nas OS ainda não migradas para o `ementas.md`);
+  5. na folha `ementas.md`, ementa com auto lavrado marcada como Regular, Não
+     aplicável ou Não fiscalizada;
+  6. na folha, "Não aplicável"/"Não fiscalizada" sem o comentário que o SFIT
+     exige;
+  7. na folha, ação `Regularizada` sem nenhum lastro registrado;
+  8. na folha marcada como dupla visita, ação `Autuação`;
+  9. na folha, a mesma ementa repetida em duas linhas.
 
 LIMITE DECLARADO, para o relatório não mentir: isto acha CONTRADIÇÃO entre
 registros. Não prova que algum deles está certo — os dois podem estar errados
@@ -61,6 +69,12 @@ import argparse
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    import ementas_os
+except Exception:      # toolkit incompleto: as conferencias da folha somem,
+    ementas_os = None  # e as dos autos continuam funcionando.
 
 # O console do Windows abre em cp1252 e o nome da pasta da OS (razao social) tem
 # acento: sem esta reconfiguracao, "FUNDICAO" sai "FUNDI??O" no cabecalho do
@@ -183,6 +197,74 @@ def conferir(pasta):
                 "snapshot esta velho, ou o [x] foi marcado antes da transmissao."
                 % ", ".join(sorted(faltando)))
 
+    problemas.extend(conferir_folha(pasta, transmitidas))
+    return problemas
+
+
+def conferir_folha(pasta, transmitidas):
+    """Confere a folha do item 2.5 (`ementas.md`) — o que vai ao documento oficial.
+
+    `transmitidas` sao as ementas que o memory.md da como transmitidas; junta-se
+    a elas o que o snapshot do Sistema Auditor conhece, porque a folha pode ter
+    sido preenchida a partir do snapshot sem o memory.md ter sido atualizado.
+    """
+    if ementas_os is None:
+        return []
+    try:
+        folha = ementas_os.ler(pasta)
+    except Exception:
+        return []
+    if folha.origem != ementas_os.ARQUIVO:
+        return []          # OS ainda nao migrada: valem as conferencias 1-4.
+
+    problemas = []
+    autuadas = set(transmitidas)
+    oficial = Path(pasta) / "autos-lavrados.md"
+    if oficial.is_file():
+        texto = oficial.read_text(encoding="utf-8", errors="replace")
+        m = re.search(r"^## Detalhamento[^\n]*\n(.*?)(?=^## |\Z)", texto, re.S | re.M)
+        if m:
+            autuadas |= set(RE_EMENTA.findall(m.group(1)))
+
+    vistos = {}
+    for e in folha.ementas:
+        # 5) O erro caro: ementa autuada que a folha declara em ordem.
+        if e.codigo in autuadas and e.situacao and e.situacao != "Irregular":
+            problemas.append(
+                "ementas.md: a ementa %s tem auto lavrado, mas a folha a marca como "
+                "\"%s\". Isto e o que vai para o item 2.5 do Relatorio de Inspecao."
+                % (e.codigo, e.situacao))
+
+        # 6) O SFIT nao aceita "nao aplicavel"/"nao fiscalizada" sem justificativa.
+        if e.situacao in ementas_os.EXIGEM_COMENTARIO and not e.comentario:
+            problemas.append(
+                "ementas.md: a ementa %s esta como \"%s\" sem comentario/justificativa "
+                "-- o SFIT exige um texto nesse caso." % (e.codigo, e.situacao))
+
+        # 7) "Regularizada" e a afirmacao mais forte da folha: precisa de lastro.
+        if "Regularizada" in e.acoes and not e.lastro:
+            problemas.append(
+                "ementas.md: a ementa %s esta marcada como Regularizada sem nenhum "
+                "lastro (comprovacao) registrado na linha." % e.codigo)
+
+        # 8) Sob dupla visita nao se autua.
+        if folha.dupla_visita == "sim" and ementas_os.ACAO_DO_SISTEMA in e.acoes:
+            problemas.append(
+                "ementas.md: a folha esta marcada como dupla visita, mas a ementa %s "
+                "traz Autuacao." % e.codigo)
+
+        # 9) A mesma ementa em duas linhas: no SFIT ha uma linha por ementa, e
+        #    duas linhas divergentes se contradizem por definicao.
+        if e.codigo in vistos:
+            problemas.append(
+                "ementas.md: a ementa %s aparece em duas linhas (\"%s\" e \"%s\") "
+                "-- no SFIT ha uma linha por ementa."
+                % (e.codigo,
+                   ementas_os.TITULO_SECAO.get(vistos[e.codigo], vistos[e.codigo]),
+                   ementas_os.TITULO_SECAO.get(e.secao, e.secao)))
+        else:
+            vistos[e.codigo] = e.secao
+
     return problemas
 
 
@@ -212,8 +294,8 @@ def main():
         for p in problemas:
             print("  CONTRADICAO: %s" % p)
         print("-" * 72)
-        print("%d contradicao(oes). Status e checkbox mudam JUNTOS, no mesmo Edit."
-              % len(problemas))
+        print("%d contradicao(oes). Nos autos, status e checkbox mudam JUNTOS, no "
+              "mesmo Edit; na folha de ementas, corrija o ementas.md." % len(problemas))
         return 1
     print("Sem contradicao entre os registros de auto do memory.md.")
     return 0

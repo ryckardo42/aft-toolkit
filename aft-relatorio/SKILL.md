@@ -130,6 +130,41 @@ Aguarde a resposta. Se o AFT indicar informações, incorpore-as no campo `outra
 (vira a seção "Outras Ocorrências Relevantes da Fiscalização"), redigidas em linguagem técnica e
 fiéis ao que ele relatou. Se ele não quiser acrescentar nada, siga sem a seção.
 
+### 4.5 — Fechar a folha do item 2.5 (Ementas fiscalizadas)
+
+O Relatório de Inspeção, no SFIT-WEB, tem o item **2.5 — Ementas fiscalizadas**: de cada
+ementa, a **situação encontrada** e, quando irregular, as **ações aplicadas**. O toolkit
+guarda essa folha no `ementas.md` da pasta da OS. Como a fiscalização está encerrando, é
+aqui que ela se fecha.
+
+1. Traga o que as fontes da pasta já provam (autos transmitidos, interdição/embargo,
+   notificações) e **mostre a proposta ao AFT** antes de gravar:
+
+   ```bash
+   python ~/.claude/skills/_scripts/ementas_situacao.py "<pasta da OS>"
+   ```
+
+2. Confira a folha e veja o que ainda falta responder:
+
+   ```bash
+   python ~/.claude/skills/_scripts/ementas_os.py "<pasta da OS>" --folha
+   ```
+
+3. As ementas sem situação são **decisão do AFT** e só ele as marca: `Regular`,
+   `Não aplicável` ou `Não fiscalizada` (as duas últimas exigem um comentário curto no
+   SFIT — o AFT costuma usar frases genéricas como "Item não aplicável nesta
+   auditoria"). Liste-as para ele e pergunte; **nunca** presuma que algo está regular.
+
+4. Antes de encerrar, rode a conferência — ementa autuada marcada como regular entra em
+   documento oficial:
+
+   ```bash
+   python ~/.claude/skills/_scripts/conferir_rastreamento.py "<pasta da OS>"
+   ```
+
+A folha **não entra** no relatório `.docx`: ela existe para o AFT digitar no SFIT-WEB
+conferindo linha a linha.
+
 ### 5. Redigir e salvar — na pasta "Relatórios de Fiscalização"
 
 Todo o relatório vai para uma subpasta dedicada dentro da pasta da OS:

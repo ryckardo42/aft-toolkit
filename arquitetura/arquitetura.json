@@ -676,7 +676,19 @@
     {
       "nome": "conferir_rastreamento.py",
       "caminho": "_scripts/conferir_rastreamento.py",
-      "papel": "Acha CONTRADIÇÃO entre os registros de auto do memory.md (checkbox [x] com texto dizendo pendente, [x] sem número de AI, [ ] com número, afirmação de auto lavrado em `## Ementas da OS` sem respaldo). Só aponta divergência: não prova qual registro está certo, e nunca escreve no memory.md.",
+      "papel": "Acha CONTRADIÇÃO entre os registros de auto de uma OS (checkbox [x] com texto dizendo pendente, [x] sem número de AI, [ ] com número, afirmação de auto lavrado sem respaldo) e, desde 28/08/2026, também na folha ementas.md: ementa autuada marcada como Regular/Não aplicável/Não fiscalizada, 'Não aplicável'/'Não fiscalizada' sem o comentário que o SFIT exige, 'Regularizada' sem lastro, Autuação em folha de dupla visita e ementa repetida em duas linhas. Só aponta divergência: não prova qual registro está certo, e nunca escreve nos arquivos.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "ementas_os.py",
+      "caminho": "_scripts/ementas_os.py",
+      "papel": "Leitor único do ementas.md de uma OS — a lista de ementas da Ordem de Serviço E a folha de resposta do item 2.5 do Relatório de Inspeção (situação encontrada + ações aplicadas, na forma da tela do SFIT-WEB). Três seções: ementas da OS (com asterisco na tela), ementas trazidas por autuação (o SFIT as acrescenta sozinho quando o auto é transmitido) e ementas incluídas pelo AFT. A primeira linha de cada ementa é idêntica à que estava no memory.md, de propósito: preparacao_docx.py e metas_regularizacao.py casam o mesmo padrão e só mudam de arquivo. Cai de volta no '## Ementas da OS' do memory.md enquanto a OS não for migrada — é o que torna a mudança reversível. --migrar recorta a seção (com backup) e deixa um ponteiro de uma linha; --folha imprime na ordem da tela para o AFT digitar conferindo. A caixa [x] é DERIVADA (significa 'linha respondida'), nunca digitada.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "ementas_situacao.py",
+      "caminho": "_scripts/ementas_situacao.py",
+      "papel": "Propõe o preenchimento da folha a partir do que já existe na pasta da OS: autos-lavrados.md (Detalhamento — só o auto válido) → Irregular + Autuação; interdicao-embargo/*.md → Irregular + Interdição/Embargo; tn-nco-*.md → Irregular + Notificação. Cada linha derivada guarda o lastro (nº do AI, arquivo do RT, arquivo da notificação). NÃO deriva juízo do AFT: Regular, Não aplicável, Não fiscalizada, Regularizada e Termo de Compromisso só entram quando ele marca. Nunca sobrescreve o que o AFT escreveu — situação divergente vira CONFLITO no relatório. Mostra a proposta; só grava com --aplicar. Ementa sem descrição oficial conhecida entra com marca de pendência, nunca com texto inventado.",
       "runtime": "Python stdlib"
     },
     {
@@ -722,6 +734,12 @@
       "arquivo": "config/models-validos.json",
       "conteudo": "Apelidos e IDs de modelo aceitos no campo model: dos SKILL.md",
       "uso": "O aft_doctor.py valida os frontmatters contra ela; quando um modelo for descontinuado, o mantenedor atualiza a lista e as skills, e os AFTs recebem via /aft-atualizar."
+    },
+    {},
+    {
+      "arquivo": "<pasta da OS>/ementas.md",
+      "conteudo": "As ementas da auditoria e a folha de resposta do item 2.5 do Relatório de Inspeção: por ementa, a situação encontrada (Regular, Irregular, Não aplicável, Não fiscalizada) e, quando irregular, as ações aplicadas (Autuação, Regularizada, Termo de Compromisso, Notificação, Embargo, Suspensão de Embargo, Interdição, Suspensão de Interdição, Outros, Manutenção de Embargo, Manutenção de Interdição), mais o comentário e o lastro de cada resposta.",
+      "uso": "Saiu do memory.md em 28/08/2026 (era 23% da ficha, relida em toda sessão da OS, para servir em três momentos apenas). Escrito pela /aft-preparacao-acao-fiscal e pela /aft-nova-auditoria, preenchido ao longo da fiscalização pelo ementas_situacao.py e fechado no /aft-relatorio. Lido sempre pelo _scripts/ementas_os.py, nunca por regex própria."
     }
   ],
   "ementas": [

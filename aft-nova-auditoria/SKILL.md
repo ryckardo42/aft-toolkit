@@ -224,8 +224,7 @@ status: em_andamento
 - [ ] <CÓDIGO> — ciência <dd/mm/aaaa>, prazo <dd/mm/aaaa>
 
 ## Ementas da OS
-_(OS SFIT nº <os> / demanda nº <demanda> — ementas a fiscalizar; seção só existe quando um PDF do SFIT foi lido)_
-- [ ] <código> — <descrição oficial literal> (<NR ou atributo>)
+_(a lista e a folha de resposta do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
 
 ## Autos de Infração
 _(vazio)_
@@ -247,7 +246,13 @@ _(vazio)_
 
 > **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor. As linhas `**Endereço:**`, `**Telefone:**`, `**OS (SFIT):**`/`**Demanda:**` e `**Vencimento da OS:**` também são opcionais — só entram quando conhecidas (tipicamente lidas dos PDFs do SFIT, Passo 0; o vencimento existe só na Ordem de Serviço); omita a linha inteira quando não houver o dado. O vencimento da OS fica FORA da seção `## Notificações DET` — assim o painel não o confunde com prazo de DET.
 >
-> **`## Ementas da OS`**: só existe quando um PDF do SFIT foi lido (Passo 0). Código e descrição **literais** do PDF — ementa nunca se resume nem se parafraseia. As caixas `- [ ]` servem para o AFT marcar, ao longo da fiscalização, o que já foi verificado/autuado; a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção. Sem PDF, não crie a seção.
+> **`## Ementas da OS`**: no `memory.md` esta seção é só um **ponteiro** de uma linha. As ementas moram no arquivo `ementas.md` da pasta da OS, que é ao mesmo tempo a lista da Ordem de Serviço e a **folha de resposta do item 2.5 do Relatório de Inspeção** ("Ementas fiscalizadas", no SFIT-WEB). Quando um PDF do SFIT foi lido (Passo 0), grave o `ementas.md` com as ementas na seção `## 1. Ementas da OS`, **código e descrição literais do PDF** — ementa nunca se resume nem se parafraseia. Sem PDF, não crie o arquivo, e mantenha o ponteiro assim mesmo (é onde ele vai aparecer depois).
+>
+> O formato do `ementas.md` está documentado em `~/.claude/skills/_scripts/ementas_os.py`. Depois de gravá-lo, confira com:
+>
+> ```bash
+> python ~/.claude/skills/_scripts/ementas_os.py "<pasta da OS>"
+> ```
 >
 > **Seções obrigatórias:** `## Notificações DET`, `## Auditoria de documentos` e
 > `## Pendências` entram em TODA ficha, **mesmo vazias** (com `_(vazio)_`). São os três
@@ -291,7 +296,7 @@ Mostre um resumo curto e ofereça o próximo passo:
 🪪 CNPJ/CPF: <formatado>   (ou "ainda não informado — obrigatório no /aft-gera-ai")
 🔢 RI: <RI>   (se vazio: "não informado — o sync do DET só importa notificações com RI conhecido; ele mesmo se preenche na 1ª sincronização, ou informe agora")
 🗓️  DET: <CÓDIGO> · prazo <dd/mm/aaaa>   (ou "sem DET cadastrado")
-📋 Ementas da OS: <N> no memory.md · 📄 PDF(s) do SFIT arquivado(s) na pasta   (só quando lidos)
+📋 Ementas da OS: <N> no ementas.md · 📄 PDF(s) do SFIT arquivado(s) na pasta   (só quando lidos)
 ⏱️ Fiscalização: iniciar até <dd/mm/aaaa> · terminar até <dd/mm/aaaa>   (só quando a OS foi lida)
 
 🗂️ Sessão no menu lateral: automática — aparece no grupo "OS ATIVAS" na

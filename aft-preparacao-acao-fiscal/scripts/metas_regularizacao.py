@@ -22,9 +22,14 @@ estratégia da ação fiscal é o AFT.
 
 Uso:
     python metas_regularizacao.py 101059-0 312494-0 ...
-    python metas_regularizacao.py --arquivo "<pasta da OS>/memory.md"
+    python metas_regularizacao.py --os "<pasta da OS>"
     python metas_regularizacao.py --arquivo <texto extraído da OS> --construcao-civil
     (aceita códigos com ou sem hífen; --arquivo pode repetir; --json p/ dado bruto)
+
+Prefira `--os`: ele pega SÓ as ementas da OS, pelo leitor único
+(`_scripts/ementas_os.py`), que sabe se elas estão no `ementas.md` ou ainda no
+`memory.md`. O `--arquivo` varre qualquer texto atrás de códigos e continua
+existindo para o extrato solto da Ordem de Serviço.
 """
 import argparse
 import csv
@@ -39,6 +44,17 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 AQUI = Path(__file__).resolve().parent
+
+# O leitor unico da folha de ementas -- no repositorio ou na instalacao.
+for _base in (AQUI.parents[1] / "_scripts", Path.home() / ".claude/skills/_scripts"):
+    if (_base / "ementas_os.py").is_file():
+        sys.path.insert(0, str(_base))
+        break
+try:
+    import ementas_os
+except Exception:
+    ementas_os = None
+
 RE_COD = re.compile(r"\b(\d{6})-(\d)\b")
 NRS_CONSTRUCAO = {"NR-10", "NR-18", "NR-35"}
 
@@ -64,14 +80,26 @@ def carrega_base():
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("codigos", nargs="*", help="códigos de ementa (com ou sem hífen)")
+    ap.add_argument("--os", dest="pasta_os", default="",
+                    help="pasta da OS: usa só as ementas da OS, pelo leitor único")
     ap.add_argument("--arquivo", action="append", default=[],
-                    help="arquivo de texto (memory.md, extrato da OS) de onde extrair os códigos")
+                    help="arquivo de texto (extrato da OS) de onde extrair os códigos")
     ap.add_argument("--construcao-civil", action="store_true",
                     help="aplica a regra do projeto de construção civil (3 ementas, só NR-10/18/35)")
     ap.add_argument("--json", action="store_true", help="saída estruturada")
     args = ap.parse_args()
 
     codigos, ordem = set(), []
+    if args.pasta_os:
+        if ementas_os is None:
+            sys.exit("ERRO: não achei o _scripts/ementas_os.py — use --arquivo.")
+        try:
+            for ementa in ementas_os.ler(args.pasta_os).da_secao("os"):
+                if ementa.codigo not in codigos:
+                    codigos.add(ementa.codigo)
+                    ordem.append(ementa.codigo)
+        except ementas_os.ErroDeUso as e:
+            sys.exit("ERRO: %s" % e)
     for c in args.codigos:
         n = normaliza(c)
         if n and n not in codigos:
@@ -91,7 +119,7 @@ def main():
                 ordem.append(n)
 
     if not ordem:
-        sys.exit("ERRO: nenhum código de ementa informado (argumentos ou --arquivo).")
+        sys.exit("ERRO: nenhum código de ementa informado (argumentos, --os ou --arquivo).")
 
     grad, faceis = carrega_base()
     linhas = []
