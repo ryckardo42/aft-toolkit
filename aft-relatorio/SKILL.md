@@ -55,6 +55,15 @@ na ordem abaixo, cada fonte seguinte só completa o que a anterior não tem:
      em redação ou pendentes de transmissão) NÃO EXISTEM para este relatório — não entram em
      nenhuma seção, nem nas Observações.
    - *`## Pendências`* (as em aberto) e *`## Inspeção física`*.
+   - *`## Auditoria de documentos`* (nas OS anteriores à renomeação, `## Anotações da
+     auditoria`): o resumo da análise documental da fiscalização. Bullets do topo são
+     constatações avulsas; subseções `### <Tema>` resumem as auditorias temáticas (PGR,
+     PCMSO, AET, Jornada...) e apontam o relatório completo na pasta `auditoria-<tema>/`
+     da OS — abra o relatório apontado quando o resumo não bastar para redigir. Use esse
+     material como CONTEXTO da narrativa (o que a fiscalização examinou e apurou nos
+     documentos), respeitando a regra dos autos: constatação que não virou auto
+     transmitido não pode ser descrita como infração autuada — descreva-a como
+     verificação realizada, nunca invente autuação.
 2. **`autos-lavrados.md`** (se existir) — snapshot do Sistema Auditor: é a fonte preferencial
    dos autos transmitidos, com os 5 campos que o relatório usa: **nº oficial do AI, código da
    ementa, fundamento (NR item / artigo), descrição da ementa e constatação**. Cruze com o

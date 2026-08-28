@@ -95,7 +95,10 @@ Junte, numa lista única de candidatas, **excluindo qualquer item cuja ementa j�
 
 1. **Contexto da sessão:** irregularidades já identificadas na sessão (saída de `/aft-auditoria-geral`, `/aft-PGR-analise`, ou o `inspecao-fisica.md` da OS) que **não têm auto** — seja porque o AFT decidiu não autuar, seja porque é dupla visita e a autuação está diferida.
 2. **Colada:** lista de irregularidades que o AFT colou no prompt.
-3. **`memory.md`:** `## Pendências` e `## Inspeção física`, quando as fontes acima não bastarem. Se nada disso existir, peça a lista ao AFT.
+3. **`## Auditoria de documentos` do `memory.md`** (nas OS anteriores à renomeação, `## Anotações da auditoria` — leia a que existir): é a casa natural da irregularidade sem auto. Duas camadas, cada uma entra de um jeito:
+   - **Bullets do topo (constatações avulsas):** cada bullet **sem** o carimbo `<!-- auto ... -->` é candidata direta (SESMT/CIPA subdimensionado, ASO faltando, programa vencido). Bullet carimbado já virou auto — excluído pela regra central.
+   - **Subseções `### <Tema>`:** o resumo aponta o relatório completo na pasta `auditoria-<tema>/` da OS. Se o resumo indicar irregularidade **ainda sem auto** (ex.: "7 ementas não conformes, autos não redigidos"), **siga o ponteiro** e extraia dali as candidatas — com a ressalva de que, quando a skill temática já preparou os itens da NCO (caso da `/aft-PGR-analise`), são esses itens que entram, sem reescrever.
+4. **`memory.md`:** `## Pendências` e `## Inspeção física`, quando as fontes acima não bastarem. Se nada disso existir, peça a lista ao AFT.
 
 Elimine duplicatas pela ementa. Se o AFT pedir para notificar algo que já tem auto (ex.: "notifica tudo o que foi autuado" — comportamento antigo desta skill), avise que a convenção mudou e confirme se ele realmente quer notificar de novo um item já autuado antes de incluir.
 

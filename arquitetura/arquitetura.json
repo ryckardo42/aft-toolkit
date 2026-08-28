@@ -267,7 +267,7 @@
         },
         {
           "nome": "/aft-tn-nco",
-          "role": "Redige a Notificação para Correção de Irregularidades — SÓ para o que NÃO tem auto de infração lavrado (o auto já coage sozinho; a FASE 0.5 consulta o Sistema Auditor para EXCLUIR o já autuado, caso típico: dupla visita) — e GRAVA OS PARÂMETROS DELA no front-matter do .md (prazo, tipo do item, retorno, pré-assinalado, tipos de arquivo, exceções item a item) — antes o texto saía perfeito e mudo, e prazo/retorno morriam com a conversa. Padrão: obrigação · digital · 16 dias · pré-assinalado. Todo item com retorno digital/impresso leva FECHO DE COMPROVAÇÃO (máquina da NR-12: laudo com ART e registro fotográfico; demais 'adequar': documento com registro fotográfico). Continua entregando bloco a bloco para colar no DET; com o painel no ar, o rascunho pode ser montado pela API (det_criar.py), sempre revisado pelo aft-revisor-notificacao antes e lavrado só pelo AFT, no site. Gera também um .docx da notificação em NOTIFICACOES/ (leitura e arquivo; ao DET vai o texto puro).",
+          "role": "Redige a Notificação para Correção de Irregularidades — SÓ para o que NÃO tem auto de infração lavrado (o auto já coage sozinho; a FASE 0.5 consulta o Sistema Auditor para EXCLUIR o já autuado, caso típico: dupla visita) — e GRAVA OS PARÂMETROS DELA no front-matter do .md (prazo, tipo do item, retorno, pré-assinalado, tipos de arquivo, exceções item a item) — antes o texto saía perfeito e mudo, e prazo/retorno morriam com a conversa. Padrão: obrigação · digital · 16 dias · pré-assinalado. Todo item com retorno digital/impresso leva FECHO DE COMPROVAÇÃO (máquina da NR-12: laudo com ART e registro fotográfico; demais 'adequar': documento com registro fotográfico). Coleta as candidatas também da ## Auditoria de documentos do memory.md: bullets sem carimbo <!-- auto --> entram direto, e nas subseções ### segue o ponteiro do relatório na pasta auditoria-<tema>/. Continua entregando bloco a bloco para colar no DET; com o painel no ar, o rascunho pode ser montado pela API (det_criar.py), sempre revisado pelo aft-revisor-notificacao antes e lavrado só pelo AFT, no site. Gera também um .docx da notificação em NOTIFICACOES/ (leitura e arquivo; ao DET vai o texto puro).",
           "tech": "front-matter det: · det_criar.py · agents/aft-revisor-notificacao · limite 1000 char/campo · model: sonnet"
         },
         {
@@ -390,8 +390,8 @@
         },
         {
           "nome": "/aft-relatorio",
-          "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia·MPT.",
-          "tech": "lê memory.md, autos-lavrados.md e interdicao-embargo/ · gera .docx · model: sonnet"
+          "role": "Relatório Final Simplificado: notificações, autos por tema e interdições — texto p/ SFITWEB + .docx p/ chefia·MPT. Lê também a ## Auditoria de documentos (avulsas + subseções ###, seguindo o ponteiro dos relatórios temáticos) como contexto da narrativa — sem nunca descrever como autuado o que não tem auto transmitido.",
+          "tech": "lê memory.md, autos-lavrados.md, interdicao-embargo/ e auditoria-*/ · gera .docx · model: sonnet"
         },
         {
           "nome": "/aft-relatorio-acidentes",
