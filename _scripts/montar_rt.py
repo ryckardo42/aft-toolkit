@@ -240,6 +240,17 @@ def tamanho_do_corpo(xml):
     return max(tamanhos, key=tamanhos.get) if tamanhos else None
 
 
+# Os filhos de <w:rPr> tem ordem FIXA no OOXML (o schema declara uma sequence, nao
+# um conjunto), e o Word recusa o arquivo quando a ordem e violada. <w:rFonts> e o
+# primeiro de todos; <w:sz>/<w:szCs> vem depois de b, i, caps, spacing e cia, e
+# ANTES dos elementos listados aqui. Empilhar o que falta no inicio do <w:rPr>,
+# como parecia natural, gerava <w:rPr><w:sz/><w:rFonts/><w:b/></w:rPr> -- ordem
+# invalida, num paragrafo do proprio template (28/08/2026).
+DEPOIS_DE_SZ = re.compile(
+    r"<w:(?:szCs|highlight|u|effect|bdr|shd|fitText|vertAlign|rtl|cs|em|lang"
+    r"|eastAsianLayout|specVanish|oMath)\b")
+
+
 def garantir_fonte(paragrafo, fonte, tamanho=None):
     """Poe <w:rFonts>/<w:sz>/<w:szCs> nos runs que nao os declaram.
 
@@ -253,24 +264,38 @@ def garantir_fonte(paragrafo, fonte, tamanho=None):
         return paragrafo
     rfonts = (f'<w:rFonts w:ascii="{fonte}" w:eastAsia="{fonte}" '
               f'w:hAnsi="{fonte}" w:cs="{fonte}"/>') if fonte else ""
-    sz = (f'<w:sz w:val="{tamanho}"/><w:szCs w:val="{tamanho}"/>') if tamanho else ""
 
     def conserta(m):
         run = m.group(0)
         if "<w:t" not in run:
             return run
-        extra = ""
-        if fonte and "<w:rFonts" not in run:
-            extra += rfonts
-        if tamanho and not re.search(r"<w:sz\b", run):
-            extra += sz
-        if not extra:
+        falta_fonte = bool(fonte) and "<w:rFonts" not in run
+        # "<w:sz\b" nao casa "<w:szCs": o \b exige fronteira, e depois de "sz"
+        # vem "C". Por isso os dois sao conferidos em separado -- havia paragrafo
+        # no template com <w:szCs> e sem <w:sz>.
+        falta_sz = bool(tamanho) and not re.search(r"<w:sz\b", run)
+        novo_sz = ""
+        if falta_sz:
+            novo_sz = f'<w:sz w:val="{tamanho}"/>'
+            if "<w:szCs" not in run:
+                novo_sz += f'<w:szCs w:val="{tamanho}"/>'
+        if not falta_fonte and not novo_sz:
             return run
-        if "<w:rPr/>" in run:
-            return run.replace("<w:rPr/>", "<w:rPr>" + extra + "</w:rPr>", 1)
-        if "<w:rPr>" in run:
-            return run.replace("<w:rPr>", "<w:rPr>" + extra, 1)
-        return re.sub(r"(<w:r\b[^>]*>)", r"\1<w:rPr>" + extra + "</w:rPr>", run, count=1)
+        if "<w:rPr>" not in run and "<w:rPr/>" not in run:
+            corpo = (rfonts if falta_fonte else "") + novo_sz
+            return re.sub(r"(<w:r\b[^>]*>)", r"\1<w:rPr>" + corpo + "</w:rPr>",
+                          run, count=1)
+        run = run.replace("<w:rPr/>", "<w:rPr></w:rPr>", 1)
+        ini = run.index("<w:rPr>") + len("<w:rPr>")
+        fim = run.index("</w:rPr>")
+        corpo = run[ini:fim]
+        if falta_fonte:
+            corpo = rfonts + corpo   # <w:rFonts> e o PRIMEIRO filho de <w:rPr>
+        if novo_sz:
+            achou = DEPOIS_DE_SZ.search(corpo)
+            pos = achou.start() if achou else len(corpo)
+            corpo = corpo[:pos] + novo_sz + corpo[pos:]
+        return run[:ini] + corpo + run[fim:]
 
     return re.sub(r"<w:r\b[^>]*>.*?</w:r>", conserta, paragrafo, flags=re.S)
 
