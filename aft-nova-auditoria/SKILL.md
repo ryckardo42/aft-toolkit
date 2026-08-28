@@ -209,6 +209,19 @@ trabalhadores: <N, ou vazio>
 cnae: "<XXXX-X/XX, ou vazio>"
 grau_risco: <1 a 4, ou vazio>
 status: em_andamento
+# Endereço do LOCAL DE FISCALIZAÇÃO (onde a ação fiscal ocorre), não o
+# cadastral da Receita Federal — numa montagem em fazenda os dois ficam a
+# centenas de quilômetros um do outro. O DET valida logradouro, número,
+# município e UF na lavratura da notificação e recusa o ato sem eles; o
+# `det_criar.py` usa estes campos para completar o que o cadastro do RI
+# deixou em branco. Deixe vazios enquanto não souber — a /aft-tn-nco e a
+# /aft-NAD perguntam quando forem criar o rascunho no DET.
+endereco_logradouro: "<rua/rodovia e referência, ou vazio>"
+endereco_numero: "<número, S/N, ou vazio>"
+endereco_bairro: "<bairro ou zona rural, ou vazio>"
+endereco_municipio: "<município do local inspecionado, ou vazio>"
+endereco_uf: "<UF, ou vazio>"
+endereco_cep: "<só dígitos, ou vazio>"
 ---
 # <NOME_DA_AUDITORIA>
 
