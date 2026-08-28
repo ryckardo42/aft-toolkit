@@ -269,6 +269,21 @@ Com o painel local no ar e o **RI** no `memory.md`, ofereça criar o rascunho da
 
 > O toolkit **nunca lavra**. O rascunho fica "Em Elaboração" no DET; conferir, lavrar e transmitir são atos do AFT, no site.
 
+### Endereço do local de fiscalização
+
+O DET valida **logradouro, número, município e UF** na lavratura e recusa o ato quando falta qualquer um. O endereço vem do cadastro do RI, que em ação fiscal rural costuma chegar truncado (só bairro e CEP), e o `det_criar.py` completa as lacunas com o que o `memory.md` da OS declarar — **preenchendo só o que está em branco**, nunca sobrescrevendo o que o RI informou:
+
+```
+endereco_logradouro: "Rodovia XX-000, KM 000 - Fazenda <nome>"
+endereco_numero: "S/N"
+endereco_bairro: "Zona Rural"
+endereco_municipio: "<município do local inspecionado>"
+endereco_uf: "<UF>"
+endereco_cep: "<8 dígitos>"
+```
+
+Prévia recusada com `endereço incompleto (logradouro, numero, municipio, uf)` é **dado que falta, não defeito**: pergunte ao AFT o endereço do local onde a fiscalização ocorreu — não o cadastral da empresa na Receita Federal —, grave no front-matter do `memory.md` com `Edit` cirúrgico e repita a prévia. Gravar faz a pergunta acontecer uma vez por OS, valendo também para a `/aft-tn-nco`. **Não gere ticket de erro por isso.**
+
 ### O PDF para levar impresso (só na NAD preliminar)
 
 Quando a notificação vai ser **entregue em mãos na empresa** — o caso da NAD preliminar, gerada na preparação, antes da visita —, acrescente `"pdf": true` à chamada de criação. O PDF do **rascunho** é baixado para o pacote da OS, em `NOTIFICACOES/<CODIGO> <dd-mm-aaaa>/notificacao-<CODIGO>-rascunho.pdf` (o pacote ganha o prefixo de ordem `NN - ` e a data de lavratura quando a notificação for lavrada e baixada).
