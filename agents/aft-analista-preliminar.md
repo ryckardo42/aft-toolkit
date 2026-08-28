@@ -76,8 +76,15 @@ Se faltar algum (fora o opcional), pare e diga o que falta; não adivinhe caminh
 
    Use a pasta temporária do sistema para o JSON, nunca a pasta da OS. O JSON traz, por
    dia de entrega: itens, arquivos com tipo/SHA-256/tamanho, o que está em
-   `invalidados/`, a marca `volumoso` e as `duplicatas` (mesmo SHA-256 em 2+ lugares,
-   entre itens ou entre dias).
+   `invalidados/`, a marca `volumoso`, as `duplicatas` (mesmo SHA-256 em 2+ lugares,
+   entre itens ou entre dias) e o campo `avisos` (arquivos que o script viu mas não
+   conseguiu ler por inteiro). Se `avisos` não estiver vazio, as contagens daquele item
+   podem estar incompletas: transcreva cada aviso no relatório, na seção "Decisões
+   pendentes do AFT", e não conclua "não entregue" para item citado ali.
+   Sanidade: compare os itens do inventário com os da notificação e com o
+   `historico-itens.md` — item que a notificação lista mas o inventário não traz merece
+   conferência manual da pasta antes de qualquer conclusão, nunca um "não entregue"
+   automático.
 
 2. **Metadados antes de PDF.** Leia primeiro o que já é texto barato:
    - `historico-itens.md` de cada dia — status oficial de cada item (enviado, não

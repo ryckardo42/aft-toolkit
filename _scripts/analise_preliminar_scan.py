@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -46,6 +47,42 @@ if hasattr(sys.stdout, "reconfigure"):
 
 ITEM_RE = re.compile(r"^item(\d+)[_ ]?(.*)$", re.IGNORECASE)
 DIA_RE = re.compile(r"^baixada em (\d{2}-\d{2}-\d{4})$", re.IGNORECASE)
+
+# Avisos de leitura acumulados durante a varredura (vão no JSON de saída):
+# arquivo/pasta que não pôde ser lido NUNCA some em silêncio do inventário.
+AVISOS: list[str] = []
+
+
+def _lp(p: Path) -> Path:
+    """Windows: caminho estendido (prefixo \\\\?\\), que escapa do limite de
+    260 caracteres do MAX_PATH. Pasta de OS dentro do OneDrive + pacote de
+    notificação + subpasta do dia + item com descrição longa passam fácil dos
+    260, e sem o prefixo o Python nem ENXERGA o arquivo: itens do pacote
+    sumiam do inventário sem erro nenhum (ticket de 28/08/2026; mesma causa
+    da issue #104 no det_baixar.py). Como os filhos de um caminho prefixado
+    herdam o prefixo, basta aplicar na raiz do pacote. Fora do Windows
+    devolve o caminho como veio."""
+    if os.name != "nt":
+        return p
+    s = os.path.abspath(str(p))
+    if s.startswith("\\\\?\\"):
+        return Path(s)
+    if s.startswith("\\\\"):  # caminho de rede (UNC)
+        return Path("\\\\?\\UNC\\" + s[2:])
+    return Path("\\\\?\\" + s)
+
+
+def _visivel(p: Path | str | None) -> str | None:
+    """Caminho SEM o prefixo \\\\?\\, para o JSON de saída e mensagens: o
+    prefixo é detalhe de I/O, não deve vazar para o relatório da skill."""
+    if p is None:
+        return None
+    s = str(p)
+    if s.startswith("\\\\?\\UNC\\"):
+        return "\\\\" + s[8:]
+    if s.startswith("\\\\?\\"):
+        return s[4:]
+    return s
 
 # Limiar de "item volumoso" num dia: a partir daqui a skill não lê arquivo por
 # arquivo — amostra e devolve PRECISA AUDITORIA AFT. Uma fonte só, aqui.
@@ -89,12 +126,26 @@ def inventariar_arquivos(pasta: Path, invalidado: bool) -> list[dict]:
             continue
         try:
             size = entry.stat().st_size
-        except OSError:
+        except OSError as e:
+            # Nunca pular calado: subcontar arquivo vira falso "não entregue".
+            aviso = (f"arquivo ilegível (fica FORA da contagem): "
+                     f"{_visivel(entry)} - {e}")
+            AVISOS.append(aviso)
+            print(f"AVISO: {aviso}", file=sys.stderr)
             continue
+        try:
+            sha = sha256_of(entry)
+        except OSError as e:
+            # Arquivo visível mas ilegível (ex.: OneDrive só na nuvem, sem
+            # rede): entra na contagem, sem hash, e o aviso vai no relatório.
+            sha = None
+            aviso = f"conteúdo ilegível (sem hash): {_visivel(entry)} - {e}"
+            AVISOS.append(aviso)
+            print(f"AVISO: {aviso}", file=sys.stderr)
         out.append({
             "nome": entry.name,
             "tipo": classify(entry.name),
-            "sha256": sha256_of(entry),
+            "sha256": sha,
             "tamanho_kb": round(size / 1024, 1),
             "invalidado": invalidado,
         })
@@ -138,9 +189,9 @@ def inventariar_dia(dia_dir: Path, rotulo: str) -> dict:
     historico = dia_dir / "historico-itens.md"
     return {
         "dia": rotulo,
-        "pasta": str(dia_dir),
-        "relatorio_atendimento": str(relatorio[0]) if relatorio else None,
-        "historico_itens": str(historico) if historico.is_file() else None,
+        "pasta": _visivel(dia_dir),
+        "relatorio_atendimento": _visivel(relatorio[0]) if relatorio else None,
+        "historico_itens": _visivel(historico) if historico.is_file() else None,
         "itens": itens,
     }
 
@@ -152,7 +203,7 @@ def detectar_duplicatas(dias: list[dict]) -> list[dict]:
     for d in dias:
         for it in d["itens"]:
             for a in it["arquivos"]:
-                if a["invalidado"]:
+                if a["invalidado"] or a["sha256"] is None:
                     continue
                 bucket.setdefault(a["sha256"], []).append({
                     "dia": d["dia"],
@@ -189,9 +240,12 @@ def main(argv: list[str]) -> int:
               file=sys.stderr)
         return 9
 
-    pacote = Path(args[0]).expanduser().resolve()
+    # Prefixo de caminho estendido ANTES de qualquer acesso a disco: todos os
+    # filhos (dias, itens, arquivos) herdam o prefixo e escapam do MAX_PATH.
+    pacote = _lp(Path(args[0]).expanduser().resolve())
     if not pacote.is_dir():
-        print(f"ERRO: pasta não encontrada: {pacote}", file=sys.stderr)
+        print(f"ERRO: pasta não encontrada: {_visivel(pacote)}",
+              file=sys.stderr)
         return 1
 
     # Código da notificação: token alfanumérico maiúsculo no nome do pacote
@@ -226,18 +280,20 @@ def main(argv: list[str]) -> int:
     notificacao_pdf = sorted(pacote.glob("notificacao-*.pdf"))
     out = {
         "notificacao": codigo,
-        "pacote": str(pacote),
-        "empresa_dir": str(empresa_dir),
-        "notificacao_pdf": str(notificacao_pdf[0]) if notificacao_pdf else None,
+        "pacote": _visivel(pacote),
+        "empresa_dir": _visivel(empresa_dir),
+        "notificacao_pdf": (_visivel(notificacao_pdf[0])
+                            if notificacao_pdf else None),
         "dias": dias,
         "duplicatas": detectar_duplicatas(dias),
+        "avisos": AVISOS,
     }
 
     texto = json.dumps(out, ensure_ascii=False, indent=2)
     if saida:
         try:
-            saida.parent.mkdir(parents=True, exist_ok=True)
-            saida.write_text(texto, encoding="utf-8")
+            _lp(saida).parent.mkdir(parents=True, exist_ok=True)
+            _lp(saida).write_text(texto, encoding="utf-8")
         except OSError as e:
             print(f"ERRO de I/O ao gravar {saida}: {e}", file=sys.stderr)
             return 9
@@ -246,6 +302,10 @@ def main(argv: list[str]) -> int:
         print(f"Notificação {codigo}: {len(dias)} dia(s) de entrega, "
               f"{n_itens} item(ns) com pasta, "
               f"{len(out['duplicatas'])} duplicata(s).")
+        if AVISOS:
+            print(f"ATENÇÃO: {len(AVISOS)} aviso(s) de leitura - veja o "
+                  f"campo 'avisos' do inventário antes de confiar nas "
+                  f"contagens.")
     else:
         print(texto)
     return 0
