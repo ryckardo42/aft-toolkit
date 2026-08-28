@@ -140,6 +140,16 @@ providências diferem conforme seja a bancada eleita (processo eleitoral) ou a d
   escopo do script.
 - Saída informativa para apoio à fiscalização; a versão certificada da norma prevalece.
 
+## Constatação de auditoria, não auto automático
+
+CIPA inexistente ou subdimensionada, apurada com dados reais da empresa (quadro efetivo
+confirmado), **não vira auto na hora**: registre como bullet no **topo** da seção
+`## Auditoria de documentos` do `memory.md` da OS (antes de qualquer subseção `###`),
+em até 2 linhas, no formato `- dd/mm/aaaa — CIPA: <o que é devido pelo Quadro I, o que
+existe, a diferença>`. Quem transforma em auto é a `/aft-auditoria-geral`. Cálculo feito
+com dados hipotéticos ou na preparação da ação fiscal (antes da visita) não gera
+registro: é indício, não constatação.
+
 ## Diário de atividades (automático)
 
 Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —

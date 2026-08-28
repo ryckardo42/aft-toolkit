@@ -94,7 +94,11 @@ Respeite os limites do especialista: ele **nunca** afirma validade qualificada I
 
 ### Etapa 4 — Consolidar
 
-Monte **um** relatório consolidado, salvo na pasta indicada como `jornada-analise-<empresa-ou-data>.md`, e apresente um resumo no chat. Use a estrutura abaixo.
+Monte **um** relatório consolidado, salvo em
+`<pasta da OS>/auditoria-jornada/jornada-analise-<empresa-ou-data>.md` (crie a subpasta
+`auditoria-jornada/` se não existir — é a pasta temática que concentra os relatórios de
+jornada da OS; o `relatorio-validacao-afd-aej.md` continua junto dos TXT da entrega), e
+apresente um resumo no chat. Use a estrutura abaixo.
 
 ---
 
@@ -149,6 +153,26 @@ Pendências de verificação externa (ICP-Brasil) listadas como tais.]
 4. **Fidelidade à fonte.** Não invente veredito; reproduza o que os especialistas retornaram, citando o relatório de cada um.
 5. **Não narre o processo.** Entregue triagem + relatório consolidado.
 6. **Privacidade:** os arquivos AFD/AEJ contêm CPFs de trabalhadores — a validação é local (script Python); não ecoe CPFs no chat além do estritamente necessário para apontar inconsistências (prefira citar o número da linha).
+
+## Registro no memory.md
+
+Ao concluir o relatório consolidado, registre a auditoria no `memory.md` da OS: na
+seção `## Auditoria de documentos` (nas OS anteriores à renomeação ela se chama
+`## Anotações da auditoria`: escreva na que existir, sem renomeá-la; se nenhuma existir,
+crie `## Auditoria de documentos`), acrescente ao **final da seção** uma subseção
+`### Jornada` (se ainda não houver) e, nela, uma linha datada:
+
+```
+### Jornada
+dd/mm/aaaa — <resumo em até 2 linhas: integridade dos arquivos, conformidade dos
+atestados, o que é autuável> — relatório: auditoria-jornada/jornada-analise-<...>.md
+```
+
+Três regras do registro: (1) é **prosa** — nunca comece a linha com `-`: na seção,
+bullet é constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e o resumo
+não é uma constatação; (2) **até 2 linhas** por análise — o detalhe fica no relatório;
+(3) análise nova do mesmo tema acrescenta outra linha datada na mesma subseção,
+mantendo as anteriores.
 
 ## Diário de atividades (automático)
 

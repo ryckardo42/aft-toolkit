@@ -65,8 +65,10 @@ Dois modos, o que for mais cômodo ao AFT:
    liste o que encontrou e confirme antes de ler.
 2. **Anexos:** use os arquivos colados com `@`.
 
-Pergunte, se ainda não souber: pasta de saída do `.docx` (padrão: a própria pasta da OS) e
-se o AFT quer pseudonimizar os trabalhadores.
+Pergunte, se ainda não souber: pasta de saída do `.docx` (padrão: a subpasta
+`auditoria-acidente/` da OS — crie-a na primeira gravação; é a pasta temática que
+concentra os relatórios de análise de acidente) e se o AFT quer pseudonimizar os
+trabalhadores.
 
 **Pergunte também, sempre, ANTES de começar a análise:**
 
@@ -457,12 +459,26 @@ no JSON. Antes de regravar um `.docx` que já existe, rode `backup_arquivo.py` e
    nos campos do SFITWEB.
 2. Ao chegar na seção 6, pergunte:
    *"Confirma os fatores e os códigos acima? Deseja incluir, remover ou reclassificar algum?"*
-3. Gere o `.docx` completo na pasta da OS.
+3. Gere o `.docx` completo em `auditoria-acidente/` na pasta da OS.
 4. Ofereça a árvore gráfica (Fase 5).
-5. Registre no `memory.md` da OS: constatações que virarão auto (em `## Anotações da
-   auditoria`) e a atividade no registro. Se houver documentos faltantes, **pergunte
-   antes** se o AFT quer cada um como item de `## Pendências` — a seção é a lista
-   pessoal dele; sem o sim, apenas cite os faltantes no chat e no relatório.
+5. Registre no `memory.md` da OS, na seção `## Auditoria de documentos` (nas OS
+   anteriores à renomeação ela se chama `## Anotações da auditoria`: escreva na que
+   existir, sem renomeá-la; se nenhuma existir, crie `## Auditoria de documentos`),
+   duas coisas distintas:
+   - **As constatações que virarão auto**, como bullets `- dd/mm/aaaa — texto` no
+     **topo da seção** (antes da primeira subseção `###`), com até 2 linhas cada — é
+     dali que a `/aft-auditoria-geral` as transforma em auto.
+   - **O resumo da análise**, numa subseção `### Análise de acidente` ao final da seção
+     (crie-a se não houver), em **prosa** (nunca bullet), até 2 linhas, terminando com o
+     ponteiro do relatório — ex.:
+     `dd/mm/aaaa — Análise do acidente de dd/mm (setor X): N fatores causais, M autos
+     sugeridos — relatório: auditoria-acidente/<arquivo>.docx`. Análise nova acrescenta
+     outra linha datada na mesma subseção.
+
+   Registre também a atividade no `## Registro de atividades`. Se houver documentos
+   faltantes, **pergunte antes** se o AFT quer cada um como item de `## Pendências` — a
+   seção é a lista pessoal dele; sem o sim, apenas cite os faltantes no chat e no
+   relatório.
 6. **Pergunte** (não faça automaticamente):
    *"Deseja que eu redija os autos de infração decorrentes desta análise?"*
    - Sim → `/aft-auditoria-geral`, passando as irregularidades apuradas; depois `/aft-gera-ai`.

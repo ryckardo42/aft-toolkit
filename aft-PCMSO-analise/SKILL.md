@@ -56,6 +56,13 @@ da análise — um risco que existe de fato no estabelecimento e não tem contro
 correspondente no PCMSO é evidência positiva de irregularidade, mais forte que a lacuna
 meramente documental.
 
+> **Onde esta skill grava.** Tudo o que ela produz mora na subpasta
+> `auditoria-PCMSO/` da OS (crie-a na primeira gravação): `analise-PCMSO.md`,
+> `pcmso-extrato.md`, `pgr-riscos-extrato.md`, `autos-pcmso.md` e
+> `recomendacao-geral-PCMSO.md`. **Nunca grave esses arquivos na raiz da OS.**
+> Em OS antigas eles podem existir na raiz: use-os normalmente para leitura, mas
+> toda gravação nova vai para a subpasta.
+
 **Procure os documentos sozinho antes de perguntar**, na pasta da OS inteira
 (`NOTIFICACOES/`, subpastas de resposta ao DET, e raiz), por nome de arquivo
 (case-insensitive):
@@ -71,7 +78,7 @@ meramente documental.
 Um anexo/texto fornecido explicitamente pelo AFT no chat tem **precedência** sobre a
 busca na pasta. **Prefira sempre o arquivo na pasta da OS**: PDF arrastado para o chat
 entra inteiro no contexto da conversa e anula a economia da Etapa 2. Se o AFT anexar um
-PCMSO grande, grave-o na pasta da OS e siga por lá.
+PCMSO grande, grave-o em `auditoria-PCMSO/` na pasta da OS e siga por lá.
 
 **PCMSO entregue em partes.** Resposta de DET costuma vir fatiada pelo limite de upload
 (ex.: `PCMSO-1-11.pdf`, `PCMSO-12-22.pdf`, ...). Nomes com faixas de página
@@ -116,7 +123,8 @@ uso do AFT, e é **recobrado a cada turno** da análise — o que estoura o plan
 trabalho. Por isso a leitura é feita fora da conversa, por um agente próprio.
 
 **Antes de medir, veja se o extrato já existe.** Se
-`<OS_ATIVAS>/[PASTA_EMPRESA]/pcmso-extrato.md` já estiver na pasta, a extração já foi
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PCMSO/pcmso-extrato.md` já estiver na pasta (ou,
+em OS antigas, `pcmso-extrato.md` na raiz da OS), a extração já foi
 feita — por uma execução anterior desta skill, ou por um fluxo que extraiu os documentos
 numa triagem inicial. Confira que ele cobre os oito blocos do roteiro abaixo e **siga
 direto para "Análise sobre o extrato"**: não meça o PDF nem delegue de novo. Extrair
@@ -133,7 +141,7 @@ Descubra primeiro o tamanho do documento (rode para cada parte, se fatiado):
 - **Mais de 20 páginas no total** (o caso comum): **delegue ao agente
   `aft-extrator-documento`**, passando no prompt: o tipo de documento (PCMSO), o(s)
   caminho(s) do(s) PDF(s) **na ordem das partes**, o caminho de saída
-  `<OS_ATIVAS>/[PASTA_EMPRESA]/pcmso-extrato.md`, o `python_path` e —
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PCMSO/pcmso-extrato.md`, o `python_path` e —
   obrigatoriamente — o **roteiro de extração** em oito blocos:
 
   > 1. Diretrizes e implantação do programa: finalidade declarada, qualquer uso do
@@ -187,11 +195,12 @@ Avise o AFT em uma linha antes de delegar (é uma etapa que demora):
 > estourar o limite da sua conversa. Um instante."
 
 **PGR para o confronto (ementas 107104-1, 107106-8, 107161-0):** se a pasta já tiver
-`pgr-extrato.md` (gerado pela `/aft-PGR-analise`), use o inventário de riscos dele — não
+`auditoria-PGR/pgr-extrato.md` (gerado pela `/aft-PGR-analise`; em OS antigas,
+`pgr-extrato.md` na raiz), use o inventário de riscos dele — não
 releia o PGR. Se não tiver e o PGR estiver disponível com mais de 20 páginas, delegue
 uma **segunda extração, em paralelo**, ao mesmo agente, com roteiro reduzido a um bloco
 único (inventário de riscos: função/setor, perigo/agente, nível de risco, medidas) e
-saída `<OS_ATIVAS>/[PASTA_EMPRESA]/pgr-riscos-extrato.md`. PGR curto, leia direto.
+saída `<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PCMSO/pgr-riscos-extrato.md`. PGR curto, leia direto.
 
 #### Análise sobre o extrato
 
@@ -335,7 +344,7 @@ Se, após percorrer todas as ementas (fixas + eventual complemento do NotebookLM
 confirmado), nenhuma não conformidade for encontrada, declare isso claramente no lugar
 das seções de ementa.
 
-Salve o relatório completo em `<OS_ATIVAS>/[PASTA_EMPRESA]/analise-PCMSO.md`.
+Salve o relatório completo em `<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PCMSO/analise-PCMSO.md`.
 
 ---
 
@@ -425,10 +434,10 @@ exemplos de trabalhadores prejudicados [NOME 1], [função], e [NOME 2],
 do `/aft-gera-ai` (Passo 0a), então basta seguir o handoff.
 
 **Salvar e handoff:** salve todos os blocos em
-`<OS_ATIVAS>/[PASTA_EMPRESA]/autos-pcmso.md` e exiba:
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PCMSO/autos-pcmso.md` e exiba:
 
 ```
-✅ N autos de PCMSO redigidos — salvos em autos-pcmso.md
+✅ N autos de PCMSO redigidos — salvos em auditoria-PCMSO/autos-pcmso.md
 
 ▶ Próximo passo — empacotar no TXT do Sistema Auditor:
   1) Rode /aft-gera-ai e responda que os autos estão (b) na sessão.
@@ -470,7 +479,7 @@ Atenciosamente,
 ```
 
 Tom técnico, direto, sem linguagem jurídica de auto — o destinatário é o empregador.
-Salve como `recomendacao-geral-PCMSO.md` na pasta da OS.
+Salve como `auditoria-PCMSO/recomendacao-geral-PCMSO.md` na pasta da OS.
 
 ---
 
@@ -482,8 +491,23 @@ recomendação gerada), atualize o `memory.md` da OS:
 - Se autos foram redigidos: acrescente uma seção em `## Autos de Infração` (mesmo
   padrão usado pelas demais skills de lavratura — data, pasta/arquivo gerado, ementas,
   elementos de convicção).
-- Sempre: acrescente uma linha em `## Auditoria de documentos` resumindo o que a
-  análise encontrou (quantas ementas não conformes, se autos foram gerados).
+- Sempre: registre a auditoria na seção `## Auditoria de documentos` (nas OS anteriores
+  à renomeação ela se chama `## Anotações da auditoria`: escreva na que existir, sem
+  renomeá-la; se nenhuma existir, crie `## Auditoria de documentos`), acrescentando ao
+  **final da seção** uma subseção `### PCMSO` (se ainda não houver) e, nela, uma linha
+  datada:
+
+  ```
+  ### PCMSO
+  dd/mm/aaaa — <resumo em até 2 linhas: quantas ementas não conformes, se autos foram
+  redigidos> — relatório: auditoria-PCMSO/analise-PCMSO.md
+  ```
+
+  Três regras do registro: (1) é **prosa** — nunca comece a linha com `-`: na seção,
+  bullet é constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e o
+  resumo não é uma constatação; (2) **até 2 linhas** por análise — o detalhe fica no
+  relatório e não se repete no memory.md; (3) análise nova do mesmo tema acrescenta
+  outra linha datada na mesma subseção, mantendo as anteriores.
 
 Ao final, registre o dia trabalhado no diário — sem perguntar nada ao AFT (o script
 deduplica por data+letra; repetir é inofensivo):

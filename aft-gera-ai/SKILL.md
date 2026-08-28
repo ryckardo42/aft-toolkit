@@ -43,7 +43,7 @@ Leia `<PASTA_AFT>/aft-config.md` logo no início. Dele saem: `cif`, `uorg`, `loc
 
 ### 1.1 Detectar fonte dos autos
 
-**Modo A — Texto colado**: o auditor colou texto dos autos no chat (ou indicou um arquivo `autos.md` na pasta da OS).
+**Modo A — Texto colado**: o auditor colou texto dos autos no chat (ou indicou um arquivo `autos.md` na pasta da OS). Autos redigidos pelas skills temáticas moram nas subpastas `auditoria-*/` da OS (`auditoria-PGR/autos-pgr.md`, `auditoria-AET/autos-aet.md`, `auditoria-PCMSO/autos-pcmso.md`, `auditoria-PGRTR/autos-pgrtr.md`, `auditoria-jornada/jornada-auto-afd-aej-*.md`); em OS antigas podem estar na raiz. Se o AFT citar um desses sem caminho, procure primeiro na subpasta temática, depois na raiz.
 **Modo B — Contexto da conversa**: a sessão atual já contém autos redigidos antes (ex: depois de `/aft-auditoria-geral`, `/aft-informalidade`, `/aft-PGR-analise`, `/aft-det-630`).
 
 Se ambíguo, pergunte: **"Os autos para empacotar estão (a) colados/fornecidos agora ou (b) redigidos antes nesta conversa?"**

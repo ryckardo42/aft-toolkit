@@ -179,7 +179,10 @@ Constatou-se que a autuada, adotante de sistema de registro eletrônico de ponto
 
 ## Salvar e atualizar memory.md
 
-1. Salve o(s) texto(s) em `<PASTA_OS>/jornada-auto-afd-aej-<CNPJ>.md` (sobrescreve com aviso).
+1. Salve o(s) texto(s) em `<PASTA_OS>/auditoria-jornada/jornada-auto-afd-aej-<CNPJ>.md`
+   (crie a subpasta `auditoria-jornada/` se não existir; sobrescreve com aviso; em OS
+   antigas o arquivo pode existir na raiz — leia-o de lá, mas grave a versão nova na
+   subpasta).
 2. Se a pasta da OS tiver `memory.md`, acrescente em `## Autos lavrados`, uma linha por auto gerado:
    ```
    - [ ] jornada-auto-afd-aej · ementa 002279-9 (AFD) · redigido <DATA_HOJE>
@@ -196,12 +199,12 @@ Imprima:
 ```
 ✅ Auto(s) redigido(s): <002279-9 AFD | 002280-2 AEJ | ambos>
 
-📄 Texto: <PASTA_OS>/jornada-auto-afd-aej-<CNPJ>.md
+📄 Texto: <PASTA_OS>/auditoria-jornada/jornada-auto-afd-aej-<CNPJ>.md
 
 ▶ Próximo passo — gerar o TXT do Sistema Auditor:
   1) Rode /aft-gera-ai
   2) Quando perguntar se os autos estão (a) colados ou (b) na sessão, responda (b)
-     — o texto está em jornada-auto-afd-aej-<CNPJ>.md e nesta sessão.
+     — o texto está em auditoria-jornada/jornada-auto-afd-aej-<CNPJ>.md e nesta sessão.
   3) Anexe o relatório de validação / comprovante de rejeição como anexo dos autos.
 ```
 

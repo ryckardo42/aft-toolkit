@@ -58,6 +58,8 @@ PADROES = [
      "referencia ao toolkit"),
     (re.compile(r"\bAutos \d{2}-\d{2}\b"),
      "pasta de lavratura"),
+    (re.compile(r"\bauditoria-[A-Za-z0-9\-]+/", re.I),
+     "pasta tematica de auditoria"),
     (re.compile(r"\[\[[A-Z_0-9]+\]\]"),
      "token de pseudonimizacao nao re-hidratado"),
 ]
