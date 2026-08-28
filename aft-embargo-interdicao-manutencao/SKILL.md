@@ -213,9 +213,10 @@ encontrada, o template mudou de verdade: avise o usuário em vez de forçar.
 ### Etapa 8 — Encerrar
 
 1. Informe o caminho do `.docx` gerado (o AFT revisa no Word);
-2. Se houver `memory.md` na pasta da OS, atualize-o: linha na seção de interdição/embargo (ou `## Pendências`)
-   com "Manutenção de interdição/embargo em [DATA] — RT salvo em [arquivo] — pendências da
-   empresa: [resumo em 1 linha]";
+2. Se houver `memory.md` na pasta da OS, atualize-o: linha na seção de interdição/embargo
+   (crie `## Interdições/Embargos` se não existir — nunca use `## Pendências`, que é a
+   lista pessoal do AFT) com "Manutenção de interdição/embargo em [DATA] — RT salvo em
+   [arquivo] — pendências da empresa: [resumo em 1 linha]";
 3. Se a seção 4 foi incluída, ofereça: *"Quer que eu gere também a notificação com esses
    requisitos via /aft-tn-nco?"*
 

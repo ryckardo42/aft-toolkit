@@ -561,10 +561,10 @@ scripts determinísticos. E não escreva esses números à mão no JSON da FASE 
 `preparacao_docx.py` chama os mesmos scripts e renderiza o resultado, justamente para que o
 documento levado a campo não dependa de transcrição.
 
-Sem efetivo (o AFT não soube informar e não há Relação de Vínculos), pule a fase, registre
-em `## Pendências` do `memory.md` "Levantar o efetivo do estabelecimento e dimensionar
-SESMT e CIPA" e siga — o `.docx` sai com o aviso no lugar da seção. Sem CNAE, idem para o
-grau de risco.
+Sem efetivo (o AFT não soube informar e não há Relação de Vínculos), pule a fase e siga —
+o `.docx` sai com o aviso no lugar da seção. Sem CNAE, idem para o grau de risco. **Não
+registre nada em `## Pendências`**: a seção é do AFT, e lacuna de preparação já fica
+visível no próprio `.docx`.
 
 ---
 
@@ -609,8 +609,8 @@ quantos bebedouros aquele local deve ter, e contar no percurso.
    `/aft-nr24-dimensionamento`, que é onde se decide o enquadramento.
 
 Sem a divisão por sexo (o AFT deu só o total, sem Relação de Vínculos), **peça-a uma vez**;
-se ele não tiver, pule a fase e registre em `## Pendências` "Levantar homens e mulheres do
-maior turno e dimensionar a NR-24". O `.docx` simplesmente não traz a seção.
+se ele não tiver, pule a fase e siga. O `.docx` simplesmente não traz a seção — e nada
+disso vai para `## Pendências` (a seção é do AFT).
 
 **Nunca dimensione a NR-24 de cabeça** — o arredondamento para cima, a regra progressiva
 dos mictórios e a separação por sexo são exatamente onde o cálculo mental erra. E não
@@ -925,10 +925,9 @@ O script avisa três coisas (e nunca bloqueia nem corrige sozinho):
    ```
    | DD/MM/AAAA | Preparação da ação fiscal | preparacao.md |
    ```
-2. Se restou pendência (checklist aprovado mas `/aft-NAD` ainda não rodada), adicione em `## Pendências` (crie a seção se não existir):
-   ```
-   - [ ] Gerar NAD com os documentos do checklist de preparacao.md
-   ```
+2. **Não escreva em `## Pendências`.** A preparação nunca registra pendência no
+   `memory.md`: a seção é a lista pessoal do AFT, e o que faltou (NAD não gerada,
+   efetivo não levantado) já aparece no `preparacao.md`/`.docx` e no resumo final.
 
 Apresente o resumo final:
 

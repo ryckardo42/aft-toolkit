@@ -209,7 +209,8 @@ ainda guarda um `.bak` automático do arquivo anterior.
 1. Informe o caminho do `.docx` gerado (o AFT revisa no Word e junta ao processo
    SEI — quem assina e transmite é sempre ele);
 2. Se houver `memory.md` na pasta da OS, atualize-o: linha na seção de
-   interdição/embargo (ou `## Pendências`) com "Levantamento total da
+   interdição/embargo (crie `## Interdições/Embargos` se não existir — nunca use
+   `## Pendências`, que é a lista pessoal do AFT) com "Levantamento total da
    interdição/embargo em [DATA] — RT salvo em [arquivo] — processo SEI [NÚMERO]";
 3. Lembre, quando fizer sentido: o **Termo de Levantamento oficial** é emitido
    pelo sistema federal — este RT é a peça técnica que o fundamenta;

@@ -255,7 +255,7 @@ _(vazio)_
 >
 > **`## Auditoria de documentos`**: nasce vazia. É onde o AFT registra o andamento da análise documental — o que apurou no PGR, nos ASO, nas atas de CIPA, no controle de jornada (SESMT/CIPA subdimensionado, ASO faltando, programa vencido…) — no formato `- dd/mm/aaaa — texto`. **Não é lista de tarefas:** não tem caixa de marcar; é o registro do que a auditoria documental encontrou. A `/aft-auditoria-geral` lê essas constatações para redigir os autos; o painel mostra, permite acrescentar e editar cada uma.
 >
-> **`## Pendências`**: nasce vazia. É a lista de tarefas da OS — o que o AFT ainda precisa fazer ou conferir (cobrar um documento na próxima visita, decidir um enquadramento, revisar uma minuta) — no formato `- [ ] texto`, **com** caixa de marcar. Resolvida, vira `- [x]` com o carimbo da data. O painel mostra só as em aberto e permite registrar e resolver.
+> **`## Pendências`**: nasce vazia. É a lista de tarefas **pessoal do AFT** — o que ele ainda precisa fazer ou conferir (cobrar um documento na próxima visita, decidir um enquadramento, revisar uma minuta) — no formato `- [ ] texto`, **com** caixa de marcar. Resolvida, vira `- [x]` com o carimbo da data. O painel mostra só as em aberto e permite registrar e resolver. **O assistente não escreve aqui por conta própria:** pendência sugerida se pergunta antes; as únicas exceções automáticas (autos redigidos aguardando importação e irregularidades de dupla visita aguardando notificação) estão na `/aft-auditoria-geral`.
 
 Regras:
 - **`prazo <dd/mm/aaaa>`** é a chave que o `/aft-painel` vigia — escreva a palavra `prazo` seguida

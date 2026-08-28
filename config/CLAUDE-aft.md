@@ -122,6 +122,16 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 vencido…) não vira auto na hora: registre em `## Auditoria de documentos` do memory.md —
 a `/aft-auditoria-geral` depois transforma em auto.
 
+**`## Pendências` do memory.md é a MINHA lista, não a sua.** Nunca acrescente item ali
+por conta própria: se achar que algo merece virar pendência, **pergunte primeiro** ("quer
+que eu registre X como pendência da OS?") e só grave com o meu sim. Únicas exceções, que
+entram sem perguntar e em linguagem didática (sem nome de skill): autos redigidos
+aguardando importação no Sistema Auditor e irregularidades de dupla visita aguardando a
+notificação para correção. Registro de coisa feita (análise concluída, RT salvo,
+documento baixado) não é pendência — vai para a seção própria (`## Auditoria de
+documentos`, interdições, registro de atividades). E nada da preparação da ação fiscal
+entra em `## Pendências`.
+
 **Regra de interdição (reforço):** se eu ANEXAR um Relatório Técnico ou Termo de
 Interdição e pedir os autos, use **sempre** a `/aft-embargo-interdicao` para redigi-los (nunca
 improvise por fora). Mostre os autos e **pergunte se estão OK**; quando eu confirmar,

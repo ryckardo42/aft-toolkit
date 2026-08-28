@@ -543,18 +543,22 @@ Esta fase só executa se existe um `memory.md` na pasta da OS (criado na Fase 0 
    - [DD/MM/AAAA] — Interdição [total/parcial] [objeto] (NR-XX) — RT pendente via /aft-embargo-interdicao
    ```
 
-4. **Adicionar pendências em `## Pendências`** (criar se não existir):
+4. **Adicionar em `## Pendências`** (criar se não existir) — a seção é a lista pessoal
+   do AFT, então só estas duas entradas entram sem perguntar, em linguagem didática
+   (nada de nome de skill ou jargão):
    ```
-   - [ ] Empacotar autos via /aft-gera-ai (N autos redigidos, NR-XX/NR-YY)
+   - [ ] Há N autos redigidos (NR-XX, NR-YY) esperando serem transformados para importação no Sistema Auditor
    ```
    Se dupla visita com irregularidades protegidas:
    ```
-   - [ ] Lavrar TN de correção — N irregularidades (dupla visita) — lista em irregularidades-para-TN.md
+   - [ ] Há N irregularidades de dupla visita esperando a notificação para correção (lista em irregularidades-para-TN.md)
    ```
-   Se risco grave:
+   Se risco grave, **pergunte antes**: *"Quer que eu registre como pendência da OS a
+   geração do RT de interdição de [objeto]?"* — só grave com o sim do AFT:
    ```
-   - [ ] Gerar RT para interdição [objeto] via /aft-embargo-interdicao
+   - [ ] Falta gerar o Relatório Técnico da interdição de [objeto]
    ```
+   Nenhuma outra pendência entra por conta própria nesta skill.
 
 5. **Carimbar as constatações que viraram auto** — em `## Auditoria de documentos` (ou `## Anotações da auditoria`, nas OS anteriores à renomeação; carimbe na seção que existir, sem renomeá-la), para cada constatação que originou um auto (ou TN), anexe o comentário de rastreio ao fim da linha, sem apagar nem reescrever o texto:
    ```
