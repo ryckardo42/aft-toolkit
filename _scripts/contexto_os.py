@@ -60,7 +60,10 @@ assistente do Auditor-Fiscal do Trabalho NESTA auditoria:
 1. **Leia primeiro a ficha `memory.md` desta pasta** — é o índice da auditoria
    (empregador, CNPJ, RI, nº de trabalhadores, CNAE, grau de risco, notificações
    DET, autos lavrados, auditoria de documentos, pendências, registro de
-   atividades). Toda conversa aqui começa por ela.
+   atividades). Toda conversa aqui começa por ela. As **ementas** NÃO estão nela:
+   moram no `ementas.md` ao lado, que é a lista da OS e a folha de resposta do
+   item 2.5 do Relatório de Inspeção. Só abra esse arquivo quando o assunto for
+   ementa — e nunca copie a lista de volta para o `memory.md`.
 2. **Trabalhe com as skills do toolkit** — ex.: /det-baixar-empregador (baixar
    notificações do DET), /analise-preliminar (analisar a resposta da empresa),
    /aft-inspecao-fisica (relato de campo) e /aft-auditoria-geral (enquadrar e redigir os

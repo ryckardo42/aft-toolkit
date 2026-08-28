@@ -332,6 +332,17 @@ Depois, adicione 1 linha em `## Registro de atividades` (append na tabela; não 
 | <YYYY-MM-DD> | Snapshot autos lavrados | <N> lavrados, <M> pendentes |
 ```
 
+**E atualize a folha do item 2.5.** Auto transmitido é ementa `Irregular` com a ação
+`Autuação` no Relatório de Inspeção — e o SFIT-WEB faz isso sozinho, puxando do Sistema
+Auditor. Para que a folha local reflita o mesmo, rode a proposta e mostre-a ao AFT:
+
+```bash
+python ~/.claude/skills/_scripts/ementas_situacao.py "<pasta da OS>"
+```
+
+Só grave (`--aplicar`) depois de o AFT ver a proposta. A folha nunca inventa juízo: o
+script só acrescenta o que tem lastro.
+
 > O `memory.md` do toolkit é um markdown simples (sem schema rígido nem limite de linhas) — basta editar as duas seções com a tool `Edit`, sem validador externo.
 
 ### Passo 6.5 — Aproveitar Porte/Nº de trabalhadores do primeiro auto lavrado

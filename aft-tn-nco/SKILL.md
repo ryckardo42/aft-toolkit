@@ -458,6 +458,20 @@ Crie a pasta `NOTIFICACOES/` se ainda não existir.
 
 ---
 
+## FASE 4.5 — Lembrete da folha do item 2.5
+
+Irregularidade notificada e não autuada é, no Relatório de Inspeção, ementa `Irregular`
+com a ação **Notificação** — é exatamente o caminho da dupla visita. Depois que o AFT
+**transmitir** a notificação no DET (não antes: rascunho não vale), a folha se atualiza
+com a proposta automática:
+
+```bash
+python ~/.claude/skills/_scripts/ementas_situacao.py "<pasta da OS>"
+```
+
+Diga isso ao AFT em **uma linha** ao entregar a notificação, e não rode nada agora — a
+notificação ainda não foi transmitida.
+
 ## FASE 5 — Registro leve no memory.md (opcional)
 
 Se a OS tem `memory.md`, adicione **uma** linha em `## Registro de atividades` (edição cirúrgica via `Edit`):

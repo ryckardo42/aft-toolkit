@@ -9,8 +9,10 @@ pedido por notificação chega depois e já ajustado.
 
 Divisão de trabalho (padrão do toolkit): o modelo REDIGE o conteúdo da triagem e
 o passa num JSON; este script RENDERIZA. Os códigos e as descrições das ementas
-nunca vêm do JSON — são lidos literalmente da seção "## Ementas da OS" do
-memory.md, agrupados na ordem em que aparecem. Assim nenhuma ementa é
+nunca vêm do JSON — são lidos literalmente da folha `ementas.md` da OS (ou, nas
+OS ainda não migradas, da seção "## Ementas da OS" do memory.md; quem resolve
+isso é o `_scripts/ementas_os.py`), agrupados na ordem em que aparecem. Assim
+nenhuma ementa é
 esquecida, inventada ou parafraseada. Pela mesma razão, o grau de risco e o
 dimensionamento da CIPA também não vêm do JSON: são calculados aqui, chamando os
 scripts determinísticos de /aft-cnae-grau-risco-nr04 e /aft-cipa-nr05-
@@ -70,9 +72,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path.home() / ".claude/skills/aft-modelo-docx/scripts"))
 import modelo_docx as m  # noqa: E402
 
-# "- [ ] 312309-0 — Deixar de adotar medidas (...). (NR-12)"
-RE_EMENTA = re.compile(
-    r"^-\s*\[[ xX]\]\s*(\d{6}-\d)\s*[—–-]\s*(.+?)\s*\(([^()]+)\)\s*$")
+# O leitor unico da folha de ementas -- no repositorio ou na instalacao.
+for _base in (Path(__file__).resolve().parents[2] / "_scripts",
+              Path.home() / ".claude/skills/_scripts"):
+    if (_base / "ementas_os.py").is_file():
+        sys.path.insert(0, str(_base))
+        break
+import ementas_os  # noqa: E402
+
 RE_FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 
 TESE = ("Este documento parte de uma premissa: quase tudo o que esta OS manda "
@@ -111,21 +118,20 @@ def le_memory(pasta: Path):
     mfm = RE_FM.match(texto)
     fm, corpo = (mfm.group(1), texto[mfm.end():]) if mfm else ("", texto)
 
-    # Ementas, na ordem do arquivo, agrupadas pela frente entre parênteses.
-    frentes, dentro = {}, False
-    for linha in corpo.splitlines():
-        if linha.startswith("## "):
-            dentro = linha.strip().lower().startswith("## ementas da os")
-            continue
-        if not dentro:
-            continue
-        mm = RE_EMENTA.match(linha.strip())
-        if mm:
-            cod, descricao, frente = mm.group(1), mm.group(2).strip(), mm.group(3).strip()
-            frentes.setdefault(frente, []).append((cod, descricao))
+    # Ementas da OS, na ordem do arquivo, agrupadas pela frente entre parênteses.
+    # So as da OS: as ementas que o AFT acrescentou depois (autuadas fora da
+    # lista, incluidas a mao) nao pertencem a preparacao, que e anterior a visita.
+    frentes = {}
+    try:
+        folha = ementas_os.ler(pasta)
+    except ementas_os.ErroDeUso as e:
+        fail(str(e))
+    for ementa in folha.da_secao("os"):
+        frentes.setdefault(ementa.frente, []).append((ementa.codigo, ementa.descricao))
     if not frentes:
-        fail("nenhuma ementa encontrada na seção '## Ementas da OS' do memory.md — "
-             "o preparacao.docx é o resumo das ementas da OS e não faz sentido sem elas")
+        fail("nenhuma ementa da OS encontrada em %s (nem em '## Ementas da OS' do "
+             "memory.md) — o preparacao.docx é o resumo das ementas da OS e não faz "
+             "sentido sem elas" % ementas_os.ARQUIVO)
 
     # "**OS (SFIT):** 123456 · **Demanda:** 789" -> só o nº da OS.
     os_sfit = campo_corpo(corpo, "OS (SFIT)").split("·")[0].strip()

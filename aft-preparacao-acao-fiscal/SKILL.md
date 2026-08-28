@@ -96,26 +96,52 @@ Sem PDF anexado, siga direto para a FASE 1 — a skill funciona como sempre, com
    - **copie o(s) PDF(s)** para a raiz da pasta da OS: a Demanda como `OS <nº da OS> - Demanda <nº da demanda>.pdf` (é o original, com os dados do denunciante — fica local, como os demais documentos sensíveis da OS) e a Ordem de Serviço como `OS <nº da OS>.pdf`;
    - acrescente ao corpo do `memory.md` (logo após `**CNPJ:**`) as linhas `**Endereço:**` (completo, com CEP e ponto de referência), `**Telefone:**` e `**OS (SFIT):** <nº da OS> · **Demanda:** <nº da demanda>`;
    - se a Ordem de Serviço trouxe o prazo limite para término, acrescente também `**Vencimento da OS:** <dd/mm/aaaa>` (é prazo da fiscalização, não de DET — fora da seção `## Notificações DET`, o painel não o confunde);
-   - grave a seção `## Ementas da OS` no `memory.md` (FASE 1.1).
+   - grave o arquivo `ementas.md` na pasta da OS (FASE 1.1).
 
    A sessão da empresa no menu lateral continua **automática** (vigia de sessões) — informe na linha do resumo, não pergunte.
 
 Guarde: `PASTA_OS`, `EMPREGADOR`, `CNPJ` (pode vir vazio).
 
-### FASE 1.1 — Ementas da OS → memory.md
+### FASE 1.1 — Ementas da OS → ementas.md
 
-Se a demanda trouxe a tabela de irregularidades, grave no `memory.md` (após `## Notificações DET`):
+Se a demanda trouxe a tabela de irregularidades, grave o arquivo `ementas.md` **na raiz
+da pasta da OS** (não no `memory.md`):
 
 ```markdown
-## Ementas da OS
-_(OS SFIT nº <os> / demanda nº <demanda> — ementas a fiscalizar)_
+---
+os_sfit: "<nº da OS>"
+dupla_visita:
+atualizado: <dd/mm/aaaa>
+---
+# Ementas fiscalizadas — <EMPREGADOR>
+
+_Folha de resposta do item 2.5 do Relatório de Inspeção (SFIT-WEB): de cada ementa, a **situação encontrada** e, quando irregular, as **ações aplicadas**._
+
+_A caixa `[x]` é calculada: significa "linha respondida", e o `ementas_os.py` a recalcula ao gravar — não marque à mão._
+
+## 1. Ementas da OS
+_(as que vêm com `*` na tela do SFIT; responda todas, inclusive as não fiscalizadas)_
 - [ ] 001774-4 — <descrição oficial literal> (REGISTRO)
 - [ ] 101049-2 — <descrição oficial literal> (NR-01)
-...
+
+## 2. Ementas trazidas por autuação
+_(autuadas FORA da lista da OS — o SFIT as acrescenta sozinho, já `Irregular` + `Autuação`; aqui só se confere se chegaram)_
+_(vazio)_
+
+## 3. Ementas incluídas pelo AFT
+_(fiscalizadas fora da OS e sem auto — digitadas no campo "Informe as ementas fiscalizadas que não constam na OS")_
+_(vazio)_
 ```
 
-- Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Na linha de origem, cite o(s) documento(s) que você leu (OS, Demanda ou ambos); vindo os dois, deduplique por código.
-- As caixas `- [ ]` são para marcar, ao longo da fiscalização, o que já foi verificado/autuado — a `/aft-auditoria-geral` e o relatório final (`/aft-relatorio`) podem se apoiar nesta seção.
+- Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Vindo OS e Demanda, deduplique por código.
+- Na preparação só se preenche a **seção 1**, e sem situação: a folha de resposta é preenchida ao longo da fiscalização e no encerramento. As seções 2 e 3 nascem `_(vazio)_`.
+- `dupla_visita:` fica em branco até se saber — a própria tela do SFIT informa (em verde quando concedida, em vermelho quando não).
+- No `memory.md`, deixe a seção `## Ementas da OS` como **ponteiro de uma linha** para o `ementas.md`. Não duplique a lista nos dois arquivos.
+- Confira o que gravou:
+
+```bash
+python ~/.claude/skills/_scripts/ementas_os.py "$PASTA_OS"
+```
 
 ### FASE 1.15 — Cadastro na Receita (antes de qualquer busca)
 
@@ -207,12 +233,12 @@ visita** (ME/EPP, art. 55, § 1º, da LC 123/2006) não pode ser autuada de imed
 regularização das ementas conta normalmente — nesse cenário, as ementas documentais
 de PGR da NR-01 costumam ser o caminho mais curto.
 
-Por isso, **logo depois de gravar a seção `## Ementas da OS`**, rode o classificador
+Por isso, **logo depois de gravar o `ementas.md`**, rode o classificador
 (gradação **nunca** se afirma de cabeça — sempre pelo script, que carrega a base local
 do ementário SST):
 
 ```bash
-python ~/.claude/skills/aft-preparacao-acao-fiscal/scripts/metas_regularizacao.py --arquivo "$PASTA_OS/memory.md"
+python ~/.claude/skills/aft-preparacao-acao-fiscal/scripts/metas_regularizacao.py --os "$PASTA_OS"
 ```
 
 Acrescente `--construcao-civil` quando a OS for de **projeto de construção civil** —
@@ -820,7 +846,7 @@ memory.md → ## CNPJs no mesmo endereço. Sem consulta: o motivo>
 - <tema 2>
 
 ## Ementas da OS
-<"N ementas a fiscalizar — ver memory.md → ## Ementas da OS" ou "OS sem tabela de ementas">
+<"N ementas a fiscalizar — ver ementas.md" ou "OS sem tabela de ementas">
 
 ## Metas de regularização (I3/I4)
 <saída da FASE 1.16: as ementas I3/I4 da OS, com as [FÁCIL n/10] primeiro e a
@@ -937,7 +963,7 @@ Apresente o resumo final:
 🖨️ preparacao.docx — triagem para levar impressa na visita
 
 Documentos no checklist: M   ·   NAD gerada: sim/não
-Ementas da OS: K no memory.md   ·   🗺️ Maps: link no preparacao.md
+Ementas da OS: K no ementas.md   ·   🗺️ Maps: link no preparacao.md
 🎯 Meta do projeto: N ementas I3/I4 na OS (mínimo: 2 ou 3) · M de fácil regularização   (só se a FASE 1.16 rodou)
 🏭 <o que a empresa faz, em uma linha — da busca da FASE 1.2>
 👥 Efetivo: <N> (<H>H/<M>M · PCD <n> · aprendizes <n>)   (só se houve Relação de Vínculos)
@@ -988,7 +1014,7 @@ Próximos passos:
 - Efetivo do estabelecimento é **homens + mulheres**; PCD, aprendizes e menores de 18 são recortes desse total e **não se somam** a ele.
 - Déficit de SESMT apurado antes da visita é **indício**, nunca constatação: o profissional pode estar sob outra ocupação, em outro estabelecimento, ou o serviço ser comum. Confirme em campo antes de qualquer conclusão.
 - Ementa é texto oficial: código e descrição copiados **literais** da demanda — nunca parafrasear.
-- **Gradação de ementa nunca se afirma de cabeça** — sempre pelo `metas_regularizacao.py` (FASE 1.16), que lê a base local; código fora da base se confere na `/aft-consulta`. A gradação e o selo `[FÁCIL]` **não entram** na seção `## Ementas da OS` do `memory.md` (o `preparacao_docx.py` exige a linha terminando na frente entre parênteses): moram na seção `## Metas de regularização (I3/I4)` do `preparacao.md`.
+- **Gradação de ementa nunca se afirma de cabeça** — sempre pelo `metas_regularizacao.py` (FASE 1.16), que lê a base local; código fora da base se confere na `/aft-consulta`. A gradação e o selo `[FÁCIL]` **não entram** no `ementas.md` (o `preparacao_docx.py` exige a linha terminando na frente entre parênteses): moram na seção `## Metas de regularização (I3/I4)` do `preparacao.md`.
 - A lista de ementas de fácil regularização é **tática de meta, nunca limite da fiscalização**: nenhuma ementa da OS deixa de ser verificada por não contar para a meta.
 - **Nunca** invente exigência documental, ementa ou dispositivo legal — o que não vier de fonte confiável, pergunte ao AFT ou deixe em aberto.
 - O checklist de documentos é sempre **sugestão para aprovação do AFT** — nunca gere a `/aft-NAD` sem essa aprovação explícita.

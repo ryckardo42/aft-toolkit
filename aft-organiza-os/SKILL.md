@@ -79,12 +79,15 @@ for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
    `python ~/.claude/skills/_scripts/backup_arquivo.py "<memory.md>"`). Se estiver em
    dia, não toque.
 
-   **Gatilho específico — Ordem de Serviço sem `## Ementas da OS`.** Se a pasta tiver um
-   PDF de Ordem de Serviço (root ou solto) e o `memory.md` **não** tiver a seção
-   `## Ementas da OS`, isso sozinho já qualifica a pasta como "atualização" — mesmo que
-   nada mais esteja fora do padrão. É o caso típico de OS organizada antes desta
-   extração existir na skill, ou de Ordem de Serviço salva depois do primeiro
-   `/aft-organiza-os`.
+   **Gatilho específico — Ordem de Serviço sem `ementas.md`.** Se a pasta tiver um
+   PDF de Ordem de Serviço (root ou solto) e **não** houver o arquivo `ementas.md`,
+   isso sozinho já qualifica a pasta como "atualização" — mesmo que nada mais esteja
+   fora do padrão. É o caso típico de OS organizada antes desta extração existir na
+   skill, ou de Ordem de Serviço salva depois do primeiro `/aft-organiza-os`.
+
+   **Gatilho específico — ementas ainda dentro do `memory.md`.** Se o `memory.md`
+   tiver a seção `## Ementas da OS` com a lista dentro (e não o ponteiro de uma
+   linha), a pasta entra como "atualização" para a **migração** da FASE 4.
 
    **Layout antigo (anterior a 22/07/2026) → migração.** Antes, notificações e pastas
    de autos ficavam soltas na raiz. Detecte e inclua a migração no plano quando houver,
@@ -147,7 +150,7 @@ Extraia, quando presentes:
   **vencimento da OS**), e a tabela inteira da seção "4. Ementas a Fiscalizar"
   (Atributo/NR, código da ementa, descrição) — **código e descrição literais do PDF,
   nunca resumidos ou parafraseados**. É a mesma extração que o `/aft-nova-auditoria`
-  faz no Passo 0; aqui ela vira a seção `## Ementas da OS` do `memory.md` (FASE 4).
+  faz no Passo 0; aqui ela vira o arquivo `ementas.md` da pasta (FASE 4).
 
 > Privacidade: **não abra nem ecoe** conteúdo de listas de empregados (ex.: "RELAÇÃO DE
 > EMPREGADOS.xlsx") nem documentos pessoais de trabalhador (CNH, RG, CAT, certidão de
@@ -176,14 +179,15 @@ Monte **um único plano** cobrindo todas as pastas (novas + atualizações) e pe
    Empregador: ACME LTDA · CNPJ 11.222.333/0001-44
    ⚠️ Sem o PDF da notificação DET na pasta → DET fica em branco no memory.md
    (preencher depois; sem pergunta)
-   Ordem de Serviço encontrada (OS 99887766-5) → 12 ementas extraídas para
-   "## Ementas da OS"; renomear "OrdemServico.pdf" → "OS 99887766-5.pdf" (fica na raiz)
+   Ordem de Serviço encontrada (OS 99887766-5) → 12 ementas extraídas para o
+   "ementas.md"; renomear "OrdemServico.pdf" → "OS 99887766-5.pdf" (fica na raiz)
 
 ── 3. ... ───────────────────────────────────────────────
 
 ── Atualização: "BETA LTDA 11222333000144" ──────────────
-   Ordem de Serviço presente na pasta, mas memory.md não tem "## Ementas da OS"
-   → acrescentar seção com as 8 ementas do PDF (backup do memory.md antes)
+   Ordem de Serviço presente na pasta, mas não há "ementas.md"
+   → criar o arquivo com as 8 ementas do PDF
+   Ementas ainda dentro do memory.md → migrar para "ementas.md" (backup antes)
    2 arquivos novos soltos na raiz → mover para NOTIFICACOES/XYZ... <data>/
    (memory.md será editado com backup antes)
 
@@ -334,8 +338,7 @@ status: em_andamento
 - [ ] <CODIGO> — prazo <dd/mm/aaaa>
 
 ## Ementas da OS
-_(OS SFIT nº <os> — ementas a fiscalizar; seção só existe quando uma Ordem de Serviço foi lida)_
-- [ ] <código> — <descrição oficial literal> (<NR ou atributo>)
+_(a lista e a folha de resposta do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
 
 ## Autos de Infração
 _(vazio)_
@@ -363,13 +366,18 @@ _(vazio)_
      `- [ ] (código não localizado) — prazo (a preencher)` + observação; **não pergunte**.
    - Registre em observação os trabalhos já iniciados pelo AFT (minutas, análises,
      relatórios .docx encontrados na raiz).
-   - **`## Ementas da OS`**: só entra no `memory.md` quando uma Ordem de Serviço foi
-     lida (FASE 2). Código e descrição **literais** do PDF — nunca resuma nem
-     parafraseie a ementa. Numa pasta **nova**, a seção já nasce junto com o resto do
-     arquivo. Numa pasta em **atualização** (memory.md já existe e só falta essa
-     seção — gatilho da FASE 1), acrescente-a com Edit cirúrgico logo após
-     `## Notificações DET`, sem tocar em mais nada do arquivo (o backup já foi feito
-     no passo 2). As linhas `**OS (SFIT):**` e `**Vencimento da OS:**` seguem a mesma
+   - **Ementas → `ementas.md`**: no `memory.md`, a seção `## Ementas da OS` é só um
+     **ponteiro de uma linha**; a lista mora no arquivo `ementas.md` da pasta, que é
+     também a folha de resposta do item 2.5 do Relatório de Inspeção (formato em
+     `~/.claude/skills/_scripts/ementas_os.py`). Três casos:
+     - **ementas ainda dentro do `memory.md`** (OS anterior a esta mudança) →
+       migração automática, que já faz o backup e deixa o ponteiro no lugar:
+       `python ~/.claude/skills/_scripts/ementas_os.py "<pasta da OS>" --migrar`
+     - **Ordem de Serviço lida e sem `ementas.md`** (FASE 2) → grave o arquivo com as
+       ementas na seção `## 1. Ementas da OS`, código e descrição **literais** do PDF.
+     - **`ementas.md` já existe** → não toque.
+
+     As linhas `**OS (SFIT):**` e `**Vencimento da OS:**` seguem a mesma
      regra: só entram/atualizam se a Ordem de Serviço foi lida.
 3. Rode o guarda de PII em cada memory.md escrito — **sempre com a saída em UTF-8**, para
    o console Windows (cp1252) não derrubar o script:
