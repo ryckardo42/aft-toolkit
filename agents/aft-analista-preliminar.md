@@ -248,11 +248,16 @@ itens) é achado relevante: diga isso aqui.>
    ```
 
 2. Acrescente em `## Auditoria de documentos` (crie a seção se faltar, antes de
-   `## Pendências` ou de `## Registro de atividades`), uma linha por rodada, **sem**
-   caixa de marcar:
+   `## Pendências` ou de `## Registro de atividades`; nas OS anteriores à renomeação
+   ela se chama `## Anotações da auditoria` — escreva na que existir, sem renomeá-la)
+   uma subseção `### Análise preliminar` ao **final da seção** (se ainda não houver) e,
+   nela, uma linha por rodada, em **prosa** (nunca comece com `-`: na seção, bullet é
+   constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e esta linha é
+   um índice, não uma constatação):
 
    ```
-   - <hoje> — Análise preliminar <CODIGO> (entregas de <dias novos>): X atendidos, Y parciais, Z irregulares, W mérito pendente, V precisa auditoria — ver `analise-preliminar-<CODIGO>.md`
+   ### Análise preliminar
+   <hoje> — Notificação <CODIGO> (entregas de <dias novos>): X atendidos, Y parciais, Z irregulares, W mérito pendente, V precisa auditoria — relatório: analise-preliminar-<CODIGO>.md
    ```
 
 3. Registre o dia trabalhado:

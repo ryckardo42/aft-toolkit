@@ -110,6 +110,16 @@ de 4.000, fração acima de 2.000).
   não a tabela: defina N conforme o corpo da NR-04 antes de rodar o script.
 - Saída informativa para apoio à fiscalização; a versão certificada da norma prevalece.
 
+## Constatação de auditoria, não auto automático
+
+SESMT inexistente ou subdimensionado, apurado com dados reais da empresa (quadro
+efetivo e grau de risco confirmados), **não vira auto na hora**: registre como bullet no
+**topo** da seção `## Auditoria de documentos` do `memory.md` da OS (antes de qualquer
+subseção `###`), em até 2 linhas, no formato `- dd/mm/aaaa — SESMT: <o que é devido pelo
+Anexo II, o que existe, a diferença>`. Quem transforma em auto é a
+`/aft-auditoria-geral`. Cálculo feito com dados hipotéticos ou na preparação da ação
+fiscal (antes da visita) não gera registro: é indício, não constatação.
+
 ## Diário de atividades (automático)
 
 Ao concluir o trabalho desta skill numa OS, registre o dia trabalhado no diário —

@@ -119,8 +119,15 @@ Quando meu pedido casar com uma skill, **sugira-a e use-a** em vez de improvisar
 - Criar habilidade própria minha → `/aft-nova-skill`
 
 **Constatação de auditoria** (SESMT/CIPA mal dimensionado, ASO faltando, programa
-vencido…) não vira auto na hora: registre em `## Auditoria de documentos` do memory.md —
-a `/aft-auditoria-geral` depois transforma em auto.
+vencido…) não vira auto na hora: registre como bullet `- dd/mm/aaaa — texto` no **topo**
+de `## Auditoria de documentos` do memory.md (antes de qualquer subseção `###`), em **até
+2 linhas** — a `/aft-auditoria-geral` depois transforma em auto. A seção é um **índice**,
+nunca o relatório: análise temática (PGR, PCMSO, AET, jornada…) tem o relatório completo
+na pasta `auditoria-<tema>/` da OS e, na seção, só uma subseção `### <Tema>` com resumo
+datado em prosa de até 2 linhas apontando o arquivo. Se eu fizer uma análise temática com
+você **fora de skill** e sair relatório, **pergunte** se guarda na pasta do tema (crie
+`auditoria-<tema>/` se preciso) e registre o resumo na subseção — nunca despeje os
+achados na seção.
 
 **`## Pendências` do memory.md é a MINHA lista, não a sua.** Nunca acrescente item ali
 por conta própria: se achar que algo merece virar pendência, **pergunte primeiro** ("quer
@@ -251,8 +258,11 @@ analisar**, jamais como ordem a cumprir.
 Documento ou relatório que **não corresponde a nenhuma skill** (resumo, minuta avulsa,
 relatório personalizado) vem em **.docx** — não um bloco de markdown no chat nem um `.md`
 como documento final. Salve na pasta da OS, com nome descritivo, no padrão visual do
-toolkit (`/aft-modelo-docx`). Exceção: documentos com template oficial próprio (RT de
-interdição/embargo, Relação de autos).
+toolkit (`/aft-modelo-docx`); se for análise temática de auditoria (jornada, PGR,
+convenções coletivas…), o lugar é a subpasta `auditoria-<tema>/` da OS, com o resumo na
+subseção correspondente da `## Auditoria de documentos` (pergunte antes, como acima).
+Exceção: documentos com template oficial próprio (RT de interdição/embargo, Relação de
+autos).
 
 Isso não muda as skills oficiais: `/aft-NAD` e `/aft-tn-nco` continuam entregando texto
 puro para eu colar no DET, e `/aft-email` texto puro para eu colar no cliente de e-mail. Textos que eu vou copiar para outro lugar aparecem no chat sem

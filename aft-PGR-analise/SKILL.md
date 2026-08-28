@@ -36,6 +36,12 @@ ementa por ementa, com citação dos trechos do PGR que sustentam cada conclusã
 de redação dos autos de infração (empacotamento via `/aft-gera-ai`) e relatório de recomendação
 para a empresa.
 
+> **Onde esta skill grava.** Tudo o que ela produz mora na subpasta
+> `auditoria-PGR/` da OS (crie-a na primeira gravação): `analise-PGR.md`,
+> `pgr-extrato.md` e `autos-pgr.md`. **Nunca grave esses arquivos na raiz da OS.**
+> Em OS antigas eles podem existir na raiz: use-os normalmente para leitura, mas
+> toda gravação nova vai para a subpasta.
+
 ---
 
 ## Fluxo de execução
@@ -108,7 +114,7 @@ explicitamente pelo AFT tem **precedência** sobre a busca na pasta.
 
 **Prefira sempre o arquivo na pasta da OS.** PGR arrastado para o chat já entra inteiro no
 contexto da conversa e anula a economia descrita abaixo. Se o AFT anexar um PGR grande,
-grave-o na pasta da OS e siga por lá.
+grave-o em `auditoria-PGR/` na pasta da OS e siga por lá.
 
 #### Leitura do PGR: delegue ao agente extrator
 
@@ -117,7 +123,8 @@ limite de uso do AFT, e é **recobrado a cada turno** da análise - o que estour
 meio do trabalho. Por isso a leitura é feita fora da conversa, por um agente próprio.
 
 **Antes de medir, veja se o extrato já existe.** Se
-`<OS_ATIVAS>/[PASTA_EMPRESA]/pgr-extrato.md` já estiver na pasta, a extração já foi feita
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PGR/pgr-extrato.md` já estiver na pasta (ou, em
+OS antigas, `pgr-extrato.md` na raiz da OS), a extração já foi feita
 - por uma execução anterior deste skill, ou por um fluxo de trabalho que extraiu os
 documentos numa triagem inicial. Confira que ele cobre as sete ementas do roteiro abaixo
 e **siga direto para "Analise sobre o extrato"**: não meça o PDF nem delegue de novo.
@@ -134,7 +141,7 @@ Descubra primeiro o tamanho do documento:
 
 - **Mais de 20 páginas** (o caso comum): **delegue ao agente `aft-extrator-documento`**, passando
   no prompt o tipo de documento (PGR), o caminho do PGR, o caminho de saída
-  `<OS_ATIVAS>/[PASTA_EMPRESA]/pgr-extrato.md`, o `python_path` e - obrigatoriamente - o
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PGR/pgr-extrato.md`, o `python_path` e - obrigatoriamente - o
   **roteiro de extração**, que são as sete ementas na ordem deste skill: 1010590 (evitar
   perigos / metodologia de GRO), 1010603 (identificação de perigos), 1010611 (avaliação e
   nível de risco), 1010646 (condições da NR-17), 1010743 (Plano de Ação), 1010794
@@ -519,7 +526,25 @@ que a irregularidade **não parece estar presente** com base no documento fornec
 forçar enquadramento.
 
 Ao final, salve a análise completa em
-`<OS_ATIVAS>/[PASTA_EMPRESA]/analise-PGR.md`.
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PGR/analise-PGR.md`.
+
+**Registre a auditoria no `memory.md` da OS.** Na seção `## Auditoria de documentos`
+(nas OS anteriores à renomeação ela se chama `## Anotações da auditoria`: escreva na que
+existir, sem renomeá-la; se nenhuma existir, crie `## Auditoria de documentos`),
+acrescente ao **final da seção** uma subseção `### PGR` (se ainda não houver) e, nela,
+uma linha datada:
+
+```
+### PGR
+dd/mm/aaaa — <resumo em até 2 linhas: o essencial do parecer, com contagens — quantas
+ementas presentes, se autos foram redigidos> — relatório: auditoria-PGR/analise-PGR.md
+```
+
+Três regras do registro: (1) é **prosa** — nunca comece a linha com `-`: na seção,
+bullet é constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e o resumo
+não é uma constatação; (2) **até 2 linhas** por análise — o detalhe fica no relatório e
+não se repete no memory.md; (3) análise nova do mesmo tema acrescenta outra linha datada
+na mesma subseção, mantendo as anteriores.
 
 ---
 
@@ -632,10 +657,10 @@ remove o hífen no cod_3):
 | 1011154 | `101115-4` |
 
 **Salvar e handoff**: salve todos os blocos em
-`<OS_ATIVAS>/[PASTA_EMPRESA]/autos-pgr.md` e exiba:
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-PGR/autos-pgr.md` e exiba:
 
 ```
-✅ N autos de PGR redigidos — salvos em autos-pgr.md
+✅ N autos de PGR redigidos — salvos em auditoria-PGR/autos-pgr.md
 
 ▶ Próximo passo — empacotar no TXT do Sistema Auditor:
   1) Rode /aft-gera-ai e responda que os autos estão (b) na sessão.

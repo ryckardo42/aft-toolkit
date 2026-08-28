@@ -490,18 +490,43 @@ def parse_memory(path: Path) -> dict:
             if feita:
                 pendencias_ok.append(feita)
 
-    # Auditoria de documentos — o que a análise documental apurou (PGR, ASO,
-    # atas de CIPA...). Não é checklist: entra tudo, na ordem do arquivo.
+    # Auditoria de documentos — duas camadas (convenção de 28/08/2026):
+    # bullets no topo = constatações avulsas (editáveis pelo painel);
+    # subseções "### <Tema>" = resumos das auditorias temáticas, em prosa,
+    # apontando o relatório na pasta auditoria-<tema>/ da OS. Ficha antiga,
+    # sem subseção, cai inteira em `anotacoes` — nada muda para ela.
     # Aceita o nome antigo da seção para não quebrar OS já abertas.
     anotacoes = []
+    temas = []          # [{"titulo": str, "linhas": [str, ...]}]
+    tema_atual = None
     sec_doc = (extrair_secao(corpo, "Auditoria de documentos")
                or extrair_secao(corpo, "Anotações da auditoria"))
     for linha in sec_doc.splitlines():
-        m_it = RE_ITEM.match(linha.strip())
-        if m_it:
-            texto_an = re.sub(r"<!--.*?-->", "", m_it.group(1)).strip()
-            if texto_an:
-                anotacoes.append(texto_an)
+        s = linha.strip()
+        m_sub = re.match(r"^###\s+(.+)$", s)
+        if m_sub:
+            tema_atual = {"titulo": m_sub.group(1).strip(), "linhas": []}
+            temas.append(tema_atual)
+            continue
+        if tema_atual is None:
+            m_it = RE_ITEM.match(s)
+            if m_it:
+                texto_an = re.sub(r"<!--.*?-->", "", m_it.group(1)).strip()
+                if texto_an:
+                    anotacoes.append(texto_an)
+            continue
+        # Dentro de um tema: prosa datada, possivelmente quebrada em mais de
+        # uma linha física — linha que não começa com data (nem bullet) é
+        # continuação da anterior.
+        txt = re.sub(r"<!--.*?-->", "", s).strip()
+        if not txt:
+            continue
+        eh_novo = bool(re.match(r"^(?:-\s|\d{2}/\d{2}/\d{4})", txt))
+        txt = re.sub(r"^-\s+", "", txt)
+        if tema_atual["linhas"] and not eh_novo:
+            tema_atual["linhas"][-1] += " " + txt
+        else:
+            tema_atual["linhas"].append(txt)
 
     # Registro de atividades (tabela markdown). Linhas do diário de atividades
     # começam com letras [A-F] na coluna Ação (tipos da tela 2.1 do RI — ver
@@ -541,6 +566,7 @@ def parse_memory(path: Path) -> dict:
         "pendencias": pendencias,
         "pendencias_ok": pendencias_ok,
         "anotacoes": anotacoes,
+        "temas": temas,
         "atividades": atividades,
         "autos_mem": autos_mem,
         "memoria": texto,
@@ -823,7 +849,10 @@ def varrer_notificacoes_novas(pasta: Path, memoria: str) -> list[dict]:
     for e in entradas:
         if e.is_file() and e.suffix.lower() == ".pdf":
             pdfs.append(e)
-        elif e.is_dir() and not e.name.startswith((".", "Autos")):
+        elif (e.is_dir() and not e.name.startswith((".", "Autos"))
+              and not e.name.lower().startswith("auditoria-")):
+            # auditoria-<tema>/ guarda documento auditado e relatório de
+            # análise — nunca notificação DET nova; fica fora da varredura.
             try:
                 pdfs += sorted(p for p in e.iterdir()
                                if p.is_file() and p.suffix.lower() == ".pdf")
@@ -1063,6 +1092,10 @@ background:var(--cream)}
 .auto .quando{font-size:12px;color:var(--t3);margin-top:4px}
 ul.lista{margin:0;padding-left:18px;font-size:13.5px}
 ul.lista li{margin-bottom:5px}
+.cartao h4.tema{margin:10px 0 4px;font-size:12.5px;text-transform:uppercase;
+ letter-spacing:.4px;color:var(--t3)}
+ul.lista.temas{list-style:none;padding-left:2px}
+ul.lista.temas li{color:var(--t2)}
 /* Pendência resolvida: continua na lista, tachada. O que já foi vencido é
    histórico da OS — sumir da tela apaga o trabalho feito. */
 ul.lista.feitas{margin-top:6px}
@@ -1539,12 +1572,20 @@ function agAtiv(i){const el=document.getElementById('ativ-txt');const v=(el.valu
 function urlDoc(o,d){return '/doc/'+encodeURIComponent(o.pasta)+'/'+encodeURIComponent(d)}
 function linkDocs(i,t){const o=DATA.os[i];let s=esc(t);
  if(!ATIVO||!o.pasta||!o.docs||!o.docs.length)return s;
+ // Casa pelo caminho completo e, quando não há ambiguidade, também pelo nome
+ // curto: linha antiga do memory.md cita "analise-PGR.md" mesmo depois de o
+ // arquivo ir para "auditoria-PGR/" (pastas temáticas de 28/08/2026).
  // Em duas fases, nomes mais longos primeiro (nome -> marcador -> link):
  // "autos.md" não pode quebrar o link de "interdicao-embargo/autos.md" que o
  // contém, nem casar dentro do HTML já inserido do link de outro documento.
- const ds=[...o.docs].sort((a,b)=>b.length-a.length),trocas=[];
- ds.forEach((d,k)=>{const e=esc(d),m='\\u0001'+k+'\\u0001';
-  if(s.indexOf(e)>=0){s=s.split(e).join(m);trocas.push([m,d,e])}});
+ const base=d=>d.slice(d.lastIndexOf('/')+1),cont={};
+ o.docs.forEach(d=>{cont[base(d)]=(cont[base(d)]||0)+1});
+ const pares=[];
+ o.docs.forEach(d=>{pares.push([d,d]);
+  if(d.indexOf('/')>=0&&cont[base(d)]===1)pares.push([base(d),d])});
+ pares.sort((a,b)=>b[0].length-a[0].length);const trocas=[];
+ pares.forEach((p,k)=>{const e=esc(p[0]),m='\\u0001'+k+'\\u0001';
+  if(s.indexOf(e)>=0){s=s.split(e).join(m);trocas.push([m,p[1],e])}});
  for(const [m,d,e] of trocas)
   s=s.split(m).join('<a class="doc-link" target="_blank" href="'+urlDoc(o,d)+'">'+e+'</a>');
  return s}
@@ -1666,12 +1707,17 @@ function cartaoPendencias(o,i){
   '<button class="cta" disabled onclick="agPendAdd('+i+')">registrar</button></div></div>';
  return h+'</div>'}
 function cartaoAnotacoes(o,i){
- const an=o.anotacoes||[];
- let h='<div class="cartao"><h3>Auditoria de documentos <span class="cont">'+an.length+'</span></h3>';
+ const an=o.anotacoes||[],ts=(o.temas||[]).filter(t=>(t.linhas||[]).length);
+ const tot=an.length+ts.reduce((n,t)=>n+t.linhas.length,0);
+ let h='<div class="cartao"><h3>Auditoria de documentos <span class="cont">'+tot+'</span></h3>';
  if(an.length)h+='<ul class="lista">'+an.map((s,k)=>'<li id="cons-'+k+'">'+esc(s)+
   (ATIVO&&o.pasta?'<button class="mini acao" onclick="agAnotEdit('+i+','+k+')">editar</button>':'')+
   '</li>').join('')+'</ul>';
- else h+='<p class="vazio">nenhuma constatação registrada</p>';
+ else if(!ts.length)h+='<p class="vazio">nenhuma constatação registrada</p>';
+ // Auditorias temáticas: resumo por subseção ### do memory.md, com o ponteiro
+ // do relatório virando link (linkDocs). Edição é pelo chat, não daqui.
+ ts.forEach(t=>{h+='<h4 class="tema">'+esc(t.titulo)+'</h4>'+
+  '<ul class="lista temas">'+t.linhas.map(s=>'<li>'+linkDocs(i,s)+'</li>').join('')+'</ul>'});
  if(ATIVO&&o.pasta)h+='<div class="entrada">'+
   '<label for="anot-txt">Nova constatação</label><div class="linha">'+
   '<input id="anot-txt" type="text" placeholder="ex.: PGR sem inventário de riscos químicos" '+
@@ -1849,7 +1895,7 @@ function abre(i){
  h+=cartaoDets(o,i);
  if((o.novas||[]).length)h+=cartaoNovas(o);
  if(ATIVO&&o.pasta||(o.pendencias||[]).length)h+=cartaoPendencias(o,i);
- if(ATIVO&&o.pasta||(o.anotacoes||[]).length)h+=cartaoAnotacoes(o,i);
+ if(ATIVO&&o.pasta||(o.anotacoes||[]).length||(o.temas||[]).length)h+=cartaoAnotacoes(o,i);
  if(o.inspecao&&((o.inspecao.bullets||[]).length||o.inspecao.texto))h+=cartaoInspecao(o,i);
  h+=cartaoTimeline(o,i);
  h+='</div><div>';
@@ -2509,9 +2555,14 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             "pendencias": [datas_para_br(p) for p in o["pendencias"]],
             "pendencias_ok": [datas_para_br(p) for p in o["pendencias_ok"]],
             # Anotações podem conter nome/CPF de trabalhador (PII): só na versão
-            # local (com_pasta), nunca no Artifact publicado.
+            # local (com_pasta), nunca no Artifact publicado. Idem os resumos
+            # das auditorias temáticas (subseções ###).
             "anotacoes": ([datas_para_br(a) for a in o.get("anotacoes", [])]
                           if com_pasta else []),
+            "temas": ([{"titulo": t["titulo"],
+                        "linhas": [datas_para_br(l) for l in t["linhas"]]}
+                       for t in o.get("temas", [])]
+                      if com_pasta else []),
             "atividades": [{"data": datas_para_br(a["data"]), "acao": a["acao"],
                             "tipos": a.get("tipos") or "",
                             "detalhe": datas_para_br(a["detalhe"])}
@@ -2782,7 +2833,7 @@ def main() -> int:
                     "cnae": "", "grau_risco": "",
                     "data_inicio": None, "data_vencimento": None,
                     "dets": [], "pendencias": [], "pendencias_ok": [],
-                    "anotacoes": [], "atividades": [],
+                    "anotacoes": [], "temas": [], "atividades": [],
                     "autos_mem": "", "memoria": "", "erro": str(e),
                 })
 

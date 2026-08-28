@@ -48,7 +48,8 @@ Divisão de trabalho no ecossistema:
 
 Se um laudo técnico/apreciação de riscos for o centro do requerimento, a análise dele
 pertence à `/aft-auditoria-AR-NR12` — ofereça rodá-la primeiro (ou reaproveite o
-`auditoria-X-AR-NR12.md` já existente na pasta da OS) e use o resultado como núcleo da
+`auditoria-X-AR-NR12.md` já existente na pasta da OS, em `auditoria-laudo-NR12/` ou,
+em OS antigas, na raiz) e use o resultado como núcleo da
 seção 2 deste RT.
 
 ---

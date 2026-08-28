@@ -197,8 +197,9 @@ Nada será apagado. Confirma a organização completa?
 
 ### Layout padrão da pasta de uma OS
 
-Duas caixas (`NOTIFICACOES/` e `AUTOS/`) concentram o material volumoso; a **raiz fica
-só com as fichas e os relatórios `.md`**:
+Duas caixas (`NOTIFICACOES/` e `AUTOS/`) concentram o material volumoso; as **pastas
+temáticas `auditoria-<tema>/`** guardam os relatórios de análise documental; a **raiz
+fica só com as fichas e os `.md` de contrato fixo**:
 
 ```
 <EMPREGADOR> <CNPJ>/
@@ -207,9 +208,14 @@ só com as fichas e os relatórios `.md`**:
 ├── OS <nº da OS>.pdf             ← Ordem de Serviço do SFIT, se presente (fica na raiz)
 ├── autos-lavrados.md             ← RAIZ OBRIGATÓRIA (ver regra abaixo)
 ├── analise-preliminar-*.md       ← RAIZ OBRIGATÓRIA
-├── jornada-analise-*.md          ← RAIZ OBRIGATÓRIA
 ├── inspecao-fisica.md            ← RAIZ OBRIGATÓRIA
 ├── tn-nco-*.md · nad-*.md        ← RAIZ OBRIGATÓRIA (texto que o AFT recola no DET)
+├── auditoria-PGR/                ← análise temática: relatório, extrato e autos do PGR
+├── auditoria-PCMSO/ · auditoria-PGRTR/ · auditoria-AET/
+├── auditoria-laudo-NR12/         ← auditoria-X-AR-NR12.md + laudo-extrato.md
+├── auditoria-jornada/            ← jornada-analise-*.md, autos e pareceres de jornada
+├── auditoria-acidente/           ← relatórios de análise de acidente (IN 2/2022)
+├── auditoria-<tema livre>/       ← análise avulsa de conversa comum (ex.: auditoria-jornada-pausas)
 ├── NOTIFICACOES/
 │   ├── tn-nco-*.docx · nad-*.docx  ← versão fechada da notificação emitida
 │   └── <NN> - <CODIGO> <dd-mm-aaaa>/  ← TUDO daquela notificação (NN = ordem de
@@ -221,11 +227,24 @@ só com as fichas e os relatórios `.md`**:
 │   ├── Autos <DD-MM>/            ← TXT + anexos gerados pelo /aft-gera-ai
 │   └── Relacao de autos/         ← relação .docx do /aft-autos-lavrados
 ├── interdicao-embargo/           ← termo, RT, laudos, juntados
+├── Acidentes/                    ← histórico de CATs (/aft-relatorio-acidentes, dossiês)
+├── eSocial/                      ← painéis do LRE/férias/folha (/aft-lre-esocial)
 ├── Relatórios de Fiscalização/   ← todo relatório de fiscalização (ver regra abaixo)
 │   ├── Relatorio auditoria RI <ri>.docx/.md/.json   ← /aft-relatorio
 │   └── RI <ri> - autos e anexos.pdf                 ← cópia do dossiê feita pelo /aft-relatorio
 └── fotos/
 ```
+
+> **Pastas temáticas — `auditoria-<tema>/`.** Cada auditoria de documento tem a sua
+> pasta no primeiro nível da OS, e é nela que a skill dedicada grava **tudo** o que
+> produz (relatório de análise, extrato do documento, autos redigidos, recomendação):
+> `auditoria-PGR/`, `auditoria-PCMSO/`, `auditoria-PGRTR/`, `auditoria-AET/`,
+> `auditoria-laudo-NR12/`, `auditoria-jornada/`, `auditoria-acidente/`. Análise
+> temática feita em conversa comum, fora de skill, ganha pasta própria no mesmo padrão
+> (`auditoria-<tema-em-minusculas-com-hifen>/`). **Sempre no primeiro nível** — o
+> painel lista e abre `.md` a 1 nível de subpasta, mas não a 2. O resumo de cada
+> auditoria (até 2 linhas + ponteiro) vai na subseção `### <Tema>` de
+> `## Auditoria de documentos` no memory.md.
 
 > **Pasta padrão para relatórios — `Relatórios de Fiscalização/`.** Todo documento cujo
 > propósito é ser um **relatório** da fiscalização (não uma notificação, não um auto,
@@ -238,19 +257,20 @@ só com as fichas e os relatórios `.md`**:
 > na raiz — porque aqui o documento final é sempre o `.docx`, e manter os três juntos
 > importa mais do que a visibilidade no painel.
 
-> **Regra dura — `.md` fica na RAIZ.** Duas travas no painel, não é preferência de
-> arrumação:
-> 1. `gerar_painel.py` lê `autos-lavrados.md` num caminho fixo na raiz e lista os demais
->    relatórios com um glob de **primeiro nível** (`pasta.glob("*.md")`) — `.md` em
->    subpasta **desaparece do painel**;
-> 2. a rota `/doc/` do `servir_painel.py` aceita exatamente
->    `/doc/<pasta-da-OS>/<arquivo>.md` e **rejeita qualquer `/` no nome do arquivo**
->    (guarda contra path traversal) — `.md` em subpasta também deixa de ser clicável.
+> **Regra dura — os `.md` de contrato fixo ficam na RAIZ.** Não é preferência de
+> arrumação: scripts do toolkit leem estes arquivos por caminho fixo na raiz da OS —
+> `memory.md`, `ementas.md`, `autos-lavrados.md`, `inspecao-fisica.md`, `email.md`,
+> `tn-nco-*.md`, `nad-*.md`, `preparacao.md`, `analise-preliminar-*.md`, `autos.md`
+> (o da `/aft-auditoria-geral`) e os `.depara*.json`. Movê-los quebra painel, e-mails
+> e o rastreio de ementas em silêncio.
 >
-> A linha divisória, então, é o **formato**, não o assunto: **documento fechado
-> (PDF/DOCX) vai para a caixa; `.md` é material de trabalho vivo e fica na raiz, onde o
-> painel enxerga.** Isso separa o par `tn-nco-*.md` / `tn-nco-*.docx` de propósito — o
-> `.md` é justamente o que o AFT reabre para recolar no DET.
+> Fora dessa lista, `.md` de **análise temática** mora na pasta `auditoria-<tema>/`
+> correspondente (regra acima) — o painel lista e abre `.md` a **1 nível** de subpasta,
+> então nada desaparece; apenas **2 níveis** (subpasta de subpasta) ficam invisíveis.
+> Documento fechado (PDF/DOCX) vai para a caixa própria (`NOTIFICACOES/`, `AUTOS/`,
+> `Relatórios de Fiscalização/`) ou para a pasta temática a que pertence. O par
+> `tn-nco-*.md` / `tn-nco-*.docx` continua separado de propósito — o `.md` é justamente
+> o que o AFT reabre para recolar no DET.
 
 Regras do plano:
 - **Nome da pasta**: `<EMPREGADOR EM CAIXA ALTA> <identificador só dígitos>` (padrão do
@@ -297,8 +317,21 @@ Regras do plano:
   solto na raiz que não seja notificação, auto ou minuta de trabalho em andamento
   (esses seguem as regras próprias acima).
 - Fotos: subpasta `fotos/` (crie se estiverem soltas; renomeie `FOTO/` → `fotos/`).
-- Trabalho do AFT em andamento (.docx/.md de minutas e análises): **fica na raiz**,
-  intocado, anotado no memory.md.
+- **Análises temáticas soltas na raiz (OS de antes das pastas temáticas)** → inclua no
+  plano movê-las para a pasta `auditoria-<tema>/` correspondente:
+  `analise-PGR.md`/`pgr-extrato.md`/`autos-pgr.md` → `auditoria-PGR/`;
+  `analise-PCMSO.md`/`pcmso-extrato.md`/`pgr-riscos-extrato.md`/`autos-pcmso.md`/
+  `recomendacao-geral-PCMSO.md` → `auditoria-PCMSO/`; idem PGRTR → `auditoria-PGRTR/`;
+  `aet-extrato.md`/`autos-aet.md`/`recomendacao-geral-AET.md` → `auditoria-AET/`;
+  `auditoria-*-AR-NR12.md`/`laudo-extrato.md` → `auditoria-laudo-NR12/`;
+  `jornada-analise-*.md`/`jornada-auto-afd-aej-*.md` → `auditoria-jornada/`; relatório
+  de análise de acidente (.docx) → `auditoria-acidente/`. Depois de mover, **atualize
+  com Edit cirúrgico (backup antes) as linhas do `memory.md` que citam o arquivo pelo
+  caminho antigo** (ex.: `(autos-pgr.md)` vira `(auditoria-PGR/autos-pgr.md)`), sem
+  reescrever o resto da linha. Relatório temático avulso solto na raiz (fora dos nomes
+  acima) só entra no plano com pasta sugerida — na ambiguidade de tema, pergunte.
+- Trabalho do AFT em andamento (.docx/.md de minutas que não são análise temática):
+  **fica na raiz**, intocado, anotado no memory.md.
 - Ambiguidade real (ex.: dois empregadores diferentes nos documentos) → **pergunte**, não
   escolha em silêncio. Fora isso, nenhuma pergunta além da aprovação do plano.
 - Só execute após a confirmação (única) do plano.

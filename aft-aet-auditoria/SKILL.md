@@ -78,6 +78,12 @@ find "<pasta-OS>" -iname "inspecao-fisica.md"
 
 ### Etapa 1: Receber a AET e extrair a identificação
 
+> **Onde esta skill grava.** Tudo o que ela produz mora na subpasta
+> `auditoria-AET/` da OS (crie-a na primeira gravação): `analise-AET.md`,
+> `aet-extrato.md`, `autos-aet.md` e `recomendacao-geral-AET.md`. **Nunca grave
+> esses arquivos na raiz da OS.** Em OS antigas eles podem existir na raiz: use-os
+> normalmente para leitura, mas toda gravação nova vai para a subpasta.
+
 **Procure a AET na pasta da OS antes de pedir.** Tipicamente um PDF com `AET`, `ergonom`,
 `laudo` ou `análise ergonômica` no nome:
 
@@ -97,7 +103,8 @@ conversa, ela consome o contexto e o limite de uso do AFT, e é **recobrada a ca
 análise. Por isso a leitura é feita fora da conversa, por um agente próprio.
 
 **Antes de medir, veja se o extrato já existe.** Se
-`<OS_ATIVAS>/[PASTA_EMPRESA]/aet-extrato.md` já estiver na pasta, a extração já foi feita
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-AET/aet-extrato.md` já estiver na pasta (ou, em
+OS antigas, `aet-extrato.md` na raiz da OS), a extração já foi feita
 - por uma execução anterior deste skill, ou por um fluxo de trabalho que extraiu os
 documentos numa triagem inicial. Confira que ele cobre as cinco ementas do roteiro abaixo
 e **analise sobre ele**: não meça o PDF nem delegue de novo. Extrair duas vezes a mesma
@@ -117,7 +124,7 @@ páginas **sem texto** (escaneadas), com **texto suspeito** (OCR ruim já embuti
 
 - **Mais de 20 páginas:** **delegue ao agente `aft-extrator-documento`**, passando no
   prompt: o tipo de documento (AET), o caminho do PDF, o caminho de saída
-  `<OS_ATIVAS>/[PASTA_EMPRESA]/aet-extrato.md`, o `python_path` e - obrigatoriamente - o
+  `<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-AET/aet-extrato.md`, o `python_path` e - obrigatoriamente - o
   **roteiro de extração**:
 
   > As cinco ementas na ordem deste skill: 117244-1 (conteúdo e etapas da AET),
@@ -388,6 +395,28 @@ Dispositivos violados: [itens da NR-17, ex: 17.4.1(d)]
 Quando a AET não trouxer informação relevante sobre uma ementa, declare explicitamente que a
 irregularidade **não parece estar presente** com base no documento, sem forçar enquadramento.
 
+Ao final, salve a análise completa (as cinco ementas, com evidências e páginas) em
+`<OS_ATIVAS>/[PASTA_EMPRESA]/auditoria-AET/analise-AET.md` — é o registro permanente da
+auditoria, no mesmo padrão do `analise-PGR.md` da `/aft-PGR-analise`.
+
+**Registre a auditoria no `memory.md` da OS.** Na seção `## Auditoria de documentos`
+(nas OS anteriores à renomeação ela se chama `## Anotações da auditoria`: escreva na que
+existir, sem renomeá-la; se nenhuma existir, crie `## Auditoria de documentos`),
+acrescente ao **final da seção** uma subseção `### AET` (se ainda não houver) e, nela,
+uma linha datada:
+
+```
+### AET
+dd/mm/aaaa — <resumo em até 2 linhas: quantas ementas presentes, se autos foram
+redigidos> — relatório: auditoria-AET/analise-AET.md
+```
+
+Três regras do registro: (1) é **prosa** — nunca comece a linha com `-`: na seção,
+bullet é constatação avulsa que a `/aft-auditoria-geral` transforma em auto, e o resumo
+não é uma constatação; (2) **até 2 linhas** por análise — o detalhe fica no relatório e
+não se repete no memory.md; (3) análise nova do mesmo tema acrescenta outra linha datada
+na mesma subseção, mantendo as anteriores.
+
 ---
 
 ## Pós-análise: ofertas ao AFT
@@ -498,10 +527,10 @@ remove o hífen no cod_3):
 (Passo 0a), então basta seguir o handoff.
 
 **Salvar e handoff:** salve todos os blocos em
-`<pasta-OS>/autos-aet.md` e exiba:
+`<pasta-OS>/auditoria-AET/autos-aet.md` e exiba:
 
 ```
-✅ N autos de AET redigidos — salvos em autos-aet.md
+✅ N autos de AET redigidos — salvos em auditoria-AET/autos-aet.md
 
 ▶ Próximo passo — empacotar no TXT do Sistema Auditor:
   1) Rode /aft-gera-ai e responda que os autos estão (b) na sessão.
@@ -537,7 +566,7 @@ Quando solicitado, redija um relatório técnico **resumido e de fácil entendim
 > referências de fonte ou de página, sem marcações internas. Texto corrido e legível para
 > quem não é técnico em ergonomia.
 
-Salve como `recomendacao-geral-AET.md` na pasta da OS.
+Salve como `auditoria-AET/recomendacao-geral-AET.md` na pasta da OS.
 
 ---
 

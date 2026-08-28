@@ -91,11 +91,14 @@ NOMES_INSTRUCAO = re.compile(r"^(agents|claude|readme|notes)$", re.I)
 PASTAS_DERIVADAS = {"extratos", "ocr", "esocial", "cache"}
 
 # Onde a analise mora. As skills de analise escrevem nestes lugares, e e neles
-# que um documento confrontado deixa rastro.
+# que um documento confrontado deixa rastro. As pastas tematicas
+# auditoria-<tema>/ (28/08/2026) sao o destino atual dos relatorios e extratos;
+# os globs de raiz continuam pelos arquivos legados de OS antigas.
 FONTES_ANALISE = [
     "memory.md",
     "*-extrato.md", "pgr-extrato.md", "aet-extrato.md", "laudo-extrato.md",
     "inspecao-fisica.md",
+    "auditoria-*/*.md", "auditoria-*/*.docx",
     "NOTIFICACOES/*.docx", "NOTIFICACOES/*.md",
     "NOTIFICACOES/EXTRATOS/*.md", "NOTIFICACOES/EXTRATOS/*.docx",
     "RELATÓRIOS DE FISCALIZAÇÃO/*.docx", "RELATORIOS DE FISCALIZACAO/*.docx",
@@ -122,6 +125,11 @@ def e_saida(caminho: Path, raiz: Path) -> bool:
     rel = caminho.relative_to(raiz)
     partes = {normalizar(p).strip() for p in rel.parts[:-1]}
     if partes & PASTAS_SAIDA:
+        return True
+    # Pastas tematicas auditoria-<tema>/ (nome dinamico): tudo ali e trabalho
+    # da fiscalizacao — relatorio, extrato, autos — ou o documento auditado que
+    # a propria analise ja confrontou.
+    if any(p == "auditoria" or p.startswith("auditoria ") for p in partes):
         return True
     # Derivada: basta a pasta COMECAR pelo nome (EXTRATOS, OCR-item13...).
     if any(any(p.startswith(d) for d in PASTAS_DERIVADAS) for p in partes):

@@ -262,9 +262,10 @@ Nesse uso:
 
 ## Constatação de auditoria, não auto automático
 
-Dimensionamento insuficiente apurado em campo **não vira auto na hora**: registre
-em `## Auditoria de documentos` do `memory.md` da OS, com os números apurados (o que
-é devido, o que existe, a diferença, o item da NR-24). Quem transforma em auto é a
+Dimensionamento insuficiente apurado em campo **não vira auto na hora**: registre como
+bullet no **topo** da seção `## Auditoria de documentos` do `memory.md` da OS (antes de
+qualquer subseção `###`), em até 2 linhas, com os números apurados (o que é devido, o
+que existe, a diferença, o item da NR-24). Quem transforma em auto é a
 `/aft-auditoria-geral`, e a ementa e a capitulação vêm da `/aft-consulta` — os
 códigos do `references/nr24_parametros.md` servem só para **localizar** a ementa,
 nunca como capitulação final.

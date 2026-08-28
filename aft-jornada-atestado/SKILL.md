@@ -151,7 +151,8 @@ podem ser cabíveis; sinalize as duas e deixe a decisão ao AFT.
 ### Etapa 5 — Entrega do parecer
 
 Gere o parecer no formato da seção seguinte. Para auditoria avulsa, apresente no chat. Se o
-usuário pedir arquivo, salve em Markdown na pasta da OS.
+usuário pedir arquivo, salve em Markdown na subpasta `auditoria-jornada/` da OS (crie-a
+se não existir).
 
 ## Estrutura do parecer (encaminhável para autuação)
 
@@ -286,7 +287,7 @@ na sessão"), com o parecer/inspeção como anexo.
 ## Convenção de nome de arquivo (quando salvar)
 
 ```
-parecer_atestado_[tipo]_[empresa_curto].md
+auditoria-jornada/parecer_atestado_[tipo]_[empresa_curto].md
 ```
 
 Exemplos:
