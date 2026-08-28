@@ -195,6 +195,31 @@ Pastas vazias (nada a fazer): PASTA-A, PASTA-B
 Nada será apagado. Confirma a organização completa?
 ```
 
+### Aviso obrigatório — autos empacotados e ainda não lavrados
+
+Antes de apresentar o plano, verifique em cada OS que terá arquivo movido ou pasta
+renomeada se há **autos já empacotados pelo `/aft-gera-ai` mas ainda não lavrados**.
+Sinais: linhas com "aguarda importação" ou "pendente" em `## Autos de Infração` do
+`memory.md`; seção "Pendentes de transmissão" do `autos-lavrados.md`; lote
+`AUTOS/Autos <DD-MM>/` com TXT cujos autos não aparecem como transmitidos.
+
+Se houver, o plano DEVE trazer este aviso em destaque, antes da pergunta de
+confirmação (adapte os nomes):
+
+> ⚠️ **Autos importados no Sistema Auditor e ainda não lavrados podem dar ERRO
+> depois desta reorganização.** O Sistema Auditor guarda o caminho dos anexos no
+> momento da importação; mover ou renomear arquivos e pastas faz esse caminho
+> deixar de bater. Antes de aprovar o plano, escolha:
+> 1. **Lavrar primeiro os autos já importados** (recomendado) e só depois aplicar
+>    a reorganização; ou
+> 2. Aplicar agora e, depois, **gerar o pacote de novo com o `/aft-gera-ai`** e
+>    reimportar no Sistema Auditor.
+
+A reorganização em si nunca toca nas pastas `AUTOS/Autos <DD-MM>/` — mas o
+caminho registrado na importação inclui a pasta da OS inteira, então renomear a
+pasta da empresa, ou mover um arquivo que tenha sido apontado como anexo, já
+basta para o erro. Na dúvida, o aviso entra.
+
 ### Layout padrão da pasta de uma OS
 
 Duas caixas (`NOTIFICACOES/` e `AUTOS/`) concentram o material volumoso; as **pastas
