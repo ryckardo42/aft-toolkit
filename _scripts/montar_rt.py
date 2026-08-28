@@ -220,20 +220,57 @@ def fonte_do_corpo(xml):
     return max(fontes, key=fontes.get) if fontes else None
 
 
-def garantir_fonte(paragrafo, fonte):
-    """Poe <w:rFonts> nos runs que nao declaram fonte propria."""
-    if not fonte:
+def tamanho_do_corpo(xml):
+    """Descobre o tamanho de fonte do corpo, pelo mesmo metodo de fonte_do_corpo.
+
+    (achado em 28/08/2026, pelo AFT: o paragrafo em branco que recebe o texto
+    da conclusao, no template, nao tem <w:sz> no run - so herda o tamanho do
+    estilo "Corpo de texto", 9pt, enquanto todo o resto do corpo usa
+    formatacao direta de 10,5pt. garantir_fonte() so cobria a fonte, nao o
+    tamanho, e o texto da conclusao saia visivelmente menor, sem erro nenhum
+    na geracao.)
+    """
+    tamanhos = {}
+    for m in RE_PARAGRAFO.finditer(xml):
+        p = m.group(0)
+        if "{{" not in texto_do_paragrafo(p):
+            continue
+        for t in re.findall(r'<w:sz w:val="(\d+)"', p):
+            tamanhos[t] = tamanhos.get(t, 0) + 1
+    return max(tamanhos, key=tamanhos.get) if tamanhos else None
+
+
+def garantir_fonte(paragrafo, fonte, tamanho=None):
+    """Poe <w:rFonts>/<w:sz>/<w:szCs> nos runs que nao os declaram.
+
+    As duas faltas tem a mesma causa (run sem <w:rPr> proprio herda do
+    estilo) e o mesmo remedio (formatacao direta), por isso ficam na mesma
+    funcao: cobrir só a fonte e deixar o tamanho de fora repete o bug do
+    achado de 28/08/2026 (conclusao saindo em 9pt por herdar do estilo,
+    enquanto o resto do corpo usa 10,5pt direto no run).
+    """
+    if not fonte and not tamanho:
         return paragrafo
     rfonts = (f'<w:rFonts w:ascii="{fonte}" w:eastAsia="{fonte}" '
-              f'w:hAnsi="{fonte}" w:cs="{fonte}"/>')
+              f'w:hAnsi="{fonte}" w:cs="{fonte}"/>') if fonte else ""
+    sz = (f'<w:sz w:val="{tamanho}"/><w:szCs w:val="{tamanho}"/>') if tamanho else ""
 
     def conserta(m):
         run = m.group(0)
-        if "<w:rFonts" in run or "<w:t" not in run:
+        if "<w:t" not in run:
             return run
+        extra = ""
+        if fonte and "<w:rFonts" not in run:
+            extra += rfonts
+        if tamanho and not re.search(r"<w:sz\b", run):
+            extra += sz
+        if not extra:
+            return run
+        if "<w:rPr/>" in run:
+            return run.replace("<w:rPr/>", "<w:rPr>" + extra + "</w:rPr>", 1)
         if "<w:rPr>" in run:
-            return run.replace("<w:rPr>", "<w:rPr>" + rfonts, 1)
-        return re.sub(r"(<w:r\b[^>]*>)", r"\1<w:rPr>" + rfonts + "</w:rPr>", run, count=1)
+            return run.replace("<w:rPr>", "<w:rPr>" + extra, 1)
+        return re.sub(r"(<w:r\b[^>]*>)", r"\1<w:rPr>" + extra + "</w:rPr>", run, count=1)
 
     return re.sub(r"<w:r\b[^>]*>.*?</w:r>", conserta, paragrafo, flags=re.S)
 
@@ -383,7 +420,7 @@ def _span_do_bloco(xml, chaves):
     return ini, fim
 
 
-def repetir_bloco(xml, chaves, itens, rotulo, fonte=None, formatar=None):
+def repetir_bloco(xml, chaves, itens, rotulo, fonte=None, tamanho=None, formatar=None):
     """Repete o bloco de paragrafos que contem `chaves`, um por item."""
     ini, fim = _span_do_bloco(xml, chaves)
     molde = xml[ini:fim]
@@ -397,7 +434,7 @@ def repetir_bloco(xml, chaves, itens, rotulo, fonte=None, formatar=None):
             copia = remover_desenhos(copia)
         if formatar:
             copia = por_paragrafo(copia, formatar)
-        copia = garantir_fonte(copia, fonte)
+        copia = garantir_fonte(copia, fonte, tamanho)
         copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
                        lambda _: f'w14:paraId="{novo_paraid()}"', copia)
         blocos.append(copia)
@@ -414,7 +451,7 @@ def substituir_no_bloco(bloco, valores):
     return "".join(saida)
 
 
-def expandir_paragrafos(xml, chave, textos, fonte=None, formatar=None):
+def expandir_paragrafos(xml, chave, textos, fonte=None, tamanho=None, formatar=None):
     """Troca o paragrafo de um placeholder solitario por N paragrafos iguais."""
     achados = paragrafos_com_chave(xml, chave)
     if not achados:
@@ -428,7 +465,7 @@ def expandir_paragrafos(xml, chave, textos, fonte=None, formatar=None):
             copia = remover_desenhos(copia)
         if formatar:
             copia = formatar(copia)
-        copia = garantir_fonte(copia, fonte)
+        copia = garantir_fonte(copia, fonte, tamanho)
         copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
                        lambda _: f'w14:paraId="{novo_paraid()}"', copia)
         copias.append(copia)
@@ -443,7 +480,7 @@ def virar_lista(paragrafo, numid):
                        numpr=numpr, sem_ind=True)
 
 
-def expandir_lista(xml, chave, textos, numid, fonte=None):
+def expandir_lista(xml, chave, textos, numid, fonte=None, tamanho=None):
     achados = paragrafos_com_chave(xml, chave)
     if not achados:
         erro(f"placeholder {{{{{chave}}}}} nao encontrado no template. "
@@ -454,7 +491,7 @@ def expandir_lista(xml, chave, textos, numid, fonte=None):
         copia = substituir_no_paragrafo(m.group(0), {chave: t})
         if i:
             copia = remover_desenhos(copia)
-        copia = garantir_fonte(copia, fonte)
+        copia = garantir_fonte(copia, fonte, tamanho)
         copia = virar_lista(copia, numid)
         copia = re.sub(r'w14:paraId="[0-9A-Fa-f]+"',
                        lambda _: f'w14:paraId="{novo_paraid()}"', copia)
@@ -575,7 +612,7 @@ def titulos_de_secao(xml):
     return achados
 
 
-def inserir_conclusao(xml, texto, fonte):
+def inserir_conclusao(xml, texto, fonte, tamanho=None):
     """Poe o texto da conclusao no paragrafo vazio apos o titulo CONCLUSAO.
 
     O template nao tem placeholder ali - o paragrafo e vazio. O texto entra no
@@ -597,11 +634,11 @@ def inserir_conclusao(xml, texto, fonte):
     else:  # paragrafo autofechado <w:p .../>
         novo = p[:-2].rstrip() + "><w:r>" + t_novo + "</w:r></w:p>"
     novo = como_corpo(novo, recuo=True)
-    novo = garantir_fonte(novo, fonte)
+    novo = garantir_fonte(novo, fonte, tamanho)
     return xml[:m.start()] + novo + xml[m.end():]
 
 
-def montar_por_objeto(xml, dados, fonte):
+def montar_por_objeto(xml, dados, fonte, tamanho=None):
     """Formato "objeto": aninha irregularidades, fatores, medidas e documentos
     dentro de cada objeto da secao 3 e remove as secoes tematicas 4 a 7.
 
@@ -661,7 +698,7 @@ def montar_por_objeto(xml, dados, fonte):
         else:
             primeira_copia.add(rotulo_molde)
         molde = formatar(molde)
-        return com_paraid(garantir_fonte(molde, fonte))
+        return com_paraid(garantir_fonte(molde, fonte, tamanho))
 
     blocos = []
     for i, obj in enumerate(dados["objetos"], 1):
@@ -750,12 +787,13 @@ def montar(dados, destino):
     xml = doc.read_text(encoding="utf-8")
 
     fonte = fonte_do_corpo(xml)
+    tamanho = tamanho_do_corpo(xml)
 
     if dados["modo"] == "embargo":
         xml = aplicar_embargo(xml)
 
     if formato == "objeto":
-        xml = montar_por_objeto(xml, dados, fonte)
+        xml = montar_por_objeto(xml, dados, fonte, tamanho)
         irregs = [t for o in dados["objetos"] for t in o["irregularidades"]]
         n_fatores = sum(len(o["fatores_risco"]) for o in dados["objetos"])
         n_medidas = sum(len(o["medidas_protecao"]) for o in dados["objetos"])
@@ -763,35 +801,36 @@ def montar(dados, destino):
     else:
         # blocos repetiveis primeiro (o molde ainda tem os placeholders)
         xml = repetir_bloco(xml, BLOCO_OBJETOS, dados["objetos"], "objeto", fonte,
-                            formatar=como_corpo)
+                            tamanho, formatar=como_corpo)
         xml = repetir_bloco(xml, BLOCO_FATORES, dados["fatores_risco"], "fator de risco",
-                            fonte, formatar=como_corpo)
+                            fonte, tamanho, formatar=como_corpo)
 
         # item 4: um paragrafo por irregularidade
         irregs = dados["irregularidades"]
         if isinstance(irregs, str):
             irregs = [irregs]
         xml = expandir_paragrafos(
-            xml, "irregularidades", irregs, fonte,
+            xml, "irregularidades", irregs, fonte, tamanho,
             formatar=lambda pg: virar_lista(pg, NUMID_BULLET))
 
         # itens 6 e 7: listas reais do Word
         xml = remover_vazio_apos(xml, "medidas_protecao")
         xml = expandir_lista(xml, "medidas_protecao", dados["medidas_protecao"],
-                             NUMID_MEDIDAS, fonte)
+                             NUMID_MEDIDAS, fonte, tamanho)
         xml = expandir_lista(xml, "documentos_solicitados",
-                             dados["documentos_solicitados"], NUMID_DOCUMENTOS, fonte)
+                             dados["documentos_solicitados"], NUMID_DOCUMENTOS,
+                             fonte, tamanho)
         n_fatores = len(dados["fatores_risco"])
         n_medidas = len(dados["medidas_protecao"])
         n_docs = len(dados["documentos_solicitados"])
 
     # conclusao (opcional nos dois formatos)
     if dados.get("conclusao"):
-        xml = inserir_conclusao(xml, dados["conclusao"], fonte)
+        xml = inserir_conclusao(xml, dados["conclusao"], fonte, tamanho)
 
     # item 2: contexto da inspecao no padrao do corpo (justificado, com recuo)
     xml = expandir_paragrafos(xml, "Contexto-da-inspecao-fisica",
-                              [dados["Contexto-da-inspecao-fisica"]], fonte,
+                              [dados["Contexto-da-inspecao-fisica"]], fonte, tamanho,
                               formatar=lambda pg: como_corpo(pg, recuo=True))
 
     # capa e fecho
