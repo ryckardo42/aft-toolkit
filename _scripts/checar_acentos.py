@@ -168,6 +168,18 @@ CAIXA_ALTA = re.compile(
 # verificador (a mesma licao dos alarmes falsos ja corrigidos no metodo).
 CODIGO = re.compile(r"`[^`]*`")
 
+# Trecho que e CAMINHO ou NOME DE ARQUIVO: tem barra entre palavras, ou termina em
+# extensao conhecida. Deliberadamente estreito -- nao basta ser palavra sem acento,
+# tem de parecer caminho de verdade.
+#
+# PORTADO do checar_texto_oficial.py (27/08/2026), que ja resolvia isto e por isso
+# ACEITAVA um texto que este script REPROVAVA: duas guardas de acentuacao dando
+# vereditos opostos sobre a mesma frase. Guarda que reprova o documento correto e
+# desligada por quem a usa, e ai deixa de proteger de tudo.
+CAMINHO = re.compile(
+    r"(?:[A-Za-zÀ-ÿ0-9_.\-]+[\\/])+[A-Za-zÀ-ÿ0-9_.\-]*"
+    r"|\b[A-Za-zÀ-ÿ0-9_\-]+\.(?:md|py|docx|pdf|json|txt|csv|xlsx|html|zip)\b")
+
 
 def mascarar_nomes_proprios(linha):
     """Troca por espaços o que não é prosa, preservando as colunas.
@@ -180,6 +192,7 @@ def mascarar_nomes_proprios(linha):
     trecho de contexto que o relatório imprime.
     """
     linha = CODIGO.sub(lambda m: " " * len(m.group(0)), linha)
+    linha = CAMINHO.sub(lambda m: " " * len(m.group(0)), linha)
     return CAIXA_ALTA.sub(lambda m: " " * len(m.group(0)), linha)
 
 
@@ -200,8 +213,23 @@ def main():
     except UnicodeDecodeError:
         texto = open(caminho, encoding="latin-1").read()
 
+    # FRONT-MATTER (--- ... ---) e CONFIGURACAO, nao prosa: os valores sao enums
+    # da API de destino, escritos sem acento de proposito ("tipo: obrigacao", que o
+    # det_criar.py documenta como "solicitacao | obrigacao | orientacao"), e os
+    # comentarios ali sao anotacao de trabalho do AFT. Acusa-los reprovava TODA
+    # notificacao real -- a do acervo dava 9 ocorrencias, nenhuma delas erro de
+    # grafia. Guarda que reprova o documento correto ensina a ignorar a guarda.
+    # As linhas continuam contando: o numero de linha do relatorio segue valendo.
+    linhas = texto.splitlines()
+    if linhas and linhas[0].strip() == "---":
+        for k in range(1, len(linhas)):
+            if linhas[k].strip() == "---":
+                for j in range(0, k + 1):
+                    linhas[j] = " " * len(linhas[j])
+                break
+
     achados = []
-    for i, linha in enumerate(texto.splitlines(), 1):
+    for i, linha in enumerate(linhas, 1):
         # A razão social vai no auto sem acento, como consta do cadastro da RFB:
         # ela sai da conferência, e só ela. O resto da linha continua valendo.
         conferivel = mascarar_nomes_proprios(linha)
