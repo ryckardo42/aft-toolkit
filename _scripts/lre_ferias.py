@@ -73,7 +73,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from lre_esocial import (achar_sisfgts, achar_partes_grupo, ler_partes,
-                         d_iso, d_rec, fmt_d, fmt_cpf_mascarado, fmt_cnpj)
+                         d_iso, d_rec, fmt_d, fmt_cpf_mascarado, fmt_cnpj, fmt_identificador)
 
 DIAS_FERIAS = 30          # art. 130 (sem as faltas, que o arquivo nao traz)
 ABONO_MAX = 10            # art. 143: ate 1/3 de 30 dias
@@ -701,12 +701,12 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
             "em /Volumes/... Informe a base com --sisfgts se estiver noutro lugar.")
     if not achar_partes_grupo(base, cnpj14, "idA_LRE"):
         raise FileNotFoundError(
-            f"Nenhum arquivo LRE para o CNPJ {cnpj14} em "
+            f"Nenhum arquivo LRE para o CNPJ/CPF {cnpj14} em "
             f"{base / 'Arquivos' / 'eSocial' / cnpj14}. "
             "Baixe os dados do eSocial no SISFGTS antes.")
     if not achar_partes_grupo(base, cnpj14, "idK_AFAST"):
         raise FileNotFoundError(
-            f"O CNPJ {cnpj14} tem o LRE mas NAO tem afastamentos (idK). "
+            f"O CNPJ/CPF {cnpj14} tem o LRE mas NAO tem afastamentos (idK). "
             "No SISFGTS, baixe o eSocial com a opcao 'LRE e demais registros' "
             "- e ela que traz os afastamentos de que a analise de ferias precisa.")
     lre, afast = carregar(base, cnpj14)
@@ -717,7 +717,7 @@ def gerar(pasta_os: Path, cnpj14: str, empregador: str = "",
     ag = agregar(trabs, janela_ini, hoje)
     linhas = montar_linhas(trabs)
     meta = {
-        "empregador": empregador or cnpj14, "cnpj": fmt_cnpj(cnpj14),
+        "empregador": empregador or cnpj14, "cnpj": fmt_identificador(cnpj14)[0],
         "gerado": hoje.strftime("%d/%m/%Y"), "janelaIni": ag["janela_ini"],
         "auditados": ag["auditados"], "trabAuditados": ag["trab_auditados"],
         "trabVencida": ag["trab_vencida"], "paVencida": ag["pa_vencida"],
@@ -767,9 +767,9 @@ def main():
         print(f"SISFGTS: {b}")
         for grupo, rotulo in (("idA_LRE", "LRE"), ("idK_AFAST", "Afastamentos")):
             partes = achar_partes_grupo(b, cnpj, grupo)
-            print(f"{rotulo} do CNPJ {cnpj}: "
+            print(f"{rotulo} do CNPJ/CPF {cnpj}: "
                   f"{len(partes)} parte(s)" if partes else
-                  f"{rotulo} do CNPJ {cnpj}: NENHUM ARQUIVO")
+                  f"{rotulo} do CNPJ/CPF {cnpj}: NENHUM ARQUIVO")
         sys.exit(0)
 
     if len(argv) < 2:
@@ -778,8 +778,9 @@ def main():
     pasta_os = Path(argv[0])
     cnpj = re.sub(r"\D", "", argv[1])
     empregador = argv[2] if len(argv) > 2 else pasta_os.name
-    if len(cnpj) != 14:
-        print(f"CNPJ invalido: '{argv[1]}' -> precisa de 14 digitos.")
+    if len(cnpj) not in (11, 14):
+        print(f"CNPJ/CPF invalido: '{argv[1]}' -> precisa de 14 digitos (CNPJ) "
+              "ou 11 digitos (CPF, empregador pessoa fisica).")
         sys.exit(1)
     if not pasta_os.is_dir():
         print(f"Pasta da OS nao existe: {pasta_os}")

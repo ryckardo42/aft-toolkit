@@ -13,9 +13,13 @@ description: >
   para as análises derivadas: "férias vencidas", "férias em atraso",
   "auditoria de férias", "quem está sem gozar férias", "buraco na folha",
   "mês sem remuneração declarada", "auditar a remuneração do eSocial".
-  Aceita 0 ou 1 argumento (CNPJ ou parte do nome da empresa); sem
-  argumento, oferece as OS ATIVAS que já têm dados baixados no SISFGTS.
-  Read-only sobre o SISFGTS: nunca escreve nele nem no banco Firebird.
+  Cobre também empregador pessoa física (produtor rural, empregador
+  doméstico), indexado pelo CPF no lugar do CNPJ — inclusive quando há
+  vários locais de trabalho (várias propriedades) e o AFT precisa filtrar
+  só a que vai fiscalizar. Aceita 0 ou 1 argumento (CNPJ, CPF ou parte do
+  nome da empresa); sem argumento, oferece as OS ATIVAS que já têm dados
+  baixados no SISFGTS. Read-only sobre o SISFGTS: nunca escreve nele nem
+  no banco Firebird.
 ---
 
 # lre-esocial — Livro de Registro de Empregados (eSocial)
@@ -71,10 +75,21 @@ registro nenhum (é `/aft-informalidade`) nem para analisar ponto (é
 
 ## Constantes
 
-- **Pasta do eSocial no SISFGTS:** `<SISFGTS>\Arquivos\eSocial\<CNPJ14>\`
-  — a pasta é o **CNPJ de 14 dígitos puro** (ex.: `00241190000139`).
-- **Padrão do arquivo:** `eSocial_idA_LRE_<n>_<8 primeiros dígitos>.txt`
-  (ex.: `eSocial_idA_LRE_1_00241190.txt`).
+- **Empregador pessoa física entra igual.** Produtor rural e empregador
+  doméstico não têm CNPJ: o eSocial os indexa pelo **CPF de 11 dígitos** do
+  próprio empregador, e o SISFGTS trata esse CPF exatamente como trataria um
+  CNPJ — mesma estrutura de pasta, mesmo padrão de arquivo, só muda a
+  quantidade de dígitos (11 em vez de 14). Os scripts (`lre_esocial.py`,
+  `lre_ferias.py`, `lre_folha.py`) aceitam os dois formatos em qualquer lugar
+  onde este texto disser `<CNPJ14>`: informe o CPF sem pontuação, sem tentar
+  completar para 14 dígitos.
+- **Pasta do eSocial no SISFGTS:** `<SISFGTS>\Arquivos\eSocial\<CNPJ14_ou_CPF11>\`
+  — a pasta é o número **puro**, sem pontuação (ex.: `00241190000139` ou,
+  pessoa física, `22360610805`).
+- **Padrão do arquivo:** `eSocial_idA_LRE_<n>_<sufixo>.txt`, onde o sufixo é
+  os 8 primeiros dígitos do CNPJ (ex.: `eSocial_idA_LRE_1_00241190.txt`) ou o
+  CPF de 11 dígitos completo, pessoa física (ex.:
+  `eSocial_idA_LRE_1_22360610805.txt`).
 - **O LRE é multi-parte.** O SISFGTS pagina de **1.000 em 1.000** vínculos: uma
   empresa grande tem `_1_`, `_2_`, ... `_16_`. **Ler só a parte 1 perde os demais
   trabalhadores e falseia todos os números.** O script junta todas — nunca
@@ -84,41 +99,46 @@ registro nenhum (é `/aft-informalidade`) nem para analisar ponto (é
   férias usa `idA`+`idK`; a análise da folha usa `idA`+`idM`+`idK`. Os grupos
   `idK`/`idM` só existem se o AFT baixou o eSocial no SISFGTS com a opção
   **"LRE e demais registros"** — se faltarem, os scripts avisam com essa frase.
+- **Local de trabalho (`localtabgeral_nrinsc`).** Empregador pessoa física
+  rural costuma ter mais de uma propriedade, cada uma com seu próprio
+  estabelecimento/matrícula CAEPF — e o LRE de todas elas vem junto, num
+  único CPF. O painel traz esse código por vínculo e, quando há mais de um
+  distinto, oferece um **filtro "Local de trabalho"** para restringir a
+  lista ao estabelecimento que o AFT vai fiscalizar. Ver Passo 3.
 - **Saída:** subpasta `eSocial/` **dentro da pasta da OS**.
 
 ## Passo a passo
 
-### Passo 1 — Resolver a OS e o CNPJ
+### Passo 1 — Resolver a OS e o CNPJ/CPF
 
 1. Resolva `<OS_ATIVAS>` (bloco do topo).
-2. Descubra o **CNPJ** da OS, nesta ordem:
-   - regex `^(.+) (\d{14})$` sobre o nome da pasta da OS;
-   - senão, o campo `cnpj:` (ou `**CNPJ:**`) do `memory.md`.
-3. **Com argumento do AFT:** 14 dígitos (limpando pontuação) → match exato;
-   texto → match por parte do nome da pasta. Se casar mais de uma, pergunte
-   com `AskUserQuestion`.
+2. Descubra o **CNPJ ou CPF** da OS, nesta ordem:
+   - regex `^(.+) (\d{14}|\d{11})$` sobre o nome da pasta da OS;
+   - senão, o campo `cnpj:` (ou `**CNPJ:**`) do `memory.md` — nas OS de
+     empregador pessoa física esse campo tem 11 dígitos (é o CPF, mesmo
+     chamando-se `cnpj:`).
+3. **Com argumento do AFT:** 14 ou 11 dígitos (limpando pontuação) → match
+   exato; texto → match por parte do nome da pasta. Se casar mais de uma,
+   pergunte com `AskUserQuestion`.
 4. **Sem argumento:** liste as OS ATIVAS que **já têm** pasta no SISFGTS e
    deixe o AFT escolher. Para descobrir quais têm, rode o `--achar` de cada
-   CNPJ (é barato) ou liste a pasta do eSocial do SISFGTS e cruze.
-
-> **CPF/CAEPF não serve.** O LRE do SISFGTS é por CNPJ de 14 dígitos. Numa OS de
-> empregador pessoa física, avise que não há LRE a importar.
+   CNPJ/CPF (é barato) ou liste a pasta do eSocial do SISFGTS e cruze.
 
 ### Passo 2 — Conferir se há arquivo (antes de prometer resultado)
 
 ```bash
-python ~/.claude/skills/_scripts/lre_esocial.py --achar <CNPJ14>
+python ~/.claude/skills/_scripts/lre_esocial.py --achar <CNPJ14_ou_CPF11>
 ```
 
 Ele responde onde achou o SISFGTS e quantas partes do LRE existem. Se responder
 `NAO ENCONTRADO`, é volume não montado ou instalação fora do padrão. Se responder
-`NENHUM ARQUIVO`, **o AFT ainda não baixou o eSocial daquele CNPJ no SISFGTS** —
-diga isso em uma frase, sem rodeios, e pare.
+`NENHUM ARQUIVO`, **o AFT ainda não baixou o eSocial daquele CNPJ/CPF no SISFGTS**
+— diga isso em uma frase, sem rodeios, e pare.
 
 ### Passo 3 — Gerar
 
 ```bash
-python ~/.claude/skills/_scripts/lre_esocial.py "<pasta da OS>" <CNPJ14> "<EMPREGADOR>"
+python ~/.claude/skills/_scripts/lre_esocial.py "<pasta da OS>" <CNPJ14_ou_CPF11> "<EMPREGADOR>"
 ```
 
 Grava dentro da OS:
@@ -130,6 +150,21 @@ Grava dentro da OS:
 | `eSocial/lre-esocial.md` | resumo **sem nome e sem CPF** — aparece em "Relatórios da OS" no `/aft-painel` |
 | `eSocial/resumo.json` | números agregados que o `/aft-painel` lê para montar o cartão |
 
+**Empregador pessoa física com mais de um local de trabalho.** Se o LRE trouxer
+mais de um código distinto de `localtabgeral_nrinsc` (comum em produtor rural
+com várias propriedades), o painel abre com um aviso e um filtro **"Local de
+trabalho"** na barra de busca, e o `lre-esocial.md` lista os códigos com a
+contagem de vínculos de cada um. A lista inteira, sem filtro, ainda é o
+comportamento padrão — o filtro é para o AFT recortar, não uma segunda saída.
+Para o AFT achar o código do estabelecimento que vai fiscalizar: busque no
+painel pelo nome ou CPF de um trabalhador que ele já sabe que trabalha lá
+(entrevista em campo, planilha que o empregador entregou), abra o detalhe do
+vínculo — o código aparece em "Local de trabalho" — e escolha esse código no
+filtro. Sem esse ponto de partida (nenhum nome conhecido), não peça ao AFT
+para adivinhar: explique a limitação e ofereça a lista de códigos com
+contagem, para ele decidir pelo tamanho de cada propriedade ou cruzar com
+outra fonte (planilha do empregador, relação de vínculos do CNIS).
+
 ### Passo 3b — Oferecer as análises de férias e de folha
 
 O `--achar` do Passo 2 já diz se o CNPJ tem afastamentos (`idK`). Se tiver,
@@ -138,8 +173,8 @@ cada uma gera mais quatro arquivos na OS). Se o AFT pediu diretamente
 ("férias vencidas", "buraco na folha"), rode direto a que ele pediu.
 
 ```bash
-python ~/.claude/skills/_scripts/lre_ferias.py "<pasta da OS>" <CNPJ14> "<EMPREGADOR>"
-python ~/.claude/skills/_scripts/lre_folha.py "<pasta da OS>" <CNPJ14> "<EMPREGADOR>"
+python ~/.claude/skills/_scripts/lre_ferias.py "<pasta da OS>" <CNPJ14_ou_CPF11> "<EMPREGADOR>"
+python ~/.claude/skills/_scripts/lre_folha.py "<pasta da OS>" <CNPJ14_ou_CPF11> "<EMPREGADOR>"
 ```
 
 | Arquivo | O que é |
@@ -186,6 +221,13 @@ Mostre o resumo em linguagem simples: total de vínculos, ativos, desligados,
 PCD e o número de **indícios de registro tardio** — este último **sempre
 acompanhado do recorte**: "N indícios entre as X admissões desde 02/01/2026". Informe o caminho real da
 pasta `eSocial/` e diga que o painel abre com duplo clique.
+
+Se havia mais de um **local de trabalho**, diga isso já no resumo — é
+informação que muda como o AFT vai ler a lista: "os N vínculos estão
+espalhados por M propriedades diferentes; o painel tem um filtro para ver só
+a que você vai fiscalizar". Não filtre por conta própria nem escolha o local
+"mais provável": quem decide qual código é o estabelecimento é o AFT, a
+partir de um nome que ele já conhece de campo.
 
 Se rodou férias/folha, acrescente os números de cada uma **com a natureza do
 achado**: férias vencidas e gozo fora do prazo são indício de **dobra**
