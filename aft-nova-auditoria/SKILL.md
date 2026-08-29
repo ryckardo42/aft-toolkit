@@ -85,8 +85,8 @@ está na "6. Equipe AFT" — se não estiver, avise (pode ser OS de outro colega
 se segue mesmo assim. Essa conferência é só no chat: a lista da equipe não vai para o
 `memory.md`.
 
-Depois de criar a pasta (Passo 2), **copie o(s) PDF(s)** para a raiz dela: a Demanda como
-`OS <nº da OS> - Demanda <nº da demanda>.pdf` e a Ordem de Serviço como `OS <nº da OS>.pdf`.
+Depois de criar a pasta (Passo 2), **copie o(s) PDF(s)** para dentro dela: a Demanda como
+`OS <nº da OS> - Demanda <nº da demanda>.pdf` e a Ordem de Serviço como `OS <nº da OS>.pdf` — os dois dentro da subpasta `preparacao-acao-fiscal/` da OS (crie-a se não existir; é onde a `/aft-preparacao-acao-fiscal` guarda os documentos da preparação).
 
 > Com o PDF lido, ofereça também a `/aft-preparacao-acao-fiscal`: ela faz o planejamento
 > completo da ação (resumo desidentificado da denúncia, estudo prévio nos NotebookLMs,
@@ -237,7 +237,7 @@ endereco_cep: "<só dígitos, ou vazio>"
 - [ ] <CÓDIGO> — ciência <dd/mm/aaaa>, prazo <dd/mm/aaaa>
 
 ## Ementas da OS
-_(a lista e a folha de resposta do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
+_(a lista e o espelho do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
 
 ## Autos de Infração
 _(vazio)_
@@ -259,7 +259,7 @@ _(vazio)_
 
 > **Campos opcionais** (`trabalhadores`, `cnae`, `grau_risco`): só escreva os que o AFT informou; deixe vazios os demais (`trabalhadores:`, `cnae: ""`, `grau_risco:`). Só espelhe no corpo (`**Nº de trabalhadores:**`, `**CNAE:**`, `**Grau de risco:**`) os que tiverem valor. As linhas `**Endereço:**`, `**Telefone:**`, `**OS (SFIT):**`/`**Demanda:**` e `**Vencimento da OS:**` também são opcionais — só entram quando conhecidas (tipicamente lidas dos PDFs do SFIT, Passo 0; o vencimento existe só na Ordem de Serviço); omita a linha inteira quando não houver o dado. O vencimento da OS fica FORA da seção `## Notificações DET` — assim o painel não o confunde com prazo de DET.
 >
-> **`## Ementas da OS`**: no `memory.md` esta seção é só um **ponteiro** de uma linha. As ementas moram no arquivo `ementas.md` da pasta da OS, que é ao mesmo tempo a lista da Ordem de Serviço e a **folha de resposta do item 2.5 do Relatório de Inspeção** ("Ementas fiscalizadas", no SFIT-WEB). Quando um PDF do SFIT foi lido (Passo 0), grave o `ementas.md` com as ementas na seção `## 1. Ementas da OS`, **código e descrição literais do PDF** — ementa nunca se resume nem se parafraseia. Sem PDF, não crie o arquivo, e mantenha o ponteiro assim mesmo (é onde ele vai aparecer depois).
+> **`## Ementas da OS`**: no `memory.md` esta seção é só um **ponteiro** de uma linha. As ementas moram no arquivo `ementas.md` da pasta da OS, que é ao mesmo tempo a lista da Ordem de Serviço e o **espelho do item 2.5 do Relatório de Inspeção** ("Ementas fiscalizadas", no SFIT-WEB). Quando um PDF do SFIT foi lido (Passo 0), grave o `ementas.md` na seção `## Ementas fiscalizadas`, **uma tabela só agrupada por Atributo/NR em ordem alfabética** (`### NR-01`, `### REGISTRO`...), com o `*` depois do código marcando a ementa da OS, e **código e descrição literais do PDF** — ementa nunca se resume nem se parafraseia. Sem PDF, não crie o arquivo, e mantenha o ponteiro assim mesmo (é onde ele vai aparecer depois).
 >
 > O formato do `ementas.md` está documentado em `~/.claude/skills/_scripts/ementas_os.py`. Depois de gravá-lo, confira com:
 >

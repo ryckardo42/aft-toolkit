@@ -35,6 +35,14 @@ description: >
 
 Organizar o que o AFT já sabe **antes de ir a campo**: quem vai fiscalizar, por quê (denúncia, OS, rotina), o que a OS manda verificar e quais documentos vale a pena já solicitar pelo DET (via `/aft-NAD`). O resultado é um `preparacao.md` na pasta da OS — um roteiro de ação, não um auto nem um relato de inspeção.
 
+**Onde a preparação mora (padrão de 29/08/2026):** os documentos usados e gerados pela
+preparação vivem na subpasta **`preparacao-acao-fiscal/`** da OS — o PDF da Demanda, o da
+Ordem de Serviço, a Relação de Vínculos Ativos e o `preparacao.docx`. Crie a subpasta na
+primeira gravação. A única exceção é o **`preparacao.md`, que fica na RAIZ da OS** (é
+arquivo de contrato fixo — painel e demais skills o leem de lá; ver a "regra dura" da
+`/aft-organiza-os`). Em OS antiga esses arquivos podem estar soltos na raiz: ao **ler**,
+procure nos dois lugares; a arrumação é da `/aft-organiza-os`.
+
 Esta skill trabalha **antes** da visita. Depois de ir ao estabelecimento, o próximo passo é `/aft-inspecao-fisica` (relato do que foi constatado) → `/aft-auditoria-geral` (autos). Esta skill **não** redige autos e **não** registra achados de campo — ela planeja.
 
 **Aprofundamento técnico é da `/aft-consulta`.** Esta skill não consulta os NotebookLMs nem estuda temas por conta própria: ela organiza os fatos e os documentos. Quando o AFT quiser tirar uma dúvida técnica, achar a ementa certa ou entender o que exigir sobre um tema, o caminho é `/aft-consulta` — antes, durante ou depois da preparação, quantas vezes precisar. Não ofereça estudo prévio nem pergunte "quais temas quer estudar".
@@ -59,7 +67,7 @@ Ambos trazem: dados da empresa (razão social, fantasia, CNPJ/CPF, telefone, CNA
 
 - **Nunca** escreva no chat nem em arquivo `.md` o nome, telefone, e-mail ou qualquer traço identificador do denunciante (parentesco com trabalhador, tempo de casa, função/setor que aponte uma pessoa única).
 - Refira-se a ele apenas como `[[DENUNCIANTE_01]]` (02, 03... se houver mais de um). Pode registrar o **tipo** de demandante (trabalhador / parente / sindicato / anônimo) — isso não identifica.
-- O contato real fica **somente no PDF original**, arquivado na pasta da OS (FASE 1) — não vai para o `.depara`, nem para o `memory.md`, nem para o `preparacao.md`. Se o AFT precisar falar com o denunciante, aponte o arquivo e a seção ("2. Demandante", primeira página) — sem transcrever nada no chat.
+- O contato real fica **somente no PDF original**, arquivado em `preparacao-acao-fiscal/` na pasta da OS (FASE 1) — não vai para o `.depara`, nem para o `memory.md`, nem para o `preparacao.md`. Se o AFT precisar falar com o denunciante, aponte o arquivo e a seção ("2. Demandante", primeira página) — sem transcrever nada no chat.
 
 **Extraia** (o que existir; a coluna "Vem de" evita procurar no documento errado):
 
@@ -93,7 +101,7 @@ Sem PDF anexado, siga direto para a FASE 1 — a skill funciona como sempre, com
 1. Se a empresa já tem pasta em `OS ATIVAS/`, use-a.
 2. Se não existe, **chame o fluxo do `/aft-nova-auditoria`** para coletar o nome da auditoria, município (e DET, se já houver) e criar a pasta + `memory.md`. Não duplique a lógica de `/aft-nova-auditoria` — reaproveite-a. O CNPJ é opcional nessa fase (só se torna obrigatório no `/aft-gera-ai`) — se o AFT já souber, informe; se não, siga sem.
 3. **Se a FASE 0 leu uma Demanda e/ou Ordem de Serviço do SFIT**, alimente o fluxo do `/aft-nova-auditoria` com o que foi extraído em vez de re-perguntar: proponha o nome da auditoria (razão social ou fantasia — o AFT confirma ou troca) e leve CNPJ, município, telefone, CNAE/grau de risco e RI confirmado. Depois de criada/resolvida a pasta:
-   - **copie o(s) PDF(s)** para a raiz da pasta da OS: a Demanda como `OS <nº da OS> - Demanda <nº da demanda>.pdf` (é o original, com os dados do denunciante — fica local, como os demais documentos sensíveis da OS) e a Ordem de Serviço como `OS <nº da OS>.pdf`;
+   - **copie o(s) PDF(s)** para a subpasta `preparacao-acao-fiscal/` da OS (crie-a se não existir): a Demanda como `OS <nº da OS> - Demanda <nº da demanda>.pdf` (é o original, com os dados do denunciante — fica local, como os demais documentos sensíveis da OS) e a Ordem de Serviço como `OS <nº da OS>.pdf`;
    - acrescente ao corpo do `memory.md` (logo após `**CNPJ:**`) as linhas `**Endereço:**` (completo, com CEP e ponto de referência), `**Telefone:**` e `**OS (SFIT):** <nº da OS> · **Demanda:** <nº da demanda>`;
    - se a Ordem de Serviço trouxe o prazo limite para término, acrescente também `**Vencimento da OS:** <dd/mm/aaaa>` (é prazo da fiscalização, não de DET — fora da seção `## Notificações DET`, o painel não o confunde);
    - grave o arquivo `ementas.md` na pasta da OS (FASE 1.1).
@@ -115,29 +123,27 @@ atualizado: <dd/mm/aaaa>
 ---
 # Ementas fiscalizadas — <EMPREGADOR>
 
-_Folha de resposta do item 2.5 do Relatório de Inspeção (SFIT-WEB): de cada ementa, a **situação encontrada** e, quando irregular, as **ações aplicadas**._
+_Espelho do item 2.5 do Relatório de Inspeção (SFIT-WEB): de cada ementa, a **situação encontrada** e, quando irregular, as **ações aplicadas**._
+
+_Mesma ordem da tela: um grupo por Atributo/NR, em ordem alfabética. **Legenda: `*` — ementas da OS.**_
 
 _A caixa `[x]` é calculada: significa "linha respondida", e o `ementas_os.py` a recalcula ao gravar — não marque à mão._
 
-## 1. Ementas da OS
-_(as que vêm com `*` na tela do SFIT; responda todas, inclusive as não fiscalizadas)_
-- [ ] 001774-4 — <descrição oficial literal> (REGISTRO)
-- [ ] 101049-2 — <descrição oficial literal> (NR-01)
+## Ementas fiscalizadas
 
-## 2. Ementas trazidas por autuação
-_(autuadas FORA da lista da OS — o SFIT as acrescenta sozinho, já `Irregular` + `Autuação`; aqui só se confere se chegaram)_
-_(vazio)_
+### NR-01
+- [ ] 101049-2* — <descrição oficial literal> (NR-01)
 
-## 3. Ementas incluídas pelo AFT
-_(fiscalizadas fora da OS e sem auto — digitadas no campo "Informe as ementas fiscalizadas que não constam na OS")_
-_(vazio)_
+### REGISTRO
+- [ ] 001774-4* — <descrição oficial literal> (REGISTRO)
 ```
 
+- **Uma tabela só, agrupada por Atributo/NR em ordem alfabética** — é assim que a tela do SFIT mostra (DESCANSO, JORNADA, MULH, NR-01, NR-10...). Não invente seções por origem: o que distingue a ementa da OS é o **asterisco** depois do código, exatamente como a legenda da tela.
 - Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Vindo OS e Demanda, deduplique por código.
-- Na preparação só se preenche a **seção 1**, e sem situação: a folha de resposta é preenchida ao longo da fiscalização e no encerramento. As seções 2 e 3 nascem `_(vazio)_`.
+- Na preparação, toda ementa gravada é da OS e leva `*`; nenhuma tem situação ainda (a folha se preenche ao longo da fiscalização e no encerramento).
 - `dupla_visita:` fica em branco até se saber — a própria tela do SFIT informa (em verde quando concedida, em vermelho quando não).
 - No `memory.md`, deixe a seção `## Ementas da OS` como **ponteiro de uma linha** para o `ementas.md`. Não duplique a lista nos dois arquivos.
-- Confira o que gravou:
+- Confira o que gravou (o script reordena e recalcula as caixas sozinho):
 
 ```bash
 python ~/.claude/skills/_scripts/ementas_os.py "$PASTA_OS"
@@ -401,7 +407,7 @@ número por conta própria.
 
 **Depois de rodar:**
 
-1. Copie o PDF para a raiz da pasta da OS como `Relacao de Vinculos - <dd-mm-aaaa>.pdf`
+1. Copie o PDF para a subpasta `preparacao-acao-fiscal/` da OS como `Relacao de Vinculos - <dd-mm-aaaa>.pdf`
    (data de emissão) — é a fonte do efetivo, fica arquivada como os demais documentos.
 2. Grave no `memory.md`: `trabalhadores: <efetivo>` no front-matter e, no corpo, a linha
    `**Quadro de pessoal:** <N> empregados (<H> homens, <M> mulheres) · PCD <n> ·
@@ -899,9 +905,10 @@ Gere sempre que a OS tiver ementas (FASE 1.1) — não pergunte; é barato e o A
 2. Rode (o `--vinculos` só quando houve FASE 3.1; o `--saude` só em estabelecimento de saúde):
    ```bash
    python ~/.claude/skills/aft-preparacao-acao-fiscal/scripts/preparacao_docx.py \
-     "$PASTA_OS" "<conteudo.json>" --vinculos "$PASTA_OS/Relacao de Vinculos - <dd-mm-aaaa>.pdf"
+     "$PASTA_OS" "<conteudo.json>" "$PASTA_OS/preparacao-acao-fiscal/preparacao.docx" \
+     --vinculos "$PASTA_OS/preparacao-acao-fiscal/Relacao de Vinculos - <dd-mm-aaaa>.pdf"
    ```
-   O script lê o `memory.md`, agrupa as ementas por frente **na ordem do arquivo**, relê a Relação de Vínculos (efetivo, composição, SESMT na lista, interlocutores), recalcula grau de risco, SESMT e CIPA pelos scripts das três skills e grava `preparacao.docx` na pasta da OS. Se o arquivo já existir, rode antes o `backup_arquivo.py` e o `checar_arquivo_aberto.py` (o AFT pode estar com ele aberto no Word).
+   O script lê o `memory.md`, agrupa as ementas por frente **na ordem do arquivo**, relê a Relação de Vínculos (efetivo, composição, SESMT na lista, interlocutores), recalcula grau de risco, SESMT e CIPA pelos scripts das três skills e grava o `preparacao.docx` em `preparacao-acao-fiscal/` (o 3º argumento; sem ele o script gravaria na raiz, que é onde as OS antigas o têm). Se o arquivo já existir, rode antes o `backup_arquivo.py` e o `checar_arquivo_aberto.py` (o AFT pode estar com ele aberto no Word).
 
    Ao final ele imprime o efetivo, o grau de risco e os dois dimensionamentos que entraram no documento — **confira** se batem com o que a FASE 3.5 mostrou ao AFT. Se o `trabalhadores:` do `memory.md` divergir da Relação de Vínculos, o script avisa e usa o da Relação: atualize o `memory.md`.
 
@@ -960,7 +967,7 @@ Apresente o resumo final:
 ```
 ✅ Preparação registrada — <EMPREGADOR>
 📄 <OS_ATIVAS>/<NOME_DA_AUDITORIA>/preparacao.md
-🖨️ preparacao.docx — triagem para levar impressa na visita
+🖨️ preparacao-acao-fiscal/preparacao.docx — triagem para levar impressa na visita
 
 Documentos no checklist: M   ·   NAD gerada: sim/não
 Ementas da OS: K no ementas.md   ·   🗺️ Maps: link no preparacao.md

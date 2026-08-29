@@ -80,7 +80,7 @@ for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
    dia, não toque.
 
    **Gatilho específico — Ordem de Serviço sem `ementas.md`.** Se a pasta tiver um
-   PDF de Ordem de Serviço (root ou solto) e **não** houver o arquivo `ementas.md`,
+   PDF de Ordem de Serviço (na raiz, solto ou já em `preparacao-acao-fiscal/`) e **não** houver o arquivo `ementas.md`,
    isso sozinho já qualifica a pasta como "atualização" — mesmo que nada mais esteja
    fora do padrão. É o caso típico de OS organizada antes desta extração existir na
    skill, ou de Ordem de Serviço salva depois do primeiro `/aft-organiza-os`.
@@ -88,6 +88,12 @@ for d in "<OS_ATIVAS>"/*/; do [ -f "$d/memory.md" ] || echo "$d"; done
    **Gatilho específico — ementas ainda dentro do `memory.md`.** Se o `memory.md`
    tiver a seção `## Ementas da OS` com a lista dentro (e não o ponteiro de uma
    linha), a pasta entra como "atualização" para a **migração** da FASE 4.
+
+   **Gatilho específico — documentos da preparação soltos na raiz.** Se a raiz da OS
+   tiver Ordem de Serviço, Demanda do SFIT, Relação de Vínculos Ativos ou
+   `preparacao.docx` fora da subpasta `preparacao-acao-fiscal/` (padrão de
+   29/08/2026), a pasta entra como "atualização": o plano move esses arquivos para a
+   subpasta (o `preparacao.md` fica na raiz — regra dura do layout).
 
    **Layout antigo (anterior a 22/07/2026) → migração.** Antes, notificações e pastas
    de autos ficavam soltas na raiz. Detecte e inclua a migração no plano quando houver,
@@ -120,6 +126,8 @@ Classifique cada item pelas assinaturas (nome do arquivo + texto da 1ª página)
 |---|---|
 | **Notificação DET** | "NOTIFICAÇÃO Nº" + código alfanumérico 12–16 chars (ex.: `S8JHJEYM2OC4VE`); "NOTIFICAÇÃO PARA A APRESENTAÇÃO DE DOCUMENTOS"/"CORREÇÃO"; cabeçalho MTE/SIT |
 | **Ordem de Serviço do SFIT** | arquivo tipo `OrdemServico*.pdf` ou qualquer nome (ex.: "Ordem de Serviço.pdf"); cabeçalho "Ordem de Serviço", seções "1. Dados da OS" / "4. Ementas a Fiscalizar" / "6. Equipe AFT" — mesma assinatura que o `/aft-nova-auditoria` usa no Passo 0 |
+| **Demanda do SFIT** | arquivo tipo `SFIT-WEB-DetalharDemanda-*.pdf` ou `OS <nº> - Demanda <nº>.pdf`; cabeçalho "Demanda", seções "1. Dados da empresa" / "2. Demandante" / "3. Objeto da demanda" — ⚠️ tem dados do denunciante: classifique e mova sem ecoar a seção "2. Demandante" |
+| **Relação de Vínculos Ativos do SFIT** | arquivo tipo `ImprimirVinculosAtivosPDF*.pdf` ou `Relacao de Vinculos - *.pdf`; cabeçalho "Relação de Empregados do Estabelecimento" — ⚠️ lista nominal de trabalhadores: **não abra o conteúdo**, classifique pelo nome/1ª linha e mova |
 | **Relatório de atendimento do DET** | nome `relatorio-atendimento*<CODIGO>*.pdf` ou 1ª página "Relatório de Atendimento" + código — é **evidência de que o DET foi respondido** |
 | **Notificação emitida pelo AFT (TN/NCO ou NAD)** | nome `tn-nco-*` ou `nad-*` (saídas das skills `/aft-tn-nco` e `/aft-NAD`) — o `.docx` vai para `NOTIFICACOES/`, o `.md` **fica na raiz** |
 | **Relação de autos lavrados** | "Relação de Autos de Infração Lavrados" (relatório do Sistema Auditor); nome tipo `RR_*.PDF` |
@@ -180,7 +188,8 @@ Monte **um único plano** cobrindo todas as pastas (novas + atualizações) e pe
    ⚠️ Sem o PDF da notificação DET na pasta → DET fica em branco no memory.md
    (preencher depois; sem pergunta)
    Ordem de Serviço encontrada (OS 99887766-5) → 12 ementas extraídas para o
-   "ementas.md"; renomear "OrdemServico.pdf" → "OS 99887766-5.pdf" (fica na raiz)
+   "ementas.md"; renomear "OrdemServico.pdf" → "OS 99887766-5.pdf" e mover para
+   preparacao-acao-fiscal/
 
 ── 3. ... ───────────────────────────────────────────────
 
@@ -230,7 +239,11 @@ fica só com as fichas e os `.md` de contrato fixo**:
 <EMPREGADOR> <CNPJ>/
 ├── memory.md                     ← ficha da OS
 ├── CLAUDE.md                     ← briefing da sessão (não mover)
-├── OS <nº da OS>.pdf             ← Ordem de Serviço do SFIT, se presente (fica na raiz)
+├── preparacao-acao-fiscal/       ← documentos da preparação (/aft-preparacao-acao-fiscal)
+│   ├── OS <nº da OS>.pdf                       ← Ordem de Serviço do SFIT
+│   ├── OS <nº> - Demanda <nº>.pdf              ← Demanda do SFIT (com dados do denunciante)
+│   ├── Relacao de Vinculos - <dd-mm-aaaa>.pdf  ← Relação de Vínculos Ativos do SFIT
+│   └── preparacao.docx                         ← triagem impressa para levar a campo
 ├── autos-lavrados.md             ← RAIZ OBRIGATÓRIA (ver regra abaixo)
 ├── analise-preliminar-*.md       ← RAIZ OBRIGATÓRIA
 ├── inspecao-fisica.md            ← RAIZ OBRIGATÓRIA
@@ -332,10 +345,17 @@ Regras do plano:
   (`autos.md` + TXT do `/aft-gera-ai`). É a mesma pasta que o `/aft-embargo-interdicao` e o `/aft-embargo-interdicao-manutencao`
   escrevem. Se já existir uma pasta antiga `Autos TE-TI DD-MM/`, inclua no plano
   renomeá-la para `interdicao-embargo/` (ou mover o conteúdo dela para lá).
-- **Ordem de Serviço** → fica na raiz (mesma convenção do `/aft-nova-auditoria`), renomeada
-  para `OS <nº da OS>.pdf` quando o número for extraído; sem número legível, mantenha o
-  nome original e avise no plano. Nunca mova para `NOTIFICACOES/` nem `AUTOS/` — não é
-  nem notificação nem auto, é o documento de abertura da fiscalização.
+- **Documentos da preparação** → subpasta `preparacao-acao-fiscal/` (crie se não existir;
+  regra de 29/08/2026, a mesma convenção do `/aft-preparacao-acao-fiscal` e do
+  `/aft-nova-auditoria`): a **Ordem de Serviço** (renomeada para `OS <nº da OS>.pdf`
+  quando o número for extraído; sem número legível, mantenha o nome original e avise no
+  plano), a **Demanda do SFIT** (`OS <nº> - Demanda <nº>.pdf` ou o nome original
+  `SFIT-WEB-DetalharDemanda-*.pdf`), a **Relação de Vínculos Ativos**
+  (`Relacao de Vinculos - *.pdf` ou `ImprimirVinculosAtivosPDF*.pdf`) e o
+  `preparacao.docx`. Nunca vão para `NOTIFICACOES/` nem `AUTOS/` — não são notificação
+  nem auto, são o material de abertura e planejamento da fiscalização. O `preparacao.md`
+  **fica na raiz** (regra dura acima). Em OS antiga, qualquer um desses solto na raiz
+  entra no plano como movimentação para a subpasta.
 - **Relatórios de fiscalização** → subpasta `Relatórios de Fiscalização/` (crie se não
   existir): relatório final (`Relatorio auditoria RI <ri>.docx/.md/.json`), dossiê de
   autos e anexos (`RI <ri> - autos e anexos.pdf`) e qualquer outro relatório avulso
@@ -416,7 +436,7 @@ status: em_andamento
 - [ ] <CODIGO> — prazo <dd/mm/aaaa>
 
 ## Ementas da OS
-_(a lista e a folha de resposta do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
+_(a lista e o espelho do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
 
 ## Autos de Infração
 _(vazio)_
@@ -446,13 +466,15 @@ _(vazio)_
      relatórios .docx encontrados na raiz).
    - **Ementas → `ementas.md`**: no `memory.md`, a seção `## Ementas da OS` é só um
      **ponteiro de uma linha**; a lista mora no arquivo `ementas.md` da pasta, que é
-     também a folha de resposta do item 2.5 do Relatório de Inspeção (formato em
+     também o espelho do item 2.5 do Relatório de Inspeção (formato em
      `~/.claude/skills/_scripts/ementas_os.py`). Três casos:
      - **ementas ainda dentro do `memory.md`** (OS anterior a esta mudança) →
        migração automática, que já faz o backup e deixa o ponteiro no lugar:
        `python ~/.claude/skills/_scripts/ementas_os.py "<pasta da OS>" --migrar`
      - **Ordem de Serviço lida e sem `ementas.md`** (FASE 2) → grave o arquivo com as
-       ementas na seção `## 1. Ementas da OS`, código e descrição **literais** do PDF.
+       ementas na seção `## Ementas fiscalizadas`, agrupadas por Atributo/NR em
+       ordem alfabética e com `*` depois do código (todas são da OS), código e
+       descrição **literais** do PDF.
      - **`ementas.md` já existe** → não toque.
 
      As linhas `**OS (SFIT):**` e `**Vencimento da OS:**` seguem a mesma

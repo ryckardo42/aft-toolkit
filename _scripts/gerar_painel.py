@@ -89,6 +89,12 @@ try:
 except ImportError:
     pdfplumber = None
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    import ementas_os  # leitor único do ementas.md (espelho do item 2.5 do RI)
+except Exception:      # toolkit incompleto: o painel segue sem a tela de ementas
+    ementas_os = None
+
 RE_FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 RE_TITULO = re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
 # Identificador do empregador no corpo do memory.md. Pessoa física (produtor
@@ -674,6 +680,42 @@ def ler_lre_esocial(pasta: Path) -> dict:
     return res
 
 
+def ler_ementas(pasta: Path) -> dict:
+    """A folha do item 2.5 (ementas.md) de uma OS, pronta para a tela.
+
+    Cai de volta no memory.md pelo próprio leitor único, então OS ainda não
+    migrada também aparece. Devolve {} quando não há ementa nenhuma — é o que
+    esconde o link no dossiê.
+    """
+    if ementas_os is None:
+        return {}
+    try:
+        folha = ementas_os.ler(pasta)
+    except Exception:
+        return {}
+    if not folha.ementas:
+        return {}
+    grupos = [{"frente": frente,
+               "itens": [{"codigo": e.codigo,
+                          "da_os": e.da_os,
+                          "descricao": e.descricao,
+                          "situacao": e.situacao,
+                          "acoes": list(e.acoes),
+                          "comentario": e.comentario,
+                          "lastro": e.lastro,
+                          "sistema": e.do_sistema} for e in itens]}
+              for frente, itens in folha.grupos()]
+    return {
+        "os_sfit": folha.os_sfit,
+        "dupla_visita": folha.dupla_visita,
+        "migrada": folha.origem == ementas_os.ARQUIVO,
+        "total": len(folha.ementas),
+        "respondidas": len([e for e in folha.ementas if e.respondida]),
+        "irregulares": len([e for e in folha.ementas if e.situacao == "Irregular"]),
+        "grupos": grupos,
+    }
+
+
 def parse_emails(pasta: Path) -> list[dict]:
     """Lê o email.md da OS (e-mails redigidos pela /aft-email) e devolve
     [{titulo, assunto, corpo}], do mais recente para o mais antigo — cada
@@ -1239,6 +1281,82 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
   border:none;border-radius:8px;padding:9px 16px;cursor:pointer}
 .hero-passo .b2{font:600 13px var(--sans);background:var(--paper);color:#9E4C34;
   border:1px solid #DCB4A3;border-radius:8px;padding:9px 16px;cursor:pointer}
+/* ---- Ementas: o espelho do item 2.5 do Relatorio de Inspecao --------------
+   A tela do SFIT e uma tabela so, agrupada por Atributo/NR em ordem
+   alfabetica. Espelho que reorganiza a tela nao serve para conferir linha a
+   linha, entao aqui a ordem e a mesma -- inclusive o "*" das ementas da OS. */
+.em-chamada{margin:16px 34px 0;background:var(--paper);border:1px solid var(--bds);
+  border-left:5px solid var(--ochre);border-radius:12px;padding:14px 18px;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.em-chamada .rotulo{font:700 11px/1 var(--sans);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ochre)}
+.em-chamada p{font:15px/1.4 var(--serif);margin:5px 0 0;color:var(--t1)}
+.em-chamada .b1{font:600 13px var(--sans);background:var(--ochre);color:var(--paper);
+  border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap}
+.em-chamada .b1:hover{filter:brightness(1.08)}
+.em-numeros{display:flex;gap:14px;font:12px var(--sans);color:var(--t2);margin-top:6px}
+.em-numeros b{color:var(--t1)}
+/* a tela cheia */
+.em-tela{padding:0 34px 40px}
+.em-cab{position:sticky;top:0;z-index:5;background:var(--paper);
+  border-bottom:1px solid #E2DECF;padding:16px 0 12px;margin-bottom:6px}
+.em-cab h3{font:600 22px var(--serif);margin:0 0 4px}
+.em-cab .legenda{font-size:12px;color:var(--t3);font-style:italic}
+.em-aviso{margin:10px 0 0;border-radius:9px;padding:9px 13px;font:600 13px var(--sans)}
+.em-aviso.dv-sim{background:#E7F1ED;border:1px solid #B9D6CC;color:#2F6455}
+.em-aviso.dv-nao{background:#F7E8E2;border:1px solid #E8C7B9;color:#9E4C34}
+.em-filtros{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.em-filtros button{font:600 12px var(--sans);background:var(--cream);color:var(--t2);
+  border:1px solid var(--bd);border-radius:20px;padding:6px 13px;cursor:pointer}
+.em-filtros button.on{background:var(--t1);border-color:var(--t1);color:var(--paper)}
+.em-grupo{margin-top:20px}
+.em-grupo .gcab{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.em-grupo .gcab .nome{font:700 12px var(--sans);letter-spacing:.09em;
+  text-transform:uppercase;color:var(--t1);background:var(--bds);
+  border-radius:5px;padding:4px 9px}
+.em-grupo .gcab .risca{flex:1;height:1px;background:var(--bd)}
+.em-grupo .gcab .qt{font:12px var(--sans);color:var(--t3)}
+.em-cabecalho,.em-linha{display:grid;
+  grid-template-columns:minmax(230px,2.1fr) 150px minmax(160px,1fr) minmax(150px,1fr);
+  gap:14px;padding:9px 12px;align-items:start}
+.em-cabecalho{font:700 11px var(--sans);letter-spacing:.07em;text-transform:uppercase;
+  color:var(--t3);padding-bottom:5px}
+.em-linha{background:var(--paper);border:1px solid var(--bds);border-radius:9px;
+  margin-bottom:6px}
+.em-linha.falta{border-style:dashed;border-color:#D6CDB4;background:transparent}
+.em-linha .cod{font:600 14px var(--sans);color:var(--t1)}
+.em-linha .cod .ast{color:var(--ochre)}
+.em-linha .desc{font-size:12.5px;color:var(--t2);line-height:1.4;margin-top:3px}
+.sit{display:inline-block;font:600 12px var(--sans);border-radius:20px;padding:4px 11px}
+.sit-irregular{background:#F7E8E2;border:1px solid #E8C7B9;color:#9E4C34}
+.sit-regular{background:#E7F1ED;border:1px solid #B9D6CC;color:#2F6455}
+.sit-outra{background:var(--cream);border:1px solid var(--bd);color:var(--t2)}
+.sit-vazia{background:transparent;border:1px dashed #C4BFB0;color:var(--t3);font-style:italic}
+.em-acoes{display:flex;flex-direction:column;gap:4px}
+.em-acoes .ac{font:600 12px var(--sans);color:var(--t1);
+  background:var(--cream);border:1px solid var(--bd);border-radius:6px;padding:3px 8px}
+.em-acoes .ac.sis{background:#EFEAD9;border-color:#DCD0A8;color:#6B5A20}
+.em-acoes .ac.sis::after{content:' — o SFIT preenche';font-weight:400;color:var(--t3)}
+.em-linha .coment{font-size:12.5px;color:var(--t2);line-height:1.4}
+.em-linha .coment.exige{color:#9E4C34;font-style:italic}
+.em-linha .lastro{font:11px var(--sans);color:var(--t3);margin-top:4px}
+.em-vazio{font-style:italic;color:var(--t3);padding:20px 0}
+/* Janela estreita (o AFT costuma pôr esta tela ao lado do SFIT): as quatro
+   colunas viram lista, com o rótulo antes do conteúdo. */
+@media (max-width:1000px){
+  .em-cabecalho{display:none}
+  .em-linha{grid-template-columns:1fr;gap:7px}
+  .em-linha .em-acoes{flex-direction:row;flex-wrap:wrap}
+}
+/* filtros: escondem linhas sem mexer no HTML */
+.em-tela.f-falta .em-linha:not(.falta),
+.em-tela.f-irr .em-linha:not(.irr){display:none}
+.em-tela.f-falta .em-grupo.sem,.em-tela.f-irr .em-grupo.sem{display:none}
+@media print{
+  .em-filtros,.voltar,.status-pill,.em-chamada{display:none}
+  .em-cab{position:static}
+  .em-linha{break-inside:avoid}
+}
 /* corpo em duas colunas + cards */
 /* Coluna direita fixa ao rolar: comandos e ações acompanham a leitura. Quando
    a coluna é maior que a janela, ganha rolagem própria (sticky puro esconderia
@@ -1387,6 +1505,20 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
   .tl .desc,.auto-card .desc{color:var(--t2)}
   .autos-rodape .alerta{background:#332C1B;border-color:#4A3F22}
   #detalhe .status-pill{background:#233530;color:#8FBCAC}
+  /* ementas (espelho do item 2.5) */
+  .em-chamada{background:#2A2419;border-color:#4A3F22}
+  .em-cab{background:var(--cream);border-color:#34302A}
+  .em-aviso.dv-sim{background:#233530;border-color:#37564B;color:#8FBCAC}
+  .em-aviso.dv-nao{background:#3D2521;border-color:#5A3327;color:#E9A891}
+  .em-filtros button{background:var(--paper)}
+  .em-filtros button.on{background:#E9A891;border-color:#E9A891;color:#191917}
+  .em-linha:hover{border-color:#4A4438}
+  .em-linha.falta{border-color:#4A4438}
+  .sit-irregular{background:#3D2521;border-color:#5A3327;color:#E9A891}
+  .sit-regular{background:#233530;border-color:#37564B;color:#8FBCAC}
+  .em-acoes .ac{background:#26241F}
+  .em-acoes .ac.sis{background:#3B2E1B;border-color:#4A3F22;color:#E8BE85}
+  .em-linha .coment.exige{color:#E9A891}
 }
 /* ---- Abas (Auditorias | Calendário) ---- */
 .abas{display:flex;gap:8px;margin:0 0 18px}
@@ -1878,6 +2010,102 @@ function secaoAutos(o,i){
    o.autos_pendentes.length+'</h4>'+o.autos_pendentes.map(s=>'<p>'+esc(s)+'</p>').join('')+'</div>';
   h+='</div>'}
  return h}
+// ---- Ementas: espelho do item 2.5 do Relatorio de Inspecao -----------------
+// Encerrar uma acao fiscal com muitas ementas e digitacao demorada no
+// SFIT-WEB. Esta tela reproduz a tabela de la -- mesma ordem (Atributo/NR
+// alfabetico), mesma legenda ("*" = ementas da OS) -- para o AFT conferir
+// linha a linha. Abre em endereco proprio (#em=), de modo que o AFT pode
+// deixa-la numa janela ao lado do SFIT.
+// A coluna "Ocorrencia" da tela nao existe aqui: ela traz dado do banco do
+// proprio SFIT ("Fiscalizacao anterior", "Autuacao Obrigatoria"), que o
+// toolkit nao tem. Coluna sempre vazia so atrapalha a conferencia.
+const SIT_CLASSE={'Irregular':'sit-irregular','Regular':'sit-regular'};
+const EXIGE_COMENT=['Não aplicável','Não fiscalizada'];
+function classeSit(s){return SIT_CLASSE[s]||(s?'sit-outra':'sit-vazia')}
+function chamadaEmentas(o,i){
+ const em=o.ementas;if(!em||!em.total)return '';
+ const falta=em.total-em.respondidas;
+ return '<div class="em-chamada"><div>'+
+  '<span class="rotulo">Item 2.5 do RI &middot; Ementas fiscalizadas</span>'+
+  '<p>Espelho da tela do SFIT-WEB, para conferir linha a linha na hora de encerrar a ação fiscal.</p>'+
+  '<div class="em-numeros"><span><b>'+em.total+'</b> ementas</span>'+
+  '<span><b>'+em.respondidas+'</b> respondidas</span>'+
+  '<span><b>'+falta+'</b> a responder</span>'+
+  (em.irregulares?'<span><b>'+em.irregulares+'</b> irregulares</span>':'')+
+  (em.migrada?'':'<span>ainda no memory.md</span>')+'</div></div>'+
+  '<button class="b1" onclick="vaiEmentas('+i+')">abrir o espelho do SFIT</button></div>'}
+function vaiEmentas(i){location.hash='#em='+encodeURIComponent(chaveOS(DATA.os[i],i))}
+function abreEmentas(i){
+ const o=DATA.os[i],em=o.ementas||{};ABERTA=o.pasta||null;
+ document.body.classList.add('solo');
+ document.title=o.empregador+' - ementas - AFT';
+ let h='<div class="topo"><button class="voltar" onclick="voltaDaEmentas('+i+')">'+
+  '&larr; voltar à auditoria</button></div>';
+ h+='<div class="em-tela" id="emTela">';
+ h+='<div class="em-cab"><h3>Ementas fiscalizadas &mdash; '+esc(o.empregador)+'</h3>'+
+  '<div class="legenda">Item 2.5 do Relatório de Inspeção'+
+  (em.os_sfit?' &middot; OS SFIT n&ordm; '+esc(em.os_sfit):'')+
+  ' &middot; mesma ordem da tela: Atributo/NR em ordem alfabética'+
+  ' &middot; <b>Legenda: * &mdash; ementas da OS</b></div>';
+ if(em.dupla_visita==='sim')h+='<div class="em-aviso dv-sim">Foram identificados '+
+  'critérios que concedem a dupla visita: a irregularidade se NOTIFICA, não se autua.</div>';
+ else if(em.dupla_visita==='nao')h+='<div class="em-aviso dv-nao">Não foram '+
+  'encontrados critérios gerais para concessão de dupla visita: as irregularidades '+
+  'encontradas devem ser autuadas, EXCETO no caso de Lei Nova.</div>';
+ h+='<div class="em-filtros">'+
+  '<button class="on" onclick="filtraEmentas(this,0)">todas ('+(em.total||0)+
+  ')</button>'+
+  '<button onclick="filtraEmentas(this,1)">a responder ('+
+  ((em.total||0)-(em.respondidas||0))+')</button>'+
+  '<button onclick="filtraEmentas(this,2)">irregulares ('+
+  (em.irregulares||0)+')</button></div></div>';
+ const grupos=em.grupos||[];
+ if(!grupos.length)h+='<p class="em-vazio">Nenhuma ementa registrada nesta auditoria.</p>';
+ // Cabeçalho da tabela UMA vez, como no SFIT: repeti-lo a cada Atributo/NR
+ // enchia a tela de rótulo e afastava as ementas umas das outras.
+ else h+='<div class="em-cabecalho"><span>Ementa</span><span>Situação encontrada</span>'+
+  '<span>Ações a serem aplicadas</span><span>Comentários / Justificativas</span></div>';
+ grupos.forEach(g=>{
+  const nRespondidas=g.itens.filter(x=>x.situacao).length;
+  const semFalta=nRespondidas===g.itens.length;
+  const semIrr=!g.itens.some(x=>x.situacao==='Irregular');
+  h+='<div class="em-grupo'+(semFalta?' sem-falta':'')+(semIrr?' sem-irr':'')+'">'+
+   '<div class="gcab"><span class="nome">'+esc(g.frente)+'</span>'+
+   '<span class="risca"></span><span class="qt">'+g.itens.length+
+   (g.itens.length===1?' ementa':' ementas')+'</span></div>';
+  g.itens.forEach(e=>{
+   const falta=!e.situacao,irr=e.situacao==='Irregular';
+   const exige=EXIGE_COMENT.indexOf(e.situacao)>=0&&!e.comentario;
+   h+='<div class="em-linha'+(falta?' falta':'')+(irr?' irr':'')+'">'+
+    '<div><div class="cod">'+esc(e.codigo)+
+     (e.da_os?'<span class="ast">*</span>':'')+'</div>'+
+     (e.descricao?'<div class="desc">'+esc(e.descricao)+'</div>':'')+'</div>'+
+    '<div><span class="sit '+classeSit(e.situacao)+'">'+
+     esc(e.situacao||'a responder')+'</span></div>'+
+    '<div class="em-acoes">'+(e.acoes||[]).map(a=>'<span class="ac'+
+     (a==='Autuacao'||a==='Autuação'?' sis':'')+'">'+esc(a)+'</span>').join('')+'</div>'+
+    '<div>'+(e.comentario?'<div class="coment">'+esc(e.comentario)+'</div>':
+     (exige?'<div class="coment exige">o SFIT exige justificativa aqui</div>':''))+
+     (e.lastro?'<div class="lastro">'+esc(e.lastro)+'</div>':'')+'</div>'+
+    '</div>'});
+  h+='</div>'});
+ h+='</div>';
+ P.innerHTML=h;P.classList.add('aberto');V.classList.add('aberto');P.scrollTop=0}
+// n: 0 todas, 1 so as que faltam responder, 2 so as irregulares.
+const FILTROS_EM=['','f-falta','f-irr'];
+function filtraEmentas(bt,n){
+ const tela=document.getElementById('emTela');if(!tela)return;
+ const f=FILTROS_EM[n]||'';
+ tela.classList.remove('f-falta','f-irr');if(f)tela.classList.add(f);
+ // Grupo que ficaria sem nenhuma linha visivel some junto com elas -- senao
+ // sobra um cabecalho de NR solto, sem nada embaixo.
+ tela.querySelectorAll('.em-grupo').forEach(g=>{
+  const some=(n===1&&g.classList.contains('sem-falta'))||
+             (n===2&&g.classList.contains('sem-irr'));
+  g.classList.toggle('sem',some)});
+ bt.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+ bt.classList.add('on')}
+function voltaDaEmentas(i){location.hash='#os='+encodeURIComponent(chaveOS(DATA.os[i],i))}
 let ABERTA=null; // pasta da OS do card aberto (p/ reabrir após auto-refresh)
 function abre(i){
  const o=DATA.os[i],st=stageOS(o);ABERTA=o.pasta||null;
@@ -1896,6 +2124,7 @@ function abre(i){
  h+='<div class="cab"><h2>'+esc(o.empregador)+'</h2><div class="meta">'+
   meta.join('<span class="sep">·</span>')+'</div>'+
   (o.endereco?'<div class="ender">'+esc(o.endereco)+'</div>':'')+'</div>';
+ h+=chamadaEmentas(o,i);
  h+=stepperHTML(o,st);
  const pp=proximoPasso(o);
  if(pp)h+='<div class="hero-passo"><div><span class="rotulo">Próximo passo sugerido</span>'+
@@ -1926,7 +2155,7 @@ function fechaVista(){P.classList.remove('aberto');V.classList.remove('aberto');
 // Fechar tira o #os= da barra de endereços — assim o botão voltar do navegador
 // devolve a auditoria. Em file:// o pushState é barrado: o hash vazio resolve.
 function fecha(){
- if(/^#(os|so)=/.test(location.hash||'')){
+ if(/^#(os|so|em)=/.test(location.hash||'')){
   try{history.pushState(null,'',location.pathname+location.search)}
   catch(e){location.hash=''}}
  saiSolo();fechaVista()}
@@ -1944,11 +2173,14 @@ const TITULO_PAINEL=document.title;
 //   #os=<pasta>  → o painel, com a auditoria aberta por cima da grade;
 //   #so=<pasta>  → SÓ a auditoria, ocupando a página (é o que abre em aba).
 function rotaOS(){
- const m=/^#(os|so)=(.*)$/.exec(location.hash||'');
+ const m=/^#(os|so|em)=(.*)$/.exec(location.hash||'');
  if(!m){saiSolo();fechaVista();return}
  const chave=decodeURIComponent(m[2]);
  const i=DATA.os.findIndex((o,k)=>chaveOS(o,k)===chave);
  if(i<0){saiSolo();fechaVista();return}
+ // #em= e a tela cheia das ementas: endereco proprio, para o AFT deixar numa
+ // janela ao lado do SFIT-WEB enquanto digita o item 2.5.
+ if(m[1]==='em'){abreEmentas(i);return}
  if(m[1]==='so'){
   document.body.classList.add('solo');
   // Com várias abas abertas, o nome da empresa na aba é o que as distingue.
@@ -2252,9 +2484,10 @@ BOM_DIA_OS_DIAS = 120
 # ver a "regra dura" do layout em aft-organiza-os/SKILL.md.)
 ARRUMACAO_EXT = {".pdf", ".jpg", ".jpeg", ".png", ".heic", ".zip"}
 # Documento do SFIT é a exceção: Ordem de Serviço, Demanda e Relação de Vínculos
-# Ativos ficam na raiz por desenho (a /aft-preparacao-acao-fiscal os lê de lá) e o
-# layout não lhes dá subpasta — apontá-los seria ruído diário. Calibrado em
-# 26/08/2026 contra as pastas reais, onde 4 dos 5 primeiros achados eram isso.
+# Ativos moram hoje em preparacao-acao-fiscal/ (regra de 29/08/2026), mas em OS
+# antiga ainda vivem soltos na raiz — apontá-los todo dia seria ruído até a
+# /aft-organiza-os migrar a pasta. Calibrado em 26/08/2026 contra as pastas
+# reais, onde 4 dos 5 primeiros achados eram isso.
 RE_OS_SFIT = re.compile(r"(^(os[ _-]|ordem))|v[ií]nculo|demanda|sfit",
                         re.IGNORECASE)
 RE_ITEM_DET = re.compile(r"^item\s*\d+$", re.IGNORECASE)
@@ -2539,6 +2772,9 @@ def montar_json_os(oss: list[dict], hoje: datetime.date, com_pasta: bool) -> lis
             # E-mails redigidos (email.md): texto que o AFT vai mandar para
             # fora — idem, nunca no Artifact publicado.
             "emails": (o.get("emails") or []) if com_pasta else [],
+            # Folha do item 2.5: traz nº de AI e lastro da fiscalização —
+            # como os demais, só na versão local, nunca no Artifact publicado.
+            "ementas": (o.get("ementas") or {}) if com_pasta else {},
             "dets": [{"codigo": d["codigo"], "feito": d["feito"],
                       "linha": datas_para_br(d["linha"]),
                       "rotulo": d.get("rotulo") or "",
@@ -2878,6 +3114,8 @@ def main() -> int:
         os_["lre"] = ler_lre_esocial(Path(os_["caminho"]))
         # E-mails redigidos pela /aft-email (idem: só na versão local).
         os_["emails"] = parse_emails(Path(os_["caminho"]))
+        # Folha do item 2.5 do RI (ementas.md) — o espelho do SFIT-WEB.
+        os_["ementas"] = ler_ementas(Path(os_["caminho"]))
         # Autos lavrados: autos-lavrados.md + scan ao vivo (opcional).
         os_["autos_lavrados_md"] = parse_autos_lavrados_md(Path(os_["caminho"]))
         vivo = scan_ao_vivo(os_) if scan else None
