@@ -543,6 +543,135 @@ def soma_esperada_de(zip_path, informada):
         "de origem desconhecida não se instala.")
 
 
+# ------------------------------------------------------- o resgate da lapide
+
+# Marcadores do toolkit inteiro: arquivos que existiram em toda versao e que a
+# lapide (issue #144) apaga. Sao eles que apontam, no historico do git, o
+# ultimo commit em que a pasta ainda tinha o toolkit.
+MARCADORES = (MANIFESTO, "AGENTS.md", "COMO-INSTALAR.md")
+
+LINK_PORTAL = "https://notebooks-aft.vercel.app/aft-toolkit"
+
+
+def _git(args, cwd):
+    """(codigo, saida) de um comando git - `saida` e o stdout quando deu certo
+    e o stderr quando nao deu, que e o que serve para relatar a falha. Nunca
+    levanta excecao: pasta que nao e repositorio git e um estado previsto, e
+    nao um acidente."""
+    try:
+        r = subprocess.run(["git", *args], cwd=str(cwd), capture_output=True,
+                           text=True, encoding="utf-8", errors="replace",
+                           timeout=120)
+    except (OSError, subprocess.SubprocessError) as e:
+        return 1, str(e)
+    if r.returncode:
+        return r.returncode, (r.stderr or r.stdout or "").strip()
+    return 0, (r.stdout or "").strip()
+
+
+def estado_lapide(destino):
+    """A pasta caiu na lapide? Devolve {commit, arquivos} quando SIM e ha como
+    repor, None quando nao.
+
+    Sim significa: a instalacao nao tem mais o manifesto (o toolkit saiu da
+    pasta), ela e um clone git, e o historico ainda guarda um commit em que o
+    toolkit estava inteiro. Foi o `git pull` da lapide que a deixou assim - o
+    caminho antigo de atualizacao, que a skill velha da maquina do AFT manda
+    seguir.
+    """
+    if (destino / MANIFESTO).is_file():
+        return None  # a instalacao tem o toolkit: nao e o caso
+    if not (destino / ".git").exists():
+        return None  # instalacao por pacote: nao ha historico de onde repor
+    for marcador in MARCADORES:
+        codigo, apagou = _git(["log", "-1", "--format=%H", "--diff-filter=D",
+                               "HEAD", "--", marcador], destino)
+        if codigo or not apagou:
+            continue
+        anterior = apagou + "^"
+        if _git(["cat-file", "-e", f"{anterior}:{marcador}"], destino)[0]:
+            continue  # o commit anterior tambem nao tinha: marcador errado
+        # -z (saida separada por NUL) e obrigatorio, nao enfeite: sem ele o git
+        # devolve caminho acentuado ENTRE ASPAS e escapado ("Template/Roteiro
+        # de inspe\303\247ao.md"), e esse nome nao existe para repor depois.
+        codigo, lista = _git(["diff", "--name-only", "-z", "--diff-filter=D",
+                              anterior, "HEAD"], destino)
+        if codigo:
+            continue
+        arquivos = [l for l in lista.split("\0")
+                    if l and not _ignorado(tuple(l.split("/")))]
+        if arquivos:
+            return {"commit": _git(["rev-parse", anterior], destino)[1],
+                    "referencia": anterior, "arquivos": arquivos}
+    return None
+
+
+def mensagem_lapide(quantos):
+    """A explicacao que o AFT le. Ela precisa dar, de uma vez, as duas noticias:
+    o que aconteceu com a pasta dele (e que da para desfazer agora) e por onde
+    volta a receber atualizacao."""
+    return (
+        f"A sua pasta de skills ficou só com o aviso de mudança: as {quantos} "
+        "habilidades de fiscalização saíram dela quando o toolkit mudou de "
+        "casa, e não foi erro seu.\n\n"
+        "Nada se perdeu: a cópia anterior continua nesta máquina e eu consigo "
+        "repor tudo agora mesmo, sem internet, para você não ficar sem "
+        "ferramenta no meio de uma fiscalização.\n\n"
+        "Próximo passo: eu reponho as habilidades e, em paralelo, você pede o "
+        f"acesso em {LINK_PORTAL} com a sua conta Google. O código chega por "
+        "e-mail uma única vez; a partir dele o toolkit volta a se atualizar "
+        "sozinho, pelo portal.")
+
+
+def cmd_resgatar(destino):
+    """--resgatar: repoe, do proprio historico do git, o que a lapide apagou.
+
+    Repoe SO o que sumiu: os arquivos que a lapide manteve (o README novo e a
+    /aft-atualizar nova) ficam como estao. Se a versao velha da skill voltasse
+    junto, ela mandaria dar `git pull` de novo e o AFT giraria em circulo.
+    """
+    lapide = estado_lapide(destino)
+    if not lapide:
+        return {"ok": False, "modo": "resgatar", "erro": "nada_a_resgatar",
+                "destino": str(destino), "detalhe": (
+                    "Não há nada para repor nesta pasta: ou as habilidades já "
+                    "estão no lugar, ou esta instalação não tem de onde "
+                    "repô-las. Nada foi alterado.")}, 2
+
+    arquivos = lapide["arquivos"]
+    # Em lotes: sao centenas de caminhos, e linha de comando tem limite (o do
+    # Windows e o mais apertado).
+    for i in range(0, len(arquivos), 100):
+        codigo, saida = _git(["checkout", lapide["referencia"], "--",
+                              *arquivos[i:i + 100]], destino)
+        if codigo:
+            # Falha no meio: os lotes anteriores JA repuseram arquivo. Dizer
+            # "nada foi alterado" seria mentira - e a frase certa e a que manda
+            # repetir, porque repor do mesmo commit e idempotente.
+            return {"ok": False, "modo": "resgatar", "erro": "resgate_falhou",
+                    "destino": str(destino), "repostos_antes_da_falha": i,
+                    "detalhe": (
+                        "Não consegui repor todas as habilidades a partir da "
+                        f"cópia guardada nesta máquina ({saida or 'o git recusou'})."
+                        + (f" {i} arquivo(s) já tinham voltado antes da falha; "
+                           "repetir o comando é seguro e continua de onde parou."
+                           if i else " Nada foi alterado na pasta.")
+                        + " Nenhuma habilidade sua foi apagada.")}, 2
+    # Os arquivos repostos ficam como arquivos do AFT, e nao como coisa
+    # preparada para virar commit: o git nao e mais o caminho de atualizacao
+    # desta pasta, e o proximo pacote do portal escreve por cima deles.
+    _git(["reset", "--quiet"], destino)
+
+    return {"ok": True, "modo": "resgatar", "erro": None,
+            "destino": str(destino), "commit": lapide["commit"],
+            "restaurados": len(arquivos), "detalhe": (
+                f"Pronto: {len(arquivos)} arquivo(s) do toolkit voltaram para a "
+                "sua pasta, a partir da cópia que já estava nesta máquina - "
+                "nada foi baixado da internet. Suas habilidades próprias não "
+                "foram tocadas. Feche e reabra o aplicativo para elas "
+                "aparecerem de novo.")}, 0
+
+
 # ------------------------------------------------------------------- o portal
 
 def versao_instalada(destino):
@@ -589,6 +718,18 @@ def cmd_verificar(destino, base, forcar):
     """--verificar: diz qual e a versao disponivel, se ha novidade e o que
     mudou. Nao baixa nada e nao escreve nada na pasta de skills."""
     instalada = versao_instalada(destino)
+    # A lapide vem ANTES do portal, e de proposito: quem caiu nela e sempre o
+    # AFT que nunca atualizou, e portanto nunca teve codigo de acesso. Se a
+    # falta de codigo respondesse primeiro, ele ouviria "peca o acesso" sem
+    # nunca saber que a pasta dele tinha ficado vazia.
+    lapide = estado_lapide(destino)
+    if lapide:
+        return {"ok": False, "modo": "verificar", "estado": "lapide",
+                "erro": "lapide", "destino": str(destino),
+                "versao_instalada": instalada, "resgate_disponivel": True,
+                "arquivos_a_repor": len(lapide["arquivos"]),
+                "detalhe": mensagem_lapide(len(lapide["arquivos"]))}, 2
+
     r, res, codigo = consultar_portal(destino, base, forcar,
                                       precisa_da_url=False, modo="verificar")
     if res:
@@ -707,6 +848,10 @@ def main():
     modo.add_argument("--estado-token", action="store_true",
                       help="diz se já há código de acesso nesta máquina - "
                            "nunca mostra o valor")
+    modo.add_argument("--resgatar", action="store_true",
+                      help="repõe, do histórico do git desta máquina, as "
+                           "habilidades que a lápide do repositório público "
+                           "apagou da pasta (não usa rede)")
     ap.add_argument("--confirmado", action="store_true",
                     help="segue mesmo com sinal suspeito na varredura - só "
                          "depois de o AFT ver o relatório e confirmar que a "
@@ -738,6 +883,21 @@ def main():
             "  O aplicador atualiza uma instalação que já existe; ele não cria "
             "pasta nova (um caminho digitado errado viraria uma instalação "
             "fantasma).")
+
+    if args.resgatar:
+        try:
+            res, codigo = cmd_resgatar(destino)
+        except Exception as e:
+            # Mesma regra do --verificar: quem chama le o stdout como JSON, e um
+            # traceback deixaria a skill sem nenhuma resposta para dar ao AFT.
+            res, codigo = {
+                "ok": False, "modo": "resgatar", "erro": "falha_inesperada",
+                "destino": str(destino),
+                "detalhe": (f"A reposição parou com um erro inesperado "
+                            f"({type(e).__name__}: {e}). Nenhuma habilidade sua "
+                            "foi apagada - o que o resgate faz é só repor.")}, 2
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        sys.exit(codigo)
 
     if args.verificar:
         try:

@@ -434,6 +434,32 @@ try:
 except Exception:
     pass  # checagem acessoria: nunca derruba o diagnostico
 
+# 7c. Codigo de acesso ao portal ---------------------------------------------
+# Contrato da issue #138: o doutor confere que o codigo EXISTE e NUNCA imprime
+# o valor. Sem ele o AFT simplesmente para de receber atualizacao - e este e o
+# comando que ele roda para saber se esta tudo em ordem, entao o assunto tem de
+# aparecer aqui. Quem guarda e le o codigo e o portal_toolkit.py; nada dele
+# passa por este arquivo alem do "tem ou nao tem".
+try:
+    sys.path.insert(0, str(SKILLS_DIR / "_scripts"))
+    from portal_toolkit import tem_token, caminho_token, LINK  # noqa: E402
+
+    if tem_token():
+        add("Codigo de acesso ao portal", "ok",
+            f"configurado (guardado em {caminho_token()}, fora da pasta de skills)")
+    else:
+        add("Codigo de acesso ao portal", "aviso",
+            "esta maquina ainda nao tem o codigo de acesso ao portal",
+            "Sem ele o /aft-atualizar nao consegue buscar versao nova. O codigo "
+            f"chega uma unica vez, por e-mail: peca o acesso em {LINK} com a sua "
+            "conta Google e me passe o codigo que eu guardo - nao precisa de "
+            "conta no GitHub nem de senha nova.")
+except Exception:
+    # Instalacao anterior a mudanca de distribuicao: o portal_toolkit.py ainda
+    # nao existe nesta maquina. Nao e pendencia do AFT - a /aft-atualizar e que
+    # explica a mudanca -, entao nao se inventa aviso aqui.
+    pass
+
 # 8. Bibliotecas Python ------------------------------------------------------
 libs = {
     "pillow": "PIL",            # fotos -> PDF
