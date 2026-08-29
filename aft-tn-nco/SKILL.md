@@ -331,6 +331,27 @@ Não pergunte item a item: ofereça o padrão e recolha apenas as exceções.
 
 > **O prazo vira data fixa.** O DET grava uma data, não uma contagem. "16 dias" é calculado no dia em que a notificação é criada — se o AFT lavrar dias depois, a data continua a mesma. Por isso a FASE 4 **sempre informa a data que ficou** e lembra que ela pode ser alterada direto no DET.
 
+### Endereço do local de fiscalização (só quando faltar)
+
+O DET **valida quatro campos do endereço na lavratura** — logradouro, número, município e UF — e recusa o ato quando falta qualquer um. O endereço vem do cadastro do RI, que em ação fiscal rural costuma chegar truncado (só bairro e CEP). Por isso a ficha da OS pode declará-lo, e o `det_criar.py` usa a ficha para **preencher só o que o DET deixou em branco** — nunca para sobrescrever o que o RI informou.
+
+Confira, antes de encerrar a fase, se o `memory.md` da OS traz os campos:
+
+```
+endereco_logradouro: "Rodovia XX-000, KM 000 - Fazenda <nome>"
+endereco_numero: "S/N"
+endereco_bairro: "Zona Rural"
+endereco_municipio: "<município do local inspecionado>"
+endereco_uf: "<UF>"
+endereco_cep: "<8 dígitos>"
+```
+
+Não os tendo, **pergunte ao AFT o endereço do local onde a fiscalização ocorreu** (não o endereço cadastral da empresa na Receita Federal — numa montagem em fazenda os dois ficam a centenas de quilômetros um do outro) e **grave-os no front-matter do `memory.md`**, com `Edit` cirúrgico. Gravar é o que faz a pergunta acontecer **uma vez por OS**, e não a cada notificação — inclusive para a `/aft-NAD`, que lê o mesmo campo.
+
+> **Antes de perguntar, procure.** O endereço já pode estar em três lugares: o `## Inspeção física` do próprio `memory.md`, o `inspecao-fisica.md` da OS, ou uma **notificação anterior da mesma OS** já lavrada no DET (o endereço dela é o que o AFT declarou daquela vez). Achando, confirme com ele em uma linha em vez de pedir que digite tudo de novo.
+
+Se o AFT não souber o endereço agora, siga sem ele: a notificação é redigida e salva do mesmo jeito. O que não sai é o **rascunho no DET** — diga isso a ele com todas as letras quando chegar lá, em vez de deixar a criação falhar sem explicação.
+
 ---
 
 ## FASE 3.7 — Revisar ANTES de apresentar ao AFT
@@ -491,6 +512,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 - **Origem natural:** em dupla visita / ME-EPP, logo após `/aft-auditoria-geral` ou `/aft-PGR-analise` identificarem irregularidades que ensejariam auto mas cuja autuação for diferida para a segunda visita, ofereça rodar `/aft-tn-nco`. Fora da dupla visita, só ofereça NCO para irregularidades que o AFT decidiu **não** autuar — nunca para o que já vai virar auto (o auto já coage sozinho).
 - **Interdição/embargo:** para as irregularidades que motivaram a medida, o caminho é `/aft-auditoria-AR-NR12` (julgar o laudo/AR apresentado) e depois `/aft-embargo-interdicao-levantamento` (levantar) ou `/aft-embargo-interdicao-manutencao` (manter) — não a notificação NCO.
 - **Criar o rascunho no DET** (opcional, exige o painel local no ar e o token do DET — veja como obtê-lo em `~/.claude/skills/config/canal-token-det.md`): a prévia sai de `POST /api/det-criar` sem `confirmar`. Antes de confirmar, chame de novo a tool `Agent` com `subagent_type: "aft-revisor-notificacao"`, agora passando o caminho do `.md` e o JSON da prévia — esta é a revisão de CONFERÊNCIA, sobre o payload montado (tipo, retorno e prazo efetivos). A revisão do TEXTO já ocorreu na FASE 3.7, antes de o AFT ler. Mostre o parecer ao AFT e só confirme com o "sim" dele. O toolkit **nunca** lavra: o rascunho fica no DET esperando a revisão e o clique dele.
+- **Endereço incompleto barra o rascunho, não a notificação.** A prévia recusada com `endereço incompleto (logradouro, numero, municipio, uf)` não é defeito do toolkit nem recusa do DET: é a barreira que evita o rascunho nascer com um vazio que só apareceria na hora de lavrar, com a notificação inteira pronta. Trate como dado que falta — volte à FASE 3.5, colha o endereço do local de fiscalização, grave no `memory.md` e repita a prévia. **Não gere ticket de erro por isso** e não force por fora.
 - Sem o painel, o AFT cola os blocos manualmente no DET.
 - **Depois de lavrada no DET:** ofereça `/aft-email` para redigir o e-mail que avisa a empresa (ou o advogado) da notificação nova.
 

@@ -164,6 +164,19 @@ def add(mapa, nome, funcao, admissao, fonte):
     return token, False
 
 
+def _padrao_insensivel(palavra):
+    """Constroi a classe [xX] letra a letra SOMENTE dentro da propria palavra ja
+    escapada. Precisa ser aplicado antes do join com o separador '\\s+' -- feito
+    depois (join na string inteira), o loop letra-a-letra tambem enxerga o 's' do
+    proprio separador e o transforma em '[sS]', quebrando o '\\s+' (deixa de casar
+    espaco em branco). Foi assim que a substituicao de qualquer nome com mais de
+    uma palavra falhava em silencio (26/08/2026)."""
+    escapada = re.escape(palavra)
+    return "".join(
+        "[%s%s]" % (c.lower(), c.upper()) if c.isalpha() and c.isascii() else c
+        for c in escapada)
+
+
 def substituir(mapa, caminho):
     """Troca nome real por token, do mais longo para o mais curto (para 'Joao
     Silva Souza' nao virar '[[TRAB_01]] Souza' quando 'Joao Silva' tambem estiver
@@ -180,10 +193,7 @@ def substituir(mapa, caminho):
     trocas = 0
     for real, token in pares:
         # casamento tolerante a acento/caixa/espaco duplo, sem heuristica de apelido
-        padrao = r"\s+".join(re.escape(p) for p in real.split())
-        padrao = "".join(
-            "[%s%s]" % (c.lower(), c.upper()) if c.isalpha() and c.isascii() else c
-            for c in padrao)
+        padrao = r"\s+".join(_padrao_insensivel(p) for p in real.split())
         novo, n = re.subn(padrao, token.replace("\\", "\\\\"), texto)
         if n == 0:
             # tenta pela forma sem acento (documento as vezes traz sem)

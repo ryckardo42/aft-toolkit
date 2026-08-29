@@ -189,6 +189,15 @@ serve para você lembrar do que foi auditado; o inteiro teor fica no arquivo do 
 Constatação avulsa (SESMT, CIPA, ASO faltando) e tema sem relatório salvo ficam como
 estão.
 
+**Um cuidado importante antes de reorganizar uma pasta antiga:** se você tem autos de
+infração já importados no Sistema Auditor mas **ainda não lavrados**, eles podem dar
+ERRO depois da reorganização — o Sistema Auditor guarda o caminho dos anexos no
+momento da importação, e mover ou renomear arquivos e pastas faz esse caminho deixar
+de bater. Recomenda-se **lavrar esses autos antes** de aplicar a reorganização; a
+alternativa é gerar o pacote de novo com o `/aft-gera-ai` depois dela e reimportar. A
+própria `/aft-organiza-os` avisa em destaque, no plano, quando encontra autos nessa
+situação.
+
 ---
 
 ## 28/08/2026
@@ -234,6 +243,151 @@ escolha esse código no filtro. A lista fica só com quem trabalha naquela propr
 um nome de partida, o painel mostra a contagem de vínculos por local, para você decidir a
 partir do tamanho de cada propriedade ou de outra fonte. Empregador com um só
 estabelecimento não vê nada disso — o filtro só aparece quando faz sentido.
+
+---
+
+## 28/08/2026
+<!-- commit: tokenizar-substituir-multi-palavra -->
+
+**Conserto na pseudonimizacao: nome de trabalhador com mais de uma palavra podia deixar
+de ser trocado pelo token, sem aviso nenhum.** A rotina que torna a busca insensivel a
+maiuscula/minuscula acabava corrompendo, sem querer, o proprio espaco em branco que
+separa as palavras do nome. O efeito era a substituicao principal falhar em silencio,
+caindo num atalho de reserva que so reconhece a forma sem acento: a ocorrencia acentuada
+do nome real continuava no arquivo. Quem rodasse a troca confiando no numero de
+"substituicoes" mostrado na tela podia achar que o nome tinha saido do documento quando
+na verdade ele seguia la. Corrigido, com casos de teste (nome ficticio) cobrindo nome de
+uma palavra, de varias palavras, com acento, em maiuscula e com espaco duplo.
+
+---
+
+## 28/08/2026
+<!-- commit: dossie-os -->
+
+**O dossiê da auditoria ficou mais confortável de ler: coluna fixa, sem corredor vazio,
+fontes alinhadas.** Três mudanças na tela que abre ao clicar num card:
+
+- **A coluna da direita agora acompanha a rolagem.** As Ações rápidas e os Comandos para
+  o Claude Code ficam à vista enquanto você percorre os DETs, as pendências e o relato
+  de campo — antes eles sumiam no topo logo no primeiro rolar. E o Registro de
+  atividades mudou da esquerda para a direita: era ele que faltava lá, e por isso a
+  direita acabava mil pixels antes da esquerda, deixando um corredor vazio na tela.
+- **O título "Autos de infração lavrados" voltou ao tamanho desenhado.** Um conflito
+  interno de estilos o encolhia para letra miúda de rótulo; agora ele aparece como o
+  cabeçalho serifado de destaque que sempre deveria ter sido.
+- **Botões e rótulos alinhados na mesma fonte.** Os botões de comando, os botõezinhos
+  "resolvido"/"editar" e os rótulos das ações estavam numa fonte diferente da dos demais
+  botões do painel; agora toda a interface usa a mesma letra, e a serifa fica reservada
+  ao conteúdo (pendências, relatos, descrições dos autos).
+
+---
+
+## 28/08/2026
+<!-- commit: checar-acentos-caminho-frontmatter -->
+
+**O conferidor de acentuacao parou de reprovar documento correto.** A ferramenta que
+confere se o texto foi escrito com acentuacao completa vinha acusando "erro" em duas
+coisas que nao sao prosa: o caminho de um arquivo (`_scripts/montar_rt.py`, `memory.md`)
+e o cabecalho de configuracao no topo das notificacoes, cujos valores sao escritos sem
+acento de proposito porque o DET os exige assim. Numa notificacao real do acervo isso
+dava nove reclamacoes, nenhuma delas erro de grafia de verdade. Guarda que reprova o
+documento certo ensina a ignorar a guarda, e ai ela deixa de proteger de tudo. Corrigido:
+os dois casos passam a ser ignorados, e o erro de acentuacao de verdade continua sendo
+apontado. De quebra, razao social com "E" no meio ("MOVEIS E DECORACOES LTDA") tambem
+deixou de ser confundida com prosa sem acento.
+
+---
+
+## 28/08/2026
+<!-- commit: fix-content-types-foto -->
+
+**Foto em .jpg deixou de corromper o documento.** Ao inserir uma fotografia num
+documento do toolkit, o programa embutia a imagem mas esquecia de registrar, na ficha
+interna do arquivo, que aquele tipo de imagem estava ali dentro. O Word recusava o
+documento inteiro, dizendo que o arquivo estava corrompido. Aparecia justamente com foto
+de celular em .jpg, que e o caso mais comum. Corrigido: o registro passa a ser feito
+sozinho, para qualquer tipo de imagem.
+
+---
+
+## 28/08/2026
+<!-- commit: fix-foto-altura-quebra-pagina -->
+
+**Foto quadrada nao ocupa mais meia pagina, e a legenda nao se separa mais da imagem.**
+O programa que insere fotografia nos documentos so limitava a largura da imagem. Uma foto
+quadrada, como as de celular, saia com quase meia pagina de altura: quando nao cabia no
+que restava da folha, o Word empurrava a foto inteira para a pagina seguinte e deixava um
+vao branco enorme no fim da anterior. Agora a altura tambem tem limite (9 cm), e a imagem
+ficou presa a sua legenda, que nunca mais cai sozinha na pagina de baixo. Notado pelo AFT
+ao revisar um Relatorio Tecnico de Interdicao com cinco fotos.
+
+---
+
+## 28/08/2026
+<!-- commit: fix-tamanho-conclusao -->
+
+**A conclusao do Relatorio Tecnico de Interdicao saia com letra menor que o resto do
+documento.** O item "8. CONCLUSAO/OBSERVACAO" vinha em 9pt, enquanto todo o corpo do RT
+usa 10,5pt: o paragrafo do modelo onde esse texto entra nao declarava tamanho proprio, e
+acabava herdando um tamanho menor. O programa ja sabia consertar a fonte nesse caso, mas
+nunca cuidava do tamanho. Agora cuida dos dois, e o RT sai com o corpo todo do mesmo
+tamanho. Notado pelo AFT ao revisar um RT gerado pelo toolkit.
+
+---
+
+## 28/08/2026
+<!-- commit: extrator-privacidade-e-segundo-plano -->
+
+**O leitor de documentos longos (PGR, AET, laudo de NR-12, PGRTR, PCMSO) ganhou regra
+propria de privacidade, e parou de sumir com o trabalho.** Duas falhas apareceram no uso
+real, e nenhuma delas dava erro na tela:
+
+- **O extrato copiava CPF.** Numa leitura de PGR, o CPF do responsavel tecnico foi
+  transcrito literalmente para o arquivo de trabalho. O leitor nao tinha regra nenhuma
+  sobre dado pessoal: a protecao dependia de cada habilidade que o chama lembrar de
+  escreve-la. Agora a regra e dele: nao copia CPF, RG nem PIS, nao copia CID, diagnostico
+  nem remuneracao (descreve em conjunto: "12 ASOs, todos com aptidao"), e continua
+  registrando o registro profissional (CREA, CRM, RQE), que e publico e e o que mostra a
+  habilitacao. Onde o dado for preciso, indica a pagina do original.
+- **Documento pesado podia terminar sem arquivo nenhum.** Num laudo de 35 paginas quase
+  todo escaneado, a leitura foi mandada para segundo plano e o trabalho acabou antes de a
+  resposta voltar: seis minutos gastos e nenhum extrato gravado, enquanto a habilidade
+  seguinte seguia adiante supondo que existia. Agora e proibido delegar a segundo plano e
+  proibido encerrar sem gravar; havendo impedimento, grava-se o extrato parcial com a
+  falta declarada.
+
+---
+
+## 28/08/2026
+<!-- commit: endereco-local-fiscalizacao -->
+
+**A notificação do DET não trava mais por endereço incompleto de fazenda ou obra.**
+
+Ao criar o rascunho de uma notificação (`/aft-tn-nco` ou `/aft-NAD`), o toolkit pegava o
+endereço do cadastro da ordem de serviço. Em fiscalização rural esse cadastro costuma vir
+pela metade — só "zona rural" e o CEP, sem rua, número, município e estado. Como o DET
+recusa a lavratura sem esses quatro campos, o rascunho simplesmente não era criado, e a
+mensagem de erro não dizia o que fazer.
+
+Agora:
+
+- **A ficha da auditoria (`memory.md`) pode guardar o endereço do local onde a
+  fiscalização aconteceu** — a fazenda, o canteiro, a frente de serviço. O toolkit usa
+  esse endereço para completar o que faltava no cadastro.
+- **A pergunta acontece uma vez por auditoria.** Quando o endereço falta, a skill pergunta
+  e grava na ficha; da próxima notificação em diante, não pergunta mais. Vale para as duas
+  skills que escrevem no DET.
+- **Antes de perguntar, ela procura.** O endereço costuma já estar na inspeção física da
+  OS ou numa notificação anterior da mesma auditoria — nesse caso ela só pede sua
+  confirmação, em vez de fazer você digitar tudo de novo.
+- **É o endereço do local fiscalizado, não o da Receita Federal.** Numa montagem em
+  fazenda os dois ficam a centenas de quilômetros um do outro, e o que vale para a
+  notificação é onde você esteve.
+- **O que você já informou nunca é sobrescrito.** A ficha só preenche campo que estava em
+  branco — se o cadastro da ordem de serviço já trazia o dado, ele é mantido.
+
+Auditoria nova (`/aft-nova-auditoria`) já nasce com os campos de endereço na ficha, vazios
+para preencher quando você souber.
 
 ---
 

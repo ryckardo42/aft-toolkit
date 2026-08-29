@@ -878,6 +878,20 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
         payload["observacoes"] = obs
     enriquecer(payload, token, ri, id_modelo, cif,
                manter_titulo=bool(do_md.get("titulo")))
+    # ORDEM IMPORTA. Os dois completam so o que esta em branco, entao quem
+    # roda primeiro preenche. A ficha da OS vem antes da Receita de proposito:
+    # ela declara o LOCAL DE FISCALIZACAO (onde o AFT esteve), e a RFB devolve
+    # o endereco CADASTRAL da empresa -- que numa montagem em fazenda fica a
+    # centenas de quilometros do local inspecionado.
+    # Só os campos que a ficha REALMENTE preencheu: os que ela declara e que
+    # estavam em branco no endereço vindo do DET. Relatar o que a ficha
+    # "tem" seria mentir na prévia — o campo que o RI já trouxe permanece o
+    # do RI, e o AFT precisa enxergar essa diferença para conferir.
+    _antes = dict((payload.get("enderecos") or [{}])[0])
+    _declarados = endereco_do_memory(_mem)
+    completar_endereco_pelo_memory(payload, _mem)
+    _do_memory = [c for c in _declarados
+                  if not str(_antes.get(c) or "").strip()]
     completar_endereco_pela_rfb(payload, cnpj)
     # O relato do enriquecer e montado ANTES do preenchimento; sem esta
     # atualizacao a previa mostra UF vazia num payload que ja tem UF --
@@ -888,6 +902,11 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
         payload["_enriquecimento"]["endereco_completo"] = ", ".join(
             str(_ends[0].get(c) or "?") for c in
             ("logradouro", "numero", "bairro", "municipio", "uf", "cep"))
+    # Quais campos do endereco vieram da ficha da OS, e nao do DET. Sem isto a
+    # previa mostra um endereco completo sem dizer de onde saiu, e o AFT nao
+    # tem como conferir o que ele proprio declarou contra o cadastro do RI.
+    payload["_enriquecimento"]["endereco_do_memory"] = (
+        sorted(_do_memory) or None)
     payload["_enriquecimento"]["observacoes_do_md"] = len(obs)
     payload["_enriquecimento"]["parametros_do_md"] = do_md or None
     payload["_parametros"] = {"titulo": titulo, "prazo": prazo_iso,
@@ -1038,6 +1057,80 @@ def completar_endereco_pela_rfb(payload: dict, ni: str) -> dict:
         "uf": consulta_cnpj.g(dados, "uf"),
         "cep": cep_rfb,
     })
+
+
+# Tipo do endereco no DET, conforme o tooltip do proprio site:
+#   0 Empregador (endereco do estabelecimento na Receita Federal)
+#   1 Entrega de documentos fisicos
+#   2 Local de Fiscalizacao (onde a fiscalizacao ocorreu, informado pelo AFT)
+# A notificacao sai contra o LOCAL DE FISCALIZACAO -- e o que `enriquecer`
+# ja prefere ao escolher entre os enderecos que o detalhe do RI devolve.
+TIPO_ENDERECO_FISCALIZACAO = 2
+
+# Campos do endereco no front-matter do memory.md, na ordem em que o DET os
+# exibe. Separados de proposito: um campo unico obrigaria a fatiar texto livre,
+# e endereco rural ("Fazenda <nome> - Rodovia XX-000 km 000, s/n, zona rural")
+# nao tem
+# formato estavel para isso. Os quatro primeiros sao os que o DET valida na
+# lavratura (ver ENDERECO_OBRIGATORIO em `revisar_payload`).
+CAMPOS_ENDERECO_MEMORY = ("logradouro", "numero", "complemento", "bairro",
+                          "municipio", "uf", "cep")
+
+
+def endereco_do_memory(texto: str) -> dict:
+    r"""Endereco do LOCAL DE FISCALIZACAO declarado no front-matter do
+    memory.md da OS. Devolve {} quando a ficha nao o traz.
+
+    O formato e o mesmo YAML simples do resto da ficha, com o prefixo
+    `endereco_` para nao colidir com o campo `municipio:` que ja existe la
+    (aquele e o municipio da OS; este e o do local inspecionado, que nem
+    sempre coincide -- fiscalizacao em fazenda de outro municipio, obra em
+    cidade vizinha):
+
+        ---
+        endereco_logradouro: "Rodovia XX-000, KM 000 - Fazenda <nome>"
+        endereco_numero: "S/N"
+        endereco_bairro: "Zona Rural"
+        endereco_municipio: "<municipio>"
+        endereco_uf: "<UF>"
+        endereco_cep: "<8 digitos>"
+        ---
+
+    Por que a ficha, e nao so o DET: o detalhe do RI devolve o endereco que
+    consta do cadastro da ordem de servico, que em acao fiscal rural costuma
+    vir truncado (so bairro e CEP). Sem logradouro, numero, municipio e UF o
+    DET RECUSA a lavratura, e o AFT descobria isso com a notificacao pronta.
+    """
+    corpo = _corpo_do_memory(texto)
+    dados = {}
+    for campo in CAMPOS_ENDERECO_MEMORY:
+        valor = _campo_do_memory(corpo, f"endereco_{campo}").strip()
+        if valor:
+            dados[campo] = re.sub(r"\D", "", valor) if campo == "cep" else valor
+    return dados
+
+
+def completar_endereco_pelo_memory(payload: dict, texto_memory: str) -> dict:
+    """Fecha as lacunas do endereco com o que o memory.md da OS declara.
+
+    COMPLETA, nunca sobrescreve: o que o DET ja informou prevalece, e a ficha
+    entra apenas onde havia branco. E a mesma regra do
+    `completar_endereco_pela_rfb`, e pela mesma razao -- deixar o arquivo local
+    vencer o cadastro do RI faria a notificacao sair com endereco diferente do
+    que consta na ordem de servico, em silencio.
+
+    Quando o detalhe do RI nao devolve endereco NENHUM, a ficha cria o
+    registro (tipo 2, Local de Fiscalizacao). Sem isso, a OS cujo RI veio sem
+    endereco ficaria travada para sempre, mesmo com o dado em maos.
+    """
+    dados = endereco_do_memory(texto_memory)
+    if not dados:
+        return payload
+    if not (payload.get("enderecos") or []):
+        payload["enderecos"] = [{"uid": "",
+                                 "tipo": TIPO_ENDERECO_FISCALIZACAO,
+                                 **{c: "" for c in CAMPOS_ENDERECO_MEMORY}}]
+    return completar_endereco(payload, dados)
 
 
 def revisar_payload(payload: dict) -> list[dict]:
@@ -1405,6 +1498,54 @@ def _autoteste() -> int:
                 adotado([]) == ["intro do modelo", "obs do modelo"])
     finally:
         recuperar_modelo, recuperar_detalhe_ri = real_modelo, real_ri
+
+    # 6. endereço do LOCAL DE FISCALIZAÇÃO declarado no memory.md da OS
+    _ficha = ('---\nri: "999999999"\ncnpj: "99999999000199"\n'
+              'municipio: MUNICIPIO DA OS\n'
+              'endereco_logradouro: "Rodovia XX-000, KM 000"\n'
+              'endereco_numero: "S/N"\nendereco_bairro: "Zona Rural"\n'
+              'endereco_municipio: "Município do Local"\nendereco_uf: "GO"\n'
+              'endereco_cep: "99999-000"\n---\n\n# corpo da ficha\n')
+    _lido = endereco_do_memory(_ficha)
+    confere("memory: lê os campos separados do endereço",
+            _lido.get("municipio") == "Município do Local"
+            and _lido.get("uf") == "GO")
+    confere("memory: CEP entra só com dígitos",
+            _lido.get("cep") == "99999000")
+    confere("memory: `municipio:` da OS não vira endereço",
+            _lido.get("municipio") != "MUNICIPIO DA OS")
+    confere("memory: ficha sem os campos devolve vazio",
+            endereco_do_memory('---\nri: "1"\n---\n') == {})
+
+    # completa o que está em branco, e SÓ isso
+    _p = {"enderecos": [{"uid": "", "tipo": 2, "logradouro": "",
+                         "numero": "", "bairro": "zona rural",
+                         "municipio": "", "uf": "", "cep": "99999000"}]}
+    completar_endereco_pelo_memory(_p, _ficha)
+    _e = _p["enderecos"][0]
+    confere("memory: preenche o campo em branco",
+            _e["municipio"] == "Município do Local" and _e["uf"] == "GO")
+    confere("memory: NÃO sobrescreve o que o DET já informou",
+            _e["bairro"] == "zona rural")
+    confere("memory: o payload deixa de ter impedimento de endereço",
+            not [a for a in revisar_payload(
+                {"ri": "1", "ni": "1" * 14, "titulo": "t", "itens": [],
+                 "enderecos": [_e]}) if a["onde"] == "endereço"])
+
+    # RI sem endereço nenhum: a ficha cria o registro, como Local de Fiscalização
+    _vazio = {}
+    completar_endereco_pelo_memory(_vazio, _ficha)
+    confere("memory: RI sem endereço ganha o registro da ficha",
+            len(_vazio.get("enderecos") or []) == 1)
+    confere("memory: registro criado nasce como Local de Fiscalização (tipo 2)",
+            (_vazio["enderecos"][0].get("tipo") == 2
+             and _vazio["enderecos"][0].get("uid") == ""))
+
+    # ficha sem os campos não pode inventar endereço onde não havia
+    _nada = {}
+    completar_endereco_pelo_memory(_nada, '---\nri: "1"\n---\n')
+    confere("memory: ficha sem endereço não cria registro",
+            not _nada.get("enderecos"))
 
     print("\n".join(casos))
     print(f"\n{len(casos) - falhas}/{len(casos)} casos passaram")

@@ -1117,7 +1117,7 @@ table.ativ td{border-top:1px solid var(--bds);padding:5px 8px;vertical-align:top
 table.ativ td:first-child{white-space:nowrap;color:var(--t3)}
 .vazio{color:var(--t3);font-style:italic;font-size:13px}
 .fonte{font-size:11.5px;color:var(--t3);margin-top:4px;word-break:break-all}
-.pasta-btn{font:11.5px var(--serif);background:none;border:none;padding:2px 0;
+.pasta-btn{font:11.5px var(--sans);background:none;border:none;padding:2px 0;
 cursor:pointer;color:var(--t3);text-decoration:underline;text-underline-offset:2px}
 .pasta-btn:hover{color:var(--coral-deep)}
 .doc-link{color:var(--coral-deep);text-decoration:underline;text-underline-offset:2px}
@@ -1136,7 +1136,10 @@ max-height:280px;overflow-y:auto}
 footer{margin-top:34px;color:var(--t3);font-size:12px}
 /* Modo interativo (servidor local) + botões de copiar comando */
 .chip.emb{background:#F5E4E0;color:var(--coral-deep)}
-.mini{font:12px var(--serif);background:var(--paper);border:1px solid var(--bd);
+/* Botões e rótulos de interface em Hanken (sans): serifa é do conteúdo.
+   Antes .mini, .cmds button, .acoes label e .pasta-btn ficavam em serifa e
+   destoavam dos botões do hero e das abas (alinhado em 28/08/2026). */
+.mini{font:600 12px var(--sans);background:var(--paper);border:1px solid var(--bd);
 border-radius:6px;padding:1px 9px;margin-left:8px;cursor:pointer;color:var(--t2)}
 .mini:hover{border-color:var(--coral);color:var(--coral-deep)}
 /* Botão de ação dentro de lista (resolvido, editar): fundo preenchido, senão
@@ -1162,7 +1165,7 @@ box-shadow:0 0 0 3px rgba(176,89,62,.18)}
 .acoes{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:14px 0 2px;
 background:var(--cream);border:1px solid var(--bds);border-radius:8px;padding:10px 14px;
 font-size:13px}
-.acoes label{color:var(--t3);font-size:12px}
+.acoes label{color:var(--t3);font:11.5px var(--sans)}
 .acoes select,.acoes input{font:13px var(--serif);background:var(--paper);
 border:1px solid var(--bd);border-radius:6px;padding:3px 8px;color:var(--t1)}
 .acoes input{min-width:220px}
@@ -1170,7 +1173,7 @@ border:1px solid var(--bd);border-radius:6px;padding:3px 8px;color:var(--t1)}
 .cmds{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
 .cmds .rot{flex-basis:100%;font-size:12px;font-weight:700;letter-spacing:.07em;
 text-transform:uppercase;color:var(--t1)}
-.cmds button{font:12.5px var(--serif);background:var(--paper);border:1px solid var(--bd);
+.cmds button{font:600 12.5px var(--sans);background:var(--paper);border:1px solid var(--bd);
 border-radius:8px;padding:5px 12px;cursor:pointer;color:var(--t2);position:relative}
 .cmds button:hover{border-color:var(--coral);color:var(--coral-deep)}
 .cmds button::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:0;
@@ -1237,6 +1240,11 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 .hero-passo .b2{font:600 13px var(--sans);background:var(--paper);color:#9E4C34;
   border:1px solid #DCB4A3;border-radius:8px;padding:9px 16px;cursor:pointer}
 /* corpo em duas colunas + cards */
+/* Coluna direita fixa ao rolar: comandos e ações acompanham a leitura. Quando
+   a coluna é maior que a janela, ganha rolagem própria (sticky puro esconderia
+   o fim dela até a esquerda acabar). */
+#detalhe .corpo2 .lado-fixo{position:sticky;top:14px;
+  max-height:calc(100vh - 28px);overflow-y:auto;scrollbar-width:thin}
 #detalhe .corpo2{display:grid;grid-template-columns:1.7fr 1fr;gap:20px;
   padding:20px 34px 6px;align-items:start}
 #detalhe .corpo2>div>.cartao{margin-bottom:14px}
@@ -1306,7 +1314,10 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 /* AUTOS: seção solo, largura total */
 .autos-solo-cab{margin:4px 34px 0;padding-top:24px;border-top:1px solid #E2DECF;
   display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px}
-.autos-solo-cab h3{font:500 23px var(--serif);margin:0;color:var(--t1);
+/* Prefixo #detalhe obrigatório: sem ele a regra geral `#detalhe h3` (12.5px,
+   maiúsculas, do modal antigo) ganha por especificidade e o título da seção
+   de autos encolhia para 12.5px — bug visível até 28/08/2026. */
+#detalhe .autos-solo-cab h3{font:500 23px var(--serif);margin:0;color:var(--t1);
   border:none;padding:0;letter-spacing:0;text-transform:none}
 .autos-solo-cab h3 em{color:var(--coral-deep)}
 .autos-solo-cab .fonte{font-size:11.5px;color:#A5A092;margin:0}
@@ -1351,7 +1362,7 @@ box-shadow:0 0 0 3px rgba(233,168,145,.25)}
 .entrada input::placeholder,.entrada textarea::placeholder{color:var(--t3);opacity:1}
 .entrada input:focus,.entrada textarea:focus{outline:none;border-color:var(--coral-deep);
   box-shadow:0 0 0 3px rgba(176,89,62,.18)}
-.entrada .cta{height:42px;padding:0 20px;font-family:var(--serif);font-size:15px;font-weight:600;
+.entrada .cta{height:42px;padding:0 20px;font-family:var(--sans);font-size:15px;font-weight:600;
   color:var(--paper);background:var(--coral-deep);border:1px solid var(--coral-deep);
   border-radius:8px;cursor:pointer}
 .entrada .cta:hover{background:var(--coral);border-color:var(--coral)}
@@ -1897,10 +1908,13 @@ function abre(i){
  if(ATIVO&&o.pasta||(o.pendencias||[]).length)h+=cartaoPendencias(o,i);
  if(ATIVO&&o.pasta||(o.anotacoes||[]).length||(o.temas||[]).length)h+=cartaoAnotacoes(o,i);
  if(o.inspecao&&((o.inspecao.bullets||[]).length||o.inspecao.texto))h+=cartaoInspecao(o,i);
- h+=cartaoTimeline(o,i);
- h+='</div><div>';
+ // Coluna direita: fixa ao rolar (.lado-fixo) e com o Registro de atividades,
+ // que morava na esquerda — sem ele a direita acabava ~1000px antes e quem
+ // rolava atravessava um corredor vazio (medido em 28/08/2026, 1513 x 538px).
+ h+='</div><div class="lado-fixo">';
  h+=cartaoAcoes(o,i);
  h+=cartaoComandosPorFase(o,i);
+ h+=cartaoTimeline(o,i);
  h+=cartaoEmails(o,i);
  h+=cartaoLre(o);
  h+=cartaoRelatorios(o);
