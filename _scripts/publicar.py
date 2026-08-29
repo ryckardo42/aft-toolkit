@@ -49,7 +49,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from remontar import git, rodar_script, remontar, MONTADOS
+from remontar import git, rodar_script, remontar, MONTADOS, EXCLUIR
 
 try:  # console do Windows e cp1252
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -58,11 +58,6 @@ except Exception:
     pass
 
 DESTINO = Path.home() / ".claude" / "skills"
-
-# O que nao vai para a pasta instalada: controle de versao, lixo do sistema e o
-# roteiro de instalacao (que so faz sentido no repositorio).
-EXCLUIR = [".git", ".gitignore", ".DS_Store", ".backups", ".claude",
-           "COMO-INSTALAR.md", "__pycache__"]
 
 
 def _repo_a_partir_de(pasta):

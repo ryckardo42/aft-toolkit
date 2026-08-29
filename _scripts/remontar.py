@@ -53,6 +53,13 @@ except Exception:
 MONTADOS = ["NOVIDADES.md", "arquitetura/arquitetura.html",
             "_scripts/skills_oficiais.txt"]
 
+# O que nao vai para fora do repositorio: controle de versao, lixo do sistema
+# e o roteiro de instalacao (que so faz sentido aqui dentro). Usado tanto
+# pelo publicar.py (copia para a pasta instalada) quanto pelo empacotar.py
+# (zip do pacote) - um lugar so, para os dois nunca divergirem no que excluem.
+EXCLUIR = {".git", ".gitignore", ".DS_Store", ".backups", ".claude",
+           "COMO-INSTALAR.md", "__pycache__"}
+
 
 def git(args, cwd, checar=True):
     r = subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True,
