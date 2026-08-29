@@ -108,8 +108,12 @@ def regenerar_manifesto(raiz):
     `raiz`. E ela que diz o que NAO e nosso e, portanto, nao pode ser apagado
     da pasta do AFT numa atualizacao; deduzir por prefixo falha, porque
     'aft-grant' e skill pessoal de um AFT e parece oficial."""
-    oficiais = sorted({l.split("/")[0] for l in
-                       git(["ls-files"], raiz).splitlines() if "/" in l})
+    # -z: sem o -z o git ENTRE ASPAS os caminhos com acento, e o manifesto
+    # nascia com '"Template' em vez de 'Template' — a pasta ficava de fora da
+    # lista do que e nosso (constatado em 29/08/2026, ao escrever o aplicador).
+    bruto = git(["ls-files", "-z"], raiz)
+    oficiais = sorted({l.split("/")[0] for l in bruto.split("\0")
+                       if "/" in l})
     (raiz / "_scripts" / "skills_oficiais.txt").write_text(
         "\n".join(oficiais) + "\n", encoding="utf-8")
     return oficiais

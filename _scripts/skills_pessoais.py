@@ -18,9 +18,13 @@ Uso:
   skills_pessoais.py --backup            # retrato antes de atualizar
   skills_pessoais.py --conferir          # o que sumiu desde o ultimo retrato?
   skills_pessoais.py --restaurar         # repoe o que sumiu (nunca sobrescreve)
+
+Por padrao olha a pasta instalada de verdade (~/.claude/skills). O
+atualizar_toolkit.py aponta para outra pasta com --skills/--manifesto, que e o
+que permite exercitar a atualizacao inteira contra uma pasta de mentira.
 """
 from __future__ import annotations
-import argparse, shutil, sys, time
+import argparse, re, shutil, sys, time
 from pathlib import Path
 
 SKILLS = Path.home() / ".claude" / "skills"
@@ -31,6 +35,9 @@ GUARDA = Path.home() / ".claude" / "skills-pessoais-backup"
 # de um AFT e tem cara de oficial. Palpite pelo nome deixaria ela desprotegida.
 MANIFESTO = Path(__file__).with_name("skills_oficiais.txt")
 INFRA = {"_scripts", "Template", "agents", "arquitetura", "config", "novidades"}
+# Nome de retrato feito por este script: AAAAMMDD-HHMMSS, com sufixo -2, -3...
+# quando dois caem no mesmo segundo.
+NOSSO_RETRATO = re.compile(r"^\d{8}-\d{6}(-\d+)?$")
 
 
 def oficiais() -> set[str]:
@@ -53,25 +60,49 @@ def pessoais() -> list[Path]:
 
 def fazer_backup() -> Path:
     alvo = GUARDA / time.strftime("%Y%m%d-%H%M%S")
+    # O nome tem resolucao de SEGUNDOS: dois retratos no mesmo segundo caiam na
+    # mesma pasta e o copytree(dirs_exist_ok) FUNDIA os dois - o retrato passava
+    # a mostrar skill que ja nao existia mais, e a conferencia acusava sumico
+    # que nao houve. Nome novo em vez de fusao.
+    n = 2
+    while alvo.exists():
+        alvo = GUARDA / (time.strftime("%Y%m%d-%H%M%S") + f"-{n}")
+        n += 1
     achadas = pessoais()
-    if not achadas:
-        print("skills_pessoais: nenhuma skill pessoal encontrada — nada a guardar.")
-        return alvo
+    # O retrato e criado MESMO VAZIO, de proposito. Sem isso, quem nao tem
+    # skill pessoal hoje continua sendo comparado com um retrato antigo, e uma
+    # skill que o proprio AFT apagou reaparece como "sumiu na atualizacao" —
+    # acusando o toolkit de um estrago que nao houve.
     alvo.mkdir(parents=True, exist_ok=True)
+    if not achadas:
+        print("skills_pessoais: nenhuma skill pessoal encontrada — retrato vazio "
+              f"em {alvo}")
+        return alvo
     for d in achadas:
         shutil.copytree(d, alvo / d.name, dirs_exist_ok=True)
-    # so os 5 retratos mais recentes
-    retratos = sorted(GUARDA.iterdir(), reverse=True)
-    for velho in retratos[5:]:
+    # So os 5 retratos mais recentes - e so os NOSSOS. Retrato batizado a mao
+    # pelo AFT ("manual-20260821-aposentada", "pre-rename-...") fica onde esta:
+    # apagar pasta que nao fomos nos que criamos e estrago, nao faxina. A
+    # ordem tambem e pela data do arquivo, nao pelo nome (ver ultimo_retrato).
+    nossos = sorted((d for d in GUARDA.iterdir()
+                     if d.is_dir() and NOSSO_RETRATO.match(d.name)),
+                    key=lambda d: d.stat().st_mtime_ns, reverse=True)
+    for velho in nossos[5:]:
         shutil.rmtree(velho, ignore_errors=True)
     print(f"skills_pessoais: {len(achadas)} skill(s) guardada(s) em {alvo}")
     return alvo
 
 
 def ultimo_retrato() -> Path | None:
+    """O retrato mais recente - pela DATA do arquivo, nao pelo nome. Ordenar
+    por nome parece dar no mesmo (os nomes sao AAAAMMDD-HHMMSS), mas retrato
+    batizado a mao ganha sempre: 'pre-rename-20260819-...' vem depois de
+    '20260829-...' no alfabeto. Era o que acontecia de verdade nesta maquina -
+    a conferencia comparava com um retrato de 19/08 e acusava sumico todo dia."""
     if not GUARDA.is_dir():
         return None
-    r = sorted((d for d in GUARDA.iterdir() if d.is_dir()), reverse=True)
+    r = sorted((d for d in GUARDA.iterdir() if d.is_dir()),
+               key=lambda d: d.stat().st_mtime_ns, reverse=True)
     return r[0] if r else None
 
 
@@ -84,13 +115,25 @@ def sumidas() -> tuple[Path | None, list[str]]:
 
 
 def main() -> None:
+    global SKILLS, GUARDA, MANIFESTO
     ap = argparse.ArgumentParser(description="Protege as skills pessoais do AFT")
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--listar", action="store_true")
     g.add_argument("--backup", action="store_true")
     g.add_argument("--conferir", action="store_true")
     g.add_argument("--restaurar", action="store_true")
+    ap.add_argument("--skills", help=f"pasta instalada (padrao: {SKILLS}). "
+                                     "O retrato vai para a pasta irma "
+                                     "'<nome>-pessoais-backup'.")
+    ap.add_argument("--manifesto", help="lista do que e do toolkit "
+                                        f"(padrao: {MANIFESTO.name} ao lado deste script)")
     a = ap.parse_args()
+
+    if a.skills:
+        SKILLS = Path(a.skills).expanduser().resolve()
+        GUARDA = SKILLS.parent / (SKILLS.name + "-pessoais-backup")
+    if a.manifesto:
+        MANIFESTO = Path(a.manifesto).expanduser().resolve()
 
     if a.listar:
         achadas = pessoais()

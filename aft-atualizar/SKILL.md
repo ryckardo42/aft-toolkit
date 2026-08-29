@@ -6,9 +6,9 @@ description: >
   Use quando o AFT pedir para atualizar o AFT Toolkit. Acione com "/aft-
   atualizar", "atualize o toolkit", "atualizar o kit", "tem atualização?",
   "verificar atualizações", "buscar novidades do toolkit", "puxar a última
-  versão". Confere o repositório das skills e o pacote notebooklm-py,
-  instala o que estiver desatualizado e roda o /aft-doctor ao final.
-  Diferente do /aft-doctor, que só diagnostica.
+  versão". Mostra a versão disponível no portal e o que mudou desde a
+  instalada, instala com o OK do AFT, cuida também do pacote notebooklm-py e
+  roda o /aft-doctor ao final. Diferente do /aft-doctor, que só diagnostica.
 ---
 
 # aft-atualizar — Atualizar o AFT Toolkit (skills + notebooklm-py)
@@ -17,12 +17,18 @@ description: >
 ## Objetivo
 
 Um único comando para manter as duas peças do toolkit em dia: as **skills**
-(este repositório) e o **comando `notebooklm`** (pacote de terceiro,
-`teng-lin/notebooklm-py`, que as skills usam para consultar ementas). No final,
-confirma que tudo continua funcionando com o `/aft-doctor`.
+(o pacote versionado que vem do portal) e o **comando `notebooklm`** (pacote de
+terceiro, `teng-lin/notebooklm-py`, que as skills usam para consultar ementas).
+No final, confirma que tudo continua funcionando com o `/aft-doctor`.
 
 Tom: tranquilizador e direto. O AFT não precisa entender git nem pip — só saber
 o que mudou e se precisa fazer algo (normalmente não).
+
+**Esta skill não aplica nada por conta própria.** Ela pergunta, narra e chama o
+programa `_scripts/atualizar_toolkit.py`, onde mora toda a lógica da atualização
+— conferência do pacote, varredura de segurança, backup, escrita e remoção. Se
+você se pegar copiando arquivo, apagando pasta ou rodando comando de git para
+atualizar as skills, parou de seguir esta skill.
 
 ## Passo 0 — Retrato das skills pessoais (SEMPRE, antes de qualquer coisa)
 
@@ -47,75 +53,116 @@ pelo git, e não rastreado é o que a limpeza remove primeiro. O `.gitignore` do
 a ignorar tudo que não é do toolkit — mas o retrato é a rede que vale mesmo quando a
 instalação não é um clone git.
 
-## Passo 1 — Atualizar as skills (repositório do toolkit)
+Se o comando falhar porque o programa não está na pasta, **não insista**: siga para o
+Passo 1, que é onde essa instalação se explica — e, quando houver instalação de fato, o
+programa do Passo 1b tira e confere o retrato sozinho, antes de escrever qualquer coisa.
 
-Na pasta das skills (você roda):
+## Passo 1 — Ver o que há de novo (sem baixar nada ainda)
+
+A atualização inteira é feita por **um programa só**, o `atualizar_toolkit.py`: é ele que
+fala com o portal, confere o pacote, guarda a instalação atual e escreve a nova. Você não
+executa nenhuma dessas etapas à mão — a sua parte é perguntar, narrar e decidir junto com
+o AFT.
+
+Comece perguntando ao portal o que existe de novo. Nesta etapa **nada é baixado e nada é
+instalado** (você roda):
 
 ```bash
-cd ~/.claude/skills
-git fetch origin
-git log HEAD..origin/main --oneline   # commits novos disponíveis
+python3 ~/.claude/skills/_scripts/atualizar_toolkit.py --verificar
 ```
 
-- **Lista vazia** → já está na última versão; informe isso e siga para o Passo 2.
-- **Lista com commits** → **antes de baixar**, faça a varredura de segurança (Passo 1a) e
-  capture as novidades para o AFT (Passo 1b). Só depois das duas, atualize:
+No Windows, troque `python3` pelo caminho completo do `python_path` do `aft-config.md`. A
+saída é um JSON: leia `estado`, `versao`, `versao_instalada`, `ha_novidade`, `novidades` e
+`detalhe`.
+
+**Se o comando não funcionar**, esta é uma instalação **anterior à mudança de
+distribuição**. São dois sintomas, e os dois querem dizer a mesma coisa: o programa não
+está lá (`No such file or directory`, `can't open file`) ou o programa que está lá é
+velho e não conhece o `--verificar` (responde com um `usage:` ou com `unrecognized
+arguments`). Em qualquer dos dois, o toolkit deixou de ser atualizado pelo GitHub. Não
+tente `git pull`, `git fetch` nem nenhum outro comando de git — o caminho antigo não traz
+mais versão nova. Explique ao AFT sem jargão, deixando claro que não foi erro dele:
+
+> O AFT Toolkit mudou de casa: as atualizações não vêm mais do GitHub, e sim do portal
+> onde o senhor já tem cadastro. É uma vez só — peça o acesso em
+> <https://notebooks-aft.vercel.app/aft-toolkit> com a sua conta Google e me passe o
+> código que chegar por e-mail, que eu cuido do resto. Enquanto isso, tudo o que já está
+> instalado continua funcionando normalmente.
+
+E **pare por aqui**: sem o programa da atualização nesta máquina não há o que instalar, e
+é a página do portal que traz o roteiro. Não copie, não baixe e não improvise instalação
+por fora dela. Pule os Passos 2 e 3 e feche pelo Passo 4, com essa orientação e nada mais
+— o que está instalado continua funcionando.
+
+Com o JSON na mão:
+
+- **`ok: true` com `estado: "sem_novidade"`** → é o caso comum, e ele é barato: nenhum
+  download aconteceu. Diga a frase do `detalhe` em uma linha, sem alarde (ela já traz a
+  versão), e siga para o Passo 2.
+- **`ok: true` com `ha_novidade: true`** → apresente ao AFT, **antes de baixar qualquer
+  coisa**: a versão disponível (`versao`), a que ele tem (`versao_instalada`) e o
+  changelog do campo `novidades` — ele já vem escrito para o AFT, em português, e cobre
+  só o período dele. Apresente o conteúdo (no máximo agrupando ou encurtando), nunca
+  reescrevendo nem acrescentando o que não está lá. Depois **pergunte se ele quer
+  instalar agora**. Só com o sim explícito vá ao Passo 1b; um "depois eu vejo" encerra a
+  skill aqui, sem insistir.
+- **`ok: false`** → o campo `detalhe` já é a explicação pronta para o AFT, em português e
+  com o próximo passo (falta o código de acesso, código recusado, e-mail sem liberação,
+  portal fora do ar). Repasse-a praticamente como está — não traduza para jargão nem
+  invente causa. Se o `estado` for `sem_token` ou `token_invalido`, vá ao Passo 1a; nos
+  demais casos nada foi alterado na máquina, então encerre com a orientação do `detalhe`.
+
+### Passo 1a — Guardar o código de acesso (só quando faltar)
+
+O código chega ao AFT uma única vez, no e-mail de liberação do portal, e depois nunca mais
+incomoda. Quando ele te passar o código:
+
+- **Nunca ponha o valor dentro do comando** (o que se digita numa linha de comando fica em
+  histórico e em registro) e **nunca repita o código no chat**. Grave-o num arquivo
+  temporário com a tool Write e mande pelo cano — o programa lê pela entrada padrão:
+
   ```bash
-  git pull origin main
+  python3 ~/.claude/skills/_scripts/atualizar_toolkit.py --gravar-token < "<arquivo temporário>"
   ```
-  Use **sempre** fast-forward simples (sem rebase/merge manual). Se o `pull` falhar
-  por mudanças locais não commitadas, **não descarte nada**: avise o AFT e pergunte
-  como prosseguir (isso não deveria acontecer numa instalação normal, em que o AFT
-  nunca edita os arquivos do repositório).
 
-### Passo 1a — Varredura de segurança do que está chegando (antes do pull)
+- Apague o arquivo temporário logo em seguida.
 
-Uma atualização de skills é **código de terceiro** entrando na máquina do AFT: roda com
-acesso aos documentos e dados reais da fiscalização. Antes do `git pull`, confira o que
-muda e varra o conteúdo que está chegando por sinais de adulteração (Unicode invisível,
-cano para shell, `ANTHROPIC_BASE_URL`, exfiltração por rede). Você roda:
+O código fica guardado na pasta de trabalho do AFT, **fora** da pasta de skills — assim a
+própria atualização não o apaga. Feito isso, repita o Passo 1.
+
+### Passo 1b — Instalar (só depois do sim do AFT)
 
 ```bash
-git diff --stat HEAD..origin/main                      # quais arquivos mudam
-python ~/.claude/skills/_scripts/checar_diff.py        # varredura das linhas novas
+python3 ~/.claude/skills/_scripts/atualizar_toolkit.py --aplicar
 ```
 
-- **Saída `✓` (nada suspeito)** → siga para o `git pull` normalmente.
-- **Saída `⚠️` (sinais suspeitos)** → **NÃO dê o pull.** Mostre os achados ao AFT em
-  linguagem simples, explique que a atualização traz algo fora do padrão e só prossiga
-  se ele confirmar que a mudança é legítima (autor/commit conhecido). Na dúvida, não
-  atualize: o toolkit antigo funcionando é melhor que um novo adulterado.
+O programa faz sozinho, nesta ordem: confere a soma de verificação do pacote, varre o
+conteúdo que está chegando à procura de sinal de adulteração, tira o retrato das skills
+pessoais, guarda a instalação atual numa pasta de backup ao lado, escreve a versão nova e
+confere que nenhuma skill pessoal sumiu no caminho. **Nada é escrito antes de as
+conferências passarem.**
 
-O `checar_diff.py` é um alarme: nunca bloqueia nem altera nada, só relata. Quem decide
-seguir é sempre o AFT.
+Leia o JSON do resultado:
 
-> **Diff muito grande não é, por si, sinal de adulteração.** Uma renomeação em massa
-> (como a que prefixou `aft-` em todas as skills, em 26/07/2026) muda dezenas de arquivos
-> de uma vez, e o `git diff --stat` fica enorme. O que importa é o resultado do
-> `checar_diff.py`: se ele disser `✓`, o conteúdo que está chegando não tem sinal
-> suspeito, por maior que seja a lista. Explique isso ao AFT em vez de alarmá-lo com o
-> tamanho da mudança.
+- **`ok: true`** → instalado. Guarde para o resumo do Passo 4: a versão nova
+  (`pacote.versao`), a anterior (`versao_anterior`), a frase do `detalhe` (quantos
+  arquivos entraram, quantas skills saíram, quantas pastas do AFT foram preservadas) e o
+  caminho do `backup`. As listas `plano.novos` e `plano.alterados` dizem quais arquivos
+  mudaram — os Passos 2c e 2h precisam delas.
+- **`erro: "conteudo_suspeito"`** → **nada foi instalado**, e assim fica até o AFT
+  decidir. Mostre a ele o `varredura.relatorio` em linguagem simples: a atualização traz
+  algo fora do padrão. Só repita o comando acrescentando `--confirmado` se ele confirmar
+  que a atualização é legítima. Na dúvida, não instale: toolkit antigo funcionando é
+  melhor que toolkit novo adulterado.
 
-### Passo 1b — Capturar as novidades (antes do pull)
-
-O `NOVIDADES.md` na raiz do repositório é o changelog escrito **para o AFT** (sem jargão
-de programador) — é o que você vai apresentar no resumo final, não as mensagens de commit
-(essas são para quem mantém o código). Capture as entradas que ainda não chegaram nesta
-máquina:
-
-```bash
-git diff HEAD..origin/main -- NOVIDADES.md
-```
-
-- **Diff com linhas `+`** → são as entradas novas. Guarde o texto (ignore linhas `+++` de
-  cabeçalho e comentários `<!-- commit: ... -->`, que são só para rastreamento interno) —
-  vai direto no resumo do Passo 4, praticamente sem reescrever.
-- **Diff vazio, mas havia commits na lista do Passo 1** → essa atualização não teve
-  entrada de changelog (pode acontecer: nem toda mudança é relevante o bastante para o
-  AFT, ou foi esquecida). Não deixe isso desaparecer: liste os títulos desses commits
-  (`git log HEAD..origin/main --oneline`) como "outras alterações desta atualização",
-  traduzindo cada título para uma frase simples — é a rede de segurança para quando o
-  `NOVIDADES.md` não foi atualizado junto.
+  > **Atualização grande não é, por si, sinal de adulteração.** Uma renomeação em massa
+  > (como a que prefixou `aft-` em todas as skills, em 26/07/2026) mexe em dezenas de
+  > arquivos de uma vez. O que importa é o `varredura.relatorio`: se ele não apontou
+  > sinal suspeito, o tamanho da lista não quer dizer nada. Explique isso ao AFT em vez
+  > de alarmá-lo com números.
+- **Qualquer outro `ok: false`** → o `detalhe` traz a explicação pronta e o que fazer; se
+  ele mencionar a pasta de backup, repasse o caminho ao AFT. Não tente consertar por fora
+  do programa nem repetir o comando às cegas.
 
 ## Passo 2 — Atualizar o `notebooklm` (notebooklm-py)
 
@@ -193,11 +240,11 @@ sai da máquina). Confira o estado no `aft-config.md`:
 grep -q 'servidor_painel: *"ligado"' "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/aft-config.md" && echo "ja_ligado" || echo "instalar"
 ```
 
-- **`ja_ligado`** → se o Passo 1 **baixou atualização** (a lista de commits não estava
-  vazia), o servidor precisa carregar o código novo — mas **reiniciar o processo apaga
+- **`ja_ligado`** → se o Passo 1b **instalou uma versão nova**, o servidor precisa
+  carregar o código novo — mas **reiniciar o processo apaga
   o token do DET** da memória e obriga o AFT a ir ao Chrome clicar em Sincronizar de
-  novo. Então o caminho depende do que a atualização mexeu (olhe a lista do
-  `git diff --stat` do Passo 1a):
+  novo. Então o caminho depende do que a atualização mexeu (procure o arquivo nas listas
+  `plano.novos` e `plano.alterados` do JSON do Passo 1b):
 
   - `_scripts/servir_painel.py` **NÃO está** na lista → recarga a quente, que troca o
     código dos módulos do DET **sem derrubar o processo e sem perder o token**:
@@ -220,7 +267,7 @@ grep -q 'servidor_painel: *"ligado"' "$(python ~/.claude/skills/_scripts/pasta_a
     **avise no resumo** (Passo 4), em uma linha, que antes do próximo download ou sync
     do DET será preciso abrir a aba do DET e clicar em **Sincronizar** uma vez.
 
-  Sem atualização no Passo 1, nada a fazer. Siga para o Passo 2d.
+  Sem instalação no Passo 1b, nada a fazer. Siga para o Passo 2d.
 - **`instalar`** → rode o Passo 7c do `/aft-setup` (mesmo script
   `instalar_servidor_painel.py`, mesmo `python_path`/pasta de OS ATIVAS já configurados) e
   grave `servidor_painel: "ligado"` no `aft-config.md` — se a chave já existir com outro
@@ -256,7 +303,7 @@ grep -q "agenda_det" "$(python ~/.claude/skills/_scripts/pasta_aft.py --path)/af
 ## Passo 2e — Re-sincronizar o perfil do auditor (CLAUDE.md)
 
 O perfil `~/.claude/CLAUDE.md` (instalado pelo `/aft-setup`) é uma **cópia** do template
-`config/CLAUDE-aft.md` e **não** é atualizado pelo `git pull`. O toolkit cerca a parte
+`config/CLAUDE-aft.md` e **não** é atualizado pela instalação do pacote. O toolkit cerca a parte
 dele do CLAUDE.md com marcadores invisíveis (`<!-- AFT-TOOLKIT-PERFIL:INICIO vN ... -->`
 … `<!-- AFT-TOOLKIT-PERFIL:FIM -->`) e uma versão, para poder atualizar **só esse bloco**
 sem tocar em nada que o AFT tenha escrito por fora. Sempre confira o estado (você roda):
@@ -356,7 +403,7 @@ python ~/.claude/skills/_scripts/instalar_hook_diario.py status
 ## Passo 2g — Sincronizar os agentes do toolkit
 
 Os **agentes** (`agents/*.md` do repositório — hoje o revisor de autos, a varredura do
-Sistema Auditor e o extrator de PGR) precisam de uma cópia em `~/.claude/agents/`, e o `git pull` sozinho
+Sistema Auditor e o extrator de PGR) precisam de uma cópia em `~/.claude/agents/`, e a instalação do pacote sozinha
 não a atualiza. Rode **sem perguntar** (idempotente, só copia o que mudou):
 
 ```bash
@@ -373,15 +420,13 @@ python ~/.claude/skills/_scripts/instalar_agentes.py
 
 Quando o toolkit ganha um notebook novo (uma NR que passou a ter ementário próprio), ele
 entra no mapa `config/notebooks.json` — mas o Google **não** o coloca na coleção do AFT
-sozinho: cada pessoa precisa abri-lo uma vez. Confira se o `git pull` do Passo 1 mexeu
-no mapa:
+sozinho: cada pessoa precisa abri-lo uma vez. Confira se a instalação do Passo 1b mexeu
+no mapa: procure `config/notebooks.json` nas listas `plano.novos` e `plano.alterados` do
+JSON.
 
-```bash
-cd ~/.claude/skills && git diff --name-only HEAD@{1} HEAD -- config/notebooks.json
-```
-
-- **Nada** → pule este passo (não gaste tempo sondando o que já funcionava).
-- **Apareceu o arquivo** → rode a conferência de acesso:
+- **Não está em nenhuma das duas** (ou não houve instalação) → pule este passo (não gaste
+  tempo sondando o que já funcionava).
+- **Está** → rode a conferência de acesso:
   ```bash
   python "<python_path>" ~/.claude/skills/_scripts/notebooklm_acesso.py
   ```
@@ -473,7 +518,7 @@ documentos continuam saindo, só sem a linha da lotação.
 
 ## Passo 3 — Confirmar que nada quebrou (`/aft-doctor`)
 
-Sempre rode ao final, mesmo se nada tiver sido atualizado no Passo 1/2 (serve
+Sempre rode ao final, mesmo se nada tiver sido instalado nos Passos 1/2 (serve
 também para confirmar que o ambiente já estava certo):
 
 ```bash
@@ -485,15 +530,21 @@ avisos). Se aparecer algum erro novo causado pela atualização, explique e orie
 a solução — não deixe o AFT com a sensação de que "atualizar" pode ter quebrado
 algo sem explicação.
 
+Se o programa do diagnóstico não estiver na pasta, não há o que diagnosticar: diga isso
+em uma linha e siga para o Passo 4.
+
 ## Passo 4 — Resumo final ao AFT
 
-Uma mensagem só, juntando os passos. As novidades vêm do `NOVIDADES.md` capturado no
-Passo 1b — apresente o conteúdo das entradas, não os títulos de commit. Exemplo:
+Uma mensagem só, juntando os passos. As novidades são as do campo `novidades` mostrado no
+Passo 1 — já escritas para o AFT; apresente o conteúdo delas, sem reescrever. Diga sempre
+a versão que ficou instalada: é ela que o AFT vai citar quando pedir ajuda. Exemplo:
 
 ```
 🔄 Atualização do AFT Toolkit
 
-✅ Skills atualizadas — novidades para você:
+✅ Skills atualizadas — versão 2026.08.31 (a anterior era 2026.08.12).
+   A versão de antes ficou guardada em ~/.claude/skills-backup-2026.08.12,
+   caso algo saia errado. Novidades para você:
 
 📋 Painel interativo — agora dá para marcar DET como checada, resolver pendência e
    mudar status direto pelo navegador, sem pedir ao Claude.
@@ -508,22 +559,29 @@ Passo 1b — apresente o conteúdo das entradas, não os títulos de commit. Exe
 ```
 
 Se nada mudou em nenhuma das duas fontes, diga isso em uma frase e confirme o
-diagnóstico — não é preciso alarde. Se houve commits sem entrada no `NOVIDADES.md`
-(rede de segurança do Passo 1b), inclua-os como "outras alterações desta atualização",
-separados das novidades principais.
+diagnóstico — não é preciso alarde: o comando barato que não achou novidade não merece
+relatório. Se algum passo falhou sem ser bloqueante (agentes, CATs, cabeçalho), registre
+em uma linha cada um, ao final, com o que fazer.
 
 ## Regras
 
-- **Nunca** rode `git reset --hard`, `git checkout -- .` ou qualquer comando que
-  descarte alterações locais sem perguntar antes — numa instalação normal isso
-  nunca deveria ser necessário.
+- **Nada é instalado sem o sim do AFT.** O changelog vem antes do download, e o download
+  antes de qualquer escrita. Perguntar duas vezes é melhor do que instalar sem perguntar.
+- **A atualização das skills não usa git.** Nunca rode `git pull`, `git fetch`,
+  `git reset --hard`, `git checkout -- .` nem qualquer coisa parecida na pasta de skills:
+  o toolkit vem do portal, em pacote versionado, e quem o aplica é o
+  `_scripts/atualizar_toolkit.py`.
+- **O código de acesso nunca aparece.** Não o escreva em comando, não o repita no chat,
+  não o guarde no `aft-config.md` e não o inclua em ticket de erro. Se precisar saber se
+  ele existe, pergunte ao programa (`--estado-token`), que responde sim ou não.
 - A atualização do `notebooklm-py` é automática (sem pedir confirmação a cada
   vez), mas sempre **reporte** a troca de versão — o AFT precisa saber o que
   mudou, mesmo sem precisar agir.
 - Esta skill **instala/atualiza**; o `/aft-doctor` (chamado no Passo 3) **só
   diagnostica**. Não pule o Passo 3: é o que garante que a atualização não
   deixou nada quebrado para o AFT descobrir sozinho em campo.
-- **Skills próprias do AFT (`minha-*`) são preservadas.** O `git pull` fast-forward
-  nunca toca nelas (namespace reservado + `.gitignore`). Se o AFT tiver alguma, o Passo
-  3 (`/aft-doctor`) as lista como protegidas — mencione isso no resumo para tranquilizá-lo
-  ("suas skills próprias continuam intactas"). Nunca rode comando que possa apagá-las.
+- **Skills próprias do AFT são preservadas** — as `minha-*` e também as sem prefixo
+  nenhum. O programa só remove pasta que o toolkit instalou e deixou de instalar; o que
+  nunca foi dele não é tocado, e no fim ele confere o retrato para garantir que nenhuma
+  sumiu. Se o AFT tiver alguma, mencione no resumo para tranquilizá-lo ("suas skills
+  próprias continuam intactas"). Nunca rode comando que possa apagá-las.
