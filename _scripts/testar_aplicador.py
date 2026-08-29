@@ -180,6 +180,12 @@ def rodar(base):
     # As duas pessoais: uma com o prefixo e outra SEM (o caso de 19/08/2026).
     escrever(destino / "minha-coisa" / "SKILL.md", "skill pessoal com prefixo\n")
     escrever(destino / "cowork-ingest" / "SKILL.md", "skill pessoal sem prefixo\n")
+    # Retrato batizado a mao pelo AFT, com estrutura que nao e a nossa: nao pode
+    # vencer a ordenacao dos retratos (era o que acontecia de verdade em
+    # ~/.claude, onde um "pre-rename-...-aft-grant" de 19/08 ganhava de todos os
+    # datados e fazia a conferencia acusar sumico todo dia) nem entrar na faxina.
+    escrever(destino.parent / f"{destino.name}-pessoais-backup"
+             / "pre-rename-20260819-a-mao" / "logs" / "x.log", "antigo\n")
     antes = retrato(destino)
 
     print("\n2. Simulacao do pacote 2")
@@ -243,10 +249,16 @@ def rodar(base):
     guarda = destino.parent / f"{destino.name}-pessoais-backup"
     checar(guarda.is_dir(), "o retrato das pessoais foi para a pasta de mentira "
                             "(nunca para a instalacao real)")
-    retratos = sorted(guarda.iterdir()) if guarda.is_dir() else []
+    retratos = sorted((d for d in guarda.iterdir() if d.name[0].isdigit()),
+                      key=lambda d: d.stat().st_mtime_ns) if guarda.is_dir() else []
     checar(bool(retratos) and {d.name for d in retratos[-1].iterdir()}
            == {"minha-coisa", "cowork-ingest"},
            "o retrato guardou as duas skills pessoais")
+    checar(res["erro"] is None,
+           "retrato batizado a mao nao vira falso alarme de skill sumida",
+           str(res.get("erro")) + " / " + str(res.get("conferencia_pessoais")))
+    checar((guarda / "pre-rename-20260819-a-mao" / "logs" / "x.log").is_file(),
+           "retrato batizado a mao nao entrou na faxina")
 
     print("\n7. Retencao: so as duas ultimas")
     # Backup antigo, feito a mao pelo AFT: nao tem a nossa marca dentro e nao
