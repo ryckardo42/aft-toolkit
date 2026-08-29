@@ -188,15 +188,17 @@ Em conformidade com a legislação em vigor, especialmente o previsto na alínea
 
 > ⚠️ **O "X" em "alínea X" está CORRETO e é intencional** — designa a décima alínea (alínea 10) do art. 18. **Nunca** substitua o "X" por uma letra, número arábico ou qualquer outro valor, e nunca "corrija" essa frase. Copie a introdução exatamente como está acima.
 
-#### Variante orientativa (quando TODOS os itens forem `tipo: orientacao` / `retorno: sem`)
+> ⚠️ **Introdução é UMA só, e o verbo é sempre "NOTIFICADA".** Nunca escreva "ORIENTADA"
+> nesta abertura, nem quando todos os itens forem `tipo: orientacao` — não existe variante
+> orientativa da introdução. A razão é prática: o tipo de cada item é editável no rascunho
+> do DET, e o AFT pode promover um item de orientação a Exigência do Cumprimento de
+> Obrigação antes de lavrar. Uma abertura que já tivesse anunciado "ORIENTADA" passaria a
+> contradizer os próprios itens, e o AFT teria de lembrar de trocar o texto fixo à mão. A
+> natureza de cada exigência é matéria de **item**, nunca da introdução.
 
-A introdução acima fala em cumprir obrigações e corrigir irregularidades — linguagem de exigência, que contradiz uma notificação inteiramente orientativa. Nesse caso, e **somente nesse caso**, use esta variante, também literal:
-
-```
-Em conformidade com a legislação em vigor, especialmente o previsto na alínea X do art. 18 do Decreto 4552/2002 (Regulamento da Inspeção do Trabalho), fica a empresa ORIENTADA quanto às irregularidades relacionadas nessa notificação, para que adote as medidas de correção nela indicadas:
-```
-
-> Vale a mesma regra do "X": copie literal. E vale a mesma fronteira: a variante troca **só** o verbo e o comando; nada de contexto da fiscalização entra na introdução. Contexto (data de elaboração do documento auditado, quadro de pessoal, norma revogada que ele adota) é matéria de **item**, não de texto fixo. Se a notificação tiver itens orientativos E itens de obrigação, use a introdução principal — a variante é para a notificação inteiramente orientativa.
+> **Nada de contexto da fiscalização na abertura.** Data de elaboração do documento
+> auditado, quadro de pessoal, norma revogada que a empresa adota — tudo isso é matéria de
+> **item** ou de bloco próprio de observação, não de texto fixo.
 
 ### Itens (um por irregularidade)
 
@@ -268,25 +270,20 @@ Regras de aplicação:
 
 ```
 Comprovação de cumprimento e pedido de prorrogação:
-> A adoção das  medidas notificadas devem ser comprovadas pelo empregador  nos prazos previstos nos itens. A dificuldade de cumprimento, ou qualquer manifestação deverá ser expressamente manifestada à fiscalização em cada item. A empresa poderá pedir prazo específico, caso deseje, para o item específico;
+> A adoção das  medidas notificadas devem ser comprovadas pelo empregador  nos prazos previstos nos itens. Item sem prazo e sem retorno tem o cumprimento verificado em fiscalização futura. A dificuldade de cumprimento, ou qualquer manifestação deverá ser expressamente manifestada à fiscalização em cada item. A empresa poderá pedir prazo específico, caso deseje, para o item específico;
 
 Dúvidas:
 >  Perguntas/esclarecimentos adicionais podem ser feitos no  "Canal de Comunicação" dentro dessa própria notificação, ou pelos e-mails disponíveis na notificação.
 ```
 
-> Esse texto de observações é o boilerplate canônico do AFT — reproduza-o verbatim, sem reescrever ou "consertar" a redação.
+> Esse texto de observações é o boilerplate canônico do AFT — reproduza-o verbatim, sem reescrever ou "consertar" a redação (inclusive os espaços duplos, que são dele).
 
-#### Variante orientativa (quando TODOS os itens forem `tipo: orientacao` / `retorno: sem`)
-
-O bloco "Comprovação de cumprimento" fala em prazos previstos nos itens e em comprovação pelo empregador — e item de orientação não tem prazo nem pede documento. Numa notificação inteiramente orientativa, **substitua aquele primeiro bloco** por este, mantendo o bloco "Dúvidas" verbatim:
-
-```
-Natureza desta notificação:
-> Os itens acima têm caráter de orientação e não exigem retorno nem apresentação de documentos por esta notificação. O cumprimento será verificado em fiscalização futura.
-
-Dúvidas:
->  Perguntas/esclarecimentos adicionais podem ser feitos no  "Canal de Comunicação" dentro dessa própria notificação, ou pelos e-mails disponíveis na notificação.
-```
+> ⚠️ **Observações são UMAS só, como a introdução.** Não existe variante orientativa deste
+> bloco: a frase "Item sem prazo e sem retorno tem o cumprimento verificado em fiscalização
+> futura" é uma regra geral por item, e por isso continua correta tanto na notificação
+> inteiramente de obrigação quanto na inteiramente de orientação — e **sobrevive** ao AFT
+> mudar o tipo de um item no rascunho do DET, que é justamente o que um texto fixo
+> declarando a natureza da notificação inteira não sobreviveria.
 
 > **Blocos de observação adicionais** são permitidos depois destes, quando a skill chamadora os fornecer (é o caso da `/aft-PGR-analise`, que acrescenta a recomendação sobre a empresa terceira elaboradora do PGR). Escreva-os no mesmo formato `Título:` seguido de `> texto`. O que **não** se faz é reescrever os blocos fixos acima para acomodar um assunto novo: acrescenta-se um bloco.
 
@@ -429,7 +426,7 @@ O arquivo começa pelo **front-matter com os parâmetros da FASE 3.5** — é el
 ```markdown
 ---
 det:
-  titulo: Termo de Notificação
+  titulo: Notificação para Cumprimento de Obrigações
   prazo: 07/09/2026          # data fixa; ou prazo_dias: 16
   tipo: obrigacao            # solicitacao | obrigacao | orientacao
   retorno: digital           # sem | digital | impresso | vistoria
@@ -523,6 +520,7 @@ Não bloqueie o fluxo se o `memory.md` não existir. Não toque em outras seçõ
 ## Regras
 
 - **Nunca** altere o "X" de "alínea X do art. 18" nem reescreva a introdução/observações fixas — são texto canônico do AFT, copiados verbatim para o DET.
+- **A introdução é sempre a mesma, com o verbo "NOTIFICADA"** — nunca "ORIENTADA", nem quando todos os itens forem de orientação. Não há variante orientativa da introdução nem das observações: o tipo de cada item é editável no rascunho do DET, e texto fixo que declara a natureza da notificação inteira quebra assim que o AFT muda um item lá.
 - **Nunca** invente código de ementa, item de NR ou base legal. Ementa só entra quando confirmada (vinda do auto lavrado ou da Fase 2); na dúvida, item sem `[...]`.
 - **Nunca notifique item que já tem auto de infração lavrado válido** — é a regra central da FASE 1. Autos substituídos (cancelados) e pendentes de transmissão não contam como "já autuados": o item continua elegível para NCO.
 - **Nunca decida sozinho** incluir ou excluir irregularidade de interdição/embargo: apresente o rito próprio, deixe desmarcada e siga a escolha do AFT.

@@ -190,7 +190,7 @@
 
 <pre><code>---
 det:
-  titulo: Termo de Notificação
+  titulo: Notificação para Cumprimento de Obrigações
   prazo_dias: 16          # ou prazo: dd/mm/aaaa
   tipo: obrigacao         # solicitacao | obrigacao | orientacao
   retorno: digital        # sem | digital | impresso | vistoria
@@ -203,6 +203,7 @@ det:
 
 <table>
   <tr><th>Parâmetro</th><th>Padrão do toolkit</th><th>No DET</th></tr>
+  <tr><td><code>titulo</code></td><td><code>Notificação para Cumprimento de Obrigações</code></td><td>o título da notificação (era <code>Termo de Notificação</code> até 29/08/2026)</td></tr>
   <tr><td><code>tipo</code></td><td><code>obrigacao</code></td><td>Exigência do Cumprimento de Obrigação (1)</td></tr>
   <tr><td><code>retorno</code></td><td><code>digital</code></td><td>a empresa anexa a comprovação (1)</td></tr>
   <tr><td><code>prazo_dias</code></td><td><code>16</code></td><td>vira <strong>data fixa</strong> no momento da criação</td></tr>
@@ -249,6 +250,22 @@ det:
   o leitor aceita cabeçalhos explícitos (<code>## Introdução</code>) se existirem, mas
   não os exige, e os arquivos antigos continuam válidos.
 </p>
+
+<div class="note">
+  <strong>Um texto só, sempre "NOTIFICADA" (29/08/2026).</strong>
+  Entre 26 e 29/08/2026 a <code>/aft-tn-nco</code> tinha uma <em>variante orientativa</em>
+  da introdução e das observações, acionada quando todos os itens nasciam
+  <code>tipo: orientacao</code>: a abertura virava "fica a empresa ORIENTADA…".
+  Foi removida porque acoplava <strong>texto fixo</strong> a um parâmetro que muda
+  <strong>depois</strong> — o toolkit só cria o rascunho, e no site o AFT promove um item
+  de orientação a Exigência do Cumprimento de Obrigação com um clique; a abertura já
+  colada passaria a contradizer os próprios itens, e nada avisaria. No lugar da variante
+  das observações entrou uma frase no bloco canônico — <em>"Item sem prazo e sem retorno
+  tem o cumprimento verificado em fiscalização futura"</em> —, que é regra <strong>por
+  item</strong> e por isso continua verdadeira na notificação toda de obrigação, toda de
+  orientação ou mista. Regra geral do subsistema: texto fixo afirma coisas sobre
+  <strong>cada item</strong>, nunca sobre a natureza da notificação inteira.
+</div>
 
 <h2>3-A. O tipo manda no retorno (e no resto do item)</h2>
 <p>

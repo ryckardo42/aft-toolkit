@@ -691,8 +691,11 @@ exatamente o que o toolkit evita.
 
 > Se o AFT preferir **exigir** a revisão em vez de orientar (não houve auto, ou ele quer
 > prazo e comprovação), passe `tipo: obrigacao` / `retorno: digital` e peça, no fecho de
-> cada item, o PGR revisado. Aí valem a introdução e as observações **principais** da
-> `/aft-tn-nco`, não a variante orientativa.
+> cada item, o PGR revisado.
+
+> A escolha do `tipo` muda só os parâmetros dos itens, **nunca o texto fixo**: a introdução
+> e as observações da `/aft-tn-nco` são as mesmas nos dois casos, sempre com o verbo
+> "NOTIFICADA". Não peça aqui uma abertura "orientativa" — ela não existe mais.
 
 **Um item por ementa irregular**, na ordem da análise, no formato da `/aft-tn-nco`
 (`*Título* - norma: texto [ementa]`). Cada item manda **rever o que está errado**, com

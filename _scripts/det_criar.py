@@ -396,7 +396,7 @@ def parametros_do_md(texto: str) -> dict:
 
         ---
         det:
-          titulo: Termo de Notificação
+          titulo: Notificação para Cumprimento de Obrigações
           prazo: 07/09/2026          # ou prazo_dias: 16
           tipo: obrigacao            # solicitacao | obrigacao | orientacao
           retorno: digital           # sem | digital | impresso | vistoria
@@ -849,7 +849,7 @@ def preparar_de_os(pasta_os: Path, arquivo_tn: str, titulo=None,
             return da_chamada
         return do_md.get(chave, padrao)
 
-    titulo = escolher(titulo, "titulo", "Termo de Notificação")
+    titulo = escolher(titulo, "titulo", "Notificação para Cumprimento de Obrigações")
     id_modelo = escolher(id_modelo, "modelo", None)
     cif = escolher(cif, "cif", None)
     tipo = escolher(tipo, "tipo", TIPO_CUMPRIMENTO_OBRIGACAO)
