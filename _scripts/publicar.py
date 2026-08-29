@@ -45,10 +45,11 @@ except Exception:
     pass
 
 import argparse
-import json
 import subprocess
 import sys
 from pathlib import Path
+
+from remontar import git, rodar_script, remontar, MONTADOS
 
 try:  # console do Windows e cp1252
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -62,14 +63,6 @@ DESTINO = Path.home() / ".claude" / "skills"
 # roteiro de instalacao (que so faz sentido no repositorio).
 EXCLUIR = [".git", ".gitignore", ".DS_Store", ".backups", ".claude",
            "COMO-INSTALAR.md", "__pycache__"]
-
-
-def git(args, cwd, checar=True):
-    r = subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True,
-                       text=True, encoding="utf-8", errors="replace")
-    if checar and r.returncode != 0:
-        raise SystemExit(f"ERRO: git {' '.join(args)}\n{r.stderr.strip()}")
-    return r.stdout.strip()
 
 
 def _repo_a_partir_de(pasta):
@@ -106,40 +99,6 @@ def copia_principal(inicio=None):
         "ERRO: não encontrei o repositório do AFT Toolkit a partir daqui.\n"
         "  Rode o publicar de dentro do repositório (ou de um worktree dele):\n"
         "    cd ~/Documents/aft-toolkit && python _scripts/publicar.py")
-
-
-def python_atual():
-    return sys.executable or "python3"
-
-
-def rodar_script(raiz, nome, args, conferir):
-    script = raiz / "_scripts" / nome
-    if not script.is_file():
-        return f"{nome}: não encontrado (pulado)"
-    if conferir:
-        return f"{nome}: rodaria agora"
-    r = subprocess.run([python_atual(), str(script)] + args,
-                       capture_output=True, text=True, encoding="utf-8",
-                       errors="replace")
-    bruto = (r.stdout or r.stderr).strip()
-    saida = bruto.splitlines()
-    ultima = saida[-1] if saida else f"terminou ({r.returncode})"
-    # Scripts que respondem em JSON: uns numa linha so (instalar_agentes), outros
-    # indentado em varias (instalar_servidor_painel) - neste, a ultima linha e um
-    # "}" solto, que nao diz nada ao AFT. Tenta a saida INTEIRA antes da ultima.
-    for candidato in (bruto, ultima):
-        if not candidato.startswith("{"):
-            continue
-        try:
-            d = json.loads(candidato)
-        except ValueError:
-            continue
-        partes = [f"{len(d[k])} {k}" for k in
-                  ("instalados", "atualizados", "em_dia", "erros")
-                  if isinstance(d.get(k), list) and d[k]]
-        ultima = ", ".join(partes) or d.get("detalhe") or "nada a fazer"
-        break
-    return f"{nome}: {ultima}"
 
 
 def main():
@@ -193,41 +152,24 @@ def main():
         print("  main já estava em dia com o GitHub")
 
     # 3. Regerar os dois arquivos montados, num lugar so ---------------------
-    gerados = []
-    print(rodar_script(raiz, "montar_novidades.py",
-                       ["--conferir" if conferir else "--montar"], False)
-          .replace("montar_novidades.py: ", "  NOVIDADES.md: "))
-    print(rodar_script(raiz, "nota_historico.py",
-                       ["--checar-arquitetura" if conferir
-                        else "--sincronizar-arquitetura"], False)
-          .replace("nota_historico.py: ", "  arquitetura: "))
-    MONTADOS = ["NOVIDADES.md", "arquitetura/arquitetura.html",
-                "_scripts/skills_oficiais.txt"]
-    if not conferir:
-        # A lista do que o toolkit instala e MONTADA como os outros dois: sai de
-        # `git ls-files`, e por isso muda sozinha sempre que nasce uma skill ou
-        # uma pasta nova. Ela era regravada mais adiante e NUNCA commitada — o
-        # publicar sujava a copia principal e, na vez seguinte, o proprio
-        # guarda-corpo do passo 1 recusava publicar por causa da sujeira que ele
-        # mesmo tinha feito (constatado em 24/08/2026, duas vezes no mesmo dia).
-        # E ela que diz o que NAO e nosso e, portanto, nao pode ser apagado da
-        # pasta do AFT; deduzir por prefixo falha, porque 'aft-grant' e skill
-        # pessoal de um AFT e parece oficial.
-        oficiais = sorted({l.split("/")[0] for l in
-                           git(["ls-files"], raiz).splitlines() if "/" in l})
-        (raiz / "_scripts" / "skills_oficiais.txt").write_text(
-            "\n".join(oficiais) + "\n", encoding="utf-8")
-        mudou = git(["status", "--porcelain", "--"] + MONTADOS, raiz)
-        if mudou:
-            gerados = [l.strip() for l in mudou.splitlines()]
-            git(["add"] + MONTADOS, raiz)
-            git(["commit", "-m",
-                 "chore: remonta NOVIDADES.md, a arquitetura e o manifesto\n\n"
-                 "Gerado por _scripts/publicar.py na copia principal - um lugar\n"
-                 "so, para duas sessoes nunca colidirem nestes arquivos."],
-                raiz)
-            git(["push", "origin", "main"], raiz)
-            print(f"  regerados e publicados: {', '.join(gerados)}")
+    # (extraido para remontar.py na issue #139: e o mesmo passo que o
+    # empacotador do toolkit vai reusar, sem duplicar esta logica)
+    linhas, gerados = remontar(raiz, conferir=conferir)
+    for l in linhas:
+        print("  " + l)
+    if not conferir and gerados:
+        # Isto era regravado mais adiante e NUNCA commitado — o publicar
+        # sujava a copia principal e, na vez seguinte, o proprio guarda-corpo
+        # do passo 1 recusava publicar por causa da sujeira que ele mesmo
+        # tinha feito (constatado em 24/08/2026, duas vezes no mesmo dia).
+        git(["add"] + MONTADOS, raiz)
+        git(["commit", "-m",
+             "chore: remonta NOVIDADES.md, a arquitetura e o manifesto\n\n"
+             "Gerado por _scripts/publicar.py na copia principal - um lugar\n"
+             "so, para duas sessoes nunca colidirem nestes arquivos."],
+            raiz)
+        git(["push", "origin", "main"], raiz)
+        print(f"  regerados e publicados: {', '.join(gerados)}")
 
     # 4. Copiar para a pasta instalada ---------------------------------------
     if not destino.is_dir():
