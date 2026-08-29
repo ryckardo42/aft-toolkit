@@ -131,8 +131,8 @@
         },
         {
           "nome": "/aft-atualizar",
-          "role": "Atualiza as skills (git pull no repositório) e o comando notebooklm (notebooklm-py, se houver versão nova no PyPI). Antes do pull, o checar_diff.py varre o diff por sinais de adulteração. Em usuários existentes: oferece a rotina diária do painel uma vez (2b), GARANTE o servidor do painel sempre ligado — agora padrão, instala em quem não tem, e carrega código novo preferindo a recarga a quente (det_token.py --recarregar → /api/recarregar), que preserva o token do DET na RAM; reinício completo só quando o próprio servir_painel.py mudou, com aviso de que será preciso Sincronizar de novo — issue #104 (2c) —, oferece o Google Calendar uma vez (2d) e re-sincroniza o perfil CLAUDE.md automaticamente pelo bloco marcado (2e, sync_perfil.py; instalação antiga sem marcador recebe uma oferta de adoção). Ao final roda o /aft-doctor para confirmar que nada quebrou.",
-          "tech": "git pull · pipx upgrade · checar_diff.py · model: sonnet"
+          "role": "Atualiza as skills (pacote versionado vindo do portal notebooks-aft) e o comando notebooklm (notebooklm-py). Desde 29/08/2026 a skill não aplica nada por conta própria: chama o atualizar_toolkit.py — --verificar mostra a versão disponível e o changelog do período ANTES de baixar qualquer coisa, --gravar-token guarda o código de acesso pelo stdin (nunca em linha de comando, nunca ecoado) e --aplicar executa a transação (soma de verificação, varredura do checar_diff.py, retrato das skills pessoais, backup, escrita e remoção só do que saiu do manifesto). Nada é instalado sem o sim explícito do AFT. Instalação anterior à virada — programa ausente ou velho, sem --verificar — é reconhecida e conduzida ao cadastro no portal em linguagem de leigo: é a skill que o AFT retardatário recebe pela lápide do repositório público. Em usuários existentes: oferece a rotina diária do painel uma vez (2b), GARANTE o servidor do painel sempre ligado — padrão, com recarga a quente (det_token.py --recarregar) que preserva o token do DET na RAM; reinício completo só quando o próprio servir_painel.py mudou, decidido agora pelas listas plano.novos/alterados do JSON (2c) —, oferece o Google Calendar uma vez (2d) e re-sincroniza o perfil CLAUDE.md pelo bloco marcado (2e). Ao final roda o /aft-doctor.",
+          "tech": "atualizar_toolkit.py (--verificar/--aplicar) · portal_toolkit.py · pipx upgrade · model: sonnet"
         },
         {
           "nome": "/aft-notebooklm-login",
@@ -701,6 +701,18 @@
       "nome": "analise_preliminar_scan.py",
       "caminho": "_scripts/analise_preliminar_scan.py",
       "papel": "Inventário SOMENTE LEITURA do pacote de uma notificação DET, por dia de entrega (baixada em <data>/): tipo lógico, SHA-256 e tamanho de cada arquivo, invalidados/ à parte, marca de item volumoso e duplicatas entre itens e dias. Sem flatten: a estrutura por dia é prova. JSON no stdout ou em arquivo (--saida). Windows: varre por caminho estendido (\\\\?\\, mesmo remédio da issue #104 no det_baixar.py) — sem ele, pacote dentro do OneDrive passava dos 260 caracteres do MAX_PATH e itens sumiam do inventário sem erro (ticket de 28/08/2026). Arquivo ilegível nunca é pulado calado: entra no campo 'avisos' do JSON, que o agente transcreve nas decisões pendentes.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "atualizar_toolkit.py",
+      "caminho": "_scripts/atualizar_toolkit.py",
+      "papel": "A costura da atualização (issue #138): consulta o portal (--verificar), guarda o código de acesso vindo do stdin (--gravar-token/--estado-token) e aplica o pacote (--aplicar). A transação confere o sha256, descompacta em área temporária recusando caminho que escape dela, varre o que está chegando pelo checar_diff.py, tira o retrato das skills pessoais, guarda a instalação atual em <destino>-backup-<versão> (mantém as duas últimas) e só então escreve. Remove o que SAIU do manifesto _scripts/skills_oficiais.txt e nunca toca no que jamais esteve nele (é o que impede a repetição do incidente de 19/08/2026). --origem-local + --destino exercitam tudo sem rede e sem tocar na instalação real; saída sempre em JSON.",
+      "runtime": "Python stdlib"
+    },
+    {
+      "nome": "portal_toolkit.py",
+      "caminho": "_scripts/portal_toolkit.py",
+      "papel": "O lado cliente do portal para o atualizar_toolkit.py: onde mora o código de acesso (na pasta de trabalho do AFT, fora da pasta de skills e fora do aft-config.md), a rota autenticada única (POST /api/toolkit/versao, token no corpo e nunca na URL), o registro que limita a consulta a uma por dia e a frase em português de cada falha (sem token, token inválido, sem acesso, sem novidade, portal fora do ar) — sempre com o próximo passo. Não escreve uma linha dentro da pasta de skills.",
       "runtime": "Python stdlib"
     }
   ],
