@@ -2238,9 +2238,10 @@ BOM_DIA_OS_DIAS = 120
 # ver a "regra dura" do layout em aft-organiza-os/SKILL.md.)
 ARRUMACAO_EXT = {".pdf", ".jpg", ".jpeg", ".png", ".heic", ".zip"}
 # Documento do SFIT é a exceção: Ordem de Serviço, Demanda e Relação de Vínculos
-# Ativos ficam na raiz por desenho (a /aft-preparacao-acao-fiscal os lê de lá) e o
-# layout não lhes dá subpasta — apontá-los seria ruído diário. Calibrado em
-# 26/08/2026 contra as pastas reais, onde 4 dos 5 primeiros achados eram isso.
+# Ativos moram hoje em preparacao-acao-fiscal/ (regra de 29/08/2026), mas em OS
+# antiga ainda vivem soltos na raiz — apontá-los todo dia seria ruído até a
+# /aft-organiza-os migrar a pasta. Calibrado em 26/08/2026 contra as pastas
+# reais, onde 4 dos 5 primeiros achados eram isso.
 RE_OS_SFIT = re.compile(r"(^(os[ _-]|ordem))|v[ií]nculo|demanda|sfit",
                         re.IGNORECASE)
 RE_ITEM_DET = re.compile(r"^item\s*\d+$", re.IGNORECASE)

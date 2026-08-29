@@ -85,8 +85,8 @@ está na "6. Equipe AFT" — se não estiver, avise (pode ser OS de outro colega
 se segue mesmo assim. Essa conferência é só no chat: a lista da equipe não vai para o
 `memory.md`.
 
-Depois de criar a pasta (Passo 2), **copie o(s) PDF(s)** para a raiz dela: a Demanda como
-`OS <nº da OS> - Demanda <nº da demanda>.pdf` e a Ordem de Serviço como `OS <nº da OS>.pdf`.
+Depois de criar a pasta (Passo 2), **copie o(s) PDF(s)** para dentro dela: a Demanda como
+`OS <nº da OS> - Demanda <nº da demanda>.pdf` e a Ordem de Serviço como `OS <nº da OS>.pdf` — os dois dentro da subpasta `preparacao-acao-fiscal/` da OS (crie-a se não existir; é onde a `/aft-preparacao-acao-fiscal` guarda os documentos da preparação).
 
 > Com o PDF lido, ofereça também a `/aft-preparacao-acao-fiscal`: ela faz o planejamento
 > completo da ação (resumo desidentificado da denúncia, estudo prévio nos NotebookLMs,
