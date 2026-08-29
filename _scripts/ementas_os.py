@@ -13,27 +13,32 @@ preparação, enquadramento e encerramento.
 
 Mas o motivo forte não é o tamanho: é a FUNÇÃO. O item 2.5 do Relatório de
 Inspeção ("Ementas fiscalizadas", no SFIT-WEB) exige, de cada ementa, uma
-**situação encontrada** e, quando irregular, as **ações aplicadas**. Isso é uma
-folha de resposta, não um recorte da Ordem de Serviço. O `ementas.md` é essa
-folha.
+**situação encontrada** e, quando irregular, as **ações aplicadas**. Encerrar
+uma ação fiscal com muitas ementas é digitação demorada, e o AFT precisa de um
+espelho para conferir linha a linha. O `ementas.md` é esse espelho.
 
-TRÊS SEÇÕES, PORQUE TRÊS MÃOS DIFERENTES PREENCHEM
---------------------------------------------------
-1. **Ementas da OS** — as que vêm com `*` na tela. O AFT responde TODAS,
-   inclusive as que não fiscalizou.
-2. **Ementas trazidas por autuação** — o Sistema Auditor as transfere sozinho
-   para o SFIT quando o auto é transmitido; chegam `Irregular` + `Autuação`, com
-   a situação travada. Só entram aqui as que NÃO constavam da OS: a ementa da OS
-   que também foi autuada tem a própria linha preenchida, na seção 1.
-3. **Ementas incluídas pelo AFT** — fiscalizadas fora da OS e sem auto. São as
-   únicas que o AFT digita no campo "Informe as ementas fiscalizadas que não
-   constam na OS".
+UMA TABELA SÓ, AGRUPADA POR ATRIBUTO/NR
+----------------------------------------
+A primeira versão deste arquivo (28/08/2026) tinha três seções: ementas da OS,
+trazidas por autuação, incluídas pelo AFT. Era uma divisão inventada. A tela do
+SFIT tem **uma tabela só**, agrupada por Atributo/NR em ordem alfabética —
+DESCANSO, JORNADA, MULH, NR-01, NR-10... Uma ementa autuada fora da OS não vai
+para um bloco no fim: ela entra no grupo dela, no meio das outras (por isso
+"MULH" aparecia acima de "NR-01" — alfabeto, não bloco separado). O que
+distingue a ementa da OS é o **asterisco** depois do código, como diz a legenda
+da própria tela: "* - Ementas da OS".
+
+Espelho que reorganiza a tela não é espelho. Por isso, aqui: um grupo por
+Atributo/NR, alfabético; dentro do grupo, código crescente; e o `*` na ementa
+da OS.
+
+A coluna "Ocorrência" da tela NÃO é modelada: ela traz dado do banco do próprio
+SFIT ("Fiscalização anterior", "Autuação Obrigatória"), que o toolkit não tem e
+nunca terá. Campo que ficaria sempre vazio só atrapalha a conferência.
 
 O FORMATO PRESERVA A LINHA ANTIGA, DE PROPÓSITO
 ------------------------------------------------
-A primeira linha de cada ementa é idêntica à que estava no `memory.md`:
-
-    - [x] 312377-4 — Deixar de adotar medidas de proteção... (NR-12)
+    - [x] 312377-4* — Deixar de adotar medidas de proteção... (NR-12)
           situação: Irregular
           ações: Autuação · Notificação
           lastro: AI 23.284.209-4 · tn-nco-2026-08-21.md
@@ -91,20 +96,7 @@ for _fluxo in ("stdout", "stderr"):
         pass
 
 ARQUIVO = "ementas.md"
-
-# As tres secoes, na ordem em que sao gravadas. A chave e o identificador
-# interno; o titulo e o que o AFT le.
-SECOES = [
-    ("os", "1. Ementas da OS",
-     "as que vêm com `*` na tela do SFIT; responda todas, inclusive as não fiscalizadas"),
-    ("autuacao", "2. Ementas trazidas por autuação",
-     "autuadas FORA da lista da OS — o SFIT as acrescenta sozinho, já `Irregular` + "
-     "`Autuação`; aqui só se confere se chegaram"),
-    ("aft", "3. Ementas incluídas pelo AFT",
-     "fiscalizadas fora da OS e sem auto — digitadas no campo "
-     "\"Informe as ementas fiscalizadas que não constam na OS\""),
-]
-TITULO_SECAO = dict((k, t) for k, t, _ in SECOES)
+TITULO_SECAO = "Ementas fiscalizadas"
 
 # Os quatro valores do combo "Situação encontrada".
 SITUACOES = ["Regular", "Irregular", "Não aplicável", "Não fiscalizada"]
@@ -129,9 +121,10 @@ ACOES = [
 ]
 ACAO_DO_SISTEMA = "Autuação"
 
-# "- [ ] 312309-0 — Deixar de adotar medidas (...). (NR-12)"
+# "- [ ] 312309-0* — Deixar de adotar medidas (...). (NR-12)"
+# O "*" e opcional e marca a ementa da OS -- a mesma legenda da tela do SFIT.
 RE_LINHA = re.compile(
-    r"^-\s*\[([ xX])\]\s*(\d{6}-\d)\s*[—–-]\s*(.+?)\s*\(([^()]+)\)\s*$")
+    r"^-\s*\[([ xX])\]\s*(\d{6}-\d)(\*?)\s*[—–-]\s*(.+?)\s*\(([^()]+)\)\s*$")
 # Sub-linha "      situação: Irregular"
 RE_SUB = re.compile(r"^\s+([A-Za-zÀ-ÿ]+):\s*(.*)$")
 RE_FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -141,6 +134,17 @@ RE_COD = re.compile(r"\b(\d{6}-\d)\b")
 
 SEPARADOR_ACOES = " · "
 VAZIO = "_(vazio)_"
+
+# Titulos de secao que ja existiram e ainda precisam ser lidos: a primeira
+# versao do arquivo (28/08/2026) tinha tres secoes, e o memory.md tem a sua.
+# O valor responde "a ementa abaixo deste titulo e da OS?"; None = quem manda
+# e o "*" da propria linha.
+SECOES_CONHECIDAS = {
+    "ementas fiscalizadas": None,       # formato atual
+    "ementas da os": True,              # memory.md e secao 1 da versao antiga
+    "ementas trazidas por autuacao": False,
+    "ementas incluidas pelo aft": False,
+}
 
 
 class ErroDeUso(Exception):
@@ -166,13 +170,23 @@ def _canonico(valor, universo):
     return None
 
 
+def chave_frente(frente):
+    """Ordem alfabética do Atributo/NR, como o SFIT agrupa.
+
+    Sem acento e em caixa alta, para "Órgão" e "ORGAO" caírem no mesmo lugar.
+    "NR-01" < "NR-10" já sai certo no alfabeto porque o número vem com zero à
+    esquerda; não é preciso tratamento numérico.
+    """
+    return _sem_acento(frente).upper()
+
+
 # --------------------------------------------------------------- modelo
 class Ementa(object):
-    def __init__(self, codigo, descricao, frente, secao="os"):
+    def __init__(self, codigo, descricao, frente, da_os=True):
         self.codigo = codigo
         self.descricao = descricao
         self.frente = frente
-        self.secao = secao
+        self.da_os = da_os      # o "*" da tela do SFIT
         self.situacao = ""
         self.acoes = []
         self.comentario = ""
@@ -182,17 +196,23 @@ class Ementa(object):
     def respondida(self):
         return bool(self.situacao)
 
+    @property
+    def do_sistema(self):
+        """A linha chega pronta do Sistema Auditor, ou o AFT a digita no SFIT?"""
+        return ACAO_DO_SISTEMA in self.acoes
+
     def como_dict(self):
         return {"codigo": self.codigo, "descricao": self.descricao,
-                "frente": self.frente, "secao": self.secao,
+                "frente": self.frente, "da_os": self.da_os,
                 "situacao": self.situacao, "acoes": list(self.acoes),
                 "comentario": self.comentario, "lastro": self.lastro,
-                "respondida": self.respondida}
+                "respondida": self.respondida, "do_sistema": self.do_sistema}
 
     def linha(self):
         marca = "x" if self.respondida else " "
-        return "- [%s] %s — %s (%s)" % (marca, self.codigo, self.descricao,
-                                        self.frente)
+        return "- [%s] %s%s — %s (%s)" % (marca, self.codigo,
+                                          "*" if self.da_os else "",
+                                          self.descricao, self.frente)
 
     def sublinhas(self):
         saida = []
@@ -208,7 +228,7 @@ class Ementa(object):
 
 
 class Folha(object):
-    """O `ementas.md` inteiro: front-matter + as ementas das três seções."""
+    """O `ementas.md` inteiro: front-matter + as ementas, na ordem da tela."""
 
     def __init__(self, pasta, empregador="", origem=""):
         self.pasta = Path(pasta)
@@ -225,8 +245,25 @@ class Folha(object):
                 return e
         return None
 
-    def da_secao(self, chave):
-        return [e for e in self.ementas if e.secao == chave]
+    @property
+    def da_os(self):
+        """Só as ementas da Ordem de Serviço (as que levam `*` na tela)."""
+        return [e for e in self.ementas if e.da_os]
+
+    def ordenar(self):
+        """A ordem da tela: Atributo/NR alfabético, código crescente dentro dele."""
+        self.ementas.sort(key=lambda e: (chave_frente(e.frente), e.codigo))
+
+    def grupos(self):
+        """[(frente, [ementas]), ...] na ordem da tela."""
+        self.ordenar()
+        saida, atual = [], None
+        for e in self.ementas:
+            if atual is None or atual[0] != e.frente:
+                atual = (e.frente, [])
+                saida.append(atual)
+            atual[1].append(e)
+        return saida
 
     @property
     def caminho(self):
@@ -241,20 +278,23 @@ class Folha(object):
         linhas.append("---")
         linhas.append("# Ementas fiscalizadas — %s" % (self.empregador or self.pasta.name))
         linhas.append("")
-        linhas.append("_Folha de resposta do item 2.5 do Relatório de Inspeção "
-                      "(SFIT-WEB): de cada ementa, a **situação encontrada** e, quando "
-                      "irregular, as **ações aplicadas**._")
+        linhas.append("_Espelho do item 2.5 do Relatório de Inspeção (SFIT-WEB): de cada "
+                      "ementa, a **situação encontrada** e, quando irregular, as **ações "
+                      "aplicadas**._")
         linhas.append("")
-        linhas.append("_A caixa `[x]` é calculada: significa \"linha respondida\", "
-                      "e o `ementas_os.py` a recalcula ao gravar — não marque à mão._")
-        for chave, titulo, explicacao in SECOES:
+        linhas.append("_Mesma ordem da tela: um grupo por Atributo/NR, em ordem "
+                      "alfabética. **Legenda: `*` — ementas da OS.**_")
+        linhas.append("")
+        linhas.append("_A caixa `[x]` é calculada: significa \"linha respondida\", e o "
+                      "`ementas_os.py` a recalcula ao gravar — não marque à mão._")
+        linhas.append("")
+        linhas.append("## %s" % TITULO_SECAO)
+        grupos = self.grupos()
+        if not grupos:
+            linhas.append(VAZIO)
+        for frente, itens in grupos:
             linhas.append("")
-            linhas.append("## %s" % titulo)
-            linhas.append("_(%s)_" % explicacao)
-            itens = self.da_secao(chave)
-            if not itens:
-                linhas.append(VAZIO)
-                continue
+            linhas.append("### %s" % frente)
             for e in itens:
                 linhas.append(e.linha())
                 linhas.extend(e.sublinhas())
@@ -297,35 +337,57 @@ def _corta_fm(texto):
     return (m.group(1), texto[m.end():]) if m else ("", texto)
 
 
-def _secao_do_titulo(titulo):
-    """Casa '## 2. Ementas trazidas por autuação' com a chave interna."""
+def _titulo_conhecido(titulo):
+    """('e uma secao de ementas?', 'as ementas dela sao da OS?') para um '## ...'."""
     limpo = _sem_acento(titulo.lstrip("#").strip())
-    limpo = re.sub(r"^\d+\.\s*", "", limpo)
-    for chave, oficial, _ in SECOES:
-        if limpo.startswith(_sem_acento(oficial.split(". ", 1)[-1])):
-            return chave
-    # "## Ementas da OS" — o titulo antigo, do memory.md.
-    if limpo.startswith("ementas da os"):
-        return "os"
-    return None
+    limpo = re.sub(r"^\d+\.\s*", "", limpo).strip()
+    for nome, da_os in SECOES_CONHECIDAS.items():
+        if limpo.startswith(nome):
+            return True, da_os
+    return False, None
 
 
-def _ler_itens(corpo, secao_padrao="os"):
-    """Extrai as ementas de um corpo markdown, respeitando os títulos de seção."""
+def _ler_itens(corpo, dentro_de_secao=True, da_os_padrao=None):
+    """Extrai as ementas de um corpo markdown.
+
+    `dentro_de_secao=False` lê o corpo inteiro — é o caso do bloco já recortado
+    na migração, que não traz o próprio título.
+
+    `da_os_padrao` responde "é ementa da OS?" quando nem o `*` da linha nem o
+    título da seção respondem. No formato atual quem manda é o `*`, e a
+    ausência dele significa NÃO — só a migração, que lê um bloco vindo do
+    `## Ementas da OS` sem asterisco nenhum, passa True aqui.
+    """
     ementas = []
-    secao_atual = None
+    ligado = dentro_de_secao is False
+    da_os_da_secao = da_os_padrao
     atual = None
     for linha in corpo.splitlines():
         if linha.startswith("## "):
-            secao_atual = _secao_do_titulo(linha)
+            # Título conhecido liga a leitura; qualquer outro ('## Autos
+            # lavrados') a desliga, para não varrer o memory.md inteiro.
+            ligado, da_secao = _titulo_conhecido(linha)
+            da_os_da_secao = da_secao if da_secao is not None else da_os_padrao
             atual = None
             continue
-        if secao_atual is None:
+        if linha.startswith("### "):
+            atual = None   # cabeçalho de grupo: só enfeite; a frente vem da linha
+            continue
+        if not ligado:
             continue
         m = RE_LINHA.match(linha.strip())
         if m:
-            atual = Ementa(m.group(2), m.group(3).strip(), m.group(4).strip(),
-                           secao_atual or secao_padrao)
+            # O "*" da linha é a fonte. Sem ele, decide a seção (formato antigo,
+            # de três seções) e, sem seção, o padrão recebido. Nada disso
+            # respondendo, a ementa NÃO é da OS: no formato atual, a ausência do
+            # asterisco é uma resposta, não uma omissão.
+            if m.group(3):
+                da_os = True
+            elif da_os_da_secao is not None:
+                da_os = da_os_da_secao
+            else:
+                da_os = False
+            atual = Ementa(m.group(2), m.group(4).strip(), m.group(5).strip(), da_os)
             ementas.append(atual)
             continue
         if atual is None or not linha.strip():
@@ -375,6 +437,7 @@ def ler(pasta):
         folha.os_sfit = _campo_fm(fm, "os_sfit")
         folha.dupla_visita = _sem_acento(_campo_fm(fm, "dupla_visita"))
         folha.ementas = _ler_itens(corpo)
+        folha.ordenar()
         return folha
 
     folha = Folha(pasta, empregador or pasta.name, origem="memory.md")
@@ -386,6 +449,7 @@ def ler(pasta):
     _, corpo = _corta_fm(texto)
     folha.os_sfit = _os_do_memory(corpo)
     folha.ementas = _ler_itens(corpo)
+    folha.ordenar()
     return folha
 
 
@@ -397,8 +461,8 @@ def _os_do_memory(corpo):
 
 # ------------------------------------------------------------- migração
 PONTEIRO = ("## Ementas da OS\n"
-            "_(a lista e a folha de resposta do item 2.5 do Relatório de Inspeção "
-            "moram em `ementas.md`, nesta mesma pasta)_\n\n")
+            "_(a lista e o espelho do item 2.5 do Relatório de Inspeção moram em "
+            "`ementas.md`, nesta mesma pasta)_\n\n")
 
 
 def migrar(pasta, conferir=False):
@@ -420,7 +484,7 @@ def migrar(pasta, conferir=False):
     fm, corpo = _corta_fm(texto)
     folha = Folha(pasta, _campo_fm(fm, "empregador") or pasta.name, origem=ARQUIVO)
     folha.os_sfit = _os_do_memory(corpo)
-    folha.ementas = _ler_itens("## Ementas da OS\n" + m.group(1))
+    folha.ementas = _ler_itens(m.group(1), dentro_de_secao=False, da_os_padrao=True)
     if not folha.ementas:
         return {"feito": False, "motivo": "a seção existe mas está vazia",
                 "ementas": 0, "descartadas": []}
@@ -465,21 +529,18 @@ def _render_folha(folha):
         saida.append("  DUPLA VISITA concedida — irregularidade se NOTIFICA, não se autua.")
     elif folha.dupla_visita == "nao":
         saida.append("  Sem dupla visita — irregularidade encontrada deve ser autuada.")
-    for chave, titulo, _ in SECOES:
-        itens = folha.da_secao(chave)
-        if not itens:
-            continue
+    saida.append("  Legenda: * — ementas da OS.")
+    for frente, itens in folha.grupos():
         saida.append("")
-        saida.append("-- %s " % titulo + "-" * max(0, 66 - len(titulo)))
+        saida.append("-- %s " % frente + "-" * max(0, 66 - len(frente)))
         for e in itens:
-            situacao = e.situacao or "(A RESPONDER)"
-            saida.append("  %s  %-8s  %s" % (e.codigo, e.frente, situacao))
-            if e.acoes:
-                for acao in e.acoes:
-                    sufixo = "   (o SFIT preenche)" if acao == ACAO_DO_SISTEMA else ""
-                    saida.append("              - %s%s" % (acao, sufixo))
+            saida.append("  %-10s %s" % (e.codigo + ("*" if e.da_os else ""),
+                                         e.situacao or "(A RESPONDER)"))
+            for acao in e.acoes:
+                sufixo = "   (o SFIT preenche)" if acao == ACAO_DO_SISTEMA else ""
+                saida.append("             - %s%s" % (acao, sufixo))
             if e.comentario:
-                saida.append("              comentário: %s" % e.comentario)
+                saida.append("             comentário: %s" % e.comentario)
     faltam = [e for e in folha.ementas if not e.respondida]
     saida.append("")
     saida.append("-" * 72)
@@ -494,11 +555,14 @@ def _render_resumo(folha):
     saida = []
     saida.append("Folha de ementas — %s" % folha.empregador)
     saida.append("Fonte: %s" % folha.origem)
-    for chave, titulo, _ in SECOES:
-        itens = folha.da_secao(chave)
-        respondidas = len([e for e in itens if e.respondida])
-        saida.append("  %-34s %3d ementa(s), %d respondida(s)"
-                     % (titulo, len(itens), respondidas))
+    respondidas = len([e for e in folha.ementas if e.respondida])
+    saida.append("  %d ementa(s), %d respondida(s); %d da OS, %d de fora"
+                 % (len(folha.ementas), respondidas, len(folha.da_os),
+                    len(folha.ementas) - len(folha.da_os)))
+    grupos = folha.grupos()
+    if grupos:
+        saida.append("  Atributos/NR: " + ", ".join(
+            "%s (%d)" % (f, len(itens)) for f, itens in grupos))
     por_situacao = {}
     for e in folha.ementas:
         if e.situacao:
@@ -511,7 +575,7 @@ def _render_resumo(folha):
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Lê, migra e grava o ementas.md (folha do item 2.5 do RI).")
+        description="Lê, migra e grava o ementas.md (espelho do item 2.5 do RI).")
     ap.add_argument("pasta_os", help="pasta da OS (a que contém o memory.md)")
     ap.add_argument("--folha", action="store_true",
                     help="imprime a folha na ordem da tela do SFIT")

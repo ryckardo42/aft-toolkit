@@ -436,7 +436,7 @@ status: em_andamento
 - [ ] <CODIGO> — prazo <dd/mm/aaaa>
 
 ## Ementas da OS
-_(a lista e a folha de resposta do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
+_(a lista e o espelho do item 2.5 do Relatório de Inspeção moram em `ementas.md`, nesta mesma pasta)_
 
 ## Autos de Infração
 _(vazio)_
@@ -466,13 +466,15 @@ _(vazio)_
      relatórios .docx encontrados na raiz).
    - **Ementas → `ementas.md`**: no `memory.md`, a seção `## Ementas da OS` é só um
      **ponteiro de uma linha**; a lista mora no arquivo `ementas.md` da pasta, que é
-     também a folha de resposta do item 2.5 do Relatório de Inspeção (formato em
+     também o espelho do item 2.5 do Relatório de Inspeção (formato em
      `~/.claude/skills/_scripts/ementas_os.py`). Três casos:
      - **ementas ainda dentro do `memory.md`** (OS anterior a esta mudança) →
        migração automática, que já faz o backup e deixa o ponteiro no lugar:
        `python ~/.claude/skills/_scripts/ementas_os.py "<pasta da OS>" --migrar`
      - **Ordem de Serviço lida e sem `ementas.md`** (FASE 2) → grave o arquivo com as
-       ementas na seção `## 1. Ementas da OS`, código e descrição **literais** do PDF.
+       ementas na seção `## Ementas fiscalizadas`, agrupadas por Atributo/NR em
+       ordem alfabética e com `*` depois do código (todas são da OS), código e
+       descrição **literais** do PDF.
      - **`ementas.md` já existe** → não toque.
 
      As linhas `**OS (SFIT):**` e `**Vencimento da OS:**` seguem a mesma

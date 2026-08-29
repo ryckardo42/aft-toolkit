@@ -118,15 +118,18 @@ def le_memory(pasta: Path):
     mfm = RE_FM.match(texto)
     fm, corpo = (mfm.group(1), texto[mfm.end():]) if mfm else ("", texto)
 
-    # Ementas da OS, na ordem do arquivo, agrupadas pela frente entre parênteses.
-    # So as da OS: as ementas que o AFT acrescentou depois (autuadas fora da
-    # lista, incluidas a mao) nao pertencem a preparacao, que e anterior a visita.
+    # Ementas da OS, agrupadas pela frente (Atributo/NR). A ordem e a da folha:
+    # frente em ordem alfabetica, codigo crescente dentro dela -- a mesma da
+    # tela 2.5 do SFIT.
+    # So as da OS (as com "*"): as ementas que o AFT acrescentou depois
+    # (autuadas fora da lista, fiscalizadas por fora) nao pertencem a
+    # preparacao, que e anterior a visita.
     frentes = {}
     try:
         folha = ementas_os.ler(pasta)
     except ementas_os.ErroDeUso as e:
         fail(str(e))
-    for ementa in folha.da_secao("os"):
+    for ementa in folha.da_os:
         frentes.setdefault(ementa.frente, []).append((ementa.codigo, ementa.descricao))
     if not frentes:
         fail("nenhuma ementa da OS encontrada em %s (nem em '## Ementas da OS' do "

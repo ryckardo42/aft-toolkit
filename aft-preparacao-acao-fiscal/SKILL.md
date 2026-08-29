@@ -123,29 +123,27 @@ atualizado: <dd/mm/aaaa>
 ---
 # Ementas fiscalizadas — <EMPREGADOR>
 
-_Folha de resposta do item 2.5 do Relatório de Inspeção (SFIT-WEB): de cada ementa, a **situação encontrada** e, quando irregular, as **ações aplicadas**._
+_Espelho do item 2.5 do Relatório de Inspeção (SFIT-WEB): de cada ementa, a **situação encontrada** e, quando irregular, as **ações aplicadas**._
+
+_Mesma ordem da tela: um grupo por Atributo/NR, em ordem alfabética. **Legenda: `*` — ementas da OS.**_
 
 _A caixa `[x]` é calculada: significa "linha respondida", e o `ementas_os.py` a recalcula ao gravar — não marque à mão._
 
-## 1. Ementas da OS
-_(as que vêm com `*` na tela do SFIT; responda todas, inclusive as não fiscalizadas)_
-- [ ] 001774-4 — <descrição oficial literal> (REGISTRO)
-- [ ] 101049-2 — <descrição oficial literal> (NR-01)
+## Ementas fiscalizadas
 
-## 2. Ementas trazidas por autuação
-_(autuadas FORA da lista da OS — o SFIT as acrescenta sozinho, já `Irregular` + `Autuação`; aqui só se confere se chegaram)_
-_(vazio)_
+### NR-01
+- [ ] 101049-2* — <descrição oficial literal> (NR-01)
 
-## 3. Ementas incluídas pelo AFT
-_(fiscalizadas fora da OS e sem auto — digitadas no campo "Informe as ementas fiscalizadas que não constam na OS")_
-_(vazio)_
+### REGISTRO
+- [ ] 001774-4* — <descrição oficial literal> (REGISTRO)
 ```
 
+- **Uma tabela só, agrupada por Atributo/NR em ordem alfabética** — é assim que a tela do SFIT mostra (DESCANSO, JORNADA, MULH, NR-01, NR-10...). Não invente seções por origem: o que distingue a ementa da OS é o **asterisco** depois do código, exatamente como a legenda da tela.
 - Código e descrição **literais** do PDF — nunca resumir nem parafrasear ementa. Vindo OS e Demanda, deduplique por código.
-- Na preparação só se preenche a **seção 1**, e sem situação: a folha de resposta é preenchida ao longo da fiscalização e no encerramento. As seções 2 e 3 nascem `_(vazio)_`.
+- Na preparação, toda ementa gravada é da OS e leva `*`; nenhuma tem situação ainda (a folha se preenche ao longo da fiscalização e no encerramento).
 - `dupla_visita:` fica em branco até se saber — a própria tela do SFIT informa (em verde quando concedida, em vermelho quando não).
 - No `memory.md`, deixe a seção `## Ementas da OS` como **ponteiro de uma linha** para o `ementas.md`. Não duplique a lista nos dois arquivos.
-- Confira o que gravou:
+- Confira o que gravou (o script reordena e recalcula as caixas sozinho):
 
 ```bash
 python ~/.claude/skills/_scripts/ementas_os.py "$PASTA_OS"
