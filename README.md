@@ -1,21 +1,31 @@
 # AFT Toolkit
 
-## Este repositório mudou de função
+## Sumiram as suas habilidades? Elas voltam em segundos
+
+Abra o aplicativo Claude, comece uma conversa e digite:
+
+```
+/aft-atualizar
+```
+
+(ou simplesmente peça "atualize o AFT Toolkit"). Ele repõe tudo na hora, a partir da
+cópia que já está no seu computador — sem baixar nada, sem internet, e sem tocar nas
+habilidades que você mesmo criou.
+
+**Não foi um problema seu, e nada se perdeu.** Este repositório mudou de função, e a sua
+instalação antiga ainda não sabia disso. O que vem abaixo explica o resto.
+
+---
+
+## O que mudou
 
 Até aqui, este repositório **era** o AFT Toolkit: você clonava com `git clone` e o
-conteúdo virava a sua pasta de skills (`~/.claude/skills`). Isso mudou.
+conteúdo virava a sua pasta de skills (`~/.claude/skills`). Isso acabou.
 
 **O toolkit passou a ser distribuído pelo portal `notebooks-aft`**, onde você já tem
 cadastro verificado (o mesmo CIF conferido contra a lista do DOU que libera o
 NotebookLM). Em vez de acompanhar commits soltos no GitHub, você agora recebe
 **versões** — com changelog em português, do seu período — e decide quando instalar.
-
-Não foi um problema seu.
-
-**Se as suas habilidades sumirem da pasta, elas voltam em segundos** — leia
-"O que fazer agora" logo abaixo. Ao atualizar pelo caminho antigo, o `/aft-atualizar`
-que você tinha instalado apaga as habilidades de fiscalização da sua pasta. Nada se
-perde: a cópia continua no seu computador e o comando novo repõe tudo, sem internet.
 
 ### Por quê
 
@@ -25,21 +35,10 @@ não havia canal nenhum para avisar alguém de uma mudança que quebra algo, por
 mantenedor não sabe quem são os usuários de um repositório público. O portal resolve as
 duas coisas: cadastro conferido e, pela primeira vez, um jeito de falar com você.
 
-## O que fazer agora
+## O passo seguinte: pedir acesso ao portal
 
-Se você já tem o AFT Toolkit instalado, **não precisa fazer nada por conta própria** —
-inclusive se as habilidades tiverem sumido do `/`. Abra o aplicativo Claude, comece uma
-conversa e digite:
-
-```
-/aft-atualizar
-```
-
-(ou simplesmente peça "atualize o AFT Toolkit"). O comando reconhece a sua situação e
-resolve na ordem certa: se as habilidades saíram da pasta, ele **repõe todas na hora**, a
-partir da cópia que já está no seu computador — sem baixar nada, e sem tocar nas
-habilidades que você mesmo criou. Depois disso ele explica, na tela, o próximo passo:
-pedir acesso ao portal com a sua conta Google, em
+Depois de repor as suas habilidades, o `/aft-atualizar` explica na tela o próximo passo —
+pedir acesso com a sua conta Google, em
 
 **<https://notebooks-aft.vercel.app/aft-toolkit>**
 
@@ -60,5 +59,6 @@ endereço acima — o cadastro te leva ao roteiro de instalação atualizado.
 
 ## Dúvidas ou problemas
 
-Abra uma Issue neste repositório, ou fale com o mantenedor (Ricardo de Oliveira, AFT —
-SRTE/GO).
+Fale com o mantenedor pelo portal: **<https://notebooks-aft.vercel.app/aft-toolkit>**
+(Ricardo de Oliveira, AFT — SRTE/GO). Este repositório vai sair do ar quando a migração
+terminar; o portal continua.
