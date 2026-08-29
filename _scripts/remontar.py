@@ -58,7 +58,7 @@ MONTADOS = ["NOVIDADES.md", "arquitetura/arquitetura.html",
 # pelo publicar.py (copia para a pasta instalada) quanto pelo empacotar.py
 # (zip do pacote) - um lugar so, para os dois nunca divergirem no que excluem.
 EXCLUIR = {".git", ".gitignore", ".DS_Store", ".backups", ".claude",
-           "COMO-INSTALAR.md", "__pycache__"}
+           "COMO-INSTALAR.md", "__pycache__", ".github"}
 
 
 def git(args, cwd, checar=True):
