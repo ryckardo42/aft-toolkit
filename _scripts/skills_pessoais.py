@@ -18,6 +18,10 @@ Uso:
   skills_pessoais.py --backup            # retrato antes de atualizar
   skills_pessoais.py --conferir          # o que sumiu desde o ultimo retrato?
   skills_pessoais.py --restaurar         # repoe o que sumiu (nunca sobrescreve)
+
+Por padrao olha a pasta instalada de verdade (~/.claude/skills). O
+atualizar_toolkit.py aponta para outra pasta com --skills/--manifesto, que e o
+que permite exercitar a atualizacao inteira contra uma pasta de mentira.
 """
 from __future__ import annotations
 import argparse, shutil, sys, time
@@ -53,11 +57,24 @@ def pessoais() -> list[Path]:
 
 def fazer_backup() -> Path:
     alvo = GUARDA / time.strftime("%Y%m%d-%H%M%S")
+    # O nome tem resolucao de SEGUNDOS: dois retratos no mesmo segundo caiam na
+    # mesma pasta e o copytree(dirs_exist_ok) FUNDIA os dois - o retrato passava
+    # a mostrar skill que ja nao existia mais, e a conferencia acusava sumico
+    # que nao houve. Nome novo em vez de fusao.
+    n = 2
+    while alvo.exists():
+        alvo = GUARDA / (time.strftime("%Y%m%d-%H%M%S") + f"-{n}")
+        n += 1
     achadas = pessoais()
-    if not achadas:
-        print("skills_pessoais: nenhuma skill pessoal encontrada — nada a guardar.")
-        return alvo
+    # O retrato e criado MESMO VAZIO, de proposito. Sem isso, quem nao tem
+    # skill pessoal hoje continua sendo comparado com um retrato antigo, e uma
+    # skill que o proprio AFT apagou reaparece como "sumiu na atualizacao" —
+    # acusando o toolkit de um estrago que nao houve.
     alvo.mkdir(parents=True, exist_ok=True)
+    if not achadas:
+        print("skills_pessoais: nenhuma skill pessoal encontrada — retrato vazio "
+              f"em {alvo}")
+        return alvo
     for d in achadas:
         shutil.copytree(d, alvo / d.name, dirs_exist_ok=True)
     # so os 5 retratos mais recentes
@@ -84,13 +101,25 @@ def sumidas() -> tuple[Path | None, list[str]]:
 
 
 def main() -> None:
+    global SKILLS, GUARDA, MANIFESTO
     ap = argparse.ArgumentParser(description="Protege as skills pessoais do AFT")
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--listar", action="store_true")
     g.add_argument("--backup", action="store_true")
     g.add_argument("--conferir", action="store_true")
     g.add_argument("--restaurar", action="store_true")
+    ap.add_argument("--skills", help=f"pasta instalada (padrao: {SKILLS}). "
+                                     "O retrato vai para a pasta irma "
+                                     "'<nome>-pessoais-backup'.")
+    ap.add_argument("--manifesto", help="lista do que e do toolkit "
+                                        f"(padrao: {MANIFESTO.name} ao lado deste script)")
     a = ap.parse_args()
+
+    if a.skills:
+        SKILLS = Path(a.skills).expanduser().resolve()
+        GUARDA = SKILLS.parent / (SKILLS.name + "-pessoais-backup")
+    if a.manifesto:
+        MANIFESTO = Path(a.manifesto).expanduser().resolve()
 
     if a.listar:
         achadas = pessoais()
