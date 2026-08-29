@@ -1,5 +1,0 @@
-{
-  "_comentario": "Valores aceitos no campo 'model:' dos SKILL.md; o aft_doctor.py valida os frontmatters contra esta lista. Desde 01/08/2026 as skills oficiais usam SOMENTE apelidos (sonnet/opus/haiku), nunca IDs datados: o apelido acompanha a geracao atual do modelo sem exigir atualizacao do toolkit, e dispensa o sufixo [1m] - que e redundante em Opus 4.7+ (ja roda com janela de 1M) e, no plano Pro, exige creditos avulsos pagos. A lista 'ids' fica vazia de proposito: sem IDs datados, o /aft-doctor tambem para de gastar cota testando modelo ao vivo.",
-  "aliases": ["sonnet", "opus", "haiku"],
-  "ids": []
-}
