@@ -227,15 +227,19 @@ def propor(pasta):
 
     mudancas, conflitos, avisos, novas = [], [], [], []
 
-    def alvo(codigo, descricao, frente, secao):
-        """A linha da ementa na folha; cria se não existir."""
+    def alvo(codigo, descricao, frente):
+        """A linha da ementa na folha; cria se não existir.
+
+        Ementa que já está na OS tem a PRÓPRIA linha preenchida — é o que o
+        SFIT faz na tela. Só quem não está na OS ganha linha nova, e sem o "*".
+        """
         e = folha.por_codigo(codigo)
         if e is not None:
             return e
-        e = Ementa(codigo, descricao or DESCRICAO_PENDENTE,
-                   frente or nrs.get(codigo, "?"), secao)
+        frente = frente or nrs.get(codigo, "?")
+        e = Ementa(codigo, descricao or DESCRICAO_PENDENTE, frente, da_os=False)
         folha.ementas.append(e)
-        novas.append((codigo, secao))
+        novas.append((codigo, frente))
         return e
 
     def aplica(e, situacao, acao, lastro, origem):
@@ -255,18 +259,18 @@ def propor(pasta):
     # 1) Auto transmitido. O SFIT já traz essas linhas prontas; aqui elas
     #    existem para o AFT CONFERIR se chegaram, não para digitar.
     for cod, dado in sorted(autuadas.items()):
-        e = alvo(cod, dado["descricao"], dado["frente"], "autuacao")
+        e = alvo(cod, dado["descricao"], dado["frente"])
         aplica(e, "Irregular", "Autuação", "AI %s" % dado["ai"], fonte_autos)
 
     # 2) Interdição / embargo.
     for cod, (acoes, arquivo) in sorted(interditadas.items()):
-        e = alvo(cod, "", "", "aft")
+        e = alvo(cod, "", "")
         for acao in acoes:
             aplica(e, "Irregular", acao, arquivo, "interdicao-embargo/%s" % arquivo)
 
     # 3) Notificação para correção — o caminho da dupla visita.
     for cod, arquivo in sorted(notificadas.items()):
-        e = alvo(cod, "", "", "aft")
+        e = alvo(cod, "", "")
         aplica(e, "Irregular", "Notificação", arquivo, arquivo)
 
     if notificadas and _tem_notificacao_lavrada(pasta) is False:
@@ -325,8 +329,8 @@ def main():
         print("  + %s" % linha)
     if rel["novas"]:
         print("-" * 72)
-        for cod, secao in rel["novas"]:
-            print("  NOVA linha (%s): %s" % (secao, cod))
+        for cod, frente in rel["novas"]:
+            print("  NOVA linha em %s: %s   (fora da lista da OS)" % (frente, cod))
     if rel["conflitos"]:
         print("-" * 72)
         for c in rel["conflitos"]:

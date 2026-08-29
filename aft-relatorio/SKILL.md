@@ -172,7 +172,10 @@ aqui que ela se fecha.
    ```
 
 A folha **não entra** no relatório `.docx`: ela existe para o AFT digitar no SFIT-WEB
-conferindo linha a linha.
+conferindo linha a linha. No painel, o dossiê da auditoria traz o botão **"abrir o
+espelho do SFIT"** logo abaixo do endereço — a mesma tabela na tela, em endereço
+próprio, para ele deixar numa janela ao lado do SFIT-WEB enquanto digita. Lembre disso
+em uma linha ao encerrar.
 
 ### 5. Redigir e salvar — na pasta "Relatórios de Fiscalização"
 

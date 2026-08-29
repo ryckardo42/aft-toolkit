@@ -94,7 +94,7 @@ def main():
         if ementas_os is None:
             sys.exit("ERRO: não achei o _scripts/ementas_os.py — use --arquivo.")
         try:
-            for ementa in ementas_os.ler(args.pasta_os).da_secao("os"):
+            for ementa in ementas_os.ler(args.pasta_os).da_os:
                 if ementa.codigo not in codigos:
                     codigos.add(ementa.codigo)
                     ordem.append(ementa.codigo)

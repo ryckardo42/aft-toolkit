@@ -257,13 +257,11 @@ def conferir_folha(pasta, transmitidas):
         #    duas linhas divergentes se contradizem por definicao.
         if e.codigo in vistos:
             problemas.append(
-                "ementas.md: a ementa %s aparece em duas linhas (\"%s\" e \"%s\") "
-                "-- no SFIT ha uma linha por ementa."
-                % (e.codigo,
-                   ementas_os.TITULO_SECAO.get(vistos[e.codigo], vistos[e.codigo]),
-                   ementas_os.TITULO_SECAO.get(e.secao, e.secao)))
+                "ementas.md: a ementa %s aparece em duas linhas (em \"%s\" e em "
+                "\"%s\") -- no SFIT ha uma linha por ementa."
+                % (e.codigo, vistos[e.codigo], e.frente))
         else:
-            vistos[e.codigo] = e.secao
+            vistos[e.codigo] = e.frente
 
     return problemas
 

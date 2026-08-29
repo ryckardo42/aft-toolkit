@@ -269,6 +269,16 @@ rotina nunca falha por causa disso.
   (Ações rápidas, Comandos para o Claude Code e o Registro de atividades) fica
   **fixa ao rolar** — acompanha a leitura em vez de sumir no topo; quando é maior
   que a janela, ganha rolagem própria.
+- **Espelho do item 2.5 do RI (Ementas fiscalizadas)**: logo abaixo do endereço, no
+  dossiê, um destaque com quantas ementas há, quantas já foram respondidas e quantas
+  faltam, e o botão **"abrir o espelho do SFIT"**. Ele abre uma tela cheia com a mesma
+  tabela do SFIT-WEB — um grupo por Atributo/NR em ordem alfabética, `*` nas ementas
+  da OS, situação encontrada, ações aplicadas e comentários —, com filtros ("todas",
+  "a responder", "irregulares") e endereço próprio (`#em=<pasta>`), para o AFT deixar
+  numa janela ao lado do SFIT enquanto digita. A fonte é o `ementas.md` da pasta (ou,
+  nas OS ainda não migradas, o `## Ementas da OS` do `memory.md`); o painel só lê. A
+  coluna "Ocorrência" da tela do SFIT não é espelhada: ela traz dado do banco do
+  próprio SFIT ("Fiscalização anterior", "Autuação Obrigatória"), que o toolkit não tem.
 - **Datas sempre em dd/mm/aaaa na tela**: as fichas do schema v2 gravam datas ISO nas
   linhas de DET; o painel normaliza só na exibição (os `memory.md` não são tocados).
 - Coral é reservado ao que aperta o prazo: DET aberto só fica vermelho se estiver
