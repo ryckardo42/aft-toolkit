@@ -24,7 +24,7 @@ atualizar_toolkit.py aponta para outra pasta com --skills/--manifesto, que e o
 que permite exercitar a atualizacao inteira contra uma pasta de mentira.
 """
 from __future__ import annotations
-import argparse, shutil, sys, time
+import argparse, re, shutil, sys, time
 from pathlib import Path
 
 SKILLS = Path.home() / ".claude" / "skills"
@@ -35,6 +35,9 @@ GUARDA = Path.home() / ".claude" / "skills-pessoais-backup"
 # de um AFT e tem cara de oficial. Palpite pelo nome deixaria ela desprotegida.
 MANIFESTO = Path(__file__).with_name("skills_oficiais.txt")
 INFRA = {"_scripts", "Template", "agents", "arquitetura", "config", "novidades"}
+# Nome de retrato feito por este script: AAAAMMDD-HHMMSS, com sufixo -2, -3...
+# quando dois caem no mesmo segundo.
+NOSSO_RETRATO = re.compile(r"^\d{8}-\d{6}(-\d+)?$")
 
 
 def oficiais() -> set[str]:
@@ -77,18 +80,29 @@ def fazer_backup() -> Path:
         return alvo
     for d in achadas:
         shutil.copytree(d, alvo / d.name, dirs_exist_ok=True)
-    # so os 5 retratos mais recentes
-    retratos = sorted(GUARDA.iterdir(), reverse=True)
-    for velho in retratos[5:]:
+    # So os 5 retratos mais recentes - e so os NOSSOS. Retrato batizado a mao
+    # pelo AFT ("manual-20260821-aposentada", "pre-rename-...") fica onde esta:
+    # apagar pasta que nao fomos nos que criamos e estrago, nao faxina. A
+    # ordem tambem e pela data do arquivo, nao pelo nome (ver ultimo_retrato).
+    nossos = sorted((d for d in GUARDA.iterdir()
+                     if d.is_dir() and NOSSO_RETRATO.match(d.name)),
+                    key=lambda d: d.stat().st_mtime_ns, reverse=True)
+    for velho in nossos[5:]:
         shutil.rmtree(velho, ignore_errors=True)
     print(f"skills_pessoais: {len(achadas)} skill(s) guardada(s) em {alvo}")
     return alvo
 
 
 def ultimo_retrato() -> Path | None:
+    """O retrato mais recente - pela DATA do arquivo, nao pelo nome. Ordenar
+    por nome parece dar no mesmo (os nomes sao AAAAMMDD-HHMMSS), mas retrato
+    batizado a mao ganha sempre: 'pre-rename-20260819-...' vem depois de
+    '20260829-...' no alfabeto. Era o que acontecia de verdade nesta maquina -
+    a conferencia comparava com um retrato de 19/08 e acusava sumico todo dia."""
     if not GUARDA.is_dir():
         return None
-    r = sorted((d for d in GUARDA.iterdir() if d.is_dir()), reverse=True)
+    r = sorted((d for d in GUARDA.iterdir() if d.is_dir()),
+               key=lambda d: d.stat().st_mtime_ns, reverse=True)
     return r[0] if r else None
 
 
