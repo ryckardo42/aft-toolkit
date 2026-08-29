@@ -85,12 +85,39 @@ def _caminhos_sensiveis() -> list[tuple[str, str]]:
     return pares
 
 
+_TOKEN_PORTAL: str | None = None
+
+
+def _token_portal() -> str:
+    """O código de acesso ao portal — lido APENAS para servir de agulha na
+    redação. O arquivo dele (`<pasta AFT>/.aft-toolkit-token`) nunca entra no
+    ticket, e o valor nunca é impresso: se ele aparecer num traceback, sai
+    daqui como `<CODIGO DE ACESSO>`. Credencial não viaja em relato de erro."""
+    global _TOKEN_PORTAL
+    if _TOKEN_PORTAL is None:
+        try:
+            sys.path.insert(0, str(AQUI))
+            from portal_toolkit import ler_token
+            _TOKEN_PORTAL = ler_token() or ""
+        except Exception:
+            _TOKEN_PORTAL = ""
+    return _TOKEN_PORTAL
+
+
 def _redigir(texto) -> str:
     """Remove de um texto qualquer tudo que possa identificar empresa,
     trabalhador ou o próprio AFT. Roda em TODO conteúdo antes de gravar."""
     if texto is None:
         return ""
     s = str(texto)
+
+    # 0. Código de acesso ao portal, caso tenha vazado num traceback. Vem
+    #    ANTES de todas as outras: se um pedaço dele casasse com a regra do
+    #    CNPJ ou a do e-mail, o resto do código escaparia inteiro. Código
+    #    curto demais não se troca - seria trocar palavra comum por engano.
+    token = _token_portal()
+    if len(token) >= 8:
+        s = s.replace(token, "<CODIGO DE ACESSO>")
 
     # 1. Nome da empresa fiscalizada: o segmento logo depois de OS ATIVAS/ARQUIVADAS.
     s = re.sub(r"(OS\s+(?:ATIVAS|ARQUIVADAS))([\\/]+)([^\\/\r\n\"']+)",
@@ -124,6 +151,7 @@ def _redigir(texto) -> str:
             s = re.sub(rf"\b{re.escape(usuario)}\b", "<USUARIO>", s, flags=re.IGNORECASE)
     except Exception:
         pass
+
     return s
 
 
@@ -254,6 +282,17 @@ def ambiente() -> list[tuple[str, str]]:
 
     try:
         itens.append(("Skills instaladas", str(len(list(SKILLS_DIR.glob("*/SKILL.md"))))))
+    except Exception:
+        pass
+
+    # Acesso ao portal: só EXISTE ou NÃO EXISTE. O valor do código nunca entra
+    # num ticket — e é justamente por isso que ele mora fora do aft-config.md,
+    # que este retrato poderia acabar copiando inteiro um dia.
+    try:
+        sys.path.insert(0, str(AQUI))
+        from portal_toolkit import tem_token
+        itens.append(("Código de acesso ao portal",
+                      "configurado" if tem_token() else "não configurado"))
     except Exception:
         pass
     return itens
