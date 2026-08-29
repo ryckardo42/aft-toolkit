@@ -359,8 +359,10 @@ def resumo_conteudo(n: dict) -> str:
     t = titulo.lower()
     if "apresenta" in t and "documento" in t:
         curto = "NAD"
+    elif "cumprimento de obriga" in t:
+        curto = "NCO"
     elif t.startswith(("termo de notifica",)):
-        curto = "TN"
+        curto = "TN"   # título usado pela /aft-tn-nco até 29/08/2026
     else:
         curto = titulo[:60] if titulo else "Notificação"
     contagem: dict[int, int] = {}
