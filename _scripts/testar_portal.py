@@ -122,7 +122,7 @@ def rodar(base, ambiente):
     from testar_aplicador import montar_pacotes  # o mesmo empacotador de verdade
 
     print("Montando os pacotes de teste com o empacotar.py...")
-    v1, v2, _v3, _envenenado = montar_pacotes(base)
+    v1, v2, v3, _envenenado = montar_pacotes(base)
 
     destino = base / "skills-de-mentira"
     destino.mkdir()
@@ -263,6 +263,38 @@ def rodar(base, ambiente):
     checar(codigo == 0 and res["estado"] == "sem_novidade",
            "e o --aplicar sai barato, sem instalar nada", str(res.get("estado")))
 
+    print("\n8b. Versão publicada DEPOIS da consulta do dia (issue #155)")
+    # O caso que acontece toda vez que o mantenedor publica: o AFT ja perguntou
+    # de manha, o registro do dia diz "nada de novo", e a versao nova sai a
+    # tarde. O registro tem de continuar barato - e --forcar tem de furar.
+    servidor.pacote = v3
+    servidor.manifesto = {
+        "versao": versao_do_pacote(v3),
+        "sha256": hashlib.sha256(Path(v3).read_bytes()).hexdigest(),
+        "novidades": "## 30/08/2026\n\n**Versão publicada depois.**\n",
+    }
+    servidor.consultas = 0
+    mudanca = destino / "aft-teste-mudanca" / "SKILL.md"
+    codigo, res, _ = rodar_script("--verificar", *comum)
+    checar(res["estado"] == "sem_novidade" and servidor.consultas == 0,
+           "a consulta do dia responde do registro, sem chamar o portal",
+           f"{res.get('estado')} / {servidor.consultas} chamadas")
+    checar(res["consulta_de_hoje"] is True,
+           "e diz que a resposta é a guardada hoje - é isso que a skill precisa "
+           "saber para oferecer conferir de novo")
+    codigo, res, _ = rodar_script("--aplicar", *comum)
+    checar(res["estado"] == "sem_novidade" and "versao dois" in mudanca.read_text(),
+           "sem --forcar, o --aplicar também sai barato e nada é instalado")
+    codigo, res, _ = rodar_script("--verificar", *comum, "--forcar")
+    checar(codigo == 0 and res["ha_novidade"] is True
+           and res["versao"] == servidor.manifesto["versao"],
+           "com --forcar, a versão publicada depois aparece no mesmo dia",
+           str(res.get("detalhe")))
+    codigo, res, _ = rodar_script("--aplicar", *comum, "--forcar")
+    checar(codigo == 0 and res["ok"] and "versao tres" in mudanca.read_text(),
+           "e o --aplicar --forcar instala a versão nova no mesmo dia",
+           str(res.get("detalhe")))
+
     print("\n9. Soma de verificação divergente (o portal anunciou outra coisa)")
     servidor.manifesto = dict(servidor.manifesto, versao="9999.99.99-mentira",
                               sha256="0" * 64)
@@ -299,6 +331,37 @@ def rodar(base, ambiente):
                "ele sai escondido, e não apagado em silêncio")
         checar("Código de acesso ao portal | configurado" in texto,
                "o ticket diz só que existe um código configurado")
+
+    print("\n12. O /aft-doctor conhece o código de acesso (issue #154)")
+    # A terceira regra do contrato da issue #138: o doutor confere que existe,
+    # e NUNCA imprime o valor. As outras duas (arquivo proprio, ticket que
+    # esconde) estao provadas nos casos 2 e 11.
+    def doutor():
+        r = subprocess.run([PY, str(AQUI / "aft_doctor.py")], capture_output=True,
+                           text=True, encoding="utf-8", errors="replace",
+                           env=ambiente)
+        bruto = r.stdout + r.stderr
+        linha = [l for l in bruto.splitlines() if l.startswith("JSON:")]
+        dados = json.loads(linha[-1][len("JSON:"):]) if linha else {"checks": []}
+        achado = [c for c in dados["checks"] if "digo de acesso" in c["titulo"]]
+        return bruto, (achado[0] if achado else None)
+
+    bruto, check = doutor()
+    checar(check is not None,
+           "o doutor tem um check do código de acesso ao portal")
+    checar(check and check["status"] == "ok",
+           "com o código guardado, ele diz que está configurado",
+           str(check))
+    checar(TOKEN_BOM not in bruto,
+           "e o valor do código não aparece em lugar nenhum da saída")
+
+    arquivo.unlink()
+    bruto, check = doutor()
+    checar(check and check["status"] == "aviso",
+           "sem o código, ele avisa em vez de dar tudo por certo", str(check))
+    checar(check and "notebooks-aft" in (check["dica"] + check["detalhe"]),
+           "e a dica conduz ao cadastro no portal", str(check))
+    arquivo.write_text(TOKEN_BOM + "\n", encoding="utf-8")
 
 
 def versao_do_pacote(zip_path):

@@ -109,8 +109,25 @@ Com o JSON na mão:
 - **`ok: false`** → o campo `detalhe` já é a explicação pronta para o AFT, em português e
   com o próximo passo (falta o código de acesso, código recusado, e-mail sem liberação,
   portal fora do ar). Repasse-a praticamente como está — não traduza para jargão nem
-  invente causa. Se o `estado` for `sem_token` ou `token_invalido`, vá ao Passo 1a; nos
-  demais casos nada foi alterado na máquina, então encerre com a orientação do `detalhe`.
+  invente causa. Se o `estado` for `sem_token` ou `token_invalido`, vá ao Passo 1a; se for
+  `lapide`, vá ao **Passo 1c**; nos demais casos nada foi alterado na máquina, então
+  encerre com a orientação do `detalhe`.
+
+**Se o AFT disser que saiu versão nova e o `estado` vier `sem_novidade`**, olhe o campo
+`consulta_de_hoje`. Quando ele for `true`, a resposta é a que ficou guardada da consulta
+de hoje — o portal não foi chamado de novo (é assim de propósito: o `/aft-bom-dia`
+pergunta toda manhã e ninguém quer chamada de rede a cada conversa). Diga isso em uma
+linha e confira de novo, agora sem o registro:
+
+```bash
+python3 ~/.claude/skills/_scripts/atualizar_toolkit.py --verificar --forcar
+```
+
+Ofereça isso **sempre que ele insistir** ("mas acabou de sair", "confere de novo") e no
+dia em que ele souber por fora que houve publicação. O `--forcar` também vale no Passo 1b
+(`--aplicar --forcar`), para instalar no mesmo dia. Não use o `--forcar` por conta
+própria a cada `/aft-atualizar`: sem motivo, ele só transforma um comando barato em
+chamada de rede.
 
 ### Passo 1a — Guardar o código de acesso (só quando faltar)
 
@@ -163,6 +180,40 @@ Leia o JSON do resultado:
 - **Qualquer outro `ok: false`** → o `detalhe` traz a explicação pronta e o que fazer; se
   ele mencionar a pasta de backup, repasse o caminho ao AFT. Não tente consertar por fora
   do programa nem repetir o comando às cegas.
+
+### Passo 1c — A pasta ficou só com a lápide (`estado: "lapide"`)
+
+Este é o AFT que ficou meses sem atualizar. A `/aft-atualizar` **antiga** da máquina dele
+mandava dar `git pull` no repositório público — e esse repositório virou **lápide**: só o
+aviso da mudança e esta skill. O pull, então, tirou da pasta dele as habilidades de
+fiscalização. **Não foi erro dele, e não foi você que apagou.**
+
+Nada se perdeu: a cópia anterior continua na máquina, e o programa repõe tudo **sem
+internet**. Faça nesta ordem:
+
+1. Conte o que aconteceu, com as palavras do `detalhe` (elas já dizem que dá para repor
+   agora e para onde ele vai pedir o acesso). Não minimize nem dramatize: para ele, as
+   habilidades sumiram do nada.
+2. Reponha — não precisa perguntar, é reparar um estrago, não instalar coisa nova:
+
+   ```bash
+   python3 ~/.claude/skills/_scripts/atualizar_toolkit.py --resgatar
+   ```
+
+3. Diga o que o `detalhe` da resposta traz (quantos arquivos voltaram) e **peça que ele
+   feche e reabra o aplicativo** — é o que faz as habilidades aparecerem de novo com `/`.
+4. Só então trate do acesso ao portal, como no Passo 1a: é isso que devolve a atualização
+   automática. Enquanto o código não chega, ele continua trabalhando normalmente.
+
+Se o resgate falhar (`erro: "resgate_falhou"`), **não improvise com comandos de git**:
+diga que as habilidades não puderam ser repostas nesta máquina e que o caminho é o
+cadastro no portal, que traz o toolkit inteiro. Depois do cadastro, o Passo 1b instala o
+pacote por cima e resolve os dois problemas de uma vez.
+
+**Nunca rode `git pull`, `git fetch` ou `git checkout` por fora deste passo** para tentar
+"consertar" a pasta. O resgate repõe só o que a lápide apagou; um `git checkout` largado
+traria de volta também a skill velha, que mandaria dar `git pull` de novo — e o AFT
+giraria em círculo.
 
 ## Passo 2 — Atualizar o `notebooklm` (notebooklm-py)
 
