@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-atualizar_toolkit.py - Aplica um pacote do toolkit numa pasta de destino.
+atualizar_toolkit.py - Consulta o portal e aplica um pacote do toolkit.
 
 Esta e a costura da atualizacao (issue #138): a logica que hoje mora no texto
-da /aft-atualizar passa a morar aqui, onde da para ler, rodar e corrigir. Este
-arquivo cobre a fatia que se prova sozinha - PACOTE LOCAL, sem rede e sem
-token (issue #141). O caminho do portal (--verificar / baixar) entra depois,
-neste mesmo script.
+da /aft-atualizar passa a morar aqui, onde da para ler, rodar e corrigir. Sao
+dois caminhos ate o mesmo pacote:
+
+  * PACOTE LOCAL (--origem-local), sem rede e sem codigo de acesso - e o que
+    permite provar a transacao inteira contra uma pasta descartavel;
+  * PORTAL (sem --origem-local), que pergunta a versao disponivel, mostra o
+    changelog e baixa o pacote pelo endereco assinado.
+
+Quem fala com o portal e o portal_toolkit.py, ao lado deste: e la que moram o
+codigo de acesso, o registro da ultima consulta e as frases em portugues de
+cada falha. Daqui para baixo, os dois caminhos sao o mesmo programa: o pacote
+chega, e a transacao abaixo decide o que entra na pasta do AFT.
 
 O QUE ESTE PROGRAMA APAGA, E O QUE ELE NUNCA APAGA
 --------------------------------------------------
@@ -48,13 +56,22 @@ Os passos 1 a 3 acontecem ANTES de qualquer escrita: pacote corrompido ou
 suspeito nao chega a tocar na pasta do AFT.
 
 Uso:
+    python atualizar_toolkit.py --verificar
+    python atualizar_toolkit.py --aplicar
     python atualizar_toolkit.py --origem-local <pacote.zip> --destino <pasta> --simular
     python atualizar_toolkit.py --origem-local <pacote.zip> --destino <pasta> --aplicar
+    python atualizar_toolkit.py --gravar-token      (o codigo vem pelo stdin)
+    python atualizar_toolkit.py --estado-token
 
-A soma esperada vem do arquivo <pacote.zip>.sha256 ao lado do pacote (e o que
-o empacotar.py grava) ou de --sha256. Saida: um objeto JSON no stdout - so
-JSON, para quem chama nao precisar interpretar prosa. Codigos de saida:
-0 = feito, 1 = erro de uso, 2 = transacao recusada.
+Sem --destino, a pasta e ~/.claude/skills (a instalacao de verdade). Com
+--origem-local, a soma esperada vem do arquivo <pacote.zip>.sha256 ao lado do
+pacote (e o que o empacotar.py grava) ou de --sha256; pelo portal, ela vem da
+propria resposta autenticada. Saida: um objeto JSON no stdout - so JSON, para
+quem chama nao precisar interpretar prosa. Codigos de saida: 0 = feito (o que
+inclui "nao ha novidade"), 1 = erro de uso, 2 = transacao recusada ou consulta
+que nao pode ser respondida (falta codigo de acesso, portal fora do ar...).
+Toda recusa traz em `detalhe` a frase pronta para o AFT, em portugues e com o
+proximo passo.
 """
 
 try:  # ticket automatico de erro (ver _scripts/erro_ticket.py e a skill /aft-erro)
@@ -84,6 +101,7 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 from remontar import EXCLUIR  # noqa: E402  (mesma lista que o empacotar usa)
+import portal_toolkit as portal  # noqa: E402  (o lado cliente do portal)
 
 try:  # console do Windows e cp1252
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -91,6 +109,7 @@ try:  # console do Windows e cp1252
 except Exception:
     pass
 
+SKILLS_PADRAO = Path.home() / ".claude" / "skills"
 MANIFESTO = "_scripts/skills_oficiais.txt"
 # Marca deixada dentro de cada backup feito por este programa - e o que
 # distingue os nossos de qualquer outra pasta "skills-backup-*" do AFT.
@@ -524,30 +543,195 @@ def soma_esperada_de(zip_path, informada):
         "de origem desconhecida não se instala.")
 
 
+# ------------------------------------------------------------------- o portal
+
+def versao_instalada(destino):
+    return ler_versao(destino / VERSAO).get("versao")
+
+
+def _recusa(modo, estado, destino, **dados):
+    """Uma falha da conversa com o portal, no mesmo formato JSON das demais.
+    `detalhe` e sempre a frase pronta para o AFT - quem chama nao redige nada,
+    e assim a mesma explicacao vale para a skill, para o /aft-bom-dia e para
+    quem rodar o script na mao."""
+    res = {"ok": False, "modo": modo, "estado": estado, "erro": estado,
+           "destino": str(destino),
+           "detalhe": portal.mensagem(estado, **dados)}
+    if dados.get("detalhe_tecnico"):
+        res["detalhe_tecnico"] = dados["detalhe_tecnico"]
+    return res, 2
+
+
+def consultar_portal(destino, base, forcar, precisa_da_url, modo):
+    """Pergunta a versao disponivel. Devolve (resposta, res, codigo): com
+    `res` preenchido, e para devolver isso a quem chamou e parar.
+
+    `precisa_da_url` marca a diferenca entre olhar e baixar. O registro do dia
+    nao guarda o endereco assinado do pacote (ele expira em minutos), entao
+    quem vai baixar de fato repete a consulta - mas so DEPOIS de o registro ja
+    ter dito, de graca, que existe versao nova. Sem novidade, nao ha chamada de
+    rede nenhuma.
+    """
+    instalada = versao_instalada(destino)
+    r = portal.verificar(instalada, base=base, forcar=forcar)
+    if (precisa_da_url and r["estado"] == "ok" and r.get("de_registro")
+            and r.get("versao") != instalada):
+        r = portal.verificar(instalada, base=base, forcar=True)
+    if r["estado"] != "ok":
+        res, codigo = _recusa(modo, r["estado"], destino,
+                              gmail=portal.gmail(),
+                              detalhe_tecnico=r.get("detalhe_tecnico"))
+        return r, res, codigo
+    return r, None, 0
+
+
+def cmd_verificar(destino, base, forcar):
+    """--verificar: diz qual e a versao disponivel, se ha novidade e o que
+    mudou. Nao baixa nada e nao escreve nada na pasta de skills."""
+    instalada = versao_instalada(destino)
+    r, res, codigo = consultar_portal(destino, base, forcar,
+                                      precisa_da_url=False, modo="verificar")
+    if res:
+        res["versao_instalada"] = instalada
+        return res, codigo
+
+    ha_novidade = r["versao"] != instalada
+    res = {"ok": True, "modo": "verificar",
+           "estado": "ok" if ha_novidade else "sem_novidade",
+           "erro": None, "destino": str(destino),
+           "versao_instalada": instalada, "versao": r["versao"],
+           "ha_novidade": ha_novidade, "novidades": r.get("novidades", ""),
+           "consulta_de_hoje": bool(r.get("de_registro")),
+           "detalhe": ""}
+    if ha_novidade:
+        res["detalhe"] = (f"Há uma versão nova do toolkit disponível: "
+                          f"{r['versao']} (a sua é "
+                          f"{instalada or 'de antes da numeração de versões'}).")
+    else:
+        res["detalhe"] = portal.mensagem("sem_novidade", versao=r["versao"])
+    return res, 0
+
+
+def baixar_do_portal(destino, base, forcar, tmp, modo):
+    """Consulta, confere se ha novidade e traz o pacote. Devolve
+    (zip, soma, versao, res, codigo) - com `res` preenchido, e para parar."""
+    instalada = versao_instalada(destino)
+    r, res, codigo = consultar_portal(destino, base, forcar,
+                                      precisa_da_url=True, modo=modo)
+    if res:
+        return None, None, None, res, codigo
+
+    if r["versao"] == instalada:
+        # Sai barato: e o caso comum, e ele nao pode custar download nenhum.
+        return None, None, None, {
+            "ok": True, "modo": modo, "estado": "sem_novidade",
+            "erro": None, "destino": str(destino),
+            "versao_instalada": instalada, "versao": r["versao"],
+            "ha_novidade": False,
+            "detalhe": portal.mensagem("sem_novidade", versao=r["versao"]),
+        }, 0
+
+    if not r.get("url"):
+        return (None, None, None,
+                *_recusa(modo, "portal_indisponivel", destino,
+                         detalhe_tecnico="o portal anunciou a versão "
+                                         f"{r['versao']} mas não mandou o "
+                                         "endereço do pacote"))
+
+    # Nome fixo, e nao a versao que o portal anunciou: nome de arquivo vindo
+    # de fora nunca decide onde se escreve (uma "versao" com barra ou com ".."
+    # apontaria para fora da area temporaria).
+    zip_path = tmp / "pacote.zip"
+    try:
+        portal.baixar(r["url"], zip_path)
+    except Exception as e:
+        # O endereco assinado tem validade curta: uma consulta guardada de
+        # horas atras, uma queda no meio do download, ou o portal fora do ar
+        # entre uma chamada e outra caem todos aqui.
+        return (None, None, None,
+                *_recusa(modo, "portal_indisponivel", destino,
+                         detalhe_tecnico=f"o download do pacote falhou ({e})"))
+    return zip_path, r["sha256"], r["versao"], None, 0
+
+
+# ------------------------------------------------------- o codigo de acesso
+
+def cmd_gravar_token():
+    """--gravar-token: o codigo chega pela ENTRADA PADRAO, nunca como
+    argumento (argumento fica no historico do terminal e nos logs). O valor
+    nao e ecoado em lugar nenhum - a saida so diz onde ele ficou."""
+    try:
+        bruto = sys.stdin.read()
+    except Exception as e:
+        return {"ok": False, "erro": "leitura_falhou",
+                "detalhe": f"Não consegui ler o código de acesso ({e})."}, 1
+    try:
+        alvo = portal.gravar_token(bruto)
+    except ValueError as e:
+        return {"ok": False, "erro": "token_invalido",
+                "detalhe": f"O código de acesso não foi guardado: {e}."}, 1
+    except OSError as e:
+        return {"ok": False, "erro": "gravacao_falhou",
+                "detalhe": f"Não consegui gravar o código de acesso ({e})."}, 2
+    return {"ok": True, "erro": None, "arquivo": str(alvo), "detalhe": (
+        "Código de acesso guardado. Ele fica na sua pasta de trabalho, fora da "
+        "pasta de skills - assim a própria atualização não o apaga. Você não "
+        "precisa digitá-lo de novo.")}, 0
+
+
+def cmd_estado_token():
+    """--estado-token: existe codigo de acesso nesta maquina? Responde sim ou
+    nao e o caminho do arquivo - NUNCA o valor."""
+    tem = portal.tem_token()
+    return {"ok": True, "erro": None, "tem_token": tem,
+            "arquivo": str(portal.caminho_token()),
+            "gmail": portal.gmail(),
+            "detalhe": ("Código de acesso ao portal já configurado nesta máquina."
+                        if tem else portal.mensagem("sem_token"))}, 0
+
+
 def main():
     ap = argparse.ArgumentParser(
-        description="Aplica um pacote do toolkit numa pasta de destino")
+        description="Consulta o portal e aplica um pacote do toolkit")
     modo = ap.add_mutually_exclusive_group(required=True)
     modo.add_argument("--aplicar", action="store_true",
                       help="executa a transação completa")
     modo.add_argument("--simular", action="store_true",
                       help="percorre tudo e relata, sem escrever nada")
+    modo.add_argument("--verificar", action="store_true",
+                      help="pergunta ao portal qual é a versão disponível e o "
+                           "que mudou, sem baixar nem instalar nada")
+    modo.add_argument("--gravar-token", action="store_true",
+                      help="guarda o código de acesso ao portal (ele vem pela "
+                           "entrada padrão, nunca como argumento)")
+    modo.add_argument("--estado-token", action="store_true",
+                      help="diz se já há código de acesso nesta máquina - "
+                           "nunca mostra o valor")
     ap.add_argument("--confirmado", action="store_true",
                     help="segue mesmo com sinal suspeito na varredura - só "
                          "depois de o AFT ver o relatório e confirmar que a "
                          "atualização é legítima")
-    ap.add_argument("--origem-local", required=True,
-                    help="pacote .zip já baixado (dispensa rede e token)")
-    ap.add_argument("--destino", required=True,
-                    help="pasta instalada onde aplicar")
+    ap.add_argument("--origem-local",
+                    help="pacote .zip já baixado (dispensa rede e código de "
+                         "acesso); sem ele, o pacote vem do portal")
+    ap.add_argument("--destino", default=str(SKILLS_PADRAO),
+                    help="pasta instalada onde aplicar (padrão: ~/.claude/skills)")
     ap.add_argument("--sha256", help="soma esperada (padrão: o arquivo "
                                      "<pacote>.sha256 ao lado do pacote)")
+    ap.add_argument("--portal", default=portal.PORTAL,
+                    help="endereço do portal (para ensaio contra um portal de "
+                         "mentira)")
+    ap.add_argument("--forcar", action="store_true",
+                    help="consulta o portal mesmo já tendo consultado hoje")
     args = ap.parse_args()
 
-    zip_path = Path(args.origem_local).expanduser().resolve()
+    if args.gravar_token or args.estado_token:
+        res, codigo = (cmd_gravar_token() if args.gravar_token
+                       else cmd_estado_token())
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        sys.exit(codigo)
+
     destino = Path(args.destino).expanduser().resolve()
-    if not zip_path.is_file():
-        raise SystemExit(f"ERRO: pacote não encontrado: {zip_path}")
     if not destino.is_dir():
         raise SystemExit(
             f"ERRO: a pasta de destino não existe: {destino}\n"
@@ -555,10 +739,45 @@ def main():
             "pasta nova (um caminho digitado errado viraria uma instalação "
             "fantasma).")
 
-    soma = soma_esperada_de(zip_path, args.sha256)
+    if args.verificar:
+        try:
+            res, codigo = cmd_verificar(destino, args.portal, args.forcar)
+        except Exception as e:
+            # Defeito nosso nao se disfarca de portal fora do ar: quem le o
+            # JSON precisa saber a diferenca entre "tente mais tarde" e "isto
+            # aqui esta quebrado".
+            res, codigo = _recusa("verificar", "falha_inesperada", destino,
+                                  detalhe_tecnico=f"{type(e).__name__}: {e}")
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        sys.exit(codigo)
+
+    # A area temporaria cobre o pacote baixado do portal; com --origem-local
+    # ela nasce vazia e e apagada no fim, sem custo.
+    baixados = Path(tempfile.mkdtemp(prefix="aft-baixar-"))
     try:
-        res, codigo = transacao(zip_path, destino, soma,
-                                simular=args.simular, confirmado=args.confirmado)
+        if args.origem_local:
+            zip_path = Path(args.origem_local).expanduser().resolve()
+            if not zip_path.is_file():
+                raise SystemExit(f"ERRO: pacote não encontrado: {zip_path}")
+            soma = soma_esperada_de(zip_path, args.sha256)
+        else:
+            zip_path, soma, _versao, res, codigo = baixar_do_portal(
+                destino, args.portal, args.forcar, baixados,
+                "simular" if args.simular else "aplicar")
+            if res is not None:
+                print(json.dumps(res, ensure_ascii=False, indent=2))
+                sys.exit(codigo)
+        res, codigo = _rodar_transacao(zip_path, destino, soma, args)
+    finally:
+        shutil.rmtree(baixados, ignore_errors=True)
+    print(json.dumps(res, ensure_ascii=False, indent=2))
+    sys.exit(codigo)
+
+
+def _rodar_transacao(zip_path, destino, soma, args):
+    try:
+        return transacao(zip_path, destino, soma,
+                         simular=args.simular, confirmado=args.confirmado)
     except Exception as e:
         # Quem chama le o stdout como JSON. Um traceback aqui deixaria a skill
         # sem nenhuma resposta para dar ao AFT - pior do que a propria falha.
@@ -568,9 +787,7 @@ def main():
                            f"({type(e).__name__}: {e}). Se a pasta ficou "
                            "incompleta, a versão anterior está na pasta de "
                            f"backup ao lado de {destino}.")}
-        codigo = 2
-    print(json.dumps(res, ensure_ascii=False, indent=2))
-    sys.exit(codigo)
+        return res, 2
 
 
 if __name__ == "__main__":
