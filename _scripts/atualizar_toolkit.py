@@ -809,7 +809,11 @@ def cmd_gravar_token():
     try:
         alvo = portal.gravar_token(bruto)
     except ValueError as e:
-        return {"ok": False, "erro": "token_invalido",
+        # Nome proprio, e nao "token_invalido": aquele e o do portal, e quer
+        # dizer codigo antigo/cancelado. Sao problemas diferentes, com saidas
+        # diferentes - regravar num caso, pedir outro no outro -, e foi
+        # justamente confundi-los que custou uma manha em 30/08/2026.
+        return {"ok": False, "erro": "codigo_malformado",
                 "detalhe": f"O código de acesso não foi guardado: {e}."}, 1
     except OSError as e:
         return {"ok": False, "erro": "gravacao_falhou",
