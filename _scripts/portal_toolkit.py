@@ -371,11 +371,25 @@ def mensagem(estado: str, **dados) -> str:
             "conta Google. Quando o código chegar, é só me passar que eu "
             "guardo — não precisa de conta no GitHub nem de senha nova.")
     if estado == "token_invalido":
+        # A frase NOMEIA o e-mail consultado de proposito. O portal procura o
+        # seu cadastro por ele: com o e-mail de outra pessoa na ficha, ele acha
+        # o cadastro dela e compara o seu codigo com o dela - e recusa, sempre.
+        # Em 30/08/2026 uma AFT herdou a ficha de um colega e ficou presa nisso
+        # por horas, porque a mensagem so falava em "codigo antigo" e mandava
+        # pedir outro: cada codigo novo falhava igual. Sem o e-mail na tela nao
+        # ha como o AFT distinguir as duas causas - e elas pedem saidas opostas.
+        quem = dados.get("gmail")
         return (
-            "O portal não aceitou o código de acesso guardado nesta máquina. "
-            "Em geral é código antigo: ele foi trocado ou cancelado.\n\n"
-            f"Próximo passo: peça um código novo em {LINK} e me passe — eu "
-            "substituo o antigo. Nada foi alterado na sua pasta.")
+            "O portal não aceitou o código de acesso guardado nesta máquina"
+            + (f", consultando com o e-mail {quem}" if quem else "")
+            + ".\n\nSão duas causas possíveis, e a saída é diferente em cada uma:"
+            "\n\n1. O e-mail acima não é o seu do portal. Acontece quando a "
+            "ficha de configuração foi copiada de um colega. Aí o problema não "
+            "é o código, e pedir um novo não resolve: me diga qual e-mail você "
+            "usou no portal que eu corrijo a ficha."
+            "\n\n2. O e-mail está certo, e então o código é antigo — foi "
+            f"trocado ou cancelado. Peça um novo em {LINK} e me passe."
+            "\n\nNada foi alterado na sua pasta.")
     if estado == "sem_acesso":
         quem = dados.get("gmail")
         return (
