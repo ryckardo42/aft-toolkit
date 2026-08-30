@@ -113,24 +113,70 @@ def caminho_consulta() -> Path:
 
 # ------------------------------------------------------------------- o token
 
+# Caracteres que grudam no codigo sem aparecer na tela. O BOM e o mais comum:
+# no Windows, arquivo salvo pelo Bloco de Notas ou pelo PowerShell ganha um, e
+# lido no console cp1252 ele vira tres caracteres na frente do codigo. Zero-width
+# e hifen suave vem de copiar de dentro de um e-mail em HTML.
+INVISIVEIS = "\ufeff\u200b\u200c\u200d\u2060\u00ad"
+ASPAS = "\"'\u2018\u2019\u201c\u201d\u00ab\u00bb`"
+
+# Mesma regra do portal (api/_lib/toolkit.js, pareceCodigo). Vive nos dois lados
+# de proposito: o que nao tem forma de codigo nunca chega a ser gravado aqui, e
+# nunca chega a ser consultado la.
+PREFIXO_CODIGO = "aft_"
+_CORPO_CODIGO = re.compile(r"[A-Za-z0-9_-]+")
+
+
+def limpar_codigo(valor: str) -> str:
+    """Tira do codigo o que gruda nele sem aparecer: espaco em volta, BOM,
+    caracteres de largura zero e aspas que vieram junto na copia."""
+    valor = (valor or "").strip().strip(ASPAS).strip()
+    return "".join(c for c in valor if c not in INVISIVEIS).strip()
+
+
+def parece_codigo(valor: str) -> bool:
+    """O valor tem forma de codigo de acesso? Espelha a conferencia do portal."""
+    return (isinstance(valor, str)
+            and valor.startswith(PREFIXO_CODIGO)
+            and len(PREFIXO_CODIGO) + 20 <= len(valor) <= 200
+            and _CORPO_CODIGO.fullmatch(valor[len(PREFIXO_CODIGO):]) is not None)
+
+
 def ler_token() -> str | None:
     """O codigo de acesso, ou None se nao houver. Nunca levanta excecao: falta
-    de token e um estado previsto, nao um acidente."""
+    de token e um estado previsto, nao um acidente.
+
+    Le com utf-8-sig e passa pelo `limpar_codigo` para que uma instalacao que
+    ja gravou um codigo sujo (antes desta correcao) volte a funcionar sozinha,
+    sem o AFT ter de regravar nada."""
     try:
-        valor = caminho_token().read_text(encoding="utf-8").strip()
+        valor = caminho_token().read_text(encoding="utf-8-sig")
     except OSError:
         return None
-    return valor or None
+    return limpar_codigo(valor) or None
 
 
 def gravar_token(valor: str) -> Path:
-    """Guarda o codigo de acesso. Devolve o caminho; nunca devolve o valor."""
-    valor = (valor or "").strip()
+    """Guarda o codigo de acesso. Devolve o caminho; nunca devolve o valor.
+
+    Confere a FORMA antes de gravar. Em 30/08/2026 uma AFT colou o codigo
+    certo, o arquivo temporario tinha um BOM, este metodo respondeu ok:true e
+    o portal recusou com "codigo antigo, trocado ou cancelado" - mensagem que
+    descrevia uma causa que nao era a dela e mandou pedir um codigo novo, que
+    daria no mesmo. Guardar em silencio o que nunca vai funcionar e pior do que
+    recusar na hora."""
+    valor = limpar_codigo(valor)
     if not valor:
         raise ValueError("o código de acesso veio vazio")
     if len(valor.split()) > 1:
         raise ValueError("o código de acesso não pode ter espaço no meio - "
                          "cole só o código, sem texto em volta")
+    if not parece_codigo(valor):
+        raise ValueError(
+            "isto não tem forma de código de acesso: o código começa com "
+            f"'{PREFIXO_CODIGO}' e vem depois só com letras, números, '-' e '_'. "
+            "Confira se copiou o código inteiro do e-mail, sem cortar o começo "
+            "nem levar texto junto, e cole de novo.")
     alvo = caminho_token()
     alvo.parent.mkdir(parents=True, exist_ok=True)
     alvo.write_text(valor + "\n", encoding="utf-8")
